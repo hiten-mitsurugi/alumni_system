@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 
 ```
-
+make a db in your postgres example "alumni_syste"
 configure backend in .env
 example: 
 # Django Settings
