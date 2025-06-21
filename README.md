@@ -30,7 +30,7 @@ pip install -r requirements.txt
 configure backend in .env
 example: 
 # Django Settings
-SECRET_KEY="django-insecure-gih)j!emjt$mx+^i*v*#4823q!wsj5ryvq@(cp6t+cl=_z3+4m"
+SECRET_KEY=***"in your settings.py"**
 DEBUG=True
 
 # Database Settings
@@ -51,9 +51,9 @@ export REDIS_USE_SSL=False
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=osorioroman101@gmail.com
-EMAIL_HOST_PASSWORD=gzyjxdiuyaxoxefc
-DEFAULT_FROM_EMAIL=osorioroman101@gmail.com
+EMAIL_HOST_USER=**youremail**
+EMAIL_HOST_PASSWORD=**yourapppassowrd Go to https://myaccount.google.com/security***
+DEFAULT_FROM_EMAIL=**youremail**
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS=http://localhost:8000,http://localhost:8080,http://localhost:5173
