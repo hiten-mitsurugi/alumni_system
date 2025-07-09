@@ -1,7 +1,7 @@
-<!-- AlumniHome.vue -->
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div>
     <h1 class="text-2xl font-bold">Alumni Home</h1>
-    <p>Welcome to your Home</p>
+    <p>Welcome to your Donate</p>
   </div>
 </template>

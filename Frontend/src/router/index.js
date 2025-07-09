@@ -115,12 +115,49 @@ const routes = [
   },
 
   // 🛡 Alumni Route
-  {
-    path: '/alumni',
-    name: 'AlumniDashboard',
-    component: () => import('../views/Alumni/AlumniDashboard.vue'),
-    meta: { requiresAuth: true, role: 3 },
-  },
+ {
+  path: '/alumni',
+  component: () => import('../components/layouts/AlumniLayout.vue'),
+  meta: { requiresAuth: true, role: 3 },
+  children: [
+    {
+      path: 'home',
+      name: 'AlumniHome',
+      component: () => import('../views/Alumni/AlumniHome.vue'),
+    },
+    {
+      path: 'my-profile',
+      name: 'AlumniMyProfile',
+      component: () => import('../views/Alumni/MyProfile.vue'),
+    },
+    {
+      path: 'my-mates',
+      name: 'AlumniMyMates',
+      component: () => import('../views/Alumni/MyMates.vue'),
+    },
+    {
+      path: 'messaging',
+      name: 'AlumniMessaging',
+      component: () => import('../views/Alumni/Messaging.vue'),
+    },
+    {
+      path: 'survey',
+      name: 'AlumniSurvey',
+      component: () => import('../views/Alumni/Survey.vue'),
+    },
+    {
+      path: 'donate',
+      name: 'AlumniDonate',
+      component: () => import('../views/Alumni/Donate.vue'),
+    },
+    {
+      path: 'settings',
+      name: 'AlumniSettings',
+      component: () => import('../views/Alumni/Settings.vue'),
+    },
+  ]
+},
+
 
   // 🔁 Default Redirect
   {
