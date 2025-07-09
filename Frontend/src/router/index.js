@@ -156,7 +156,7 @@ router.beforeEach(async (to, from, next) => {
     switch (userRole) {
       case 1: return next({ name: 'SuperAdminDashboard' });
       case 2: return next({ name: 'AdminDashboard' });
-      case 3: return next({ name: 'AlumniDashboard' });
+      case 3: return next({ name: 'AlumniHome' });
       default: return next('/login');
     }
   }

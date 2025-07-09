@@ -23,16 +23,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Third-party
+    'django_cryptography',
     'rest_framework',
     'rest_framework_simplejwt',
     'channels',
     'corsheaders',
     'axes',
-
-    # Local apps
     'auth_app',
+    'posts_app',
+    'messaging_app',
 ]
 
 # === Middleware ===
@@ -100,9 +99,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-
 # === Django REST Framework ===
-# settings.py
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -110,7 +107,6 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
 }
-
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -135,30 +131,38 @@ REDIS_PASSWORD = config('REDIS_PASSWORD', default='')
 REDIS_URL = config('REDIS_URL', default=f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0')
 
 # === Caching ===
-# settings.py
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
 
+# === Channels ===
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/2'],  # Use Redis DB 2
+            'hosts': [f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/2'],
             'prefix': 'alumni_channels',
             'capacity': 1000,
             'expiry': 60,
-            # ❌ DO NOT include `connection_kwargs` — it's not supported
         },
     },
 }
 
+# === Django Cryptography ===
+CRYPTOGRAPHY_BACKEND = 'django_cryptography.core.backends.default.DefaultBackend'
+CRYPTOGRAPHY_SALT = config('CRYPTOGRAPHY_SALT', default='alumni_system_salt_2025')
 
 # === Static & Media Files ===
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-# ✅ Fixed missing directory warning: check if path exists
 frontend_static = os.path.join(BASE_DIR, 'static/frontend')
 STATICFILES_DIRS = [frontend_static] if os.path.exists(frontend_static) else []
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
@@ -172,12 +176,7 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # === CORS Settings ===
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost",
-    "http://localhost:8000",
-    "http://localhost:8080",
-    "http://localhost:5173",
-]
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:8000,http://localhost:8080,http://localhost:5173', cast=lambda v: [s.strip() for s in v.split(',')])
 
 # === Axes (Brute-force protection) ===
 AXES_ENABLED = True
@@ -185,10 +184,9 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_RESET_ON_SUCCESS = True
 AXES_USERNAME_FORM_FIELD = "email"
+AXES_LOCKOUT_CALLABLE = 'auth_app.utils.my_lockout_function'
 
-# ✅ Ensure lockout callable is valid
-AXES_LOCKOUT_CALLABLE = 'auth_app.utils.my_lockout_function'  # Make sure this function exists
-
+# === Logging ===
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

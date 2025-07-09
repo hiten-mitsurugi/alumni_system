@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    LoginView, RegisterView, UserCreateView, ApproveUserView,ApprovedAlumniListView, RejectUserView,
+    LoginView, RegisterView, UserCreateView, ApproveUserView, ApprovedAlumniListView, RejectUserView,
     ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView,
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
     ProfileView, CheckAlumniDirectoryView, PendingAlumniListView  # ✅ Make sure this is imported
@@ -24,5 +24,4 @@ urlpatterns = [
     path('unblock-user/<int:user_id>/', UnblockUserView.as_view(), name='unblock_user'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('check-alumni-directory/', CheckAlumniDirectoryView.as_view(), name='check_alumni_directory'),
-    path('pending-alumni/', PendingAlumniListView.as_view(), name='pending_alumni'),
 ]
