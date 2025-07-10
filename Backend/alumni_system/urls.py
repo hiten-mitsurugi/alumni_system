@@ -1,4 +1,3 @@
-# alumni_system/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
@@ -12,5 +11,5 @@ urlpatterns = [
     path('', api_root),
     path('admin/', admin.site.urls),
     path('api/', include('auth_app.urls')),
-    path('api/messaging/', include('messaging_app.urls')),
+    path('api/', include('messaging_app.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

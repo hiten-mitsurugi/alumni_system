@@ -1,7 +1,9 @@
 <template>
-  <div class="flex justify-between items-center px-4 py-4 bg-white shadow"> <!-- changed from py-2 to py-4 -->
-    <div class="text-xl font-semibold">Search Alumni Mates</div> <!-- text-lg → text-xl -->
+  <div class="flex justify-between items-center px-4 py-4 bg-white shadow">
+    <div class="text-xl font-semibold">Search Alumni Mates</div>
+
     <div class="flex gap-4 items-center">
+      <!-- Notification Icon -->
       <div class="relative cursor-pointer" @click="$emit('toggleNotification')">
         <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -13,14 +15,21 @@
         </span>
       </div>
 
+      <!-- Profile Dropdown -->
       <div class="relative" @click="dropdownOpen = !dropdownOpen">
-        <img class="w-10 h-10 rounded-full cursor-pointer" src="https://via.placeholder.com/40" alt="Profile" />
-        <!-- w-10 h-10 for bigger profile -->
+        <img
+          class="w-10 h-10 rounded-full cursor-pointer object-cover"
+          :src="profilePictureUrl"
+          alt="Profile"
+        />
         <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white shadow-md rounded z-50">
           <a href="#" class="block px-4 py-2 hover:bg-gray-100">Settings & Privacy</a>
           <a href="#" class="block px-4 py-2 hover:bg-gray-100">Update Profile</a>
           <a href="#" class="block px-4 py-2 hover:bg-gray-100">Send Feedback</a>
-          <button @click.stop="handleLogout" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500">
+          <button
+            @click.stop="handleLogout"
+            class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
+          >
             Logout
           </button>
         </div>
@@ -30,15 +39,38 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth' // adjust path if needed
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const BASE_URL = 'http://127.0.0.1:8000' // your backend URL
 
 const notificationCount = ref(0)
 const dropdownOpen = ref(false)
+
+// Fetch user if not already present (just like sidebar)
+onMounted(async () => {
+  if (!authStore.user && authStore.token) {
+    try {
+      await authStore.fetchUser()
+    } catch (error) {
+      console.error('Failed to fetch user:', error)
+      authStore.logout()
+      router.push('/login')
+    }
+  }
+})
+
+// Compute profile picture URL
+const profilePictureUrl = computed(() => {
+  const user = authStore.user
+  const pic = user?.profile_picture
+  return pic
+    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
+    : '/default-profile.png'
+})
 
 function handleLogout() {
   authStore.logout()

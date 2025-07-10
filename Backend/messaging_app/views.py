@@ -3,8 +3,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.cache import cache
 from .models import Message, GroupChat, Reaction, Attachment
+from .serializers import MessageSerializer, GroupChatSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import status
+import django.db.models as models
 
 User = get_user_model()
 
@@ -22,20 +24,16 @@ class MessageListView(APIView):
                     (models.Q(sender_id=receiver_id) & models.Q(receiver=user))
                 ).select_related('sender', 'receiver').prefetch_related('reactions', 'attachments')
                 cache.set(cache_key, list(messages), timeout=3600)
-            data = [{'id': m.id, 'sender': m.sender.username, 'content': m.content, 'timestamp': m.timestamp.isoformat(),
-                     'reactions': [{'type': r.reaction_type, 'user': r.user.username} for r in m.reactions.all()],
-                     'attachments': [{'url': a.file.url, 'type': a.file_type} for a in m.attachments.all()]} for m in messages]
-            return Response(data)
+            serializer = MessageSerializer(messages, many=True)
+            return Response(serializer.data)
         elif group_id:
             cache_key = f"messages_group_{group_id}"
             messages = cache.get(cache_key)
             if not messages:
                 messages = Message.objects.filter(group_id=group_id).select_related('sender').prefetch_related('reactions', 'attachments')
                 cache.set(cache_key, list(messages), timeout=3600)
-            data = [{'id': m.id, 'sender': m.sender.username, 'content': m.content, 'timestamp': m.timestamp.isoformat(),
-                     'reactions': [{'type': r.reaction_type, 'user': r.user.username} for r in m.reactions.all()],
-                     'attachments': [{'url': a.file.url, 'type': a.file_type} for a in m.attachments.all()]} for m in messages]
-            return Response(data)
+            serializer = MessageSerializer(messages, many=True)
+            return Response(serializer.data)
         return Response({'error': 'Specify receiver_id or group_id'}, status=status.HTTP_400_BAD_REQUEST)
 
 class GroupChatCreateView(APIView):
@@ -47,7 +45,8 @@ class GroupChatCreateView(APIView):
         group = GroupChat.objects.create(name=name)
         group.members.add(request.user, *User.objects.filter(id__in=member_ids))
         group.admins.add(request.user)
-        return Response({'group_id': group.id}, status=status.HTTP_201_CREATED)
+        serializer = GroupChatSerializer(group)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class GroupChatManageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -66,4 +65,5 @@ class GroupChatManageView(APIView):
             group.admins.add(user_id)
         elif action == 'demote_admin':
             group.admins.remove(user_id)
-        return Response({'message': 'Action completed'}, status=status.HTTP_200_OK)
+        serializer = GroupChatSerializer(group)
+        return Response(serializer.data, status=status.HTTP_200_OK)
