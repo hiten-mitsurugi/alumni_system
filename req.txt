@@ -15,3 +15,13 @@ daphne -b 0.0.0.0 -p 8000 alumni_system.asgi:application
 python manage.py runserver
 
 
+psql -U postgres -d alumni_db
+
+INSERT INTO auth_app_alumnidirectory 
+(first_name, middle_name, last_name, birth_date, school_id, program, year_graduated, gender)
+VALUES 
+('Roman', 'Rico', 'Osorio', '1989-04-08', '221-01926', 'BS in Information Technology', 2026, 'male'),
+
+('Maria', 'Lopez', 'Santos', '1990-09-15', '220-01845', 'BS in Computer Science', 2012, 'female'),
+
+('John', 'Dela', 'Cruz', '1991-01-22', '219-01789', 'BS in Information Systems', 2015, 'male');

@@ -17,12 +17,14 @@ from .models import CustomUser, Skill, WorkHistory
 from .serializers import (
     RegisterSerializer, UserDetailSerializer, UserCreateSerializer,
     SkillSerializer, WorkHistorySerializer, AlumniDirectoryCheckSerializer,
-    ProfileSerializer
+    ProfileSerializer, UserSearchSerializer
 )
 from .permissions import IsAdminOrSuperAdmin
 from .utils import generate_token, confirm_token
 from django.urls import reverse
 import logging
+from django.contrib.auth import get_user_model
+from rest_framework import viewsets
 
 logger = logging.getLogger(__name__)
 
@@ -395,3 +397,21 @@ class ProfileView(APIView):
             cache.set(cache_key, serializer.data, timeout=300)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+CustomUser = get_user_model()
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSearchSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.query_params.get('q', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(username__icontains=search_query)
+            ).exclude(id=self.request.user.id)
+        return queryset

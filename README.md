@@ -8,7 +8,8 @@ To set up and run this project, just follow the steps below — everything is he
 
 cd Frontend
 npm install
-npm install @eslint/js\@9.28.0 @vitejs/plugin-vue\@5.2.4 axios\@1.9.0 eslint-plugin-vue\@10.0.1 eslint\@9.28.0 globals\@16.2.0 lucide-vue-next\@0.514.0 pinia-plugin-persistedstate\@4.3.0 pinia\@3.0.3 vite-plugin-vue-devtools\@7.7.6 vite\@6.3.5 vue-router\@4.5.1 vue\@3.5.16
+npm install @vitejs/plugin-vue@5.2.4 axios@1.9.0 globals@16.2.0 lucide-vue-next@0.514.0 pinia-plugin-persistedstate@4.3.0 pinia@3.0.3 vite-plugin-vue-devtools@7.7.6 vite@6.3.5 vue-router@4.5.1 vue@3.5.16
+
 npm install tailwindcss @tailwindcss/vite
 npm run build
 npm run dev
@@ -21,7 +22,8 @@ Open a new terminal and run the backend:
 
 cd Backend
 python -m venv env
-source venv/Scripts/activate
+source env/Scripts/activate
+pip install django
 pip install -r requirements.txt
 
 
@@ -72,7 +74,7 @@ insert this for the Alumni Directory:
 INSERT INTO auth_app_alumnidirectory 
 (first_name, middle_name, last_name, birth_date, school_id, program, year_graduated, gender)
 VALUES 
-('John', 'Michael', 'Doe', '1995-05-15', '221-00001', 'Computer Science', 2018, 'male');
+('Roman', 'Rico', 'Ososrio', '1989-04-08', '221-01926', 'BS in Information Technology', 2026, 'male');
 
 
 ```
