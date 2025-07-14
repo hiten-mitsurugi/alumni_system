@@ -3,8 +3,8 @@
     :to="to"
     class="relative group flex items-center p-3 hover:bg-green-800 cursor-pointer text-white"
   >
-    <!-- Icon (white and larger) -->
-    <span class="text-2xl text-white">{{ icon }}</span>
+    <!-- Icon Component -->
+    <component :is="icon" class="w-5 h-5" />
 
     <!-- Label (expanded) -->
     <span v-if="expanded" class="ml-3">{{ label }}</span>
@@ -25,5 +25,12 @@
 </template>
 
 <script setup>
-defineProps(['icon', 'label', 'to', 'expanded', 'badge'])
+defineProps({
+  icon: [Object, Function], 
+  label: String,
+  to: String,
+  expanded: Boolean,
+  badge: [String, Number]
+})
 </script>
+

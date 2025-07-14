@@ -25,3 +25,20 @@ VALUES
 ('Maria', 'Lopez', 'Santos', '1990-09-15', '220-01845', 'BS in Computer Science', 2012, 'female'),
 
 ('John', 'Dela', 'Cruz', '1991-01-22', '219-01789', 'BS in Information Systems', 2015, 'male');
+
+
+import ChatArea from '../../components/messaging/ChatArea.vue'
+import EmptyState from '../../components/messaging/EmptyState.vue'
+import PendingMessagesModal from '../../components/messaging/PendingMessagesModal.vue'
+import CreateGroupModal from '../../components/messaging/CreateGroupModal.vue'
+
+
+
+import ConversationHeader from '../../components/messaging/ConversationHeader.vue'
+import ConversationsList from '../../components/messaging/ConversationList.vue'
+
+
+import ChatArea from '../../components/messaging/ChatArea.vue'
+import EmptyState from '../../components/messaging/EmptyState.vue'
+import PendingMessagesModal from '../../components/messaging/PendingMessagesModal.vue'
+import CreateGroupModal from '../../components/messaging/CreateGroupModal.vue'
