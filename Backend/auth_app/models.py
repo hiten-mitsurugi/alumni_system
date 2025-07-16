@@ -178,6 +178,7 @@ class FeedbackRecommendations(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='feedback')
     recommendations = models.TextField(blank=True)
 
+# auth_app/models.py (only the Profile model is shown for brevity)
 class Profile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -200,6 +201,9 @@ class Profile(models.Model):
     employment_classification = models.CharField(max_length=50, choices=WorkHistory.CLASSIFICATION_CHOICES, blank=True)
     present_occupation = models.CharField(max_length=255, blank=True)
     employing_agency = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=20, choices=[('online', 'Online'), ('offline', 'Offline')], default='offline')  # Added
+    bio = models.TextField(blank=True, null=True)  # Added
+    last_seen = models.DateTimeField(null=True, blank=True)  # Added
 
     def save(self, *args, **kwargs):
         self.full_name = f"{self.user.first_name} {self.user.middle_name or ''} {self.user.last_name}".strip()

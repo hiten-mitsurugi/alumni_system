@@ -178,7 +178,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # === CORS Settings ===
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:8000,http://localhost:8080,http://localhost:5173', cast=lambda v: [s.strip() for s in v.split(',')])
-
+CORS_ALLOW_ALL_ORIGINS = True
 # === Axes (Brute-force protection) ===
 AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 5

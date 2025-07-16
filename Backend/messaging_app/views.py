@@ -2,39 +2,187 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.cache import cache
-from .models import Message, GroupChat, MessageRequest, BlockedUser, MutedConversation, UserProfile
-from .serializers import MessageSerializer, GroupChatSerializer, UserSerializer, MessageRequestSerializer, BlockedUserSerializer, MutedConversationSerializer
-from django.contrib.auth import get_user_model
-from rest_framework import status
 from django.db.models import Q
 from django.utils import timezone
+from rest_framework import status
+from .models import Message, GroupChat, MessageRequest, BlockedUser, MutedConversation
+from .serializers import UserSerializer, GroupChatSerializer, MessageSerializer, MessageRequestSerializer, BlockedUserSerializer, MutedConversationSerializer, AttachmentSerializer, ReactionSerializer, UserSearchSerializer
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from .models import Attachment
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+import logging
+from django.contrib.auth import get_user_model
+CustomUser = get_user_model()
 
-User = get_user_model()
+import logging
+logger = logging.getLogger(__name__)
+
+class SearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        if not query:
+            return Response({"users": [], "groups": []}, status=status.HTTP_200_OK)
+
+        # ✅ Search users (safe filters)
+        users_qs = CustomUser.objects.filter(
+            Q(username__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        )
+
+        # ✅ Apply optional filters if they exist
+        if hasattr(CustomUser, 'is_approved'):
+            users_qs = users_qs.filter(is_approved=True)
+        if hasattr(CustomUser, 'user_type'):
+            users_qs = users_qs.filter(user_type=3)
+
+        users = users_qs.distinct()
+
+        # ✅ Search groups
+        groups = GroupChat.objects.filter(name__icontains=query)
+
+        # ✅ Serialize using EXISTING serializers
+        user_serializer = UserSearchSerializer(users, many=True, context={"request": request})
+        group_serializer = GroupChatSerializer(groups, many=True)
+
+        return Response({
+            "users": user_serializer.data,
+            "groups": group_serializer.data
+        }, status=status.HTTP_200_OK)
+
+        
+        
+class ConversationListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        conversations = []
+
+        # Private conversations (only with accepted contacts)
+        private_users = CustomUser.objects.filter(
+            Q(sent_messages__receiver=user) | Q(received_messages__sender=user)
+        ).distinct()
+        for other_user in private_users:
+            latest_message = Message.objects.filter(
+                (Q(sender=user) & Q(receiver=other_user)) |
+                (Q(sender=other_user) & Q(receiver=user))
+            ).order_by('-timestamp').first()
+            if latest_message:
+                unread_count = Message.objects.filter(
+                    sender=other_user, receiver=user, is_read=False
+                ).count()
+                is_muted = MutedConversation.objects.filter(
+                    user=user, receiver=other_user
+                ).exists()
+                is_blocked = BlockedUser.objects.filter(
+                    user=user, blocked_user=other_user
+                ).exists()
+                conversations.append({
+                    'type': 'private',
+                    'id': str(other_user.id),
+                    'mate': UserSerializer(other_user).data,
+                    'lastMessage': latest_message.content if latest_message else '',
+                    'timestamp': latest_message.timestamp.isoformat() if latest_message else None,
+                    'unreadCount': unread_count,
+                    'isMuted': is_muted,
+                    'isBlocked': is_blocked
+                })
+
+        # Group conversations
+        groups = GroupChat.objects.filter(members=user)
+        for group in groups:
+            latest_message = Message.objects.filter(group=group).order_by('-timestamp').first()
+            is_muted = MutedConversation.objects.filter(user=user, group=group).exists()
+            conversations.append({
+                'type': 'group',
+                'id': str(group.id),
+                'group': GroupChatSerializer(group).data,
+                'lastMessage': latest_message.content if latest_message else '',
+                'timestamp': latest_message.timestamp.isoformat() if latest_message else None,
+                'unreadCount': 0,  # Placeholder; enhance later
+                'isMuted': is_muted
+            })
+
+        conversations.sort(key=lambda x: x['timestamp'] or '1970-01-01T00:00:00Z', reverse=True)
+        return Response(conversations)
+
+class SendMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        receiver_id = request.data.get('receiver_id')
+        content = request.data.get('content')
+        reply_to_id = request.data.get('reply_to_id')
+        attachment_ids = request.data.get('attachment_ids', [])
+
+        if not receiver_id or not content:
+            return Response({'error': 'Receiver ID and content required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            receiver = CustomUser.objects.get(id=receiver_id)
+        except settings.AUTH_USER_MODEL.DoesNotExist:
+            return Response({'error': 'Receiver not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if receiver has blocked the sender
+        if BlockedUser.objects.filter(user=receiver, blocked_user=request.user).exists():
+            return Response({'error': 'You are blocked by this user'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Check if there's an existing conversation
+        has_conversation = Message.objects.filter(
+            (Q(sender=request.user) & Q(receiver=receiver)) |
+            (Q(sender=receiver) & Q(receiver=request.user))
+        ).exists()
+
+        if not has_conversation:
+            # Create a message request if no prior conversation
+            message_request = MessageRequest.objects.create(
+                sender=request.user,
+                receiver=receiver,
+                timestamp=timezone.now()
+            )
+            return Response({
+                'status': 'Message request sent',
+                'request_id': str(message_request.id)
+            }, status=status.HTTP_201_CREATED)
+        else:
+            # Create message if conversation exists
+            message = Message.objects.create(
+                sender=request.user,
+                receiver=receiver,
+                content=content,
+                reply_to_id=reply_to_id if reply_to_id else None
+            )
+            for attachment_id in attachment_ids:
+                attachment = Attachment.objects.get(id=attachment_id)
+                message.attachments.add(attachment)
+            serializer = MessageSerializer(message)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class MessageListView(APIView):
-    permission_classes = [IsAuthenticated]
     def get(self, request, receiver_id=None, group_id=None):
-        user = request.user
-        if receiver_id:
-            cache_key = f"messages_private_{user.id}_{receiver_id}"
-            messages = cache.get(cache_key)
-            if not messages:
-                messages = Message.objects.filter(
-                    (Q(sender=user) & Q(receiver_id=receiver_id)) |
-                    (Q(sender_id=receiver_id) & Q(receiver=user))
-                ).select_related('sender', 'receiver').prefetch_related('reactions', 'attachments')
-                cache.set(cache_key, list(messages), timeout=3600)
-            serializer = MessageSerializer(messages, many=True)
-            return Response(serializer.data)
-        elif group_id:
-            cache_key = f"messages_group_{group_id}"
-            messages = cache.get(cache_key)
-            if not messages:
-                messages = Message.objects.filter(group_id=group_id).select_related('sender').prefetch_related('reactions', 'attachments')
-                cache.set(cache_key, list(messages), timeout=3600)
-            serializer = MessageSerializer(messages, many=True)
-            return Response(serializer.data)
-        return Response({'error': 'Specify receiver_id or group_id'}, status=status.HTTP_400_BAD_REQUEST)
+        # ✅ Try UUID lookup first
+        receiver = None
+        try:
+            receiver = CustomUser.objects.get(id=receiver_id)
+        except (CustomUser.DoesNotExist, ValueError):
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Fetch messages as usual...
+        messages = Message.objects.filter(
+            sender=request.user, receiver=receiver
+        ) | Message.objects.filter(
+            sender=receiver, receiver=request.user
+        )
+        messages = messages.order_by("timestamp")
+
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
 
 class GroupChatCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -43,7 +191,7 @@ class GroupChatCreateView(APIView):
         member_ids = request.data.get('members', [])
         if not name or not member_ids:
             return Response({'error': 'Name and members required'}, status=status.HTTP_400_BAD_REQUEST)
-        valid_members = User.objects.filter(id__in=member_ids).exclude(id=request.user.id)
+        valid_members = settings.AUTH_USER_MODEL.objects.filter(id__in=member_ids).exclude(id=request.user.id)
         group = GroupChat.objects.create(name=name)
         group.members.add(request.user, *valid_members)
         group.admins.add(request.user)
@@ -80,7 +228,7 @@ class ConversationUsersView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         user = request.user
-        users = User.objects.filter(
+        users = settings.AUTH_USER_MODEL.objects.filter(
             Q(sent_messages__receiver=user) | Q(received_messages__sender=user)
         ).distinct()
         serializer = UserSerializer(users, many=True)
@@ -99,9 +247,17 @@ class MessageRequestView(APIView):
         if action == 'accept':
             msg_request.accepted = True
             msg_request.save()
+            # Create a message to start the conversation
+            message = Message.objects.create(
+                sender=msg_request.sender,
+                receiver=request.user,
+                content="Conversation started"
+            )
+            return Response({'status': 'Request accepted', 'message_id': str(message.id)})
         elif action == 'decline':
             msg_request.delete()
-        return Response({'status': 'success'})
+            return Response({'status': 'Request declined'})
+        return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
 
 class BlockUserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -131,7 +287,11 @@ class SearchUsersView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         query = request.GET.get('q', '')
-        users = User.objects.filter(username__icontains=query).exclude(id=request.user.id)
+        users = settings.AUTH_USER_MODEL.objects.filter(
+            Q(username__icontains=query) | 
+            Q(first_name__icontains=query) | 
+            Q(last_name__icontains=query)
+        ).exclude(id=request.user.id)
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
@@ -142,3 +302,15 @@ class PinMessageView(APIView):
         message.is_pinned = not message.is_pinned
         message.save()
         return Response({'status': 'message pinned/unpinned'})
+    
+class UploadView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        file = request.FILES['file']
+        fs = FileSystemStorage(location='media/attachments/')
+        filename = fs.save(file.name, file)
+        attachment = Attachment.objects.create(
+            file=fs.url(filename),
+            file_type=file.content_type
+        )
+        return Response({'id': str(attachment.id)}, status=status.HTTP_201_CREATED)

@@ -58,13 +58,14 @@
 
 <script setup>
 import { computed } from 'vue'
-// Removed PaperclipIcon import as it's now a direct SVG
-// import { PaperclipIcon } from 'lucide-vue-next'
 
 const props = defineProps({
   message: Object,
   currentUserId: Number
 })
 
-const isOwnMessage = computed(() => props.message.senderId === props.currentUserId)
+const isOwnMessage = computed(() => {
+  return props.message.sender?.id === props.currentUserId // ✅ FIX
+})
 </script>
+

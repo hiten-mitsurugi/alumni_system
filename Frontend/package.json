@@ -12,6 +12,8 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.9.0",
+    "lodash": "^4.17.21",
+    "lodash.debounce": "^4.0.8",
     "lucide-vue-next": "^0.514.0",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.3.0",
