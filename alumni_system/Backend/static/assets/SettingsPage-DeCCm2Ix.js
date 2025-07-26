@@ -1,0 +1,1 @@
+import{_ as t}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as o,o as s,e as n}from"./index-CAVRmTej.js";const r={};function c(a,e){return s(),o("div",null,e[0]||(e[0]=[n("h1",{class:"text-2xl font-bold mb-4"},"Welcome to the Settings",-1)]))}const m=t(r,[["render",c]]);export{m as default};

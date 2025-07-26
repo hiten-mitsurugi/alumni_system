@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as t,o as c,e as n}from"./index-CAVRmTej.js";const r={};function a(s,e){return c(),t("div",null,e[0]||(e[0]=[n("h1",{class:"text-2xl font-bold mb-4"},"Welcome to the Notification",-1)]))}const l=o(r,[["render",a]]);export{l as default};
