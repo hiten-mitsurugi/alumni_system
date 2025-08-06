@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_cryptography.fields import encrypt
 
 # # --- UserProfile ---
 # class UserProfile(models.Model):
@@ -41,7 +42,7 @@ class Message(models.Model):
         null=True
     )
     group = models.ForeignKey('GroupChat', on_delete=models.CASCADE, null=True)
-    content = models.TextField()
+    content = encrypt(models.TextField())  # Encrypt message content
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
     attachments = models.ManyToManyField('Attachment', blank=True)
@@ -92,6 +93,7 @@ class MessageRequest(models.Model):
         related_name='received_requests',
         on_delete=models.CASCADE
     )
+    content = encrypt(models.TextField(blank=True, null=True))  # Encrypt message request content
     timestamp = models.DateTimeField(auto_now_add=True)
     accepted = models.BooleanField(default=False)
 

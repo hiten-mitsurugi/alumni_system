@@ -133,10 +133,14 @@ class SendMessageView(APIView):
         if BlockedUser.objects.filter(user=receiver, blocked_user=request.user).exists():
             return Response({'error': 'You are blocked by this user'}, status=status.HTTP_403_FORBIDDEN)
 
-        # Check if there's an existing conversation
+        # Check if there's an existing conversation (either messages exist OR accepted message requests exist)
         has_conversation = Message.objects.filter(
             (Q(sender=request.user) & Q(receiver=receiver)) |
             (Q(sender=receiver) & Q(receiver=request.user))
+        ).exists() or MessageRequest.objects.filter(
+            (Q(sender=request.user) & Q(receiver=receiver)) |
+            (Q(sender=receiver) & Q(receiver=request.user)),
+            accepted=True
         ).exists()
 
         if not has_conversation:
@@ -144,6 +148,7 @@ class SendMessageView(APIView):
             message_request = MessageRequest.objects.create(
                 sender=request.user,
                 receiver=receiver,
+                content=content,
                 timestamp=timezone.now()
             )
             return Response({
@@ -155,8 +160,7 @@ class SendMessageView(APIView):
             message = Message.objects.create(
                 sender=request.user,
                 receiver=receiver,
-                content=content,
-                reply_to_id=reply_to_id if reply_to_id else None
+                content=content
             )
             for attachment_id in attachment_ids:
                 attachment = Attachment.objects.get(id=attachment_id)
@@ -247,12 +251,31 @@ class MessageRequestView(APIView):
         if action == 'accept':
             msg_request.accepted = True
             msg_request.save()
-            # Create a message to start the conversation
+            # Create a message with the original content from the request
             message = Message.objects.create(
                 sender=msg_request.sender,
                 receiver=request.user,
-                content="Conversation started"
+                content=msg_request.content  # Use the actual message content
             )
+            
+            # Send real-time notification to sender that request was accepted
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'user_{msg_request.sender.id}',
+                {
+                    'type': 'request_accepted',
+                    'message': {
+                        'id': str(message.id),
+                        'content': message.content,
+                        'receiver': {'id': request.user.id, 'first_name': request.user.first_name},
+                        'timestamp': message.timestamp.isoformat()
+                    }
+                }
+            )
+            
             return Response({'status': 'Request accepted', 'message_id': str(message.id)})
         elif action == 'decline':
             msg_request.delete()

@@ -76,7 +76,6 @@ class MessageSerializer(serializers.ModelSerializer):
     receiver = UserSearchSerializer(read_only=True)
     attachments = AttachmentSerializer(many=True, read_only=True)
     reactions = ReactionSerializer(many=True, read_only=True)
-    reply_to = serializers.UUIDField(read_only=True)
 
     class Meta:
         model = Message
@@ -90,8 +89,7 @@ class MessageSerializer(serializers.ModelSerializer):
             'is_read',
             'attachments',
             'is_pinned',
-            'reactions',
-            'reply_to'
+            'reactions'
         ]
 
 # ✅ Group Chat Serializer
@@ -117,7 +115,7 @@ class MessageRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MessageRequest
-        fields = ['id', 'sender', 'receiver', 'timestamp', 'accepted']
+        fields = ['id', 'sender', 'receiver', 'content', 'timestamp', 'accepted']
 
 # ✅ Blocked User Serializer
 class BlockedUserSerializer(serializers.ModelSerializer):

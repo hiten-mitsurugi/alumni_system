@@ -36588,3 +36588,359 @@ Traceback (most recent call last):
     if hasattr(obj, "profile") and obj.profile.profile_picture
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'Profile' object has no attribute 'profile_picture'
+Exception inside application: 'CustomUser' object has no attribute 'contacts'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 203, in websocket_receive
+    await self.receive(text_data=message["text"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 86, in receive
+    await handler(data)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 99, in send_private_message
+        lambda: Message.objects.filter(sender=sender, receiver=receiver).exists()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        request = await database_sync_to_async(MessageRequest.objects.create)(
+    
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\asgiref\sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\db.py", line 13, in thread_handler
+    return super().thread_handler(loop, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\asgiref\sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 100, in <lambda>
+    or Message.objects.filter(sender=receiver, receiver=sender).exists()
+    ^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'contacts'
+Exception inside application: 'CustomUser' object has no attribute 'contacts'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 203, in websocket_receive
+    await self.receive(text_data=message["text"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 86, in receive
+    await handler(data)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 99, in send_private_message
+        lambda: Message.objects.filter(sender=sender, receiver=receiver).exists()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        request = await database_sync_to_async(MessageRequest.objects.create)(
+    
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\asgiref\sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\db.py", line 13, in thread_handler
+    return super().thread_handler(loop, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\asgiref\sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 100, in <lambda>
+    or Message.objects.filter(sender=receiver, receiver=sender).exists()
+    ^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'contacts'
+Exception inside application: 'CustomUser' object has no attribute 'contacts'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 203, in websocket_receive
+    await self.receive(text_data=message["text"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 86, in receive
+    await handler(data)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 99, in send_private_message
+        lambda: Message.objects.filter(sender=sender, receiver=receiver).exists()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        request = await database_sync_to_async(MessageRequest.objects.create)(
+    
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\asgiref\sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\db.py", line 13, in thread_handler
+    return super().thread_handler(loop, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\asgiref\sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 100, in <lambda>
+    or Message.objects.filter(sender=receiver, receiver=sender).exists()
+    ^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'contacts'
+Exception inside application: name 'logger' is not defined
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 203, in websocket_receive
+    await self.receive(text_data=message["text"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 86, in receive
+    await handler(data)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 93, in send_private_message
+    logger.info(f"Received send_private_message: receiver_id={receiver_id}, content={content}, attachment_ids={attachment_ids}")
+    ^^^^^^
+NameError: name 'logger' is not defined
+Exception inside application: name 'logger' is not defined
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 203, in websocket_receive
+    await self.receive(text_data=message["text"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 86, in receive
+    handler = actions_map.get(action)
+    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 93, in send_private_message
+    await self.send_json({'error': 'Invalid JSON'})
+    ^^
+NameError: name 'logger' is not defined
+Exception inside application: name 'logger' is not defined
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 203, in websocket_receive
+    await self.receive(text_data=message["text"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 86, in receive
+    handler = actions_map.get(action)
+    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 93, in send_private_message
+    await self.send_json({'error': 'Invalid JSON'})
+    ^^
+NameError: name 'logger' is not defined
+Error in send_private_message: MessageRequest() got unexpected keyword arguments: 'content'
+Error in send_private_message: MessageRequest() got unexpected keyword arguments: 'content'
+Error in send_private_message: MessageRequest() got unexpected keyword arguments: 'content'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 81, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected from PrivateChatConsumer")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: Message() got unexpected keyword arguments: 'reply_to_id'
+Error in send_private_message: You cannot call this from an async context - use a thread or sync_to_async.
+Error in send_private_message: You cannot call this from an async context - use a thread or sync_to_async.
+Error in send_private_message: You cannot call this from an async context - use a thread or sync_to_async.
