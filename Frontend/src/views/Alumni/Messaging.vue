@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import debounce from 'lodash/debounce';
 import { useAuthStore } from '@/stores/auth';
 import api from '../../services/api';
@@ -144,7 +144,7 @@ const searchInput = ref(null);
 const privateWs = ref(null);
 const groupWs = ref(null);
 
-// ✅ Helper to always return correct avatar URL for user/group
+// === Helper to always return correct avatar URL for user/group
 const getProfilePictureUrl = (entity) => {
   return (
     entity?.profile_picture ||              // direct CustomUser profile_picture
@@ -223,7 +223,7 @@ const fetchPendingMessages = async () => {
     pendingMessages.value = (data || []).map(req => ({
       id: req.id,
       name: `${req.sender.first_name} ${req.sender.last_name}`,
-      avatar: getProfilePictureUrl(req.sender),  // ✅ USE helper
+      avatar: getProfilePictureUrl(req.sender),
       message: 'Message request',
       timestamp: req.timestamp
     }));
@@ -235,7 +235,7 @@ const fetchAvailableMates = async () => {
     const { data } = await api.get('/message/search/');
     availableMates.value = (Array.isArray(data.users) ? data.users : []).map(u => ({
       ...u,
-      profile_picture: getProfilePictureUrl(u) // ✅ pre-normalize avatar
+      profile_picture: getProfilePictureUrl(u)
     }));
   } catch (e) { console.error('Mates fetch error', e); }
 };
@@ -248,7 +248,7 @@ async function search() {
     const users = (data.users || []).map(u => ({
       type: 'user',
       ...u,
-      profile_picture: getProfilePictureUrl(u) // ✅ also normalize here
+      profile_picture: getProfilePictureUrl(u)
     }));
     const groups = (data.groups || []).map(g => ({ type: 'group', ...g }));
     searchResults.value = [...users, ...groups];
@@ -306,56 +306,103 @@ async function selectConversation(conv) {
 
 // === MESSAGE ACTIONS ===
 async function sendMessage(data) {
-  // ✅ Upload attachments first
-  const attachmentIds = await uploadAttachments(data.attachments)
+  console.log('Messaging.vue: sendMessage called with:', data);
+  try {
+    // Upload attachments
+    const attachmentIds = await uploadAttachments(data.attachments);
+    console.log('Messaging.vue: Attachment IDs:', attachmentIds);
 
-  const newMessage = {
-    id: `temp-${Date.now()}`, // temporary ID
-    sender: currentUser.value, // mark as from current user
-    content: data.content,
-    attachments: data.attachments.map(file => ({
-      url: URL.createObjectURL(file), // preview
-      name: file.name,
-      type: file.type
-    })),
-    timestamp: new Date().toISOString(),
-    is_read: false
-  }
-
-  // ✅ Optimistically add it to UI immediately
-  messages.value.push(newMessage)
-
-  // ✅ Prepare WebSocket payload
-  const payload = {
-    action: 'send_message',
-    content: data.content,
-    attachment_ids: attachmentIds,
-    reply_to_id: data.reply_to_id
-  }
-
-  // ✅ Actually send through WebSocket
-  if (selectedConversation.value.type === 'private') {
-    payload.receiver_id = selectedConversation.value.mate.id
-    if (privateWs.value?.readyState === WebSocket.OPEN) {
-      privateWs.value.send(JSON.stringify(payload))
+    // Validate required data
+    if (!currentUser.value) {
+      console.error('Messaging.vue: Error: currentUser is null');
+      return;
     }
-  } else {
-    if (groupWs.value?.readyState === WebSocket.OPEN) {
-      groupWs.value.send(JSON.stringify(payload))
+    if (!selectedConversation.value || !selectedConversation.value.type) {
+      console.error('Messaging.vue: Error: selectedConversation is invalid:', selectedConversation.value);
+      return;
     }
+
+    // Create temporary message for UI
+    const newMessage = {
+      id: `temp-${Date.now()}`,
+      sender: currentUser.value,
+      content: data.content,
+      attachments: data.attachments.map(file => ({
+        url: URL.createObjectURL(file),
+        name: file.name,
+        type: file.type
+      })),
+      timestamp: new Date().toISOString(),
+      is_read: false
+    };
+    console.log('Messaging.vue: Optimistically adding message to UI:', newMessage);
+    messages.value.push(newMessage);
+
+    // Prepare WebSocket payload
+    const payload = {
+      action: 'send_message',
+      content: data.content,
+      attachment_ids: attachmentIds,
+      reply_to_id: data.reply_to_id,
+      receiver_id: selectedConversation.value.mate?.id
+    };
+
+    // Send via WebSocket
+    if (selectedConversation.value.type === 'private') {
+      if (!selectedConversation.value.mate?.id) {
+        console.error('Messaging.vue: Error: mate.id is missing');
+        messages.value.pop();
+        return;
+      }
+      if (privateWs.value?.readyState === WebSocket.OPEN) {
+        console.log('Messaging.vue: Sending private WS payload:', payload);
+        privateWs.value.send(JSON.stringify(payload));
+      } else {
+        console.error('Messaging.vue: Private WebSocket not open:', privateWs.value?.readyState);
+        messages.value.pop();
+      }
+    } else if (selectedConversation.value.type === 'group') {
+      if (!selectedConversation.value.group?.id) {
+        console.error('Messaging.vue: Error: group.id is missing');
+        messages.value.pop();
+        return;
+      }
+      if (groupWs.value?.readyState === WebSocket.OPEN) {
+        console.log('Messaging.vue: Sending group WS payload:', payload);
+        groupWs.value.send(JSON.stringify(payload));
+      } else {
+        console.error('Messaging.vue: Group WebSocket not open:', groupWs.value?.readyState);
+        messages.value.pop();
+      }
+    } else {
+      console.error('Messaging.vue: Invalid conversation type:', selectedConversation.value.type);
+      messages.value.pop();
+    }
+  } catch (e) {
+    console.error('Messaging.vue: Error in sendMessage:', e);
+    messages.value.pop();
   }
 }
 
-
-const uploadAttachments = async (attachments) => {
+async function uploadAttachments(attachments) {
+  console.log('Messaging.vue: Uploading attachments:', attachments);
   const ids = [];
   for (const att of attachments) {
     const formData = new FormData();
-    formData.append('file', att.file);
-    try { ids.push((await api.upload('/message/upload/')).data.id); } catch (e) { console.error('Upload error', e); }
+    formData.append('file', att);
+    try {
+      const response = await api.post('/message/upload/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      console.log('Messaging.vue: Uploaded file:', att.name, 'ID:', response.data.id);
+      ids.push(response.data.id);
+    } catch (e) {
+      console.error('Messaging.vue: Upload error for file:', att.name, e);
+      throw e;
+    }
   }
   return ids;
-};
+}
 
 const createGroup = async ({ name, members }) => {
   try {
@@ -388,11 +435,18 @@ function setupWebSockets() {
     if (!token) return (isAuthenticated.value = false);
     privateWs.value = new WebSocket(`ws://localhost:8000/ws/private/?token=${token}`);
 
-    privateWs.value.onopen = () => console.log('Private WS connected');
-    privateWs.value.onclose = () => console.log('Private WS closed');
-    privateWs.value.onerror = async () => (await refreshToken()) ? setupWebSockets() : (isAuthenticated.value = false);
-
-    privateWs.value.onmessage = (e) => handleWsMessage(JSON.parse(e.data), 'private');
+    privateWs.value.onopen = () => console.log('Messaging.vue: Private WS connected');
+    privateWs.value.onclose = () => console.log('Messaging.vue: Private WS closed');
+    privateWs.value.onerror = async (error) => {
+      console.error('Messaging.vue: Private WS error:', error);
+      if (await refreshToken()) setupWebSockets();
+      else isAuthenticated.value = false;
+    };
+    privateWs.value.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      console.log('Messaging.vue: Received WebSocket message:', data);
+      handleWsMessage(data, 'private');
+    };
   });
 }
 
@@ -401,31 +455,119 @@ function setupGroupWebSocket(conv) {
   getValidToken().then(token => {
     if (!token) return;
     groupWs.value = new WebSocket(`ws://localhost:8000/ws/group/${conv.group.id}/?token=${token}`);
-    groupWs.value.onmessage = e => handleWsMessage(JSON.parse(e.data), 'group');
-    groupWs.value.onerror = async () => (await refreshToken()) ? setupGroupWebSocket(conv) : (isAuthenticated.value = false);
+    groupWs.value.onmessage = e => {
+      const data = JSON.parse(e.data);
+      console.log('Messaging.vue: Received group WebSocket message:', data);
+      handleWsMessage(data, 'group');
+    };
+    groupWs.value.onerror = async (error) => {
+      console.error('Messaging.vue: Group WS error:', error);
+      if (await refreshToken()) setupGroupWebSocket(conv);
+      else isAuthenticated.value = false;
+    };
   });
 }
 
 function handleWsMessage(data, scope) {
+  console.log('Messaging.vue: Handling WebSocket message:', data, 'scope:', scope);
   const actions = {
-    chat_message: () => {
-      if (scope === 'private' && selectedConversation.value?.mate.id === data.message.sender.id) messages.value.push(data.message);
-      if (scope === 'group' && selectedConversation.value?.group.id === data.message.group) messages.value.push(data.message);
+    chat_message: (data) => {
+      console.log('Messaging.vue: Processing chat_message:', data);
+      // Add message to current conversation if it's selected
+      if (scope === 'private' && selectedConversation.value?.type === 'private') {
+        const senderId = data.message.sender.id;
+        const receiverId = data.message.receiver.id;
+        const currentUserId = authStore.user.id;
+        const selectedUserId = selectedConversation.value.mate.id;
+        
+        console.log('Messaging.vue: Message participants - sender:', senderId, 'receiver:', receiverId, 'current:', currentUserId, 'selected:', selectedUserId);
+        
+        // Show message if it's between current user and selected conversation partner
+        if ((senderId === currentUserId && receiverId === selectedUserId) || 
+            (senderId === selectedUserId && receiverId === currentUserId)) {
+          console.log('Messaging.vue: Adding message to conversation');
+          messages.value = messages.value.filter(m => !m.id.startsWith('temp-')); // Remove temp message
+          messages.value.push(data.message);
+          // Auto-scroll to bottom
+          nextTick(() => {
+            const chatArea = document.querySelector('.chat-messages-container');
+            if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+          });
+        } else {
+          console.log('Messaging.vue: Message not for current conversation');
+        }
+      }
+      
+      if (scope === 'group' && selectedConversation.value?.type === 'group' && 
+          selectedConversation.value?.group.id === data.message.group) {
+        console.log('Messaging.vue: Adding group message to conversation');
+        messages.value = messages.value.filter(m => !m.id.startsWith('temp-')); // Remove temp message
+        messages.value.push(data.message);
+        // Auto-scroll to bottom
+        nextTick(() => {
+          const chatArea = document.querySelector('.chat-messages-container');
+          if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+        });
+      }
+      
+      // Always update conversation list with latest message
       updateConversation(data.message);
     },
-    reaction_added: () => {
+    reaction_added: (data) => {
       const m = messages.value.find(m => m.id === data.message_id);
       if (m) (m.reactions ||= []).push({ user: { id: data.user_id }, emoji: data.emoji });
     },
-    message_edited: () => {
+    message_edited: (data) => {
       const m = messages.value.find(m => m.id === data.message_id);
       if (m) m.content = data.new_content;
     },
-    message_deleted: () => messages.value = messages.value.filter(m => m.id !== data.message_id),
-    messages_read: () => messages.value.forEach(m => { if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true; }),
-    pending: fetchPendingMessages
+    message_deleted: (data) => messages.value = messages.value.filter(m => m.id !== data.message_id),
+    messages_read: (data) => messages.value.forEach(m => { if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true; }),
+    message_request: (data) => {
+      console.log('Messaging.vue: Received message request:', data);
+      fetchPendingMessages(); // Refresh pending messages
+      // Also add to conversations if not exists
+      updateConversationWithRequest(data.message);
+    },
+    request_accepted: (data) => {
+      console.log('Messaging.vue: Message request was accepted:', data);
+      fetchConversations(); // Refresh conversations
+      // If this user sent the request, the conversation should now be available
+    },
+    pending: () => fetchPendingMessages(),
+    error: (data) => {
+      console.error('Messaging.vue: WebSocket error received:', data);
+      // Remove the temporary message if there was an error
+      messages.value = messages.value.filter(m => !m.id.startsWith('temp-'));
+    },
+    status: (data) => {
+      console.log('Messaging.vue: WebSocket status:', data);
+      if (data.status === 'connected') {
+        console.log('Messaging.vue: WebSocket connected successfully');
+      } else if (data.status === 'success' && data.message) {
+        // Message was sent successfully, temp message will be replaced by real-time message
+        console.log('Messaging.vue: Message sent successfully');
+      } else if (data.status === 'pending') {
+        console.log('Messaging.vue: Message request sent, waiting for acceptance');
+      }
+    },
+    connected: (data) => {
+      console.log('Messaging.vue: WebSocket connection established');
+    }
   };
-  actions[data.type || data.status]?.();
+  
+  const action = actions[data.type || data.status];
+  if (action) {
+    action(data);
+  } else {
+    console.warn('Messaging.vue: Unknown WebSocket message type:', data.type || data.status, data);
+  }
+}
+
+// Function to update conversations when a new message request is received
+function updateConversationWithRequest(messageRequest) {
+  // This function can be expanded to add new conversations from message requests
+  console.log('Updating conversation with request:', messageRequest);
 }
 
 // === UTILS ===

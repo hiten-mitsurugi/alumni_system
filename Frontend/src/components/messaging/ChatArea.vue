@@ -3,13 +3,13 @@
     <!-- Header with user/group info -->
     <div class="p-4 bg-white border-b border-gray-200 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- ✅ Safe avatar -->
+        <!-- Safe avatar -->
         <img :src="conversation.type === 'private'
             ? getProfilePictureUrl(conversation.mate)
             : conversation.group?.group_picture || '/default-group.png'
           " alt="Avatar" class="w-10 h-10 rounded-full object-cover" />
         <div>
-          <!-- ✅ Safe name -->
+          <!-- Safe name -->
           <h3 class="font-semibold text-gray-900">
             {{
               conversation.type === 'private'
@@ -17,31 +17,22 @@
                 : conversation.group?.name || 'Group'
             }}
           </h3>
-          <!-- ✅ Safe status -->
+          <!-- Safe status -->
           <p v-if="conversation.type === 'private'" class="text-sm text-gray-500">
             {{ conversation.mate?.profile?.status ?? 'online' }}
           </p>
-
         </div>
       </div>
     </div>
 
     <!-- Messages -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-4">
-      <div v-for="message in messages" :key="message.id" :class="[
-        'flex',
-        message.sender?.id === currentUser?.id ? 'justify-end' : 'justify-start'
-      ]">
-        <div :class="[
-          'max-w-xs p-3 rounded-lg',
-          message.sender?.id === currentUser?.id ? 'bg-green-100' : 'bg-gray-100'
-        ]">
-          <p class="text-sm">{{ message.content }}</p>
-          <span class="text-xs text-gray-500">
-            {{ formatTimestamp(message.timestamp) }}
-          </span>
-        </div>
-      </div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 chat-messages-container">
+      <MessageBubble
+        v-for="message in messages"
+        :key="message.id"
+        :message="message"
+        :currentUserId="currentUser.id"
+      />
     </div>
 
     <!-- Message input -->
@@ -50,34 +41,42 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, defineEmits, watch } from 'vue'
+import MessageBubble from './MessageBubble.vue'
 import MessageInput from './MessageInput.vue'
 
-// ✅ Props
-defineProps({
+const props = defineProps({
   conversation: Object,
   messages: Array,
   currentUser: Object
 })
 
-// ✅ Safe profile picture helper
+const emit = defineEmits(['send-message'])
+
+// Safe profile picture helper
 const getProfilePictureUrl = (entity) => {
   return (
-    entity?.profile_picture || // direct user field
-    entity?.profile?.profile_picture || // nested profile model
-    '/default-avatar.png' // fallback
+    entity?.profile_picture ||
+    entity?.profile?.profile_picture ||
+    '/default-avatar.png'
   )
 }
 
-// ✅ Safe timestamp
+// Safe timestamp
 function formatTimestamp(timestamp) {
   if (!timestamp) return ''
   const date = new Date(timestamp)
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-// ✅ Dummy send handler (kept if needed)
+// Forward sendMessage to parent
 function sendMessage(data) {
-  // Will be emitted to parent
+  console.log('ChatArea: Forwarding sendMessage to parent with:', data)
+  emit('send-message', data)
 }
+
+// Watch messages for debugging
+watch(() => props.messages, (newMessages) => {
+  console.log('ChatArea: Messages updated:', newMessages)
+}, { immediate: true })
 </script>

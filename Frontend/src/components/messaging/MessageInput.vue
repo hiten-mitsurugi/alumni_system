@@ -57,36 +57,37 @@
 import { ref } from 'vue'
 
 const emit = defineEmits(['send-message'])
-
 const content = ref('')
 const attachments = ref([]) // Store selected files
 const fileInput = ref(null)
 
-// ✅ Open file picker
+// Open file picker
 function triggerFilePicker() {
   fileInput.value.click()
 }
 
-// ✅ Handle selected files
+// Handle selected files
 function handleFileSelect(event) {
   const files = Array.from(event.target.files)
   attachments.value.push(...files)
 }
 
-// ✅ Remove selected attachment before sending
+// Remove selected attachment before sending
 function removeAttachment(index) {
   attachments.value.splice(index, 1)
 }
 
-// ✅ Send message with attachments
+// Send message with attachments
 function send() {
-  if (!content.value.trim() && attachments.value.length === 0) return
-
+  if (!content.value.trim() && attachments.value.length === 0) {
+    console.log('MessageInput: No content or attachments, aborting')
+    return
+  }
+  console.log('MessageInput: Emitting send-message with:', { content: content.value, attachments: attachments.value })
   emit('send-message', {
     content: content.value,
     attachments: attachments.value
   })
-
   content.value = ''
   attachments.value = []
   fileInput.value.value = '' // Reset input
