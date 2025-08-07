@@ -34,20 +34,34 @@
     <!-- Messages -->
     <div 
       ref="messagesContainer"
-      class="flex-1 overflow-y-auto p-4 space-y-4 chat-messages-container bg-gray-50"
+      class="flex-1 overflow-y-auto p-4 chat-messages-container bg-gray-50"
       style="min-height: 0; max-height: calc(100vh - 300px);"
     >
-      <MessageBubble
-        v-for="message in messages"
+      <div
+        v-for="(message, index) in messages"
         :key="message.id"
-        :message="message"
-        :currentUserId="currentUser.id"
-      />
+        :class="[
+          // Reduce spacing for reply threads
+          isReplyMessage(message, index) ? 'mb-2' : 'mb-4'
+        ]"
+      >
+        <MessageBubble
+          :message="message"
+          :messages="messages"
+          :currentUserId="currentUser.id"
+          @message-action="handleMessageAction"
+          @scroll-to-message="scrollToMessage"
+        />
+      </div>
     </div>
 
     <!-- Message input -->
     <div class="flex-shrink-0 border-t border-gray-200 bg-white p-2">
-      <MessageInput @send-message="sendMessage" />
+      <MessageInput 
+        :replyingTo="replyingTo"
+        @send-message="sendMessage" 
+        @cancel-reply="cancelReply"
+      />
     </div>
   </div>
 </template>
@@ -63,8 +77,11 @@ const props = defineProps({
   currentUser: Object
 })
 
-const emit = defineEmits(['send-message'])
+const emit = defineEmits(['send-message', 'message-action'])
 const messagesContainer = ref(null)
+
+// Reply state
+const replyingTo = ref(null)
 
 // Safe profile picture helper (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
@@ -137,20 +154,144 @@ function scrollToBottom() {
   }
 }
 
+// Handle message actions from MessageBubble
+function handleMessageAction(actionData) {
+  console.log('ChatArea: Message action received:', actionData)
+  const { action, message, newContent } = actionData
+  
+  switch (action) {
+    case 'reply':
+      // Set reply state for MessageInput
+      replyingTo.value = message
+      console.log('ChatArea: Set reply target to message:', message.id)
+      console.log('ChatArea: replyingTo.value is now:', replyingTo.value)
+      console.log('ChatArea: Will pass to MessageInput:', !!replyingTo.value)
+      break
+    case 'forward':
+      // Forward to parent to handle forwarding
+      emit('message-action', actionData)
+      break
+    case 'pin':
+    case 'unpin':
+      // Forward to parent to handle pin/unpin
+      emit('message-action', actionData)
+      break
+    case 'bump':
+      // Forward to parent to handle bump
+      emit('message-action', actionData)
+      break
+    case 'edit':
+      // Forward to parent to handle edit
+      emit('message-action', actionData)
+      break
+    case 'delete':
+      // Forward to parent to handle delete
+      emit('message-action', actionData)
+      break
+    case 'select':
+      // Forward to parent to handle selection
+      emit('message-action', actionData)
+      break
+    default:
+      console.warn('ChatArea: Unknown message action:', action)
+  }
+}
+
+// Reply functionality
+const cancelReply = () => {
+  replyingTo.value = null
+  console.log('ChatArea: Cancelled reply')
+}
+
+// Scroll to specific message by ID
+function scrollToMessage(messageId) {
+  console.log('ChatArea: Scrolling to message:', messageId)
+  nextTick(() => {
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`)
+    if (messageElement) {
+      messageElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      })
+      // Add highlight effect
+      messageElement.classList.add('highlight-message')
+      setTimeout(() => {
+        messageElement.classList.remove('highlight-message')
+      }, 2000)
+    } else {
+      console.warn('ChatArea: Message element not found for ID:', messageId)
+    }
+  })
+}
+
+// Check if message is a reply to create threaded layout
+function isReplyMessage(message, index) {
+  // Check if this message is a reply
+  const isReply = !!(message.reply_to || message.reply_to_id)
+  
+  // Check if previous message is related (same conversation thread)
+  if (index > 0) {
+    const prevMessage = props.messages[index - 1]
+    const isReplyToPrevious = message.reply_to === prevMessage.id || message.reply_to_id === prevMessage.id
+    const sameAuthorAsReply = message.reply_to && props.messages.find(m => m.id === message.reply_to)?.sender?.id === prevMessage.sender?.id
+    
+    return isReply || isReplyToPrevious || sameAuthorAsReply
+  }
+  
+  return isReply
+}
+
 // Forward sendMessage to parent
 function sendMessage(data) {
-  console.log('ChatArea: Forwarding sendMessage to parent with:', data)
+  console.log('ChatArea: =========================')
+  console.log('ChatArea: sendMessage function called!')
+  console.log('ChatArea: Received data:', data)
+  
+  // Add reply information if replying to a message
+  if (replyingTo.value) {
+    data.reply_to_id = replyingTo.value.id
+    console.log('ChatArea: Adding reply_to_id:', data.reply_to_id)
+  }
+  
+  console.log('ChatArea: Forwarding to parent Messaging.vue')
+  console.log('ChatArea: =========================')
+  
   emit('send-message', data)
+  
+  // Clear reply state after sending
+  if (replyingTo.value) {
+    replyingTo.value = null
+    console.log('ChatArea: Cleared reply state after sending')
+  }
+  
   // Auto-scroll to bottom after sending message
   setTimeout(scrollToBottom, 100)
 }
 
 // Watch messages for debugging and auto-scroll
-watch(() => props.messages, (newMessages) => {
-  console.log('ChatArea: Messages updated:', newMessages)
+watch(() => props.messages, (newMessages, oldMessages) => {
+  console.log('🔄 ChatArea: Messages updated - count:', newMessages?.length || 0)
+  
+  // Debug: Check for new messages with reply_to data
+  if (newMessages && oldMessages) {
+    const newMessagesWithReplies = newMessages.filter(m => 
+      m.reply_to || m.reply_to_id && 
+      !oldMessages.find(old => old.id === m.id)
+    );
+    
+    if (newMessagesWithReplies.length > 0) {
+      console.log('✅ ChatArea: New messages with reply data detected:', newMessagesWithReplies.length)
+      newMessagesWithReplies.forEach(msg => {
+        console.log(`✅ ChatArea: Message ${msg.id} has reply_to:`, msg.reply_to ? 'YES' : 'NO')
+      });
+    }
+  }
+  
   // Auto-scroll to bottom when new messages arrive
-  scrollToBottom()
-}, { immediate: true })
+  nextTick(() => {
+    scrollToBottom()
+  })
+}, { immediate: true, deep: true })
 
 // Scroll to bottom when conversation changes
 watch(() => props.conversation, () => {
@@ -180,5 +321,25 @@ watch(() => props.conversation, () => {
 
 .chat-messages-container::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+/* Highlight effect for scrolled-to messages */
+:deep(.highlight-message) {
+  animation: messageHighlight 2s ease-in-out;
+}
+
+@keyframes messageHighlight {
+  0% { 
+    background-color: rgba(59, 130, 246, 0.2);
+    transform: scale(1.02);
+  }
+  50% { 
+    background-color: rgba(59, 130, 246, 0.1);
+    transform: scale(1.01);
+  }
+  100% { 
+    background-color: transparent;
+    transform: scale(1);
+  }
 }
 </style>

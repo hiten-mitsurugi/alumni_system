@@ -37486,3 +37486,10 @@ Logout failed: Token is invalid or expired
 Logout failed: Token is invalid or expired
 Logout failed: Token is invalid or expired
 Logout failed: Token is invalid or expired
+Error in send_private_message: can not serialize 'UUID' object
+Error in send_private_message: can not serialize 'UUID' object
+Error in send_private_message: can not serialize 'UUID' object
+Error in send_private_message: can not serialize 'UUID' object
+Error in send_private_message: can not serialize 'UUID' object
+Error in send_private_message: can not serialize 'UUID' object
+Error in send_private_message: can not serialize 'UUID' object

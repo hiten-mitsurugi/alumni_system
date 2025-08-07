@@ -87,6 +87,7 @@ class ReactionSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSearchSerializer(read_only=True)
     receiver = UserSearchSerializer(read_only=True)
+    reply_to = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(many=True, read_only=True)
     reactions = ReactionSerializer(many=True, read_only=True)
 
@@ -100,10 +101,31 @@ class MessageSerializer(serializers.ModelSerializer):
             'content',
             'timestamp',
             'is_read',
+            'reply_to',
             'attachments',
             'is_pinned',
             'reactions'
         ]
+
+    def get_reply_to(self, obj):
+        if obj.reply_to:
+            return {
+                'id': str(obj.reply_to.id),  # ✅ FIX: Convert UUID to string
+                'content': obj.reply_to.content,
+                'sender': {
+                    'id': obj.reply_to.sender.id,
+                    'first_name': obj.reply_to.sender.first_name,
+                    'last_name': obj.reply_to.sender.last_name,
+                    'profile_picture': self.get_profile_picture_url(obj.reply_to.sender)
+                }
+            }
+        return None
+
+    def get_profile_picture_url(self, user):
+        if user.profile_picture:
+            request = self.context.get('request')
+            return request.build_absolute_uri(user.profile_picture.url) if request else user.profile_picture.url
+        return None
 
     def to_representation(self, instance):
         # Pass request context to nested serializers

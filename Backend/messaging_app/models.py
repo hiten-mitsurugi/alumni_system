@@ -47,6 +47,13 @@ class Message(models.Model):
     is_read = models.BooleanField(default=False)
     attachments = models.ManyToManyField('Attachment', blank=True)
     is_pinned = models.BooleanField(default=False)
+    reply_to = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='replies'
+    )
 
     class Meta:
         app_label = 'messaging_app'
