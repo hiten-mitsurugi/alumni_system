@@ -10,6 +10,7 @@ from messaging_app.models import (
 )
 from messaging_app.serializers import MessageSerializer
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.utils import timezone
 
 # Define logger
 logger = logging.getLogger(__name__)
@@ -32,10 +33,39 @@ class ChatHelperMixin:
         except (TokenError, User.DoesNotExist):
             return None
 
+    async def update_user_status(self, user, status):
+        """Update user's online status and last_seen timestamp"""
+        def _update_status():
+            try:
+                from auth_app.models import Profile
+                profile, created = Profile.objects.get_or_create(user=user)
+                
+                if status == 'online':
+                    # Set to online and update last_seen
+                    profile.status = 'online'
+                    profile.last_seen = timezone.now()
+                    profile.save()
+                    logger.info(f"Updated user {user.id} status to online at {profile.last_seen}")
+                elif status == 'activity':
+                    # Only update last_seen, keep current status (don't force offline)
+                    profile.last_seen = timezone.now()
+                    profile.save()
+                    logger.debug(f"Updated user {user.id} last_seen to {profile.last_seen}")
+                    
+            except Exception as e:
+                logger.error(f"Error updating user status: {str(e)}")
+        await database_sync_to_async(_update_status)()
+
     async def serialize_message(self, message):
         """Serialize a message for WebSocket broadcast"""
         def _serialize():
-            serializer = MessageSerializer(message, context={'request': None})
+            # Create a mock request object for proper URL building
+            from django.http import HttpRequest
+            mock_request = HttpRequest()
+            mock_request.META = {'HTTP_HOST': '127.0.0.1:8000', 'wsgi.url_scheme': 'http'}
+            mock_request.build_absolute_uri = lambda path: f"http://127.0.0.1:8000{path}"
+            
+            serializer = MessageSerializer(message, context={'request': mock_request})
             return serializer.data
         return await database_sync_to_async(_serialize)()
 
@@ -69,19 +99,34 @@ class PrivateChatConsumer(ChatHelperMixin, AsyncJsonWebsocketConsumer):
             await self.close()
             return
         
+        # Update user status to online
+        await self.update_user_status(self.user, 'online')
+        
         # Join user's personal channel group for receiving broadcasts
         self.user_group_name = f'user_{self.user.id}'
         await self.channel_layer.group_add(self.user_group_name, self.channel_name)
         
+        # Join global status updates group
+        await self.channel_layer.group_add('status_updates', self.channel_name)
+        
         self.scope['user'] = self.user
         await self.accept()
         await self.send_json({'status': 'connected'})
-        logger.info(f"User {self.user.id} connected to PrivateChatConsumer")
+        logger.info(f"User {self.user.id} connected to PrivateChatConsumer and status set to online")
 
     async def disconnect(self, close_code):
+        # Don't set to offline on WebSocket disconnect - only on logout
+        # Just update last_seen timestamp
+        if hasattr(self, 'user') and self.user:
+            await self.update_user_status(self.user, 'activity')
+        
         # Leave user's personal channel group
         if hasattr(self, 'user_group_name'):
             await self.channel_layer.group_discard(self.user_group_name, self.channel_name)
+        
+        # Leave global status updates group
+        await self.channel_layer.group_discard('status_updates', self.channel_name)
+        
         user_id = getattr(self, 'user', None)
         user_id = user_id.id if user_id else 'unknown'
         logger.info(f"User {user_id} disconnected from PrivateChatConsumer")
@@ -110,6 +155,9 @@ class PrivateChatConsumer(ChatHelperMixin, AsyncJsonWebsocketConsumer):
             await self.send_json({'error': 'Invalid JSON'})
 
     async def send_private_message(self, data):
+        # Update user activity timestamp
+        await self.update_user_status(self.user, 'activity')
+        
         receiver_id = data.get('receiver_id')
         content = data.get('content')
         attachment_ids = data.get('attachment_ids', [])
@@ -329,6 +377,7 @@ class PrivateChatConsumer(ChatHelperMixin, AsyncJsonWebsocketConsumer):
     async def messages_read(self, e): await self.send_json({'type': 'messages_read', **e})
     async def user_typing(self, e): await self.send_json({'type': 'user_typing', **e})
     async def user_stop_typing(self, e): await self.send_json({'type': 'user_stop_typing', **e})
+    async def status_update(self, e): await self.send_json({'type': 'status_update', **e})
 
 # ==========================
 # ✅ Group Chat Consumer
@@ -345,20 +394,35 @@ class GroupChatConsumer(ChatHelperMixin, AsyncWebsocketConsumer):
             if self.user not in await database_sync_to_async(lambda: list(group.members.all()))():
                 return await self.close()
 
+            # Update user status to online
+            await self.update_user_status(self.user, 'online')
+
+            # Join global status updates group
+            await self.channel_layer.group_add('status_updates', self.channel_name)
+
             self.group_name = f'group_{self.group_id}'
             await self.channel_layer.group_add(self.group_name, self.channel_name)
             await self.accept()
             await self.send_json({'status': 'connected'})
-            logger.info(f"User {self.user.id} connected to GroupChatConsumer for group {self.group_id}")
+            logger.info(f"User {self.user.id} connected to GroupChatConsumer for group {self.group_id} and status set to online")
 
         except GroupChat.DoesNotExist:
             logger.error(f"Group {self.group_id} not found")
             await self.close()
 
     async def disconnect(self, close_code):
+        # Don't set to offline on WebSocket disconnect - only on logout
+        # Just update last_seen timestamp
+        if hasattr(self, 'user') and self.user:
+            await self.update_user_status(self.user, 'activity')
+            
         # Leave group chat
         if hasattr(self, 'group_name'):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
+            
+        # Leave global status updates group
+        await self.channel_layer.group_discard('status_updates', self.channel_name)
+        
         user_id = getattr(self, 'user', None)
         user_id = user_id.id if user_id else 'unknown'
         logger.info(f"User {user_id} disconnected from GroupChatConsumer")
@@ -388,6 +452,9 @@ class GroupChatConsumer(ChatHelperMixin, AsyncWebsocketConsumer):
             await self.send_json({'error': 'Invalid JSON'})
 
     async def send_group_message(self, data):
+        # Update user activity timestamp
+        await self.update_user_status(self.user, 'activity')
+        
         content = data.get('content')
         attachment_ids = data.get('attachment_ids', [])
         
@@ -501,6 +568,7 @@ class GroupChatConsumer(ChatHelperMixin, AsyncWebsocketConsumer):
     async def message_deleted(self, e): await self.send_json({'type': 'message_deleted', **e})
     async def user_typing(self, e): await self.send_json({'type': 'user_typing', **e})
     async def user_stop_typing(self, e): await self.send_json({'type': 'user_stop_typing', **e})
+    async def status_update(self, e): await self.send_json({'type': 'status_update', **e})
 
     # Utility to avoid repeating json.dumps
     async def send_json(self, data):

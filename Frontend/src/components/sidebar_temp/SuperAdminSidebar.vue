@@ -33,8 +33,8 @@ onMounted(async () => {
   }
 });
 
-const logout = () => {
-  authStore.logout();
+const logout = async () => {
+  await authStore.logoutWithAPI();
   router.push('/login');
 };
 

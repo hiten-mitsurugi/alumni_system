@@ -54,7 +54,7 @@ class Message(models.Model):
 # --- Attachment ---
 class Attachment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    file = models.URLField()
+    file = models.FileField(upload_to='attachments/')  # Like profile_picture field
     file_type = models.CharField(max_length=100, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

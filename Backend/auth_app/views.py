@@ -196,6 +196,39 @@ class LoginView(APIView):
                     {'detail': 'Not yet approved, please contact the Alumni Relations Office'},
                     status=status.HTTP_403_FORBIDDEN
                 )
+            
+            # Update user status to online when logging in
+            from .models import Profile
+            from django.utils import timezone
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.status = 'online'
+            profile.last_seen = timezone.now()
+            profile.save()
+            logger.info(f"User {user.id} status set to online on login")
+            
+            # Broadcast status change to all connected users
+            try:
+                channel_layer = get_channel_layer()
+                status_payload = {
+                    'type': 'status_update',
+                    'user_id': user.id,
+                    'status': 'online',
+                    'last_seen': profile.last_seen.isoformat()
+                }
+                logger.info(f"Broadcasting login status update: {status_payload}")
+                
+                # Broadcast to all users who might have this user in their conversation list
+                async_to_sync(channel_layer.group_send)(
+                    'status_updates',  # Global status updates group
+                    status_payload
+                )
+                logger.info(f"Successfully broadcast login status update for user {user.id}")
+            except Exception as ws_error:
+                logger.error(f"WebSocket status broadcast failed in LoginView: {str(ws_error)}")
+            
             refresh = RefreshToken.for_user(user)
             return Response({
                 'token': str(refresh.access_token),
@@ -345,6 +378,38 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
+            # Update user status to offline when logging out
+            from .models import Profile
+            from django.utils import timezone
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            
+            user = request.user
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.status = 'offline'
+            profile.last_seen = timezone.now()
+            profile.save()
+            logger.info(f"User {user.id} status set to offline on logout")
+            
+            # Broadcast status change to all connected users
+            try:
+                channel_layer = get_channel_layer()
+                status_payload = {
+                    'type': 'status_update',
+                    'user_id': user.id,
+                    'status': 'offline',
+                    'last_seen': profile.last_seen.isoformat()
+                }
+                logger.info(f"Broadcasting logout status update: {status_payload}")
+                
+                async_to_sync(channel_layer.group_send)(
+                    'status_updates',  # Global status updates group
+                    status_payload
+                )
+                logger.info(f"Successfully broadcast logout status update for user {user.id}")
+            except Exception as ws_error:
+                logger.error(f"WebSocket status broadcast failed in LogoutView: {str(ws_error)}")
+            
             refresh_token = request.data.get("refresh")
             if not refresh_token:
                 return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -415,3 +480,51 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(username__icontains=search_query)
             ).exclude(id=self.request.user.id)
         return queryset
+
+class TestStatusBroadcastView(APIView):
+    """Test endpoint to manually broadcast status updates"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            from .models import Profile
+            from django.utils import timezone
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            
+            user = request.user
+            test_status = request.data.get('status', 'offline')
+            
+            # Update user status
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.status = test_status
+            profile.last_seen = timezone.now()
+            profile.save()
+            
+            # Broadcast status change
+            channel_layer = get_channel_layer()
+            status_payload = {
+                'type': 'status_update',
+                'user_id': user.id,
+                'status': test_status,
+                'last_seen': profile.last_seen.isoformat()
+            }
+            
+            logger.info(f"Test broadcasting status update: {status_payload}")
+            
+            async_to_sync(channel_layer.group_send)(
+                'status_updates',
+                status_payload
+            )
+            
+            return Response({
+                'message': f'Status broadcast test successful for user {user.id}',
+                'payload': status_payload
+            })
+            
+        except Exception as e:
+            logger.error(f"Test status broadcast failed: {str(e)}")
+            return Response(
+                {'error': f'Test failed: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

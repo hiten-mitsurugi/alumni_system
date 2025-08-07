@@ -30,6 +30,37 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('user');
     },
 
+    async logoutWithAPI() {
+      console.log('=== AUTH STORE DEBUG: Starting logoutWithAPI ===');
+      console.log('AUTH STORE DEBUG: Current refreshToken:', this.refreshToken ? 'exists' : 'null');
+      console.log('AUTH STORE DEBUG: Current token:', this.token ? 'exists' : 'null');
+      
+      try {
+        // Call backend logout API to set status to offline and broadcast
+        if (this.refreshToken) {
+          console.log('AUTH STORE DEBUG: Making POST request to /logout/');
+          const response = await api.post('/logout/', {
+            refresh: this.refreshToken
+          });
+          console.log('AUTH STORE DEBUG: Backend logout response:', response.status, response.data);
+          console.log('AUTH STORE DEBUG: Backend logout successful - status set to offline and broadcasted');
+        } else {
+          console.log('AUTH STORE DEBUG: No refresh token available, skipping backend logout API call');
+        }
+      } catch (error) {
+        console.error('AUTH STORE DEBUG: Backend logout failed:', error);
+        console.error('AUTH STORE DEBUG: Error response:', error.response?.status, error.response?.data);
+        // Continue with frontend logout even if backend fails
+        // This ensures the user can always log out from the frontend
+        // even if there are network issues
+      }
+      
+      console.log('AUTH STORE DEBUG: Calling frontend logout to clear tokens');
+      // Clear frontend state regardless of backend success/failure
+      this.logout();
+      console.log('AUTH STORE DEBUG: logoutWithAPI completed');
+    },
+
     async fetchUser() {
       if (!this.token) return;
 

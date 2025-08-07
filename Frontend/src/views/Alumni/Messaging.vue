@@ -59,9 +59,9 @@
           @click="selectConversation(conversation)"
           :class="['flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-white', selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : 'hover:shadow-sm']">
           <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-4">
-            <img :src="getProfilePictureUrl(conversation.mate)" class="w-10 h-10 rounded-full object-cover" />
+            <img :src="getProfilePictureUrl(conversation.mate)" class="w-12 h-12 rounded-full object-cover" />
             <div
-              :class="['absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white', getStatusColor(conversation.mate.profile?.status)]" />
+              :class="['absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white', getStatusColor(conversation.mate)]" />
           </div>
 
           <div v-else class="relative flex-shrink-0 mr-4">
@@ -88,6 +88,10 @@
             </div>
             <div class="flex items-center justify-between">
               <p class="text-sm text-gray-600 truncate pr-2">{{ conversation.lastMessage }}</p>
+              <div v-if="conversation.type === 'private'" class="flex flex-col items-end text-xs">
+                <span :class="getStatusTextColor(conversation.mate)">{{ getStatusText(conversation.mate) }}</span>
+                <span class="text-gray-400 mt-0.5">{{ formatLastSeen(conversation.mate) }}</span>
+              </div>
               <span v-if="conversation.unreadCount > 0"
                 class="bg-green-500 text-white text-xs rounded-full px-2 py-1 min-w-[24px] text-center font-medium">{{
                   conversation.unreadCount }}</span>
@@ -116,7 +120,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, triggerRef } from 'vue';
 import debounce from 'lodash/debounce';
 import { useAuthStore } from '@/stores/auth';
 import api from '../../services/api';
@@ -144,14 +148,13 @@ const searchInput = ref(null);
 const privateWs = ref(null);
 const groupWs = ref(null);
 
-// === Helper to always return correct avatar URL for user/group
+// === Helper to always return correct avatar URL for user/group (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
-  return (
-    entity?.profile_picture ||              // direct CustomUser profile_picture
-    entity?.profile?.profile_picture ||     // nested Profile model
-    entity?.group_picture ||                // group chat avatar
-    '/default-avatar.png'                   // fallback
-  );
+  const BASE_URL = 'http://127.0.0.1:8000'
+  const pic = entity?.profile_picture || entity?.group_picture
+  return pic
+    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
+    : '/default-avatar.png'
 };
 
 // === COMPUTED ===
@@ -186,6 +189,7 @@ async function refreshToken() {
     authStore.setToken(data.access, authStore.refreshToken);
     return data.access;
   } catch (e) {
+    // For token refresh errors, use regular logout since it's an automatic process
     authStore.logout();
     return null;
   }
@@ -203,8 +207,12 @@ const fetchConversations = async () => {
     const { data } = await api.get('/message/conversations/');
     conversations.value = (Array.isArray(data) ? data : []).map(conv => ({
       ...conv,
-      id: conv.id || (conv.type === 'private' ? conv.mate.id : conv.group.id)
+      id: conv.id || (conv.type === 'private' ? conv.mate.id : conv.group.id),
+      // Ensure we have a timestamp for sorting
+      timestamp: conv.timestamp || conv.lastMessageTime || new Date().toISOString()
     }));
+    
+    console.log('Messaging.vue: Fetched conversations:', conversations.value);
   } catch (e) { console.error('Conv fetch error', e); }
 };
 
@@ -257,6 +265,25 @@ async function search() {
 const debouncedSearch = debounce(search, 300);
 
 const focusSearch = () => searchQuery.value ? (searchQuery.value = searchResults.value = '') : searchInput.value?.focus();
+
+// === AUTO-SELECT LAST CONVERSATION ===
+const selectLastConversation = () => {
+  if (conversations.value.length > 0) {
+    // Sort conversations by timestamp (most recent first)
+    const sortedConversations = [...conversations.value].sort((a, b) => {
+      const timestampA = new Date(a.timestamp || 0).getTime();
+      const timestampB = new Date(b.timestamp || 0).getTime();
+      return timestampB - timestampA; // Descending order (newest first)
+    });
+    
+    // Select the most recent conversation
+    const lastConversation = sortedConversations[0];
+    if (lastConversation) {
+      console.log('Messaging.vue: Auto-selecting last conversation:', lastConversation);
+      selectConversation(lastConversation);
+    }
+  }
+};
 
 // === CONVERSATION HANDLERS ===
 async function selectSearchResult(r) {
@@ -513,6 +540,36 @@ function handleWsMessage(data, scope) {
       // Always update conversation list with latest message
       updateConversation(data.message);
     },
+    status_update: (data) => {
+      console.log('Messaging.vue: Processing status_update:', data);
+      // Update user status in conversations list
+      const userId = data.user_id;
+      const newStatus = data.status;
+      const lastSeen = data.last_seen;
+      
+      // Update conversations list
+      conversations.value.forEach(conv => {
+        if (conv.type === 'private' && conv.mate.id === userId) {
+          if (!conv.mate.profile) {
+            conv.mate.profile = {};
+          }
+          conv.mate.profile.status = newStatus;
+          conv.mate.profile.last_seen = lastSeen;
+          console.log(`Updated conversation ${conv.mate.first_name} ${conv.mate.last_name} status to ${newStatus}`);
+        }
+      });
+      
+      // Update selected conversation if it matches
+      if (selectedConversation.value?.type === 'private' && 
+          selectedConversation.value.mate.id === userId) {
+        if (!selectedConversation.value.mate.profile) {
+          selectedConversation.value.mate.profile = {};
+        }
+        selectedConversation.value.mate.profile.status = newStatus;
+        selectedConversation.value.mate.profile.last_seen = lastSeen;
+        console.log(`Updated selected conversation status to ${newStatus}`);
+      }
+    },
     reaction_added: (data) => {
       const m = messages.value.find(m => m.id === data.message_id);
       if (m) (m.reactions ||= []).push({ user: { id: data.user_id }, emoji: data.emoji });
@@ -572,18 +629,152 @@ function updateConversationWithRequest(messageRequest) {
 
 // === UTILS ===
 const formatTimestamp = ts => ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-const getStatusColor = s => ({ online: 'bg-green-500', offline: 'bg-gray-400' }[s] || 'bg-gray-400');
+
+// Status helper functions for online/offline indicators
+const getStatusColor = (user) => {
+  if (!user?.profile?.last_seen) return 'bg-gray-400'; // Default offline color
+  return isRecentlyActive(user) ? 'bg-green-500' : 'bg-gray-400';
+};
+
+const getStatusTextColor = (user) => {
+  return isRecentlyActive(user) ? 'text-green-600' : 'text-gray-500';
+};
+
+const getStatusText = (user) => {
+  if (!user?.profile?.last_seen) return 'Offline';
+  return isRecentlyActive(user) ? 'Online' : 'Offline';
+};
+
+const isRecentlyActive = (user) => {
+  if (!user?.profile?.last_seen) return false;
+  const lastSeen = new Date(user.profile.last_seen);
+  const now = new Date();
+  const diffMinutes = (now - lastSeen) / (1000 * 60);
+  // Consider active if seen within last 2 minutes AND status is online
+  const isRecent = diffMinutes <= 2;
+  const isOnlineStatus = user.profile.status === 'online';
+  console.log(`isRecentlyActive for user ${user.id}: lastSeen=${lastSeen.toISOString()}, diffMinutes=${diffMinutes.toFixed(2)}, status=${user.profile.status}, isRecent=${isRecent}, isOnlineStatus=${isOnlineStatus}`);
+  return isRecent && isOnlineStatus;
+};
+
+const formatLastSeen = (user) => {
+  if (!user?.profile?.last_seen) return 'Never seen';
+  
+  const lastSeen = new Date(user.profile.last_seen);
+  const now = new Date();
+  const diffMinutes = (now - lastSeen) / (1000 * 60);
+  
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${Math.floor(diffMinutes)} minutes ago`;
+  
+  const diffHours = diffMinutes / 60;
+  if (diffHours < 24) return `${Math.floor(diffHours)} hours ago`;
+  
+  const diffDays = diffHours / 24;
+  if (diffDays < 7) return `${Math.floor(diffDays)} days ago`;
+  
+  return lastSeen.toLocaleDateString();
+};
+
+// === STATUS UPDATES ===
+const handleGlobalStatusUpdate = (event) => {
+  const data = event.detail;
+  console.log('Messaging.vue: Received global status update from window event:', data);
+  console.log('Messaging.vue: Current conversations before update:', conversations.value);
+  console.log('Messaging.vue: Selected conversation before update:', selectedConversation.value);
+  
+  if (data.type === 'status_update') {
+    const { user_id, status, last_seen } = data;
+    console.log(`Messaging.vue: Processing status update for user ${user_id} to ${status}`);
+    
+    // Update conversations list
+    let conversationUpdated = false;
+    conversations.value.forEach(conv => {
+      if (conv.type === 'private' && conv.mate.id === user_id) {
+        if (conv.mate.profile) {
+          console.log(`Messaging.vue: Found conversation with user ${user_id}, updating status from ${conv.mate.profile.status} to ${status}`);
+          conv.mate.profile.status = status;
+          if (last_seen) conv.mate.profile.last_seen = last_seen;
+          conversationUpdated = true;
+          console.log(`Messaging.vue: Updated conversation mate ${user_id} status to ${status}`);
+        } else {
+          console.log(`Messaging.vue: Found conversation with user ${user_id} but no profile object`);
+        }
+      }
+    });
+    
+    if (!conversationUpdated) {
+      console.log(`Messaging.vue: No conversation found with user ${user_id}`);
+    }
+    
+    // Update selected conversation if it matches
+    let selectedUpdated = false;
+    if (selectedConversation.value?.type === 'private' && 
+        selectedConversation.value.mate.id === user_id) {
+      if (selectedConversation.value.mate.profile) {
+        console.log(`Messaging.vue: Found selected conversation with user ${user_id}, updating status from ${selectedConversation.value.mate.profile.status} to ${status}`);
+        selectedConversation.value.mate.profile.status = status;
+        if (last_seen) selectedConversation.value.mate.profile.last_seen = last_seen;
+        selectedUpdated = true;
+        console.log(`Messaging.vue: Updated selected conversation mate ${user_id} status to ${status}`);
+      } else {
+        console.log(`Messaging.vue: Found selected conversation with user ${user_id} but no profile object`);
+      }
+    }
+    
+    if (!selectedUpdated && selectedConversation.value?.type === 'private') {
+      console.log(`Messaging.vue: Selected conversation is with user ${selectedConversation.value.mate.id}, not ${user_id}`);
+    }
+    
+    // Update available mates list
+    let matesUpdated = false;
+    availableMates.value.forEach(mate => {
+      if (mate.id === user_id && mate.profile) {
+        console.log(`Messaging.vue: Found available mate ${user_id}, updating status from ${mate.profile.status} to ${status}`);
+        mate.profile.status = status;
+        if (last_seen) mate.profile.last_seen = last_seen;
+        matesUpdated = true;
+        console.log(`Messaging.vue: Updated available mate ${user_id} status to ${status}`);
+      }
+    });
+    
+    if (!matesUpdated) {
+      console.log(`Messaging.vue: No available mate found with user ${user_id}`);
+    }
+    
+    console.log('Messaging.vue: Status update processing complete');
+    
+    // Force reactivity update
+    triggerRef(conversations);
+    triggerRef(selectedConversation);
+    triggerRef(availableMates);
+  } else {
+    console.log('Messaging.vue: Received non-status-update message:', data);
+  }
+};
 
 // === LIFECYCLE ===
 onMounted(async () => {
   if (await validateToken()) {
     await Promise.all([fetchCurrentUser(), fetchConversations(), fetchPendingMessages(), fetchAvailableMates()]);
+    
+    // Auto-select the most recent conversation
+    selectLastConversation();
+    
     setupWebSockets();
+    
+    // Listen for global status updates via window events
+    window.addEventListener('user-status-update', handleGlobalStatusUpdate);
+    console.log('Messaging.vue: Added window event listener for user-status-update');
   }
 });
 
 onUnmounted(() => {
   privateWs.value?.close();
   groupWs.value?.close();
+  
+  // Remove global status update listener
+  window.removeEventListener('user-status-update', handleGlobalStatusUpdate);
+  console.log('Messaging.vue: Removed window event listener for user-status-update');
 });
 </script>

@@ -39,15 +39,58 @@
       </button>
     </div>
 
-    <!-- Show Selected Files -->
-    <div v-if="attachments.length" class="mt-2 flex flex-wrap gap-2">
-      <div
-        v-for="(file, index) in attachments"
-        :key="index"
-        class="flex items-center bg-gray-100 px-2 py-1 rounded text-sm"
-      >
-        {{ file.name }}
-        <button @click="removeAttachment(index)" class="ml-2 text-red-500">✕</button>
+    <!-- Show Selected Files with Previews -->
+    <div v-if="attachments.length" class="mt-3 space-y-2">
+      <div class="flex flex-wrap gap-3">
+        <div
+          v-for="(file, index) in attachments"
+          :key="index"
+          class="relative group"
+        >
+          <!-- Image Preview -->
+          <div v-if="isImageFile(file)" class="relative">
+            <img
+              :src="getFilePreviewUrl(file)"
+              :alt="file.name"
+              class="w-20 h-20 object-cover rounded-lg border border-gray-200"
+            />
+            <button
+              @click="removeAttachment(index)"
+              class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+            >
+              ✕
+            </button>
+            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+              {{ file.name }}
+            </div>
+          </div>
+
+          <!-- File Preview -->
+          <div v-else class="flex items-center bg-gray-100 px-3 py-2 rounded-lg border border-gray-200 min-w-[200px]">
+            <div class="flex-shrink-0 mr-2">
+              <!-- File type icon -->
+              <svg v-if="getFileType(file) === 'pdf'" class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+              </svg>
+              <svg v-else-if="getFileType(file) === 'doc'" class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+              </svg>
+              <svg v-else class="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-sm truncate">{{ file.name }}</p>
+              <p class="text-xs text-gray-500">{{ getFileSize(file) }} • {{ getFileType(file).toUpperCase() }}</p>
+            </div>
+            <button
+              @click="removeAttachment(index)"
+              class="ml-2 text-red-500 hover:text-red-700 text-sm"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -91,5 +134,29 @@ function send() {
   content.value = ''
   attachments.value = []
   fileInput.value.value = '' // Reset input
+}
+
+// Helper methods for file handling
+const isImageFile = (file) => {
+  return file.type && file.type.startsWith('image/')
+}
+
+const getFilePreviewUrl = (file) => {
+  return URL.createObjectURL(file)
+}
+
+const getFileType = (file) => {
+  if (!file.name) return 'file'
+  const extension = file.name.split('.').pop()?.toLowerCase()
+  return extension || 'file'
+}
+
+const getFileSize = (file) => {
+  const bytes = file.size
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>

@@ -4,7 +4,7 @@ from .views import (
     LoginView, RegisterView, UserCreateView, ApproveUserView, ApprovedAlumniListView, RejectUserView,
     ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView,
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
-    ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet
+    ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView
 )
 
 router = DefaultRouter()
@@ -29,4 +29,5 @@ urlpatterns = [
     path('unblock-user/<int:user_id>/', UnblockUserView.as_view(), name='unblock_user'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('check-alumni-directory/', CheckAlumniDirectoryView.as_view(), name='check_alumni_directory'),
+    path('test-status-broadcast/', TestStatusBroadcastView.as_view(), name='test_status_broadcast'),
 ]

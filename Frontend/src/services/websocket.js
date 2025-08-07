@@ -4,16 +4,22 @@ export class WebSocketService {
   constructor() {
     this.sockets = new Map();
     this.listeners = new Map();
-    this.authStore = useAuthStore();
     this.reconnectAttempts = new Map();
     this.maxReconnectAttempts = 5;
   }
 
+  getAuthStore() {
+    // Lazy initialization of auth store to avoid Pinia timing issues
+    return useAuthStore();
+  }
+
   async connect(endpoint = 'notifications') {
-    if (!this.authStore.token) {
+    const authStore = this.getAuthStore();
+    
+    if (!authStore.token) {
       try {
-        await this.authStore.tryRefreshToken();
-        if (!this.authStore.token) {
+        await authStore.tryRefreshToken();
+        if (!authStore.token) {
           console.error('No JWT token available after refresh attempt');
           return;
         }
@@ -23,7 +29,7 @@ export class WebSocketService {
       }
     }
 
-    const wsUrl = `ws://localhost:8000/ws/${endpoint}/?token=${this.authStore.token}`;
+    const wsUrl = `ws://localhost:8000/ws/${endpoint}/?token=${authStore.token}`;
     if (this.sockets.has(endpoint)) {
       const socket = this.sockets.get(endpoint);
       if (socket.readyState === WebSocket.OPEN) {
@@ -38,14 +44,20 @@ export class WebSocketService {
 
     socket.onopen = () => {
       console.log(`WebSocket connected to ${endpoint}`);
+      console.log(`WebSocket service: Active listeners for ${endpoint}:`, this.listeners.get(endpoint) || []);
       this.reconnectAttempts.delete(endpoint);
     };
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log(`WebSocket service: Received message on ${endpoint}:`, data);
         const listeners = this.listeners.get(endpoint) || [];
-        listeners.forEach((listener) => listener(data));
+        console.log(`WebSocket service: Found ${listeners.length} listeners for ${endpoint}`);
+        listeners.forEach((listener) => {
+          console.log(`WebSocket service: Calling listener with data:`, data);
+          listener(data);
+        });
       } catch (error) {
         console.error(`Error parsing WebSocket message on ${endpoint}:`, error);
       }

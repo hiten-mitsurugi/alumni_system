@@ -7,7 +7,7 @@
 
       <!-- Header: Profile Picture & Basic Info -->
       <div class="flex items-center space-x-6 mb-8">
-        <img :src="user.profile_picture" class="w-24 h-24 rounded-full object-cover border-2 border-gray-300" />
+        <img :src="getProfilePictureUrl(user)" class="w-24 h-24 rounded-full object-cover border-2 border-gray-300" />
         <div>
           <h2 class="text-2xl font-bold text-gray-800">{{ user.first_name }} {{ user.last_name }}</h2>
           <p class="text-base text-gray-600">{{ user.email }}</p>
@@ -50,6 +50,15 @@ defineProps({
 });
 
 defineEmits(['close']);
+
+// Helper function to get profile picture URL (same logic as AlumniNavbar)
+const getProfilePictureUrl = (entity) => {
+  const BASE_URL = 'http://127.0.0.1:8000' // Same as AlumniNavbar
+  const pic = entity?.profile_picture
+  return pic
+    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
+    : '/default-avatar.png'
+};
 
 function userType(type) {
   return type === 1 ? 'Super Admin' : type === 2 ? 'Admin' : 'Alumni';

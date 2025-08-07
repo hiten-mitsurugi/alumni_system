@@ -87,7 +87,7 @@ class ConversationListView(APIView):
                 conversations.append({
                     'type': 'private',
                     'id': str(other_user.id),
-                    'mate': UserSerializer(other_user).data,
+                    'mate': UserSearchSerializer(other_user, context={'request': request}).data,
                     'lastMessage': latest_message.content if latest_message else '',
                     'timestamp': latest_message.timestamp.isoformat() if latest_message else None,
                     'unreadCount': unread_count,
@@ -185,7 +185,7 @@ class MessageListView(APIView):
         )
         messages = messages.order_by("timestamp")
 
-        serializer = MessageSerializer(messages, many=True)
+        serializer = MessageSerializer(messages, many=True, context={'request': request})
         return Response(serializer.data)
 
 class GroupChatCreateView(APIView):
@@ -235,7 +235,7 @@ class ConversationUsersView(APIView):
         users = settings.AUTH_USER_MODEL.objects.filter(
             Q(sent_messages__receiver=user) | Q(received_messages__sender=user)
         ).distinct()
-        serializer = UserSerializer(users, many=True)
+        serializer = UserSearchSerializer(users, many=True, context={'request': request})
         return Response(serializer.data)
 
 class MessageRequestView(APIView):
@@ -315,7 +315,7 @@ class SearchUsersView(APIView):
             Q(first_name__icontains=query) | 
             Q(last_name__icontains=query)
         ).exclude(id=request.user.id)
-        serializer = UserSerializer(users, many=True)
+        serializer = UserSearchSerializer(users, many=True, context={'request': request})
         return Response(serializer.data)
 
 class PinMessageView(APIView):
@@ -330,10 +330,9 @@ class UploadView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
         file = request.FILES['file']
-        fs = FileSystemStorage(location='media/attachments/')
-        filename = fs.save(file.name, file)
+        # Create attachment directly like profile picture upload
         attachment = Attachment.objects.create(
-            file=fs.url(filename),
+            file=file,
             file_type=file.content_type
         )
         return Response({'id': str(attachment.id)}, status=status.HTTP_201_CREATED)

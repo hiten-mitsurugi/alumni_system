@@ -303,6 +303,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
         fields = [field.name for field in CustomUser._meta.fields if field.name != 'password']
         
 class UserSearchSerializer(serializers.ModelSerializer):
+    profile = ProfileModelSerializer(read_only=True)
+    
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture']
+        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture', 'profile']

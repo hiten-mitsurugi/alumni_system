@@ -14,13 +14,20 @@ from auth_app.models import Profile  # Import Profile from auth_app
 # ✅ Always fetch the correct user model dynamically
 CustomUser = get_user_model()
 
+# ✅ Profile Serializer (comes from auth_app.Profile)
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile  # Use auth_app.Profile, not messaging_app.UserProfile
+        fields = ['status', 'bio', 'last_seen']
+
 # ✅ Basic reusable User serializer
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
+    profile = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture']
+        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture', 'profile']
 
     def get_profile_picture(self, obj):
         if obj.profile_picture:
@@ -29,19 +36,14 @@ class UserSerializer(serializers.ModelSerializer):
         return None
 
 
-# ✅ Profile Serializer (comes from auth_app.Profile)
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile  # Use auth_app.Profile, not messaging_app.UserProfile
-        fields = ['profile_picture', 'status', 'bio', 'last_seen']
-
 # ✅ User Search Serializer (includes profile info)
 class UserSearchSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
+    profile = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'year_graduated', 'profile_picture']
+        fields = ['id', 'username', 'first_name', 'last_name', 'year_graduated', 'profile_picture', 'profile']
 
     def get_profile_picture(self, obj):
         if obj.profile_picture:
@@ -56,11 +58,22 @@ class GroupSearchSerializer(serializers.ModelSerializer):
         model = GroupChat
         fields = ['id', 'name', 'group_picture']
 
-# ✅ Attachment Serializer
+# ✅ Attachment Serializer (same logic as profile pictures)
 class AttachmentSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()
+
     class Meta:
         model = Attachment
-        fields = ['id', 'file']  # Only include file unless you need file_type
+        fields = ['id', 'file', 'file_type']
+
+    def get_file(self, obj):
+        if obj.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            else:
+                return obj.file.url
+        return None
 
 # ✅ Reaction Serializer
 class ReactionSerializer(serializers.ModelSerializer):
@@ -91,6 +104,17 @@ class MessageSerializer(serializers.ModelSerializer):
             'is_pinned',
             'reactions'
         ]
+
+    def to_representation(self, instance):
+        # Pass request context to nested serializers
+        data = super().to_representation(instance)
+        if self.context.get('request'):
+            data['attachments'] = AttachmentSerializer(
+                instance.attachments.all(), 
+                many=True, 
+                context=self.context
+            ).data
+        return data
 
 # ✅ Group Chat Serializer
 class GroupChatSerializer(serializers.ModelSerializer):

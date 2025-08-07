@@ -5,6 +5,15 @@ defineProps({
 });
 defineEmits(['close', 'approve', 'reject']);
 
+// Helper function to get profile picture URL (same logic as AlumniNavbar)
+const getProfilePictureUrl = (entity) => {
+  const BASE_URL = 'http://127.0.0.1:8000' // Same as AlumniNavbar
+  const pic = entity?.profile_picture
+  return pic
+    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
+    : '/default-avatar.png'
+};
+
 const userType = (type) => type === 1 ? 'Super Admin' : type === 2 ? 'Admin' : 'Alumni';
 </script>
 
@@ -16,7 +25,7 @@ const userType = (type) => type === 1 ? 'Super Admin' : type === 2 ? 'Admin' : '
       </button>
 
       <div class="flex items-center space-x-4 mb-6">
-        <img :src="user.profile_picture" alt="Profile" class="w-20 h-20 rounded-full object-cover border" />
+        <img :src="getProfilePictureUrl(user)" alt="Profile" class="w-20 h-20 rounded-full object-cover border" />
         <div>
           <h2 class="text-xl font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
           <p class="text-sm text-gray-500">{{ user.email }}</p>

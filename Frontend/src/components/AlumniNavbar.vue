@@ -72,8 +72,15 @@ const profilePictureUrl = computed(() => {
     : '/default-profile.png'
 })
 
-function handleLogout() {
-  authStore.logout()
-  router.push('/login')
+async function handleLogout() {
+  console.log('AlumniNavbar: Starting logout process');
+  await authStore.logoutWithAPI();
+  console.log('AlumniNavbar: Backend logout completed, waiting briefly for status broadcast');
+  
+  // Wait a bit to ensure status update is broadcast and received
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  console.log('AlumniNavbar: Redirecting to login');
+  router.push('/login');
 }
 </script>
