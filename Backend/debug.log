@@ -38477,3 +38477,7 @@ Traceback (most recent call last):
   File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
     raise ValueError("No handler for message type %s" % message["type"])
 ValueError: No handler for message type request_accepted
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.

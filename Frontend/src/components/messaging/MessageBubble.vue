@@ -182,7 +182,7 @@
               </div>
               <p v-else class="text-sm" v-html="formatMessageContent(message.content)"></p>
               <!-- Edit indicator -->
-              <span v-if="message.isEdited" class="text-xs opacity-75 ml-1">(edited)</span>
+              <span v-if="message.edited_at" class="text-xs opacity-75 ml-1">(edited)</span>
             </div>
           </div>
         </template>
@@ -583,6 +583,9 @@ const handleAction = (actionData) => {
     case 'copy':
       copyMessage()
       break
+    case 'delete':
+      confirmDelete()
+      break
     default:
       // Forward all other actions to parent
       emit('message-action', actionData)
@@ -627,6 +630,20 @@ const copyMessage = () => {
       // Could show a toast notification here
     }).catch(err => {
       console.error('MessageBubble: Failed to copy message:', err)
+    })
+  }
+}
+
+// Delete functionality with confirmation
+const confirmDelete = () => {
+  if (!isOwnMessage.value) return
+  
+  const confirmed = window.confirm('Are you sure you want to delete this message? This action cannot be undone.')
+  if (confirmed) {
+    console.log('MessageBubble: Deleting message', props.message.id)
+    emit('message-action', {
+      action: 'delete',
+      message: props.message
     })
   }
 }

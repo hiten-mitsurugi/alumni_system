@@ -44,6 +44,7 @@ class Message(models.Model):
     group = models.ForeignKey('GroupChat', on_delete=models.CASCADE, null=True)
     content = encrypt(models.TextField())  # Encrypt message content
     timestamp = models.DateTimeField(auto_now_add=True)
+    edited_at = models.DateTimeField(null=True, blank=True)  # Track when message was last edited
     is_read = models.BooleanField(default=False)
     attachments = models.ManyToManyField('Attachment', blank=True)
     is_pinned = models.BooleanField(default=False)

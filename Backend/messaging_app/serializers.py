@@ -100,6 +100,7 @@ class MessageSerializer(serializers.ModelSerializer):
             'group',
             'content',
             'timestamp',
+            'edited_at',  # Add edited_at field
             'is_read',
             'reply_to',
             'attachments',

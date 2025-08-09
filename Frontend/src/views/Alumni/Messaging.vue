@@ -520,23 +520,67 @@ async function handleMessageAction(actionData) {
         break
         
       case 'edit':
-        // Edit message content
-        await api.patch(`/message/${message.id}/`, { content: newContent })
-        // Update local message state
-        const editIndex = messages.value.findIndex(m => m.id === message.id)
-        if (editIndex !== -1) {
-          messages.value[editIndex].content = newContent
-          messages.value[editIndex].is_edited = true
+        // Optimistically update the message content immediately for the sender
+        const editMessageIndex = messages.value.findIndex(m => m.id === message.id);
+        if (editMessageIndex !== -1) {
+          const optimisticUpdate = {
+            ...messages.value[editMessageIndex],
+            content: newContent,
+            edited_at: new Date().toISOString()
+          };
+          messages.value.splice(editMessageIndex, 1, optimisticUpdate);
+          console.log('✅ Optimistic edit: Updated message locally for immediate feedback');
         }
-        console.log('Messaging: Edited message:', message.id, 'new content:', newContent)
+        
+        // Send edit via WebSocket for real-time delivery to other participants
+        if (selectedConversation.value?.type === 'private') {
+          if (privateWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending edit via WebSocket for message:', message.id)
+            privateWs.value.send(JSON.stringify({
+              action: 'edit_message',
+              message_id: message.id,
+              new_content: newContent
+            }))
+          } else {
+            console.error('Messaging: Private WebSocket not open for edit')
+          }
+        } else if (selectedConversation.value?.type === 'group') {
+          if (groupWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending group edit via WebSocket for message:', message.id)
+            groupWs.value.send(JSON.stringify({
+              action: 'edit_message',
+              message_id: message.id,
+              new_content: newContent
+            }))
+          } else {
+            console.error('Messaging: Group WebSocket not open for edit')
+          }
+        }
         break
         
       case 'delete':
-        // Delete message
-        await api.delete(`/message/${message.id}/`)
-        // Remove from local messages
-        messages.value = messages.value.filter(m => m.id !== message.id)
-        console.log('Messaging: Deleted message:', message.id)
+        // Delete message via WebSocket for real-time delivery
+        if (selectedConversation.value?.type === 'private') {
+          if (privateWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending delete via WebSocket for message:', message.id)
+            privateWs.value.send(JSON.stringify({
+              action: 'delete_message',
+              message_id: message.id
+            }))
+          } else {
+            console.error('Messaging: Private WebSocket not open for delete')
+          }
+        } else if (selectedConversation.value?.type === 'group') {
+          if (groupWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending group delete via WebSocket for message:', message.id)
+            groupWs.value.send(JSON.stringify({
+              action: 'delete_message',
+              message_id: message.id
+            }))
+          } else {
+            console.error('Messaging: Group WebSocket not open for delete')
+          }
+        }
         break
         
       case 'select':
@@ -825,10 +869,30 @@ function handleWsMessage(data, scope) {
       if (m) (m.reactions ||= []).push({ user: { id: data.user_id }, emoji: data.emoji });
     },
     message_edited: (data) => {
-      const m = messages.value.find(m => m.id === data.message_id);
-      if (m) m.content = data.new_content;
+      console.log('Messaging: Received message_edited event:', data)
+      const messageIndex = messages.value.findIndex(m => m.id === data.message_id);
+      if (messageIndex !== -1) {
+        // Create a new object to trigger Vue reactivity
+        const updatedMessage = {
+          ...messages.value[messageIndex],
+          content: data.new_content,
+          edited_at: new Date().toISOString()
+        };
+        
+        // Replace the message at the specific index to trigger reactivity
+        messages.value.splice(messageIndex, 1, updatedMessage);
+        
+        // Force Vue reactivity with nextTick
+        nextTick(() => {
+          console.log('✅ Real-time edit: Message content updated in UI:', data.message_id);
+          console.log('✅ Real-time edit: New content:', data.new_content);
+        });
+      }
     },
-    message_deleted: (data) => messages.value = messages.value.filter(m => m.id !== data.message_id),
+    message_deleted: (data) => {
+      console.log('Messaging: Received message_deleted event:', data)
+      messages.value = messages.value.filter(m => m.id !== data.message_id)
+    },
     messages_read: (data) => messages.value.forEach(m => { if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true; }),
     message_request: (data) => {
       console.log('Messaging.vue: Received message request:', data);
@@ -846,6 +910,12 @@ function handleWsMessage(data, scope) {
       console.error('Messaging.vue: WebSocket error received:', data);
       // Remove the temporary message if there was an error
       messages.value = messages.value.filter(m => !m.id.startsWith('temp-'));
+      
+      // If this was an edit error, we might need to revert optimistic updates
+      if (data.error && data.error.includes('edit')) {
+        console.error('Edit failed, consider reverting optimistic update');
+        // TODO: Add logic to revert optimistic edit updates if needed
+      }
     },
     status: (data) => {
       console.log('Messaging.vue: WebSocket status:', data);
@@ -854,6 +924,12 @@ function handleWsMessage(data, scope) {
       } else if (data.status === 'success' && data.message) {
         // Message was sent successfully, temp message will be replaced by real-time message
         console.log('Messaging.vue: Message sent successfully');
+      } else if (data.status === 'success' && data.action === 'message_edited') {
+        console.log('✅ Edit confirmation: Message edited successfully:', data.message_id);
+        // The actual content update should come through message_edited event
+      } else if (data.status === 'success' && data.action === 'message_deleted') {
+        console.log('✅ Delete confirmation: Message deleted successfully:', data.message_id);
+        // The actual removal should come through message_deleted event
       } else if (data.status === 'pending') {
         console.log('Messaging.vue: Message request sent, waiting for acceptance');
       }

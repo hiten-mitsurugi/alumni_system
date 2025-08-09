@@ -525,8 +525,10 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         try:
             @database_sync_to_async
             def _edit():
+                from django.utils import timezone
                 message = Message.objects.get(id=message_id, sender=self.user)
                 message.content = new_content
+                message.edited_at = timezone.now()  # Set edit timestamp
                 message.save()
                 return message
                 
@@ -539,6 +541,13 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
                 'message_edited',
                 {'message_id': str(message.id), 'new_content': new_content}
             )
+            
+            # Send success confirmation to sender
+            await self.send_json({
+                'status': 'success', 
+                'action': 'message_edited',
+                'message_id': str(message.id)
+            })
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot edit this message'})
@@ -565,6 +574,13 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
                 'message_deleted',
                 {'message_id': str(message_id)}
             )
+            
+            # Send success confirmation to sender
+            await self.send_json({
+                'status': 'success', 
+                'action': 'message_deleted',
+                'message_id': str(message_id)
+            })
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot delete this message'})
@@ -868,12 +884,14 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         try:
             @database_sync_to_async
             def _edit():
+                from django.utils import timezone
                 message = Message.objects.get(
                     id=message_id, 
                     group_id=self.group_id, 
                     sender=self.user
                 )
                 message.content = new_content
+                message.edited_at = timezone.now()  # Set edit timestamp
                 message.save()
                 
             await _edit()
@@ -886,6 +904,13 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                     'new_content': new_content
                 }
             )
+            
+            # Send success confirmation to sender
+            await self.send_json({
+                'status': 'success', 
+                'action': 'message_edited',
+                'message_id': str(message_id)
+            })
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot edit this message'})
@@ -913,6 +938,13 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                 self.group_name,
                 {'type': 'message_deleted', 'message_id': str(message_id)}
             )
+            
+            # Send success confirmation to sender
+            await self.send_json({
+                'status': 'success', 
+                'action': 'message_deleted',
+                'message_id': str(message_id)
+            })
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot delete this message'})
