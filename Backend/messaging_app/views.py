@@ -284,16 +284,29 @@ class MessageRequestView(APIView):
 
 class BlockUserView(APIView):
     permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        blocked_users = BlockedUser.objects.filter(user=request.user)
+        serializer = BlockedUserSerializer(blocked_users, many=True)
+        return Response(serializer.data)
+    
     def post(self, request):
         user_id = request.data.get('user_id')
         BlockedUser.objects.create(user=request.user, blocked_user_id=user_id)
         return Response({'status': 'user blocked'})
+        
     def delete(self, request, user_id):
         BlockedUser.objects.filter(user=request.user, blocked_user_id=user_id).delete()
         return Response({'status': 'user unblocked'})
 
 class MuteConversationView(APIView):
     permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        muted_conversations = MutedConversation.objects.filter(user=request.user)
+        serializer = MutedConversationSerializer(muted_conversations, many=True)
+        return Response(serializer.data)
+    
     def post(self, request):
         receiver_id = request.data.get('receiver_id')
         group_id = request.data.get('group_id')
@@ -305,6 +318,21 @@ class MuteConversationView(APIView):
             muted_until=muted_until
         )
         return Response({'status': 'conversation muted'})
+    
+    def delete(self, request):
+        receiver_id = request.data.get('receiver_id')
+        group_id = request.data.get('group_id')
+        
+        muted_conversation = MutedConversation.objects.filter(
+            user=request.user,
+            receiver_id=receiver_id if receiver_id else None,
+            group_id=group_id if group_id else None
+        ).first()
+        
+        if muted_conversation:
+            muted_conversation.delete()
+            return Response({'status': 'conversation unmuted'})
+        return Response({'error': 'Conversation not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class SearchUsersView(APIView):
     permission_classes = [IsAuthenticated]
@@ -320,11 +348,74 @@ class SearchUsersView(APIView):
 
 class PinMessageView(APIView):
     permission_classes = [IsAuthenticated]
+    
     def post(self, request, message_id):
-        message = Message.objects.get(id=message_id)
-        message.is_pinned = not message.is_pinned
-        message.save()
-        return Response({'status': 'message pinned/unpinned'})
+        """Pin or unpin a message"""
+        try:
+            message = get_object_or_404(Message, id=message_id)
+            
+            # Check if user has permission to pin this message
+            # For private messages: either sender or receiver can pin
+            # For group messages: any group member can pin
+            can_pin = False
+            
+            if message.receiver:  # Private message
+                if request.user == message.sender or request.user == message.receiver:
+                    can_pin = True
+            elif message.group:  # Group message
+                if request.user in message.group.members.all():
+                    can_pin = True
+            
+            if not can_pin:
+                return Response({
+                    'error': 'You do not have permission to pin this message'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Toggle pin status
+            message.is_pinned = not message.is_pinned
+            message.save()
+            
+            # Send real-time notification via WebSocket
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            
+            channel_layer = get_channel_layer()
+            
+            # Prepare message data for WebSocket
+            serializer = MessageSerializer(message, context={'request': request})
+            
+            if message.receiver:  # Private message
+                # Notify both sender and receiver
+                for user_id in [message.sender.id, message.receiver.id]:
+                    async_to_sync(channel_layer.group_send)(
+                        f'user_{user_id}',
+                        {
+                            'type': 'message_pinned',
+                            'message': serializer.data,
+                            'action': 'pin' if message.is_pinned else 'unpin'
+                        }
+                    )
+            elif message.group:  # Group message
+                # Notify all group members
+                async_to_sync(channel_layer.group_send)(
+                    f'group_{message.group.id}',
+                    {
+                        'type': 'message_pinned',
+                        'message': serializer.data,
+                        'action': 'pin' if message.is_pinned else 'unpin'
+                    }
+                )
+            
+            return Response({
+                'status': f'Message {"pinned" if message.is_pinned else "unpinned"} successfully',
+                'message': serializer.data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error pinning/unpinning message {message_id}: {e}")
+            return Response({
+                'error': 'Failed to pin/unpin message'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 class BumpMessageView(APIView):
     permission_classes = [IsAuthenticated]

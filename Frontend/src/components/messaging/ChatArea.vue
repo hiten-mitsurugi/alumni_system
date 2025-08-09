@@ -29,6 +29,20 @@
           </p>
         </div>
       </div>
+      
+      <!-- Chat Info Toggle Button -->
+      <div class="flex items-center gap-2">
+        <button 
+          @click="$emit('toggle-chat-info')"
+          class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+          title="Chat Info"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Messages -->
@@ -48,7 +62,7 @@
         <MessageBubble
           :message="message"
           :messages="messages"
-          :currentUserId="currentUser.id"
+          :currentUser="currentUser"
           @message-action="handleMessageAction"
           @scroll-to-message="scrollToMessage"
         />
@@ -328,6 +342,11 @@ watch(() => props.conversation, () => {
   animation: messageHighlight 2s ease-in-out;
 }
 
+/* Special highlight for pinned messages */
+:deep(.highlight-pinned-message) {
+  animation: pinnedMessageHighlight 3s ease-in-out;
+}
+
 @keyframes messageHighlight {
   0% { 
     background-color: rgba(59, 130, 246, 0.2);
@@ -340,6 +359,24 @@ watch(() => props.conversation, () => {
   100% { 
     background-color: transparent;
     transform: scale(1);
+  }
+}
+
+@keyframes pinnedMessageHighlight {
+  0% { 
+    background-color: rgba(245, 158, 11, 0.3);
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  }
+  50% { 
+    background-color: rgba(245, 158, 11, 0.2);
+    transform: scale(1.01);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+  }
+  100% { 
+    background-color: transparent;
+    transform: scale(1);
+    box-shadow: none;
   }
 }
 </style>

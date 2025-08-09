@@ -313,24 +313,31 @@ function send() {
     return
   }
   
-  console.log('MessageInput: Validation passed, emitting send-message event')
+  // Prevent double sending by temporarily disabling
+  const originalContent = content.value
+  const originalAttachments = [...attachments.value]
   
-  try {
-    emit('send-message', {
-      content: content.value,
-      attachments: attachments.value
-    })
-    console.log('MessageInput: send-message event emitted successfully')
-  } catch (error) {
-    console.error('MessageInput: Error emitting send-message event:', error)
-  }
-  
-  // Clear form
-  console.log('MessageInput: Clearing form...')
+  // Clear form immediately to prevent double sends
   content.value = ''
   attachments.value = []
   if (fileInput.value) {
     fileInput.value.value = '' // Reset input
+  }
+  
+  console.log('MessageInput: Validation passed, emitting send-message event')
+  
+  try {
+    emit('send-message', {
+      content: originalContent,
+      attachments: originalAttachments,
+      reply_to_id: props.replyingTo?.id || null
+    })
+    console.log('MessageInput: send-message event emitted successfully')
+  } catch (error) {
+    console.error('MessageInput: Error emitting send-message event:', error)
+    // Restore content on error
+    content.value = originalContent
+    attachments.value = originalAttachments
   }
   
   // Reset textarea height

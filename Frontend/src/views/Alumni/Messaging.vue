@@ -8,14 +8,26 @@
           <h2 class="text-xl font-bold text-gray-800">Messages</h2>
           <div class="flex gap-2">
             <button @click="showPendingMessages = true"
-              class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-              title="Pending Messages">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              :class="[
+                'relative p-2 rounded-lg transition-all duration-200',
+                pendingMessages.length > 0 
+                  ? 'text-orange-600 bg-orange-50 hover:text-orange-700 hover:bg-orange-100' 
+                  : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
+              ]"
+              title="Pending Message Requests">
+              <!-- Message bubble icon with pending indicator -->
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                :class="pendingMessages.length > 0 ? 'animate-pulse' : ''">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                <!-- Clock indicator for pending status -->
+                <circle cx="18" cy="6" r="3" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
+                <path d="M18 5v1.5l1 1" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
               </svg>
+              <!-- Notification badge -->
               <span v-if="pendingMessages.length > 0"
-                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {{ pendingMessages.length }}
+                class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-medium shadow-lg animate-bounce">
+                {{ pendingMessages.length > 99 ? '99+' : pendingMessages.length }}
               </span>
             </button>
             <button @click="showCreateGroup = true"
@@ -104,14 +116,38 @@
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <p class="text-gray-500">No conversations found</p>
+          <div v-if="pendingMessages.length > 0" class="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+            <p class="text-orange-700 text-sm font-medium">
+              📬 You have {{ pendingMessages.length }} pending message {{ pendingMessages.length === 1 ? 'request' : 'requests' }}
+            </p>
+            <button @click="showPendingMessages = true" 
+              class="mt-2 text-orange-600 hover:text-orange-700 text-sm underline">
+              View pending requests
+            </button>
+          </div>
         </div>
       </div>
     </div>
     <div class="flex-1 flex flex-col">
       <ChatArea v-if="selectedConversation" :conversation="selectedConversation" :messages="messages"
-        :current-user="currentUser" @send-message="sendMessage" @message-action="handleMessageAction" />
+        :current-user="currentUser" @send-message="sendMessage" @message-action="handleMessageAction" 
+        @toggle-chat-info="showChatInfo = !showChatInfo" />
       <EmptyState v-else />
     </div>
+    
+    <!-- Chat Info Panel -->
+    <ChatInfoPanel 
+      v-if="selectedConversation && showChatInfo" 
+      :conversation="selectedConversation" 
+      :messages="messages"
+      :current-user="currentUser"
+      @close="showChatInfo = false"
+      @mute="handleMute"
+      @unmute="handleUnmute"
+      @block="handleBlock"
+      @unblock="handleUnblock"
+      @scroll-to-message="scrollToMessage"
+    />
     <PendingMessagesModal v-if="showPendingMessages" :pending-messages="pendingMessages"
       @close="showPendingMessages = false" @accept="acceptPendingMessage" @reject="rejectPendingMessage" />
     <CreateGroupModal v-if="showCreateGroup" :available-mates="availableMates" @close="showCreateGroup = false"
@@ -128,6 +164,7 @@ import ChatArea from '../../components/messaging/ChatArea.vue';
 import EmptyState from '../../components/messaging/EmptyState.vue';
 import PendingMessagesModal from '../../components/messaging/PendingMessagesModal.vue';
 import CreateGroupModal from '../../components/messaging/CreateGroupModal.vue';
+import ChatInfoPanel from '../../components/messaging/ChatInfoPanel.vue';
 
 // === STATE ===
 const authStore = useAuthStore();
@@ -141,6 +178,7 @@ const availableMates = ref([]);
 
 const showPendingMessages = ref(false);
 const showCreateGroup = ref(false);
+const showChatInfo = ref(false);
 const searchQuery = ref('');
 const searchResults = ref([]);
 const searchInput = ref(null);
@@ -354,7 +392,15 @@ async function selectConversation(conv) {
 // === MESSAGE ACTIONS ===
 async function sendMessage(data) {
   console.log('Messaging.vue: sendMessage called with:', data);
+  
   try {
+    // Prevent double sending by checking if already processing
+    if (data._processing) {
+      console.log('Messaging.vue: Message already being processed, skipping');
+      return;
+    }
+    data._processing = true;
+    
     // Upload attachments
     const attachmentIds = await uploadAttachments(data.attachments);
     console.log('Messaging.vue: Attachment IDs:', attachmentIds);
@@ -369,9 +415,12 @@ async function sendMessage(data) {
       return;
     }
 
+    // Create unique temporary message ID to prevent duplicates
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+    
     // Create temporary message for UI
     const newMessage = {
-      id: `temp-${Date.now()}`,
+      id: tempId,
       sender: currentUser.value,
       content: data.content,
       attachments: data.attachments.map(file => ({
@@ -383,8 +432,10 @@ async function sendMessage(data) {
       is_read: false,
       // ✅ FIX: Add reply relationship to temporary message for immediate display
       reply_to: data.reply_to_id ? messages.value.find(m => m.id === data.reply_to_id) : null,
-      reply_to_id: data.reply_to_id || null
+      reply_to_id: data.reply_to_id || null,
+      _isTemporary: true // Mark as temporary
     };
+    
     console.log('Messaging.vue: Optimistically adding message to UI:', newMessage);
     messages.value.push(newMessage);
 
@@ -394,14 +445,15 @@ async function sendMessage(data) {
       content: data.content,
       attachment_ids: attachmentIds,
       reply_to_id: data.reply_to_id,
-      receiver_id: selectedConversation.value.mate?.id
+      receiver_id: selectedConversation.value.mate?.id,
+      temp_id: tempId // Include temp ID for deduplication
     };
 
     // Send via WebSocket
     if (selectedConversation.value.type === 'private') {
       if (!selectedConversation.value.mate?.id) {
         console.error('Messaging.vue: Error: mate.id is missing');
-        messages.value.pop();
+        messages.value = messages.value.filter(m => m.id !== tempId);
         return;
       }
       if (privateWs.value?.readyState === WebSocket.OPEN) {
@@ -409,12 +461,12 @@ async function sendMessage(data) {
         privateWs.value.send(JSON.stringify(payload));
       } else {
         console.error('Messaging.vue: Private WebSocket not open:', privateWs.value?.readyState);
-        messages.value.pop();
+        messages.value = messages.value.filter(m => m.id !== tempId);
       }
     } else if (selectedConversation.value.type === 'group') {
       if (!selectedConversation.value.group?.id) {
         console.error('Messaging.vue: Error: group.id is missing');
-        messages.value.pop();
+        messages.value = messages.value.filter(m => m.id !== tempId);
         return;
       }
       if (groupWs.value?.readyState === WebSocket.OPEN) {
@@ -422,15 +474,19 @@ async function sendMessage(data) {
         groupWs.value.send(JSON.stringify(payload));
       } else {
         console.error('Messaging.vue: Group WebSocket not open:', groupWs.value?.readyState);
-        messages.value.pop();
+        messages.value = messages.value.filter(m => m.id !== tempId);
       }
     } else {
       console.error('Messaging.vue: Invalid conversation type:', selectedConversation.value.type);
-      messages.value.pop();
+      messages.value = messages.value.filter(m => m.id !== tempId);
     }
   } catch (e) {
     console.error('Messaging.vue: Error in sendMessage:', e);
-    messages.value.pop();
+    // Remove temporary message on error
+    if (data._processing) {
+      const tempId = `temp-${Date.now()}-${Math.random()}`;
+      messages.value = messages.value.filter(m => m.id !== tempId);
+    }
   }
 }
 
@@ -472,25 +528,25 @@ async function handleMessageAction(actionData) {
         break
         
       case 'pin':
-        // Pin/unpin message
-        await api.post(`/message/${message.id}/pin/`)
-        // Update local message state
-        const messageIndex = messages.value.findIndex(m => m.id === message.id)
-        if (messageIndex !== -1) {
-          messages.value[messageIndex].is_pinned = !messages.value[messageIndex].is_pinned
-        }
-        console.log('Messaging: Pinned message:', message.id)
-        break
-        
       case 'unpin':
-        // Unpin message
-        await api.delete(`/message/${message.id}/pin/`)
-        // Update local message state
-        const unpinIndex = messages.value.findIndex(m => m.id === message.id)
-        if (unpinIndex !== -1) {
-          messages.value[unpinIndex].is_pinned = false
+        // Pin/unpin message
+        try {
+          const response = await api.post(`/message/${message.id}/pin/`)
+          console.log('Messaging: Pin/unpin response:', response.data)
+          
+          // Update local message state with the updated message from backend
+          const messageIndex = messages.value.findIndex(m => m.id === message.id)
+          if (messageIndex !== -1 && response.data.message) {
+            messages.value[messageIndex] = {
+              ...messages.value[messageIndex],
+              is_pinned: response.data.message.is_pinned
+            }
+            console.log(`Messaging: Message ${message.id} ${response.data.message.is_pinned ? 'pinned' : 'unpinned'} successfully`)
+          }
+        } catch (error) {
+          console.error('Messaging: Error pinning/unpinning message:', error)
+          // TODO: Show error toast to user
         }
-        console.log('Messaging: Unpinned message:', message.id)
         break
         
       case 'bump':
@@ -520,6 +576,9 @@ async function handleMessageAction(actionData) {
         break
         
       case 'edit':
+        // Get the original content for potential rollback
+        const originalContent = message.content;
+        
         // Optimistically update the message content immediately for the sender
         const editMessageIndex = messages.value.findIndex(m => m.id === message.id);
         if (editMessageIndex !== -1) {
@@ -529,31 +588,55 @@ async function handleMessageAction(actionData) {
             edited_at: new Date().toISOString()
           };
           messages.value.splice(editMessageIndex, 1, optimisticUpdate);
-          console.log('✅ Optimistic edit: Updated message locally for immediate feedback');
+          
+          // Force reactivity
+          nextTick(() => {
+            messages.value = [...messages.value];
+            console.log('✅ Optimistic edit: Updated message locally for immediate feedback');
+          });
         }
         
         // Send edit via WebSocket for real-time delivery to other participants
-        if (selectedConversation.value?.type === 'private') {
-          if (privateWs.value?.readyState === WebSocket.OPEN) {
-            console.log('Messaging: Sending edit via WebSocket for message:', message.id)
-            privateWs.value.send(JSON.stringify({
-              action: 'edit_message',
-              message_id: message.id,
-              new_content: newContent
-            }))
-          } else {
-            console.error('Messaging: Private WebSocket not open for edit')
+        try {
+          if (selectedConversation.value?.type === 'private') {
+            if (privateWs.value?.readyState === WebSocket.OPEN) {
+              const editPayload = {
+                action: 'edit_message',
+                message_id: message.id,
+                new_content: newContent
+              };
+              console.log('🔴 SENDING EDIT: Private WebSocket payload:', editPayload)
+              privateWs.value.send(JSON.stringify(editPayload))
+            } else {
+              throw new Error('Private WebSocket not open for edit')
+            }
+          } else if (selectedConversation.value?.type === 'group') {
+            if (groupWs.value?.readyState === WebSocket.OPEN) {
+              const editPayload = {
+                action: 'edit_message',
+                message_id: message.id,
+                new_content: newContent
+              };
+              console.log('🔴 SENDING GROUP EDIT: Group WebSocket payload:', editPayload)
+              groupWs.value.send(JSON.stringify(editPayload))
+            } else {
+              throw new Error('Group WebSocket not open for edit')
+            }
           }
-        } else if (selectedConversation.value?.type === 'group') {
-          if (groupWs.value?.readyState === WebSocket.OPEN) {
-            console.log('Messaging: Sending group edit via WebSocket for message:', message.id)
-            groupWs.value.send(JSON.stringify({
-              action: 'edit_message',
-              message_id: message.id,
-              new_content: newContent
-            }))
-          } else {
-            console.error('Messaging: Group WebSocket not open for edit')
+        } catch (error) {
+          console.error('Messaging: Error sending edit via WebSocket:', error)
+          
+          // Rollback optimistic update on error
+          if (editMessageIndex !== -1) {
+            const rollbackUpdate = {
+              ...messages.value[editMessageIndex],
+              content: originalContent
+            };
+            messages.value.splice(editMessageIndex, 1, rollbackUpdate);
+            nextTick(() => {
+              messages.value = [...messages.value];
+              console.log('❌ Edit failed: Rolled back optimistic update');
+            });
           }
         }
         break
@@ -622,6 +705,65 @@ const rejectPendingMessage = async (id) => {
   } catch (e) { console.error('Reject error', e); }
 };
 
+// === CHAT INFO HANDLERS ===
+const handleMute = () => {
+  console.log('Chat muted');
+  // Update conversation mute status if needed
+  if (selectedConversation.value) {
+    selectedConversation.value.isMuted = true;
+  }
+};
+
+const handleUnmute = () => {
+  console.log('Chat unmuted');
+  // Update conversation mute status if needed
+  if (selectedConversation.value) {
+    selectedConversation.value.isMuted = false;
+  }
+};
+
+const handleBlock = () => {
+  console.log('User blocked');
+  // Update conversation block status if needed
+  if (selectedConversation.value) {
+    selectedConversation.value.isBlocked = true;
+  }
+};
+
+const handleUnblock = () => {
+  console.log('User unblocked');
+  // Update conversation block status if needed
+  if (selectedConversation.value) {
+    selectedConversation.value.isBlocked = false;
+  }
+};
+
+const scrollToMessage = (messageId) => {
+  console.log('Messaging: Scrolling to pinned message:', messageId);
+  
+  // Find the message element and scroll to it
+  const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+  if (messageElement) {
+    // Scroll to the message
+    messageElement.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center' 
+    });
+    
+    // Add visual highlight effect specifically for pinned messages
+    messageElement.classList.add('highlight-pinned-message');
+    
+    // Remove highlight after 3 seconds
+    setTimeout(() => {
+      messageElement.classList.remove('highlight-pinned-message');
+    }, 3000);
+    
+    console.log('Messaging: Successfully scrolled to and highlighted pinned message');
+  } else {
+    console.warn('Messaging: Message element not found for ID:', messageId);
+  }
+};
+
 // === WEBSOCKETS ===
 function setupWebSockets() {
   getValidToken().then(token => {
@@ -651,6 +793,14 @@ function setupWebSockets() {
       if (data.action === 'pong') {
         console.log('Messaging.vue: Received pong from server');
         return;
+      }
+      
+      // ✅ Special debugging for edit events
+      if (data.type === 'message_edited') {
+        console.log('🔴 EDIT EVENT: Received message_edited via private WebSocket');
+        console.log('🔴 EDIT EVENT: Message ID:', data.message_id);
+        console.log('🔴 EDIT EVENT: New content:', data.new_content);
+        console.log('🔴 EDIT EVENT: Event data:', data);
       }
       
       // ✅ FIX: Special handling for messages with reply_to data
@@ -697,6 +847,14 @@ function setupGroupWebSocket(conv) {
         return;
       }
       
+      // ✅ Special debugging for edit events
+      if (data.type === 'message_edited') {
+        console.log('🔴 GROUP EDIT EVENT: Received message_edited via group WebSocket');
+        console.log('🔴 GROUP EDIT EVENT: Message ID:', data.message_id);
+        console.log('🔴 GROUP EDIT EVENT: New content:', data.new_content);
+        console.log('🔴 GROUP EDIT EVENT: Event data:', data);
+      }
+      
       // ✅ FIX: Special handling for group messages with reply_to data
       if (data.type === 'chat_message' && data.message) {
         if (data.message.reply_to) {
@@ -720,6 +878,15 @@ function setupGroupWebSocket(conv) {
 
 function handleWsMessage(data, scope) {
   console.log('Messaging.vue: Handling WebSocket message:', data, 'scope:', scope);
+  
+  // Handle error messages from backend
+  if (data.error) {
+    console.error('🔴 WebSocket Error:', data.error);
+    // You can add user notification here if needed
+    // For now, just log the error and return
+    return;
+  }
+  
   const actions = {
     chat_message: (data) => {
       console.log('Messaging.vue: Processing chat_message:', data);
@@ -731,20 +898,20 @@ function handleWsMessage(data, scope) {
         console.log('🔵 WebSocket: Reply_to sender:', data.message.reply_to.sender)
         console.log('🔵 WebSocket: Reply_to ID:', data.message.reply_to.id)
       } else if (data.message.reply_to_id) {
-        console.log('� WebSocket: Message has reply_to_id but no reply_to object:', data.message.reply_to_id)
+        console.log('🔵 WebSocket: Message has reply_to_id but no reply_to object:', data.message.reply_to_id)
       } else {
-        console.log('�🔴 WebSocket: Message has NO reply_to data')
+        console.log('🔴 WebSocket: Message has NO reply_to data')
       }
       
-      // ✅ DEBUG: Log complete message structure for troubleshooting
-      console.log('� WebSocket: Complete message structure:', {
-        id: data.message.id,
-        content: data.message.content,
-        reply_to: data.message.reply_to,
-        reply_to_id: data.message.reply_to_id,
-        sender: data.message.sender?.first_name,
-        receiver: data.message.receiver?.first_name
-      })
+      // Remove temporary messages (both generic temp and specific temp_id)
+      if (data.temp_id) {
+        messages.value = messages.value.filter(m => m.id !== data.temp_id);
+        console.log('✅ Removed specific temporary message with ID:', data.temp_id);
+      } else {
+        // Remove any generic temporary messages
+        messages.value = messages.value.filter(m => !m._isTemporary && !m.id.startsWith('temp-'));
+        console.log('✅ Removed generic temporary messages');
+      }
       
       // Add message to current conversation if it's selected
       if (scope === 'private' && selectedConversation.value?.type === 'private') {
@@ -760,8 +927,12 @@ function handleWsMessage(data, scope) {
             (senderId === selectedUserId && receiverId === currentUserId)) {
           console.log('✅ Messaging.vue: Adding message to conversation (REAL-TIME)');
           
-          // Remove any temporary messages first
-          messages.value = messages.value.filter(m => !m.id.startsWith('temp-'));
+          // Check if message already exists to prevent duplicates
+          const existingMessage = messages.value.find(m => m.id === data.message.id);
+          if (existingMessage) {
+            console.log('⚠️ Message already exists, skipping duplicate:', data.message.id);
+            return;
+          }
           
           // ✅ FIX: Create a deep copy to ensure reactivity
           const newMessage = JSON.parse(JSON.stringify(data.message));
@@ -810,7 +981,13 @@ function handleWsMessage(data, scope) {
       if (scope === 'group' && selectedConversation.value?.type === 'group' && 
           selectedConversation.value?.group.id === data.message.group) {
         console.log('Messaging.vue: Adding group message to conversation');
-        messages.value = messages.value.filter(m => !m.id.startsWith('temp-')); // Remove temp message
+        
+        // Check if message already exists to prevent duplicates
+        const existingMessage = messages.value.find(m => m.id === data.message.id);
+        if (existingMessage) {
+          console.log('⚠️ Group message already exists, skipping duplicate:', data.message.id);
+          return;
+        }
         
         // ✅ FIX: Force reactive update for reply relationships
         const newMessage = { ...data.message };
@@ -869,24 +1046,33 @@ function handleWsMessage(data, scope) {
       if (m) (m.reactions ||= []).push({ user: { id: data.user_id }, emoji: data.emoji });
     },
     message_edited: (data) => {
-      console.log('Messaging: Received message_edited event:', data)
+      console.log('🔴 REAL-TIME EDIT: Received message_edited event:', data)
       const messageIndex = messages.value.findIndex(m => m.id === data.message_id);
       if (messageIndex !== -1) {
+        console.log(`🔴 REAL-TIME EDIT: Found message at index ${messageIndex}`)
+        console.log(`🔴 REAL-TIME EDIT: Updating content from "${messages.value[messageIndex].content}" to "${data.new_content}"`)
+        
         // Create a new object to trigger Vue reactivity
         const updatedMessage = {
           ...messages.value[messageIndex],
           content: data.new_content,
-          edited_at: new Date().toISOString()
+          edited_at: data.edited_at || new Date().toISOString()
         };
         
         // Replace the message at the specific index to trigger reactivity
         messages.value.splice(messageIndex, 1, updatedMessage);
         
-        // Force Vue reactivity with nextTick
+        // Force Vue reactivity with multiple strategies
         nextTick(() => {
-          console.log('✅ Real-time edit: Message content updated in UI:', data.message_id);
-          console.log('✅ Real-time edit: New content:', data.new_content);
+          // Force array reactivity
+          messages.value = [...messages.value];
+          console.log('✅ REAL-TIME EDIT: Message content updated in UI:', data.message_id);
+          console.log('✅ REAL-TIME EDIT: New content:', data.new_content);
+          console.log('✅ REAL-TIME EDIT: UI should now show updated message');
         });
+      } else {
+        console.warn('🔴 REAL-TIME EDIT: Message not found for editing:', data.message_id);
+        console.warn('🔴 REAL-TIME EDIT: Available message IDs:', messages.value.map(m => m.id));
       }
     },
     message_deleted: (data) => {
@@ -903,6 +1089,7 @@ function handleWsMessage(data, scope) {
     request_accepted: (data) => {
       console.log('Messaging.vue: Message request was accepted:', data);
       fetchConversations(); // Refresh conversations
+      fetchPendingMessages(); // Update pending messages count
       // If this user sent the request, the conversation should now be available
     },
     pending: () => fetchPendingMessages(),
@@ -1013,71 +1200,41 @@ const handleGlobalStatusUpdate = (event) => {
     const { user_id, status, last_seen } = data;
     console.log(`Messaging.vue: Processing status update for user ${user_id} to ${status}`);
     
-    // Update conversations list
-    let conversationUpdated = false;
-    conversations.value.forEach(conv => {
-      if (conv.type === 'private' && conv.mate.id === user_id) {
-        if (conv.mate.profile) {
-          console.log(`Messaging.vue: Found conversation with user ${user_id}, updating status from ${conv.mate.profile.status} to ${status}`);
-          conv.mate.profile.status = status;
-          if (last_seen) conv.mate.profile.last_seen = last_seen;
-          conversationUpdated = true;
-          console.log(`Messaging.vue: Updated conversation mate ${user_id} status to ${status}`);
-        } else {
-          console.log(`Messaging.vue: Found conversation with user ${user_id} but no profile object`);
-        }
-      }
-    });
-    
-    if (!conversationUpdated) {
-      console.log(`Messaging.vue: No conversation found with user ${user_id}`);
-    }
-    
-    // Update selected conversation if it matches
-    let selectedUpdated = false;
-    if (selectedConversation.value?.type === 'private' && 
-        selectedConversation.value.mate.id === user_id) {
-      if (selectedConversation.value.mate.profile) {
-        console.log(`Messaging.vue: Found selected conversation with user ${user_id}, updating status from ${selectedConversation.value.mate.profile.status} to ${status}`);
-        selectedConversation.value.mate.profile.status = status;
-        if (last_seen) selectedConversation.value.mate.profile.last_seen = last_seen;
-        selectedUpdated = true;
-        console.log(`Messaging.vue: Updated selected conversation mate ${user_id} status to ${status}`);
-      } else {
-        console.log(`Messaging.vue: Found selected conversation with user ${user_id} but no profile object`);
-      }
-    }
-    
-    if (!selectedUpdated && selectedConversation.value?.type === 'private') {
-      console.log(`Messaging.vue: Selected conversation is with user ${selectedConversation.value.mate.id}, not ${user_id}`);
-    }
-    
-    // Update available mates list
-    let matesUpdated = false;
-    availableMates.value.forEach(mate => {
-      if (mate.id === user_id && mate.profile) {
-        console.log(`Messaging.vue: Found available mate ${user_id}, updating status from ${mate.profile.status} to ${status}`);
-        mate.profile.status = status;
-        if (last_seen) mate.profile.last_seen = last_seen;
-        matesUpdated = true;
-        console.log(`Messaging.vue: Updated available mate ${user_id} status to ${status}`);
-      }
-    });
-    
-    if (!matesUpdated) {
-      console.log(`Messaging.vue: No available mate found with user ${user_id}`);
-    }
-    
-    console.log('Messaging.vue: Status update processing complete');
-    
-    // Force reactivity update
-    triggerRef(conversations);
-    triggerRef(selectedConversation);
     triggerRef(availableMates);
-  } else {
-    console.log('Messaging.vue: Received non-status-update message:', data);
   }
 };
+
+// === LIFECYCLE ===
+onMounted(async () => {
+  console.log('Messaging.vue: Component mounted');
+  
+  if (await validateToken()) {
+    await fetchCurrentUser();
+    await Promise.all([
+      fetchConversations(),
+      fetchPendingMessages(),
+      fetchAvailableMates()
+    ]);
+    
+    setupWebSockets();
+    selectLastConversation();
+    
+    // Listen for global status updates
+    window.addEventListener('statusUpdate', handleGlobalStatusUpdate);
+  } else {
+    console.log('Messaging.vue: Token validation failed');
+  }
+});
+
+onUnmounted(() => {
+  console.log('Messaging.vue: Component unmounting');
+  privateWs.value?.close();
+  groupWs.value?.close();
+  stopHeartbeat();
+  
+  // Remove global status update listener
+  window.removeEventListener('statusUpdate', handleGlobalStatusUpdate);
+});
 
 // === LIFECYCLE ===
 onMounted(async () => {
@@ -1105,3 +1262,19 @@ onUnmounted(() => {
   console.log('Messaging.vue: Removed window event listener for user-status-update');
 });
 </script>
+
+<style scoped>
+/* Pinned message highlight effect */
+:deep(.highlight-pinned-message) {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  border-left: 4px solid #f59e0b !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3) !important;
+  transform: scale(1.02) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* Smooth transition for all message bubbles */
+:deep(.message-bubble) {
+  transition: all 0.3s ease-in-out;
+}
+</style>

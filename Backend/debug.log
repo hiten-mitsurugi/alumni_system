@@ -38481,3 +38481,85 @@ Error processing message: You cannot call this from an async context - use a thr
 Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
 Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
 Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error processing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error editing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error editing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error editing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error editing message: You cannot call this from an async context - use a thread or sync_to_async.
+Error editing message 01ca7584-cdbf-4e15-861d-831030967584: You cannot call this from an async context - use a thread or sync_to_async.
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 218, in __get__
+    rel_obj = self.field.get_cached_value(instance)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\fields\mixins.py", line 15, in get_cached_value
+    return instance._state.fields_cache[cache_name]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'receiver'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 549, in handle_edit_message
+    users = [message.sender.id, message.receiver.id] if message.receiver else [message.sender.id]
+                                                        ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 236, in __get__
+    rel_obj = self.get_object(instance)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 199, in get_object
+    return qs.get(self.field.get_reverse_related_filter(instance))
+           ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\query.py", line 633, in get
+    num = len(clone)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\query.py", line 380, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\db\models\sql\compiler.py", line 1560, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\utils\asyncio.py", line 24, in inner
+    raise SynchronousOnlyOperation(message)
+django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an async context - use a thread or sync_to_async.

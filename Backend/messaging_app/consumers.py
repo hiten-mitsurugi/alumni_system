@@ -50,6 +50,7 @@ class MessagingBaseMixin:
         @database_sync_to_async
         def _update_status():
             try:
+                from django.utils import timezone as tz
                 from auth_app.models import Profile
                 profile, created = Profile.objects.get_or_create(user=user)
                 
@@ -57,10 +58,10 @@ class MessagingBaseMixin:
                 
                 if status == 'online':
                     profile.status = 'online'
-                    profile.last_seen = timezone.now()
+                    profile.last_seen = tz.now()
                 elif status == 'activity':
                     # Keep current status, just update last_seen (don't change online status)
-                    profile.last_seen = timezone.now()
+                    profile.last_seen = tz.now()
                     # Don't change status from online to anything else unless explicitly set to offline
                     
                 profile.save()
@@ -76,13 +77,14 @@ class MessagingBaseMixin:
         
         # Broadcast status change if it actually changed to online
         if old_status != new_status and new_status == 'online':
+            from django.utils import timezone as tz
             await self.channel_layer.group_send(
                 'status_updates',
                 {
                     'type': 'status_update',
                     'user_id': user.id,
                     'status': new_status,
-                    'last_seen': timezone.now().isoformat()
+                    'last_seen': tz.now().isoformat()
                 }
             )
 
@@ -109,10 +111,11 @@ class MessagingBaseMixin:
         @database_sync_to_async
         def _set_offline():
             try:
+                from django.utils import timezone as tz
                 from auth_app.models import Profile
                 profile, created = Profile.objects.get_or_create(user=user)
                 profile.status = 'offline'
-                profile.last_seen = timezone.now()
+                profile.last_seen = tz.now()
                 profile.save()
                 return True
             except Exception as e:
@@ -120,13 +123,14 @@ class MessagingBaseMixin:
                 return False
                 
         if await _set_offline():
+            from django.utils import timezone as tz
             await self.channel_layer.group_send(
                 'status_updates',
                 {
                     'type': 'status_update',
                     'user_id': user.id,
                     'status': 'offline',
-                    'last_seen': timezone.now().isoformat()
+                    'last_seen': tz.now().isoformat()
                 }
             )
 
@@ -258,7 +262,8 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
     async def handle_ping(self, data: Dict[str, Any]):
         """Handle ping messages to keep connection alive."""
         await self.update_user_status(self.user, 'activity')
-        await self.send_json({'action': 'pong', 'timestamp': timezone.now().isoformat()})
+        from django.utils import timezone as tz
+        await self.send_json({'action': 'pong', 'timestamp': tz.now().isoformat()})
 
     async def handle_send_message(self, data: Dict[str, Any]):
         """Handle sending a private message with optional reply."""
@@ -519,27 +524,40 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         message_id = data.get('message_id')
         new_content = data.get('new_content', '').strip()
         
+        logger.info(f"Edit request: message_id={message_id}, new_content='{new_content}', user={self.user.id}")
+        
         if not message_id or not new_content:
+            logger.warning(f"Edit validation failed: message_id={message_id}, new_content='{new_content}'")
             return await self.send_json({'error': 'message_id and new_content are required'})
             
         try:
             @database_sync_to_async
             def _edit():
-                from django.utils import timezone
+                from django.utils import timezone as tz
+                logger.info(f"Looking for message with id={message_id} and sender={self.user.id}")
                 message = Message.objects.get(id=message_id, sender=self.user)
+                logger.info(f"Found message: {message.id}, current content: '{message.content}'")
                 message.content = new_content
-                message.edited_at = timezone.now()  # Set edit timestamp
+                message.edited_at = tz.now()  # Set edit timestamp
                 message.save()
-                return message
+                logger.info(f"Message saved successfully with new content: '{message.content}'")
                 
-            message = await _edit()
+                # Get user IDs for broadcasting - must be done in sync context
+                users = [message.sender.id, message.receiver.id] if message.receiver else [message.sender.id]
+                return message, message.edited_at, users
+                
+            message, edited_at, users = await _edit()
             
             # Broadcast to participants
-            users = [message.sender.id, message.receiver.id] if message.receiver else [message.sender.id]
+            logger.info(f"Broadcasting edit to users: {users}")
             await self.broadcast_to_users(
                 users,
                 'message_edited',
-                {'message_id': str(message.id), 'new_content': new_content}
+                {
+                    'message_id': str(message.id), 
+                    'new_content': new_content,
+                    'edited_at': edited_at.isoformat()
+                }
             )
             
             # Send success confirmation to sender
@@ -548,9 +566,14 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
                 'action': 'message_edited',
                 'message_id': str(message.id)
             })
+            logger.info(f"Edit completed successfully for message {message.id}")
             
         except Message.DoesNotExist:
+            logger.error(f"Message not found: id={message_id}, sender={self.user.id}")
             await self.send_json({'error': 'Cannot edit this message'})
+        except Exception as e:
+            logger.error(f"Error editing message {message_id}: {e}", exc_info=True)
+            await self.send_json({'error': 'Failed to edit message'})
 
     async def handle_delete_message(self, data: Dict[str, Any]):
         """Delete user's own message."""
@@ -740,7 +763,8 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
     async def handle_ping(self, data: Dict[str, Any]):
         """Handle ping messages to keep connection alive."""
         await self.update_user_status(self.user, 'activity')
-        await self.send_json({'action': 'pong', 'timestamp': timezone.now().isoformat()})
+        from django.utils import timezone as tz
+        await self.send_json({'action': 'pong', 'timestamp': tz.now().isoformat()})
 
     async def handle_group_message(self, data: Dict[str, Any]):
         """Send message to group with optional reply."""
@@ -884,24 +908,26 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         try:
             @database_sync_to_async
             def _edit():
-                from django.utils import timezone
+                from django.utils import timezone as tz
                 message = Message.objects.get(
                     id=message_id, 
                     group_id=self.group_id, 
                     sender=self.user
                 )
                 message.content = new_content
-                message.edited_at = timezone.now()  # Set edit timestamp
+                message.edited_at = tz.now()  # Set edit timestamp
                 message.save()
+                return message.edited_at
                 
-            await _edit()
+            edited_at = await _edit()
             
             await self.channel_layer.group_send(
                 self.group_name,
                 {
                     'type': 'message_edited',
                     'message_id': str(message_id),
-                    'new_content': new_content
+                    'new_content': new_content,
+                    'edited_at': edited_at.isoformat()
                 }
             )
             
@@ -914,6 +940,9 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot edit this message'})
+        except Exception as e:
+            logger.error(f"Error editing group message: {e}")
+            await self.send_json({'error': 'Failed to edit message'})
 
     async def handle_group_delete(self, data: Dict[str, Any]):
         """Delete group message (own messages only)."""

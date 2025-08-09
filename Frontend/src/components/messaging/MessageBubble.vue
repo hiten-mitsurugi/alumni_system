@@ -11,7 +11,7 @@
 
     <div :class="['flex flex-col max-w-[70%] relative group', isOwnMessage && 'items-end']">
       <!-- Pin indicator -->
-      <div v-if="message.isPinned" class="flex items-center gap-1 mb-1 text-xs text-amber-600">
+      <div v-if="message.is_pinned" class="flex items-center gap-1 mb-1 text-xs text-amber-600">
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
           <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
@@ -237,10 +237,10 @@
 
     <!-- Context Menu -->
     <MessageContextMenu
-      :isVisible="showContextMenu"
+      :visible="showContextMenu"
       :message="message"
       :position="contextMenuPosition"
-      :isOwnMessage="isOwnMessage"
+      :currentUser="currentUser"
       @close="showContextMenu = false"
       @action="handleAction"
     />
@@ -253,7 +253,7 @@ import MessageContextMenu from './MessageContextMenu.vue'
 
 const props = defineProps({
   message: Object,
-  currentUserId: Number,
+  currentUser: Object, // Changed from currentUserId to full user object
   messages: Array // Add this to access all messages for reply lookups
 })
 
@@ -268,13 +268,13 @@ const isEditing = ref(false)
 const editContent = ref('')
 
 const isOwnMessage = computed(() => {
-  const result = props.message.sender?.id === props.currentUserId
+  const result = props.message.sender?.id === props.currentUser?.id
   console.log('MessageBubble isOwnMessage check:', {
     messageId: props.message.id,
     senderId: props.message.sender?.id,
-    currentUserId: props.currentUserId,
+    currentUserId: props.currentUser?.id,
     senderIdType: typeof props.message.sender?.id,
-    currentUserIdType: typeof props.currentUserId,
+    currentUserIdType: typeof props.currentUser?.id,
     isOwnMessage: result
   })
   return result
