@@ -36,9 +36,8 @@
         {{ message.isPinned ? 'Unpin' : 'Pin' }}
       </button>
 
-      <!-- Bump (only for own messages) -->
+      <!-- Bump (available for all messages) -->
       <button
-        v-if="isOwnMessage"
         @click="handleAction('bump')"
         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
       >

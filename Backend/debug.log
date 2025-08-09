@@ -37493,3 +37493,987 @@ Error in send_private_message: can not serialize 'UUID' object
 Error in send_private_message: can not serialize 'UUID' object
 Error in send_private_message: can not serialize 'UUID' object
 Error in send_private_message: can not serialize 'UUID' object
+Exception inside application: No handler for message type send_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type send_notification
+Exception inside application: No handler for message type send_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type send_notification
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Error bumping message: Original message not found or not owned by sender
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Error bumping message: Original message not found or not owned by sender
+Error bumping message: Original message not found or not owned by sender
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    # Set user online and join personal channel
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Logout failed: Token is invalid or expired
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Logout failed: Token is invalid or expired
+Exception inside application: 'CustomUser' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 73, in dispatch
+    await handler(message)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\generic\websocket.py", line 249, in websocket_disconnect
+    await self.disconnect(message["code"])
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 147, in disconnect
+    data['id'] = str(data['id'])
+                ~~~~^^^^^^^^^^^^
+AttributeError: 'CustomUser' object has no attribute 'get'
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 47, in __call__
+    return await self.inner(dict(scope, cookies=cookies), receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\sessions.py", line 263, in __call__
+    return await self.inner(wrapper.scope, receive, wrapper.send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\auth.py", line 185, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted

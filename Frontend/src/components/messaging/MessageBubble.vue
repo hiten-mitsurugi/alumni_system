@@ -128,42 +128,62 @@
           </div>
           <!-- Normal display -->
           <div v-else>
-            <!-- Reply preview inside the message bubble (WhatsApp/Telegram style) -->
-            <div v-if="replyMessage" class="mb-3">
-              <div :class="[
-                'border-l-4 pl-3 py-2 rounded-r-md cursor-pointer transition-all duration-200 hover:bg-opacity-80',
-                isOwnMessage 
-                  ? 'border-white bg-white bg-opacity-20' 
-                  : 'border-blue-500 bg-blue-50'
-              ]" @click="scrollToOriginalMessage">
-                <div class="flex items-center gap-2 mb-1">
-                  <img 
-                    :src="getProfilePictureUrl(replyMessage.sender)" 
-                    :alt="replyMessage.sender.first_name"
-                    class="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                  />
-                  <span :class="[
-                    'font-medium text-xs',
-                    isOwnMessage ? 'text-white text-opacity-90' : 'text-blue-600'
-                  ]">{{ replyMessage.sender.first_name }} {{ replyMessage.sender.last_name }}</span>
-                </div>
-                <!-- ✅ FIX: Always show the message content, not just for non-senders -->
-                <p :class="[
-                  'text-xs line-clamp-2 leading-tight',
-                  isOwnMessage ? 'text-white text-opacity-80' : 'text-gray-700'
-                ]">
-                  {{ replyMessage.content || 'Attachment' }}
-                </p>
+            <!-- Special styling for bump messages - show original content cleanly -->
+            <div v-if="isBumpMessage && replyMessage" @click="scrollToOriginalMessage" class="cursor-pointer">
+              <!-- Small bump indicator at top -->
+              <div class="flex items-center gap-2 text-xs text-amber-600 mb-2 opacity-80">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                </svg>
+                <span>Bumped</span>
               </div>
+              
+              <!-- Display original message content directly (clean style) -->
+              <div v-if="replyMessage && /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]*$/u.test(replyMessage.content)" class="text-4xl p-2">
+                {{ replyMessage.content }}
+              </div>
+              <p v-else-if="replyMessage" class="text-sm" v-html="formatMessageContent(replyMessage.content)"></p>
             </div>
+            
+            <!-- Regular message content (non-bump) -->
+            <div v-else>
+              <!-- Reply preview inside the message bubble (WhatsApp/Telegram style) -->
+              <div v-if="replyMessage" class="mb-3">
+                <div :class="[
+                  'border-l-4 pl-3 py-2 rounded-r-md cursor-pointer transition-all duration-200 hover:bg-opacity-80',
+                  isOwnMessage 
+                    ? 'border-white bg-white bg-opacity-20' 
+                    : 'border-blue-500 bg-blue-50'
+                ]" @click="scrollToOriginalMessage">
+                  <div class="flex items-center gap-2 mb-1">
+                    <img 
+                      :src="getProfilePictureUrl(replyMessage.sender)" 
+                      :alt="replyMessage.sender.first_name"
+                      class="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                    />
+                    <span :class="[
+                      'font-medium text-xs',
+                      isOwnMessage ? 'text-white text-opacity-90' : 'text-blue-600'
+                    ]">{{ replyMessage.sender.first_name }} {{ replyMessage.sender.last_name }}</span>
+                  </div>
+                  <!-- ✅ FIX: Always show the message content, not just for non-senders -->
+                  <p :class="[
+                    'text-xs line-clamp-2 leading-tight',
+                    isOwnMessage ? 'text-white text-opacity-80' : 'text-gray-700'
+                  ]">
+                    {{ replyMessage.content || 'Attachment' }}
+                  </p>
+                </div>
+              </div>
 
-            <!-- Main message content -->
-            <div v-if="isEmojiOnlyMessage" class="text-4xl p-2">
-              {{ message.content }}
+              <!-- Main message content -->
+              <div v-if="isEmojiOnlyMessage" class="text-4xl p-2">
+                {{ message.content }}
+              </div>
+              <p v-else class="text-sm" v-html="formatMessageContent(message.content)"></p>
+              <!-- Edit indicator -->
+              <span v-if="message.isEdited" class="text-xs opacity-75 ml-1">(edited)</span>
             </div>
-            <p v-else class="text-sm" v-html="formatMessageContent(message.content)"></p>
-            <!-- Edit indicator -->
-            <span v-if="message.isEdited" class="text-xs opacity-75 ml-1">(edited)</span>
           </div>
         </template>
         </div>
@@ -248,7 +268,21 @@ const isEditing = ref(false)
 const editContent = ref('')
 
 const isOwnMessage = computed(() => {
-  return props.message.sender?.id === props.currentUserId // ✅ FIX
+  const result = props.message.sender?.id === props.currentUserId
+  console.log('MessageBubble isOwnMessage check:', {
+    messageId: props.message.id,
+    senderId: props.message.sender?.id,
+    currentUserId: props.currentUserId,
+    senderIdType: typeof props.message.sender?.id,
+    currentUserIdType: typeof props.currentUserId,
+    isOwnMessage: result
+  })
+  return result
+})
+
+// Check if this is a bump message
+const isBumpMessage = computed(() => {
+  return props.message.content === "🔔 Bumped message" && props.message.reply_to
 })
 
 // Get the original message being replied to
@@ -407,13 +441,18 @@ const hasFileAttachment = computed(() => fileAttachments.value.length > 0)
 
 // Check if message contains only emojis (for special large rendering)
 const isEmojiOnlyMessage = computed(() => {
-  if (!props.message.content) return false
+  // For bump messages, check the original message content
+  const contentToCheck = isBumpMessage.value && replyMessage.value 
+    ? replyMessage.value.content 
+    : props.message.content
+    
+  if (!contentToCheck) return false
   
   // Remove all emoji characters and check if anything remains
-  const textWithoutEmojis = props.message.content.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+  const textWithoutEmojis = contentToCheck.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
   
   // Consider it emoji-only if no text remains and original message has content
-  return textWithoutEmojis.length === 0 && props.message.content.trim().length > 0
+  return textWithoutEmojis.length === 0 && contentToCheck.trim().length > 0
 })
 
 // Format message content with enhanced emoji rendering

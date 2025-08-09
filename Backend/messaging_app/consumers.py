@@ -12,12 +12,16 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from channels.db import database_sync_to_async
 from django.utils import timezone
+from django.core.cache import cache
 
 from messaging_app.models import Message, MessageRequest, GroupChat, Reaction, Attachment
 from messaging_app.serializers import MessageSerializer
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+# Track active connections per user
+ACTIVE_CONNECTIONS = {}
 
 
 class MessagingBaseMixin:
@@ -26,7 +30,7 @@ class MessagingBaseMixin:
     Handles authentication, user status updates, and message serialization.
     """
     
-    async def authenticate_user(self) -> Optional[User]:
+    async def authenticate_user(self):
         """Extract and validate user from JWT token in query string."""
         try:
             query_string = self.scope['query_string'].decode()
@@ -41,28 +45,90 @@ class MessagingBaseMixin:
         except (TokenError, User.DoesNotExist, IndexError):
             return None
 
-    async def update_user_status(self, user: User, status: str) -> None:
-        """Update user's online status and last seen timestamp."""
+    async def update_user_status(self, user, status: str) -> None:
+        """Update user's online status and last seen timestamp with connection tracking."""
         @database_sync_to_async
         def _update_status():
             try:
                 from auth_app.models import Profile
                 profile, created = Profile.objects.get_or_create(user=user)
                 
+                old_status = profile.status
+                
                 if status == 'online':
                     profile.status = 'online'
                     profile.last_seen = timezone.now()
                 elif status == 'activity':
-                    # Keep current status, just update last_seen
+                    # Keep current status, just update last_seen (don't change online status)
                     profile.last_seen = timezone.now()
+                    # Don't change status from online to anything else unless explicitly set to offline
                     
                 profile.save()
-                logger.debug(f"Updated user {user.id} status: {status}")
+                
+                # Return both old and new status for broadcasting
+                return old_status, profile.status
                 
             except Exception as e:
                 logger.error(f"Error updating user status: {e}")
+                return None, None
                 
-        await _update_status()
+        old_status, new_status = await _update_status()
+        
+        # Broadcast status change if it actually changed to online
+        if old_status != new_status and new_status == 'online':
+            await self.channel_layer.group_send(
+                'status_updates',
+                {
+                    'type': 'status_update',
+                    'user_id': user.id,
+                    'status': new_status,
+                    'last_seen': timezone.now().isoformat()
+                }
+            )
+
+    def add_user_connection(self, user_id: int, channel_name: str):
+        """Track a new connection for a user."""
+        if user_id not in ACTIVE_CONNECTIONS:
+            ACTIVE_CONNECTIONS[user_id] = set()
+        ACTIVE_CONNECTIONS[user_id].add(channel_name)
+        logger.debug(f"Added connection for user {user_id}. Total connections: {len(ACTIVE_CONNECTIONS[user_id])}")
+
+    def remove_user_connection(self, user_id: int, channel_name: str):
+        """Remove a connection for a user and return True if it was the last connection."""
+        if user_id in ACTIVE_CONNECTIONS:
+            ACTIVE_CONNECTIONS[user_id].discard(channel_name)
+            if not ACTIVE_CONNECTIONS[user_id]:  # No more connections
+                del ACTIVE_CONNECTIONS[user_id]
+                logger.debug(f"Removed last connection for user {user_id}")
+                return True
+            logger.debug(f"Removed connection for user {user_id}. Remaining connections: {len(ACTIVE_CONNECTIONS[user_id])}")
+        return False
+
+    async def set_user_offline(self, user):
+        """Set user offline and broadcast the status change."""
+        @database_sync_to_async
+        def _set_offline():
+            try:
+                from auth_app.models import Profile
+                profile, created = Profile.objects.get_or_create(user=user)
+                profile.status = 'offline'
+                profile.last_seen = timezone.now()
+                profile.save()
+                return True
+            except Exception as e:
+                logger.error(f"Error setting user offline: {e}")
+                return False
+                
+        if await _set_offline():
+            await self.channel_layer.group_send(
+                'status_updates',
+                {
+                    'type': 'status_update',
+                    'user_id': user.id,
+                    'status': 'offline',
+                    'last_seen': timezone.now().isoformat()
+                }
+            )
 
     async def serialize_message(self, message: Message) -> Dict[str, Any]:
         """Serialize message for WebSocket transmission with proper UUID handling."""
@@ -124,6 +190,9 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
             await self.close()
             return
             
+        # Track this connection
+        self.add_user_connection(self.user.id, self.channel_name)
+        
         # Set user online and join personal channel
         await self.update_user_status(self.user, 'online')
         self.user_group = f'user_{self.user.id}'
@@ -135,16 +204,25 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         logger.info(f"User {self.user.id} connected to private chat")
 
     async def disconnect(self, close_code):
-        """Clean up on disconnect - update activity but don't set offline."""
+        """Clean up on disconnect - only set offline if last connection."""
         if hasattr(self, 'user') and self.user:
-            await self.update_user_status(self.user, 'activity')
+            # Check if this was the user's last connection
+            is_last_connection = self.remove_user_connection(self.user.id, self.channel_name)
+            
+            if is_last_connection:
+                # Only set offline if this was the last connection
+                await self.set_user_offline(self.user)
+            else:
+                # Just update activity timestamp
+                await self.update_user_status(self.user, 'activity')
             
         # Leave groups
         if hasattr(self, 'user_group'):
             await self.channel_layer.group_discard(self.user_group, self.channel_name)
         await self.channel_layer.group_discard('status_updates', self.channel_name)
         
-        logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} disconnected")
+        user_id = getattr(self.user, 'id', 'unknown') if hasattr(self, 'user') and self.user else 'unknown'
+        logger.info(f"User {user_id} disconnected")
 
     async def receive(self, text_data):
         """Route incoming messages to appropriate handlers."""
@@ -155,12 +233,14 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
             # Action routing map
             handlers = {
                 'send_message': self.handle_send_message,
+                'bump_message': self.handle_bump_message,
                 'add_reaction': self.handle_add_reaction,
                 'edit_message': self.handle_edit_message,
                 'delete_message': self.handle_delete_message,
                 'mark_as_read': self.handle_mark_as_read,
                 'typing': self.handle_typing,
-                'stop_typing': self.handle_stop_typing
+                'stop_typing': self.handle_stop_typing,
+                'ping': self.handle_ping  # Add ping handler
             }
             
             handler = handlers.get(action)
@@ -174,6 +254,11 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             await self.send_json({'error': 'Server error'})
+
+    async def handle_ping(self, data: Dict[str, Any]):
+        """Handle ping messages to keep connection alive."""
+        await self.update_user_status(self.user, 'activity')
+        await self.send_json({'action': 'pong', 'timestamp': timezone.now().isoformat()})
 
     async def handle_send_message(self, data: Dict[str, Any]):
         """Handle sending a private message with optional reply."""
@@ -222,7 +307,7 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
             logger.error(f"Error sending message: {e}")
             await self.send_json({'error': 'Failed to send message'})
 
-    async def _check_conversation_exists(self, receiver: User) -> bool:
+    async def _check_conversation_exists(self, receiver) -> bool:
         """Check if conversation exists between users."""
         @database_sync_to_async
         def _check():
@@ -243,7 +328,7 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
             
         return await _check()
 
-    async def _create_message_request(self, receiver: User, content: str):
+    async def _create_message_request(self, receiver, content: str):
         """Create a message request for new conversation."""
         @database_sync_to_async
         def _create_request():
@@ -284,7 +369,7 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         
         await self.send_json({'status': 'pending', 'message': 'Message request sent'})
 
-    async def _create_private_message(self, receiver: User, content: str, reply_to_id: Optional[str]) -> Message:
+    async def _create_private_message(self, receiver, content: str, reply_to_id: Optional[str]):
         """Create a private message with optional reply."""
         @database_sync_to_async
         def _create():
@@ -308,6 +393,92 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
             return Message.objects.select_related(
                 'sender', 'receiver', 'reply_to', 'reply_to__sender'
             ).prefetch_related('attachments').get(id=message.id)
+            
+        return await _create()
+
+    async def handle_bump_message(self, data: Dict[str, Any]):
+        """Handle bumping a message - creates a new message referencing the original."""
+        await self.update_user_status(self.user, 'activity')
+        
+        # Extract data
+        original_message_id = data.get('original_message_id')
+        receiver_id = data.get('receiver_id')
+        
+        # Validation
+        if not original_message_id:
+            return await self.send_json({'error': 'original_message_id is required'})
+        if not receiver_id:
+            return await self.send_json({'error': 'receiver_id is required'})
+        if receiver_id == self.user.id:
+            return await self.send_json({'error': 'Cannot bump message to yourself'})
+            
+        try:
+            # Get receiver user
+            try:
+                receiver = await database_sync_to_async(User.objects.get)(id=receiver_id)
+            except User.DoesNotExist:
+                return await self.send_json({'error': 'Receiver not found'})
+            
+            # Check if conversation exists
+            conversation_exists = await self._check_conversation_exists(receiver)
+            if not conversation_exists:
+                return await self.send_json({'error': 'No active conversation with this user'})
+            
+            # Create bump message
+            bump_message = await self._create_bump_message(receiver, original_message_id)
+            
+            # Serialize and broadcast
+            serialized = await self.serialize_message(bump_message)
+            
+            await self.broadcast_to_users(
+                [self.user.id, receiver.id], 
+                'chat_message', 
+                {'message': serialized}
+            )
+            await self.send_json({'status': 'success', 'message': serialized})
+            
+        except ValueError as ve:
+            logger.error(f"Validation error in bump: {ve}")
+            await self.send_json({'error': str(ve)})
+        except Exception as e:
+            logger.error(f"Unexpected error bumping message: {e}")
+            await self.send_json({'error': 'Failed to bump message'})
+
+    async def _create_bump_message(self, receiver, original_message_id: str):
+        """Create a bump message referencing the original message."""
+        @database_sync_to_async
+        def _create():
+            try:
+                # Get the original message - can be any message accessible to both users
+                original_message = Message.objects.get(id=original_message_id)
+                
+                # Verify the message is part of the conversation between these users
+                is_in_conversation = (
+                    (original_message.sender == self.user and original_message.receiver == receiver) or
+                    (original_message.sender == receiver and original_message.receiver == self.user)
+                )
+                
+                if not is_in_conversation:
+                    raise ValueError("Message not found in this conversation")
+                
+                # Create bump message with special content and reply relationship
+                message = Message.objects.create(
+                    sender=self.user,
+                    receiver=receiver,
+                    content="🔔 Bumped message",  # Special indicator for bump
+                    reply_to=original_message
+                )
+                
+                # Return with relationships loaded
+                return Message.objects.select_related(
+                    'sender', 'receiver', 'reply_to', 'reply_to__sender'
+                ).prefetch_related('attachments').get(id=message.id)
+                
+            except Message.DoesNotExist:
+                raise ValueError("Original message not found")
+            except Exception as e:
+                logger.error(f"Error creating bump message: {e}")
+                raise
             
         return await _create()
 
@@ -487,6 +658,9 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
             if not is_member:
                 return await self.close()
                 
+            # Track this connection
+            self.add_user_connection(self.user.id, self.channel_name)
+                
             # Set user online and join group
             await self.update_user_status(self.user, 'online')
             self.group_name = f'group_{self.group_id}'
@@ -501,16 +675,25 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        """Clean up on disconnect."""
+        """Clean up on disconnect - only set offline if last connection."""
         if hasattr(self, 'user') and self.user:
-            await self.update_user_status(self.user, 'activity')
+            # Check if this was the user's last connection
+            is_last_connection = self.remove_user_connection(self.user.id, self.channel_name)
+            
+            if is_last_connection:
+                # Only set offline if this was the last connection
+                await self.set_user_offline(self.user)
+            else:
+                # Just update activity timestamp
+                await self.update_user_status(self.user, 'activity')
             
         # Leave groups
         if hasattr(self, 'group_name'):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
         await self.channel_layer.group_discard('status_updates', self.channel_name)
         
-        logger.info(f"User {getattr(self, 'user', {}).get('id', 'unknown')} left group")
+        user_id = getattr(self.user, 'id', 'unknown') if hasattr(self, 'user') and self.user else 'unknown'
+        logger.info(f"User {user_id} left group")
 
     async def receive(self, text_data):
         """Route group message actions."""
@@ -520,11 +703,13 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
             
             handlers = {
                 'send_message': self.handle_group_message,
+                'bump_message': self.handle_group_bump,
                 'add_reaction': self.handle_group_reaction,
                 'edit_message': self.handle_group_edit,
                 'delete_message': self.handle_group_delete,
                 'typing': self.handle_group_typing,
-                'stop_typing': self.handle_group_stop_typing
+                'stop_typing': self.handle_group_stop_typing,
+                'ping': self.handle_ping  # Add ping handler
             }
             
             handler = handlers.get(action)
@@ -535,6 +720,11 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                 
         except json.JSONDecodeError:
             await self.send_json({'error': 'Invalid JSON'})
+
+    async def handle_ping(self, data: Dict[str, Any]):
+        """Handle ping messages to keep connection alive."""
+        await self.update_user_status(self.user, 'activity')
+        await self.send_json({'action': 'pong', 'timestamp': timezone.now().isoformat()})
 
     async def handle_group_message(self, data: Dict[str, Any]):
         """Send message to group with optional reply."""
@@ -584,6 +774,58 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error sending group message: {e}")
             await self.send_json({'error': 'Failed to send message'})
+
+    async def handle_group_bump(self, data: Dict[str, Any]):
+        """Handle bumping a message in group chat."""
+        await self.update_user_status(self.user, 'activity')
+        
+        # Extract data
+        original_message_id = data.get('original_message_id')
+        
+        # Validation
+        if not original_message_id:
+            return await self.send_json({'error': 'original_message_id is required'})
+            
+        try:
+            @database_sync_to_async
+            def _create_group_bump():
+                # Get the original message - must be sender's own message in this group
+                try:
+                    original_message = Message.objects.get(
+                        id=original_message_id,
+                        sender=self.user,
+                        group_id=self.group_id
+                    )
+                except Message.DoesNotExist:
+                    raise ValueError("Original message not found or not owned by sender")
+                
+                # Create bump message
+                message = Message.objects.create(
+                    sender=self.user,
+                    group=self.group,
+                    content="🔔 Bumped message",  # Special indicator for bump
+                    reply_to=original_message
+                )
+                
+                # Return with relationships
+                return Message.objects.select_related(
+                    'sender', 'group', 'reply_to', 'reply_to__sender'
+                ).prefetch_related('attachments').get(id=message.id)
+                
+            message = await _create_group_bump()
+            
+            # Serialize and broadcast to group
+            serialized = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                self.group_name, 
+                {'type': 'chat_message', 'message': serialized}
+            )
+            
+        except ValueError as e:
+            await self.send_json({'error': str(e)})
+        except Exception as e:
+            logger.error(f"Error bumping group message: {e}")
+            await self.send_json({'error': 'Failed to bump message'})
 
     async def handle_group_reaction(self, data: Dict[str, Any]):
         """Add reaction to group message."""

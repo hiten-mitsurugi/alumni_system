@@ -148,6 +148,26 @@ const searchInput = ref(null);
 const privateWs = ref(null);
 const groupWs = ref(null);
 
+// Heartbeat system to keep WebSocket connections alive
+let heartbeatInterval = null;
+
+function startHeartbeat(ws) {
+  stopHeartbeat(); // Clear any existing interval
+  heartbeatInterval = setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      console.log('Messaging.vue: Sending heartbeat ping');
+      ws.send(JSON.stringify({ action: 'ping' }));
+    }
+  }, 30000); // Send ping every 30 seconds
+}
+
+function stopHeartbeat() {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  }
+}
+
 // === Helper to always return correct avatar URL for user/group (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
   const BASE_URL = 'http://127.0.0.1:8000'
@@ -474,9 +494,29 @@ async function handleMessageAction(actionData) {
         break
         
       case 'bump':
-        // Bump message (resend)
-        await api.post(`/message/${message.id}/bump/`)
-        console.log('Messaging: Bumped message:', message.id)
+        // Bump message via WebSocket for real-time delivery
+        if (selectedConversation.value?.type === 'private') {
+          if (privateWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending bump via WebSocket for message:', message.id)
+            privateWs.value.send(JSON.stringify({
+              action: 'bump_message',
+              original_message_id: message.id,
+              receiver_id: selectedConversation.value.mate.id
+            }))
+          } else {
+            console.error('Messaging: Private WebSocket not open for bump')
+          }
+        } else if (selectedConversation.value?.type === 'group') {
+          if (groupWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending group bump via WebSocket for message:', message.id)
+            groupWs.value.send(JSON.stringify({
+              action: 'bump_message',
+              original_message_id: message.id
+            }))
+          } else {
+            console.error('Messaging: Group WebSocket not open for bump')
+          }
+        }
         break
         
       case 'edit':
@@ -544,16 +584,30 @@ function setupWebSockets() {
     if (!token) return (isAuthenticated.value = false);
     privateWs.value = new WebSocket(`ws://localhost:8000/ws/private/?token=${token}`);
 
-    privateWs.value.onopen = () => console.log('Messaging.vue: Private WS connected');
-    privateWs.value.onclose = () => console.log('Messaging.vue: Private WS closed');
+    privateWs.value.onopen = () => {
+      console.log('Messaging.vue: Private WS connected');
+      // Start heartbeat to keep connection alive
+      startHeartbeat(privateWs.value);
+    };
+    privateWs.value.onclose = () => {
+      console.log('Messaging.vue: Private WS closed');
+      stopHeartbeat();
+    };
     privateWs.value.onerror = async (error) => {
       console.error('Messaging.vue: Private WS error:', error);
+      stopHeartbeat();
       if (await refreshToken()) setupWebSockets();
       else isAuthenticated.value = false;
     };
     privateWs.value.onmessage = (e) => {
       const data = JSON.parse(e.data);
       console.log('🔵 WebSocket RECEIVED:', data);
+      
+      // Handle pong responses
+      if (data.action === 'pong') {
+        console.log('Messaging.vue: Received pong from server');
+        return;
+      }
       
       // ✅ FIX: Special handling for messages with reply_to data
       if (data.type === 'chat_message' && data.message) {
@@ -578,9 +632,26 @@ function setupGroupWebSocket(conv) {
   getValidToken().then(token => {
     if (!token) return;
     groupWs.value = new WebSocket(`ws://localhost:8000/ws/group/${conv.group.id}/?token=${token}`);
+    
+    groupWs.value.onopen = () => {
+      console.log('Messaging.vue: Group WS connected');
+      startHeartbeat(groupWs.value);
+    };
+    
+    groupWs.value.onclose = () => {
+      console.log('Messaging.vue: Group WS closed');
+      stopHeartbeat();
+    };
+    
     groupWs.value.onmessage = e => {
       const data = JSON.parse(e.data);
       console.log('🟢 Group WebSocket RECEIVED:', data);
+      
+      // Handle pong responses
+      if (data.action === 'pong') {
+        console.log('Messaging.vue: Received pong from group server');
+        return;
+      }
       
       // ✅ FIX: Special handling for group messages with reply_to data
       if (data.type === 'chat_message' && data.message) {
@@ -596,6 +667,7 @@ function setupGroupWebSocket(conv) {
     };
     groupWs.value.onerror = async (error) => {
       console.error('Messaging.vue: Group WS error:', error);
+      stopHeartbeat();
       if (await refreshToken()) setupGroupWebSocket(conv);
       else isAuthenticated.value = false;
     };
@@ -948,6 +1020,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  stopHeartbeat(); // Stop heartbeat when component unmounts
   privateWs.value?.close();
   groupWs.value?.close();
   

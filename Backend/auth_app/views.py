@@ -391,6 +391,12 @@ class LogoutView(APIView):
             profile.save()
             logger.info(f"User {user.id} status set to offline on logout")
             
+            # Clear all active connections for this user
+            from messaging_app.consumers import ACTIVE_CONNECTIONS
+            if user.id in ACTIVE_CONNECTIONS:
+                del ACTIVE_CONNECTIONS[user.id]
+                logger.info(f"Cleared all active connections for user {user.id}")
+            
             # Broadcast status change to all connected users
             try:
                 channel_layer = get_channel_layer()
