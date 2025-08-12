@@ -52,12 +52,12 @@ const currentProfilePicture = computed(() => {
   if (profilePicturePreview.value) {
     return profilePicturePreview.value;
   }
-  
+
   const pic = authStore.user?.profile_picture;
   if (pic && typeof pic === 'string') {
     return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`;
   }
-  
+
   // Return a default avatar SVG data URL when no profile picture is available
   return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23e5e7eb'/%3E%3Cpath fill='%239ca3af' d='M50 45c-8.284 0-15-6.716-15-15s6.716-15 15-15 15 6.716 15 15-6.716 15-15 15zm0 5c16.569 0 30 13.431 30 30v10H20V80c0-16.569 13.431-30 30-30z'/%3E%3C/svg%3E";
 });
@@ -66,7 +66,7 @@ const handleFileUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
     profilePictureFile.value = file;
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -79,38 +79,38 @@ const handleFileUpload = (event) => {
 const updateProfile = async () => {
   isLoading.value = true;
   message.value = '';
-  
+
   try {
     const formData = new FormData();
-    
+
     // Add profile data
     Object.keys(profile).forEach(key => {
       if (profile[key] !== null && profile[key] !== undefined) {
         formData.append(key, profile[key]);
       }
     });
-    
+
     // Add profile picture if selected
     if (profilePictureFile.value) {
       formData.append('profile_picture', profilePictureFile.value);
     }
-    
+
     const response = await api.put('/user/profile/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-    
+
     // Update auth store with new user data
     authStore.setUser(response.data);
-    
+
     message.value = 'Profile updated successfully!';
     messageType.value = 'success';
-    
+
     // Clear preview and file
     profilePictureFile.value = null;
     profilePicturePreview.value = '';
-    
+
   } catch (error) {
     console.error('Error updating profile:', error);
     message.value = error.response?.data?.detail || 'Failed to update profile';
@@ -140,7 +140,7 @@ const triggerFileInput = () => {
       <!-- Content -->
       <div class="p-6">
         <!-- Success/Error Message -->
-        <div v-if="message" class="mb-6 p-4 rounded-lg" 
+        <div v-if="message" class="mb-6 p-4 rounded-lg"
              :class="messageType === 'success' ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'">
           {{ message }}
         </div>
@@ -149,12 +149,12 @@ const triggerFileInput = () => {
           <!-- Profile Picture Section -->
           <div class="flex flex-col items-center mb-8">
             <div class="relative">
-              <img 
-                :src="currentProfilePicture" 
-                alt="Profile Picture" 
+              <img
+                :src="currentProfilePicture"
+                alt="Profile Picture"
                 class="w-32 h-32 rounded-full border-4 border-green-200 object-cover shadow-lg"
               />
-              <button 
+              <button
                 type="button"
                 @click="triggerFileInput"
                 class="absolute bottom-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg transition-colors"
@@ -162,10 +162,10 @@ const triggerFileInput = () => {
                 <Camera class="w-4 h-4" />
               </button>
             </div>
-            <input 
+            <input
               id="profile-picture-input"
-              type="file" 
-              accept="image/*" 
+              type="file"
+              accept="image/*"
               @change="handleFileUpload"
               class="hidden"
             />
@@ -177,9 +177,9 @@ const triggerFileInput = () => {
             <!-- First Name -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-              <input 
+              <input
                 v-model="profile.first_name"
-                type="text" 
+                type="text"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
@@ -188,9 +188,9 @@ const triggerFileInput = () => {
             <!-- Last Name -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-              <input 
+              <input
                 v-model="profile.last_name"
-                type="text" 
+                type="text"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
@@ -199,9 +199,9 @@ const triggerFileInput = () => {
             <!-- Middle Name -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Middle Name</label>
-              <input 
+              <input
                 v-model="profile.middle_name"
-                type="text" 
+                type="text"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -212,9 +212,9 @@ const triggerFileInput = () => {
                 <Mail class="w-4 h-4 inline mr-1" />
                 Email
               </label>
-              <input 
+              <input
                 v-model="profile.email"
-                type="email" 
+                type="email"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
@@ -226,9 +226,9 @@ const triggerFileInput = () => {
                 <Phone class="w-4 h-4 inline mr-1" />
                 Contact Number
               </label>
-              <input 
+              <input
                 v-model="profile.contact_number"
-                type="tel" 
+                type="tel"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -239,9 +239,9 @@ const triggerFileInput = () => {
                 <Calendar class="w-4 h-4 inline mr-1" />
                 Birth Date
               </label>
-              <input 
+              <input
                 v-model="profile.birth_date"
-                type="date" 
+                type="date"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -249,7 +249,7 @@ const triggerFileInput = () => {
             <!-- Gender -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-              <select 
+              <select
                 v-model="profile.gender"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
@@ -263,7 +263,7 @@ const triggerFileInput = () => {
             <!-- Civil Status -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Civil Status</label>
-              <select 
+              <select
                 v-model="profile.civil_status"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
@@ -277,9 +277,9 @@ const triggerFileInput = () => {
             <!-- School ID -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">School ID</label>
-              <input 
+              <input
                 v-model="profile.school_id"
-                type="text" 
+                type="text"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 readonly
               />
@@ -291,9 +291,9 @@ const triggerFileInput = () => {
                 <GraduationCap class="w-4 h-4 inline mr-1" />
                 Program
               </label>
-              <input 
+              <input
                 v-model="profile.program"
-                type="text" 
+                type="text"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -305,7 +305,7 @@ const triggerFileInput = () => {
               <MapPin class="w-4 h-4 inline mr-1" />
               Address
             </label>
-            <textarea 
+            <textarea
               v-model="profile.address"
               rows="3"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -315,7 +315,7 @@ const triggerFileInput = () => {
 
           <!-- Submit Button -->
           <div class="flex justify-end pt-6">
-            <button 
+            <button
               type="submit"
               :disabled="isLoading"
               class="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"

@@ -153,4 +153,9 @@ print(f"Created users: {CustomUser.objects.count()}")
 
 
 
+
+
+
+    TO RUN THE BACKEND YOU MUST: 
+        
  -->

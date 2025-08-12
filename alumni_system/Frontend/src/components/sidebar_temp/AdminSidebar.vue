@@ -42,9 +42,17 @@ const user = computed(() => authStore.user || {});
 
 const profilePicture = computed(() => {
   const pic = user.value.profile_picture;
-  return pic && typeof pic === 'string'
-    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
-    : '/default-profile.png';
+  console.log('AdminSidebar - Computing profile picture:', pic);
+  console.log('AdminSidebar - User data:', user.value);
+  
+  if (pic && typeof pic === 'string' && pic !== 'null') {
+    const fullUrl = pic.startsWith('http') ? pic : `${BASE_URL}${pic}`;
+    console.log('AdminSidebar - Using profile picture:', fullUrl);
+    return fullUrl;
+  }
+  
+  console.log('AdminSidebar - Using default profile picture');
+  return '/default-profile.png';
 });
 
 const userTypeLabel = computed(() => {

@@ -165,7 +165,7 @@ const saveQuestionForm = async () => {
     if (!needsOptions.value) {
       formData.options = [];
     }
-    
+
     if (editingQuestion.value) {
       await api.put(`/survey/questions/${editingQuestion.value.id}/`, formData);
       showMessage('Question updated successfully', 'success');
@@ -212,14 +212,14 @@ const getQuestionsByCategory = (categoryId) => {
           <p class="text-gray-600 mt-2">Manage survey categories and questions for alumni registration</p>
         </div>
         <div class="flex gap-3">
-          <button 
+          <button
             @click="openCategoryModal()"
             class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
             <Plus class="w-4 h-4" />
             Add Category
           </button>
-          <button 
+          <button
             @click="openQuestionModal()"
             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
@@ -231,7 +231,7 @@ const getQuestionsByCategory = (categoryId) => {
     </div>
 
     <!-- Success/Error Message -->
-    <div v-if="message" class="mb-6 p-4 rounded-lg" 
+    <div v-if="message" class="mb-6 p-4 rounded-lg"
          :class="messageType === 'success' ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'">
       {{ message }}
     </div>
@@ -247,13 +247,13 @@ const getQuestionsByCategory = (categoryId) => {
               <p class="text-sm text-green-600">Order: {{ category.order }} | {{ category.questions_count }} questions</p>
             </div>
             <div class="flex gap-2">
-              <button 
+              <button
                 @click="openCategoryModal(category)"
                 class="p-2 text-green-600 hover:bg-green-100 rounded"
               >
                 <Edit2 class="w-4 h-4" />
               </button>
-              <button 
+              <button
                 @click="deleteCategory(category.id)"
                 class="p-2 text-red-600 hover:bg-red-100 rounded"
               >
@@ -266,9 +266,9 @@ const getQuestionsByCategory = (categoryId) => {
         <!-- Questions in Category -->
         <div class="p-4">
           <div class="space-y-3">
-            <div 
-              v-for="question in getQuestionsByCategory(category.id)" 
-              :key="question.id" 
+            <div
+              v-for="question in getQuestionsByCategory(category.id)"
+              :key="question.id"
               class="border border-gray-200 rounded-lg p-4"
             >
               <div class="flex justify-between items-start">
@@ -284,9 +284,9 @@ const getQuestionsByCategory = (categoryId) => {
                   <div v-if="question.options.length > 0" class="mt-2">
                     <p class="text-sm text-gray-600">Options:</p>
                     <div class="flex flex-wrap gap-1 mt-1">
-                      <span 
-                        v-for="option in question.options" 
-                        :key="option" 
+                      <span
+                        v-for="option in question.options"
+                        :key="option"
                         class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
                       >
                         {{ option }}
@@ -295,13 +295,13 @@ const getQuestionsByCategory = (categoryId) => {
                   </div>
                 </div>
                 <div class="flex gap-2 ml-4">
-                  <button 
+                  <button
                     @click="openQuestionModal(question)"
                     class="p-2 text-blue-600 hover:bg-blue-100 rounded"
                   >
                     <Edit2 class="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     @click="deleteQuestion(question.id)"
                     class="p-2 text-red-600 hover:bg-red-100 rounded"
                   >
@@ -310,7 +310,7 @@ const getQuestionsByCategory = (categoryId) => {
                 </div>
               </div>
             </div>
-            
+
             <div v-if="getQuestionsByCategory(category.id).length === 0" class="text-center py-8 text-gray-500">
               No questions in this category
             </div>
@@ -325,37 +325,37 @@ const getQuestionsByCategory = (categoryId) => {
         <h3 class="text-lg font-semibold mb-4">
           {{ editingCategory ? 'Edit Category' : 'Add Category' }}
         </h3>
-        
+
         <form @submit.prevent="saveCategoryForm" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Category Name</label>
-            <input 
+            <input
               v-model="categoryForm.name"
-              type="text" 
+              type="text"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
               required
             />
           </div>
-          
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Order</label>
-            <input 
+            <input
               v-model.number="categoryForm.order"
-              type="number" 
+              type="number"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
               required
             />
           </div>
-          
+
           <div class="flex justify-end gap-3 pt-4">
-            <button 
+            <button
               type="button"
               @click="showCategoryModal = false"
               class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
               :disabled="loading"
               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
@@ -373,11 +373,11 @@ const getQuestionsByCategory = (categoryId) => {
         <h3 class="text-lg font-semibold mb-4">
           {{ editingQuestion ? 'Edit Question' : 'Add Question' }}
         </h3>
-        
+
         <form @submit.prevent="saveQuestionForm" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-            <select 
+            <select
               v-model="questionForm.category"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
               required
@@ -387,21 +387,21 @@ const getQuestionsByCategory = (categoryId) => {
               </option>
             </select>
           </div>
-          
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Question Text</label>
-            <textarea 
+            <textarea
               v-model="questionForm.question_text"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
               rows="3"
               required
             ></textarea>
           </div>
-          
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-              <select 
+              <select
                 v-model="questionForm.question_type"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                 required
@@ -411,41 +411,41 @@ const getQuestionsByCategory = (categoryId) => {
                 </option>
               </select>
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Order</label>
-              <input 
+              <input
                 v-model.number="questionForm.order"
-                type="number" 
+                type="number"
                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
           </div>
-          
+
           <div class="flex items-center">
-            <input 
+            <input
               v-model="questionForm.is_required"
-              type="checkbox" 
+              type="checkbox"
               id="required"
               class="mr-2"
             />
             <label for="required" class="text-sm font-medium text-gray-700">Required</label>
           </div>
-          
+
           <!-- Options for select, radio, checkbox, rating -->
           <div v-if="needsOptions" class="space-y-3">
             <label class="block text-sm font-medium text-gray-700">Options</label>
-            
+
             <div class="flex gap-2">
-              <input 
+              <input
                 v-model="newOption"
-                type="text" 
+                type="text"
                 placeholder="Add new option"
                 class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                 @keyup.enter="addOption"
               />
-              <button 
+              <button
                 type="button"
                 @click="addOption"
                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -453,15 +453,15 @@ const getQuestionsByCategory = (categoryId) => {
                 Add
               </button>
             </div>
-            
+
             <div class="space-y-2">
-              <div 
-                v-for="(option, index) in questionForm.options" 
-                :key="index" 
+              <div
+                v-for="(option, index) in questionForm.options"
+                :key="index"
                 class="flex items-center gap-2 p-2 bg-gray-50 rounded"
               >
                 <span class="flex-1">{{ option }}</span>
-                <button 
+                <button
                   type="button"
                   @click="removeOption(index)"
                   class="p-1 text-red-600 hover:bg-red-100 rounded"
@@ -471,16 +471,16 @@ const getQuestionsByCategory = (categoryId) => {
               </div>
             </div>
           </div>
-          
+
           <div class="flex justify-end gap-3 pt-4">
-            <button 
+            <button
               type="button"
               @click="showQuestionModal = false"
               class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
               :disabled="loading"
               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"

@@ -54,7 +54,7 @@ const fetchSurveyData = async () => {
   try {
     const response = await api.get('/survey/active-questions/');
     const surveyData = response.data;
-    
+
     // Extract categories and questions from the combined response
     categories.value = surveyData.map(item => ({
       id: item.id,
@@ -62,15 +62,15 @@ const fetchSurveyData = async () => {
       order: item.order,
       questions_count: item.questions.length
     })).sort((a, b) => a.order - b.order);
-    
+
     // Flatten all questions from all categories
-    questions.value = surveyData.flatMap(item => 
+    questions.value = surveyData.flatMap(item =>
       item.questions.map(question => ({
         ...question,
         category: item.id
       }))
     ).sort((a, b) => a.order - b.order);
-    
+
   } catch (err) {
     console.error('Failed to fetch survey data:', err);
   }
@@ -497,67 +497,67 @@ const handleFileUpload = (event, type) => {
         <div v-else-if="stepThree" class="max-h-[70vh] overflow-y-auto">
           <h3 class="text-xl font-semibold text-center mb-6">Step 3: Alumni Tracer Survey</h3>
           <p class="text-center text-gray-600 mb-6">Please complete this survey to help us improve our programs and services.</p>
-          
+
           <div class="space-y-8">
             <div v-for="category in categories" :key="category.id" class="bg-gray-50 rounded-lg p-6">
               <h4 class="text-lg font-semibold text-green-700 mb-4 border-b border-green-200 pb-2">
                 {{ category.name }}
               </h4>
-              
+
               <div class="space-y-6">
                 <div v-for="question in getQuestionsByCategory(category.id)" :key="question.id" class="bg-white rounded p-4">
                   <label class="block text-sm font-medium text-gray-700 mb-3">
                     {{ question.question_text }}
                     <span v-if="question.is_required" class="text-red-500">*</span>
                   </label>
-                  
+
                   <!-- Text Input -->
-                  <input 
+                  <input
                     v-if="question.question_type === 'text'"
                     v-model="surveyResponses[question.id]"
                     type="text"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     :required="question.is_required"
                   />
-                  
+
                   <!-- Textarea -->
-                  <textarea 
+                  <textarea
                     v-else-if="question.question_type === 'textarea'"
                     v-model="surveyResponses[question.id]"
                     rows="3"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     :required="question.is_required"
                   ></textarea>
-                  
+
                   <!-- Number Input -->
-                  <input 
+                  <input
                     v-else-if="question.question_type === 'number'"
                     v-model.number="surveyResponses[question.id]"
                     type="number"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     :required="question.is_required"
                   />
-                  
+
                   <!-- Email Input -->
-                  <input 
+                  <input
                     v-else-if="question.question_type === 'email'"
                     v-model="surveyResponses[question.id]"
                     type="email"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     :required="question.is_required"
                   />
-                  
+
                   <!-- Date Input -->
-                  <input 
+                  <input
                     v-else-if="question.question_type === 'date'"
                     v-model="surveyResponses[question.id]"
                     type="date"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     :required="question.is_required"
                   />
-                  
+
                   <!-- Select Dropdown -->
-                  <select 
+                  <select
                     v-else-if="question.question_type === 'select'"
                     v-model="surveyResponses[question.id]"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
@@ -568,11 +568,11 @@ const handleFileUpload = (event, type) => {
                       {{ option }}
                     </option>
                   </select>
-                  
+
                   <!-- Radio Buttons -->
                   <div v-else-if="question.question_type === 'radio'" class="space-y-2">
                     <div v-for="option in question.options" :key="option" class="flex items-center">
-                      <input 
+                      <input
                         :id="`radio-${question.id}-${option}`"
                         v-model="surveyResponses[question.id]"
                         :value="option"
@@ -586,11 +586,11 @@ const handleFileUpload = (event, type) => {
                       </label>
                     </div>
                   </div>
-                  
+
                   <!-- Checkboxes -->
                   <div v-else-if="question.question_type === 'checkbox'" class="space-y-2">
                     <div v-for="option in question.options" :key="option" class="flex items-center">
-                      <input 
+                      <input
                         :id="`checkbox-${question.id}-${option}`"
                         type="checkbox"
                         :value="option"
@@ -603,11 +603,11 @@ const handleFileUpload = (event, type) => {
                       </label>
                     </div>
                   </div>
-                  
+
                   <!-- Yes/No -->
                   <div v-else-if="question.question_type === 'yes_no'" class="flex gap-4">
                     <div class="flex items-center">
-                      <input 
+                      <input
                         :id="`yes-${question.id}`"
                         v-model="surveyResponses[question.id]"
                         value="Yes"
@@ -619,7 +619,7 @@ const handleFileUpload = (event, type) => {
                       <label :for="`yes-${question.id}`" class="text-sm text-gray-700">Yes</label>
                     </div>
                     <div class="flex items-center">
-                      <input 
+                      <input
                         :id="`no-${question.id}`"
                         v-model="surveyResponses[question.id]"
                         value="No"
@@ -631,11 +631,11 @@ const handleFileUpload = (event, type) => {
                       <label :for="`no-${question.id}`" class="text-sm text-gray-700">No</label>
                     </div>
                   </div>
-                  
+
                   <!-- Rating Scale -->
                   <div v-else-if="question.question_type === 'rating'" class="flex gap-2">
                     <div v-for="option in question.options" :key="option" class="flex items-center">
-                      <input 
+                      <input
                         :id="`rating-${question.id}-${option}`"
                         v-model="surveyResponses[question.id]"
                         :value="option"
@@ -653,7 +653,7 @@ const handleFileUpload = (event, type) => {
               </div>
             </div>
           </div>
-          
+
           <button
             @click="completeRegistration"
             class="w-full mt-6 bg-green-700 text-white py-3 rounded hover:bg-green-800 font-semibold text-lg"

@@ -430,28 +430,45 @@ class ProfileView(APIView):
         return Response(serializer.data)
     
     def put(self, request):
+        print(f"=== PROFILE UPDATE DEBUG ===")
+        print(f"User: {request.user}")
+        print(f"User authenticated: {request.user.is_authenticated}")
+        print(f"Request data: {request.data}")
+        print(f"Request FILES: {request.FILES}")
+        
         user = request.user
         serializer = UserDetailSerializer(user, data=request.data, partial=True)
         
+        print(f"Serializer is_valid: {serializer.is_valid()}")
+        if not serializer.is_valid():
+            print(f"Serializer errors: {serializer.errors}")
+        
         if serializer.is_valid():
+            print("Serializer validation passed")
+            
             # Handle profile picture upload
             if 'profile_picture' in request.FILES:
+                print(f"Profile picture found: {request.FILES['profile_picture']}")
                 user.profile_picture = request.FILES['profile_picture']
             
             # Update other fields
             for field, value in serializer.validated_data.items():
                 if field != 'profile_picture':  # Skip profile picture as we handled it above
+                    print(f"Updating field {field}: {getattr(user, field)} -> {value}")
                     setattr(user, field, value)
             
             user.save()
+            print("User saved successfully")
             
             # Clear cache
             cache.delete(f"user_profile_{user.id}")
             
             # Return updated user data
             updated_serializer = UserDetailSerializer(user)
+            print("Returning updated user data")
             return Response(updated_serializer.data, status=status.HTTP_200_OK)
         
+        print(f"Returning validation errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserCreateView(APIView):
