@@ -64,7 +64,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ['id', 'file', 'file_type']
+        fields = ['id', 'file', 'file_name', 'file_type', 'file_size', 'uploaded_at']
 
     def get_file(self, obj):
         if obj.file:

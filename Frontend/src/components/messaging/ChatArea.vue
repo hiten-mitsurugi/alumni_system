@@ -67,6 +67,28 @@
           @scroll-to-message="scrollToMessage"
         />
       </div>
+
+      <!-- Individual Pinned Message Indicators (inside messages container) -->
+      <div 
+        v-if="pinnedMessages.length > 0" 
+        class="pinned-indicators-container"
+      >
+        <div 
+          v-for="pinnedMessage in pinnedMessages"
+          :key="pinnedMessage.id"
+          class="pinned-indicator-container"
+          @click="scrollToMessage(pinnedMessage.id)"
+        >
+          <div class="pinned-indicator">
+            <svg class="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
+              <path fill-rule="evenodd" d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+              <path d="M9 11H7v5a1 1 0 001 1h4a1 1 0 001-1v-5h-2V9H9v2z"/>
+            </svg>
+            <span class="pinned-text">pinned message</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Message input -->
@@ -81,7 +103,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, watch, ref, nextTick } from 'vue'
+import { defineProps, defineEmits, watch, ref, nextTick, computed } from 'vue'
 import MessageBubble from './MessageBubble.vue'
 import MessageInput from './MessageInput.vue'
 
@@ -91,11 +113,16 @@ const props = defineProps({
   currentUser: Object
 })
 
-const emit = defineEmits(['send-message', 'message-action'])
+const emit = defineEmits(['send-message', 'message-action', 'toggle-chat-info'])
 const messagesContainer = ref(null)
 
 // Reply state
 const replyingTo = ref(null)
+
+// Computed property for pinned messages
+const pinnedMessages = computed(() => {
+  return props.messages?.filter(message => message.is_pinned) || []
+})
 
 // Safe profile picture helper (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
@@ -228,10 +255,10 @@ function scrollToMessage(messageId) {
         block: 'center' 
       })
       // Add highlight effect
-      messageElement.classList.add('highlight-message')
+      messageElement.classList.add('highlight-pinned-message')
       setTimeout(() => {
-        messageElement.classList.remove('highlight-message')
-      }, 2000)
+        messageElement.classList.remove('highlight-pinned-message')
+      }, 3000)
     } else {
       console.warn('ChatArea: Message element not found for ID:', messageId)
     }
@@ -378,5 +405,50 @@ watch(() => props.conversation, () => {
     transform: scale(1);
     box-shadow: none;
   }
+}
+
+/* Pinned Message Indicators Styles */
+.pinned-indicators-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(245, 158, 11, 0.1);
+  margin-top: 16px;
+}
+
+.pinned-indicator-container {
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pinned-indicator-container:hover {
+  transform: translateY(-1px);
+}
+
+.pinned-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.pinned-indicator:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.pinned-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: #92400e;
+  letter-spacing: 0.025em;
 }
 </style>

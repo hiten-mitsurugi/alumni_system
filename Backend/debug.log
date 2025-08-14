@@ -38563,3 +38563,5 @@ Traceback (most recent call last):
   File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\django\utils\asyncio.py", line 24, in inner
     raise SynchronousOnlyOperation(message)
 django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an async context - use a thread or sync_to_async.
+Logout failed: Token is invalid or expired
+Logout failed: Token is invalid or expired

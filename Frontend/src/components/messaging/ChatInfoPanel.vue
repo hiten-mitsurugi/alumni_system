@@ -170,62 +170,55 @@
         </div>
       </div>
 
-      <!-- Shared Media -->
+      <!-- Shared Images -->
       <div class="border-b border-gray-200">
         <button 
-          @click="showSharedMedia = !showSharedMedia"
+          @click="showSharedImages = !showSharedImages"
           class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
         >
           <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span class="font-medium text-gray-900">Shared Media</span>
-            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-              {{ sharedMedia.length }}
+            <span class="font-medium text-gray-900">Shared Images</span>
+            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+              {{ sharedImages.length }}
             </span>
           </div>
           <svg 
-            :class="['w-4 h-4 text-gray-400 transition-transform', showSharedMedia ? 'rotate-180' : '']" 
+            :class="['w-4 h-4 text-gray-400 transition-transform', showSharedImages ? 'rotate-180' : '']" 
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
-        <!-- Shared Media Grid -->
-        <div v-if="showSharedMedia" class="p-3">
-          <div v-if="sharedMedia.length === 0" class="text-center text-gray-500 text-sm py-4">
-            No shared media
+        <!-- Shared Images Grid -->
+        <div v-if="showSharedImages" class="p-3">
+          <div v-if="sharedImages.length === 0" class="text-center text-gray-500 text-sm py-4">
+            No shared images
           </div>
           <div class="grid grid-cols-3 gap-2">
             <div 
-              v-for="media in sharedMedia.slice(0, 9)" 
-              :key="media.id"
+              v-for="image in sharedImages.slice(0, 9)" 
+              :key="image.id"
               class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-              @click="openMedia(media)"
+              @click="openMedia(image)"
             >
               <img 
-                v-if="media.type?.startsWith('image')"
-                :src="media.url" 
-                :alt="media.name"
+                :src="image.url" 
+                :alt="image.name"
                 class="w-full h-full object-cover"
               />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
             </div>
           </div>
           <button 
-            v-if="sharedMedia.length > 9" 
+            v-if="sharedImages.length > 9" 
             class="w-full mt-3 p-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-            @click="showAllMedia = true"
+            @click="showAllImages = true"
           >
-            View All ({{ sharedMedia.length }})
+            View All ({{ sharedImages.length }})
           </button>
         </div>
       </div>
@@ -367,18 +360,18 @@ const emit = defineEmits(['close', 'mute', 'unmute', 'block', 'unblock', 'scroll
 const isMuted = ref(false)
 const isBlocked = ref(false)
 const pinnedMessages = ref([])
-const sharedMedia = ref([])
+const sharedImages = ref([])
 const sharedLinks = ref([])
 const sharedFiles = ref([])
 
 // UI State
 const showPinnedMessages = ref(true) // Start expanded for better UX
-const showSharedMedia = ref(false)
+const showSharedImages = ref(false)
 const showSharedLinks = ref(false)
 const showSharedFiles = ref(false)
 const showSearchMessages = ref(false)
 const showGroupInfo = ref(false)
-const showAllMedia = ref(false)
+const showAllImages = ref(false)
 
 // Helper functions
 const getProfilePictureUrl = (entity) => {
@@ -470,33 +463,41 @@ const fetchPinnedMessages = async () => {
 }
 
 const processSharedContent = () => {
-  const media = []
+  const images = []
   const links = []
   const files = []
+
+  console.log('ChatInfoPanel: Processing shared content from messages:', props.messages.length)
 
   props.messages.forEach(message => {
     // Process attachments
     if (message.attachments && message.attachments.length > 0) {
+      console.log('ChatInfoPanel: Processing attachments for message:', message.id, message.attachments)
+      
       message.attachments.forEach(attachment => {
-        if (attachment.type?.startsWith('image/') || attachment.type?.startsWith('video/')) {
-          media.push({
-            id: attachment.id,
-            url: attachment.url,
-            name: attachment.name,
-            type: attachment.type,
-            timestamp: message.timestamp,
-            messageId: message.id
-          })
+        console.log('ChatInfoPanel: Processing attachment:', attachment)
+        
+        // Build the attachment data
+        const attachmentData = {
+          id: attachment.id,
+          url: attachment.file, // This comes from the serializer
+          name: attachment.file_name || 'Unnamed file',
+          type: attachment.file_type || 'application/octet-stream',
+          size: attachment.file_size || 0,
+          timestamp: message.timestamp,
+          messageId: message.id
+        }
+        
+        console.log('ChatInfoPanel: Built attachment data:', attachmentData)
+        
+        // Only images go to shared images
+        if (attachment.file_type?.startsWith('image/')) {
+          images.push(attachmentData)
+          console.log('ChatInfoPanel: Added to images')
         } else {
-          files.push({
-            id: attachment.id,
-            url: attachment.url,
-            name: attachment.name,
-            size: attachment.size || 0,
-            type: attachment.type,
-            timestamp: message.timestamp,
-            messageId: message.id
-          })
+          // All non-image files (PDFs, Word docs, videos, etc.) go to shared files
+          files.push(attachmentData)
+          console.log('ChatInfoPanel: Added to files')
         }
       })
     }
@@ -523,9 +524,14 @@ const processSharedContent = () => {
     }
   })
 
-  sharedMedia.value = media.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  console.log('ChatInfoPanel: Final results - Images:', images.length, 'Files:', files.length, 'Links:', links.length)
+
+  sharedImages.value = images.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
   sharedLinks.value = links.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
   sharedFiles.value = files.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  
+  console.log('ChatInfoPanel: sharedImages:', sharedImages.value)
+  console.log('ChatInfoPanel: sharedFiles:', sharedFiles.value)
 }
 
 // Actions

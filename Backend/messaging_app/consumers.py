@@ -241,6 +241,7 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
                 'add_reaction': self.handle_add_reaction,
                 'edit_message': self.handle_edit_message,
                 'delete_message': self.handle_delete_message,
+                'pin_message': self.handle_pin_message,
                 'mark_as_read': self.handle_mark_as_read,
                 'typing': self.handle_typing,
                 'stop_typing': self.handle_stop_typing,
@@ -608,6 +609,87 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot delete this message'})
 
+    async def handle_pin_message(self, data: Dict[str, Any]):
+        """Pin or unpin user's own message or messages in conversation."""
+        message_id = data.get('message_id')
+        
+        logger.info(f"Pin request: message_id={message_id}, user={self.user.id}")
+        
+        if not message_id:
+            logger.warning(f"Pin validation failed: message_id={message_id}")
+            return await self.send_json({'error': 'message_id is required'})
+            
+        try:
+            @database_sync_to_async
+            def _pin():
+                from django.utils import timezone as tz
+                logger.info(f"Looking for message with id={message_id}")
+                
+                # Get the message - allow pinning for conversation participants
+                message = Message.objects.get(id=message_id)
+                
+                # Check permissions
+                can_pin = False
+                if message.receiver:  # Private message
+                    if self.user == message.sender or self.user == message.receiver:
+                        can_pin = True
+                elif message.group:  # Group message
+                    if self.user in message.group.members.all():
+                        can_pin = True
+                
+                if not can_pin:
+                    raise PermissionError("No permission to pin this message")
+                
+                logger.info(f"Found message: {message.id}, current pin status: {message.is_pinned}")
+                
+                # Toggle pin status
+                message.is_pinned = not message.is_pinned
+                message.save()
+                
+                logger.info(f"Message pin status updated to: {message.is_pinned}")
+                
+                # Get user IDs for broadcasting - must be done in sync context
+                if message.receiver:
+                    users = [message.sender.id, message.receiver.id]
+                else:
+                    # For group messages, get all group members
+                    users = list(message.group.members.values_list('id', flat=True))
+                
+                return message, message.is_pinned, users
+                
+            message, is_pinned, users = await _pin()
+            
+            # Broadcast to participants
+            logger.info(f"Broadcasting pin update to users: {users}")
+            await self.broadcast_to_users(
+                users,
+                'message_pinned',
+                {
+                    'message_id': str(message.id), 
+                    'is_pinned': is_pinned,
+                    'action': 'pin' if is_pinned else 'unpin'
+                }
+            )
+            
+            # Send success confirmation to sender
+            await self.send_json({
+                'status': 'success', 
+                'action': 'message_pinned',
+                'message_id': str(message.id),
+                'is_pinned': is_pinned
+            })
+            logger.info(f"Pin completed successfully for message {message.id}")
+            
+        except Message.DoesNotExist:
+            logger.error(f"Message not found: id={message_id}")
+            await self.send_json({'error': 'Message not found'})
+        except PermissionError as e:
+            logger.error(f"Permission denied for pin: {e}")
+            await self.send_json({'error': 'You do not have permission to pin this message'})
+        except Exception as e:
+            logger.error(f"Error pinning message {message_id}: {e}", exc_info=True)
+            await self.send_json({'error': 'Failed to pin message'})
+
     async def handle_mark_as_read(self, data: Dict[str, Any]):
         """Mark messages from specific user as read."""
         receiver_id = data.get('receiver_id')
@@ -661,6 +743,8 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         await self.send_json({'type': 'message_edited', **event})
     async def message_deleted(self, event): 
         await self.send_json({'type': 'message_deleted', **event})
+    async def message_pinned(self, event): 
+        await self.send_json({'type': 'message_pinned', **event})
     async def messages_read(self, event): 
         await self.send_json({'type': 'messages_read', **event})
     async def user_typing(self, event): 
@@ -746,6 +830,7 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                 'add_reaction': self.handle_group_reaction,
                 'edit_message': self.handle_group_edit,
                 'delete_message': self.handle_group_delete,
+                'pin_message': self.handle_group_pin,
                 'typing': self.handle_group_typing,
                 'stop_typing': self.handle_group_stop_typing,
                 'ping': self.handle_ping  # Add ping handler
@@ -978,6 +1063,53 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot delete this message'})
 
+    async def handle_group_pin(self, data: Dict[str, Any]):
+        """Pin or unpin group message (any group member can pin)."""
+        message_id = data.get('message_id')
+        
+        if not message_id:
+            return await self.send_json({'error': 'message_id is required'})
+            
+        try:
+            @database_sync_to_async
+            def _pin():
+                from django.utils import timezone as tz
+                message = Message.objects.get(
+                    id=message_id, 
+                    group_id=self.group_id
+                )
+                
+                # Toggle pin status
+                message.is_pinned = not message.is_pinned
+                message.save()
+                return message.is_pinned
+                
+            is_pinned = await _pin()
+            
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'message_pinned',
+                    'message_id': str(message_id),
+                    'is_pinned': is_pinned,
+                    'action': 'pin' if is_pinned else 'unpin'
+                }
+            )
+            
+            # Send success confirmation to sender
+            await self.send_json({
+                'status': 'success', 
+                'action': 'message_pinned',
+                'message_id': str(message_id),
+                'is_pinned': is_pinned
+            })
+            
+        except Message.DoesNotExist:
+            await self.send_json({'error': 'Message not found in this group'})
+        except Exception as e:
+            logger.error(f"Error pinning group message: {e}")
+            await self.send_json({'error': 'Failed to pin message'})
+
     async def handle_group_typing(self, data: Dict[str, Any]):
         """Notify group of typing."""
         await self.channel_layer.group_send(
@@ -1001,6 +1133,8 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         await self.send_json({'type': 'message_edited', **event})
     async def message_deleted(self, event): 
         await self.send_json({'type': 'message_deleted', **event})
+    async def message_pinned(self, event): 
+        await self.send_json({'type': 'message_pinned', **event})
     async def user_typing(self, event): 
         await self.send_json({'type': 'user_typing', **event})
     async def user_stop_typing(self, event): 

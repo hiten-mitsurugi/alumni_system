@@ -7,7 +7,7 @@
   >
     <!-- Pin/Unpin -->
     <button 
-      @click="handleAction('pin')"
+      @click="handleAction(message.is_pinned ? 'unpin' : 'pin')"
       class="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors"
       :class="message.is_pinned ? 'text-amber-700' : 'text-gray-700'"
     >

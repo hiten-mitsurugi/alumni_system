@@ -529,23 +529,27 @@ async function handleMessageAction(actionData) {
         
       case 'pin':
       case 'unpin':
-        // Pin/unpin message
-        try {
-          const response = await api.post(`/message/${message.id}/pin/`)
-          console.log('Messaging: Pin/unpin response:', response.data)
-          
-          // Update local message state with the updated message from backend
-          const messageIndex = messages.value.findIndex(m => m.id === message.id)
-          if (messageIndex !== -1 && response.data.message) {
-            messages.value[messageIndex] = {
-              ...messages.value[messageIndex],
-              is_pinned: response.data.message.is_pinned
-            }
-            console.log(`Messaging: Message ${message.id} ${response.data.message.is_pinned ? 'pinned' : 'unpinned'} successfully`)
+        // Pin/unpin message via WebSocket for real-time updates
+        if (selectedConversation.value?.type === 'private') {
+          if (privateWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending pin via WebSocket for message:', message.id)
+            privateWs.value.send(JSON.stringify({
+              action: 'pin_message',
+              message_id: message.id
+            }))
+          } else {
+            console.error('Messaging: Private WebSocket not open for pin')
           }
-        } catch (error) {
-          console.error('Messaging: Error pinning/unpinning message:', error)
-          // TODO: Show error toast to user
+        } else if (selectedConversation.value?.type === 'group') {
+          if (groupWs.value?.readyState === WebSocket.OPEN) {
+            console.log('Messaging: Sending group pin via WebSocket for message:', message.id)
+            groupWs.value.send(JSON.stringify({
+              action: 'pin_message',
+              message_id: message.id
+            }))
+          } else {
+            console.error('Messaging: Group WebSocket not open for pin')
+          }
         }
         break
         
@@ -1078,6 +1082,32 @@ function handleWsMessage(data, scope) {
     message_deleted: (data) => {
       console.log('Messaging: Received message_deleted event:', data)
       messages.value = messages.value.filter(m => m.id !== data.message_id)
+    },
+    message_pinned: (data) => {
+      console.log('📌 Messaging: Received message_pinned event:', data)
+      const messageIndex = messages.value.findIndex(m => m.id === data.message_id)
+      if (messageIndex !== -1) {
+        console.log(`📌 Messaging: Found message at index ${messageIndex}`)
+        console.log(`📌 Messaging: Updating pin status to ${data.is_pinned}`)
+        
+        // Create a new object to trigger Vue reactivity
+        const updatedMessage = {
+          ...messages.value[messageIndex],
+          is_pinned: data.is_pinned
+        }
+        
+        // Replace the message at the specific index to trigger reactivity
+        messages.value.splice(messageIndex, 1, updatedMessage)
+        
+        // Force Vue reactivity
+        nextTick(() => {
+          messages.value = [...messages.value]
+          const action = data.is_pinned ? 'pinned' : 'unpinned'
+          console.log(`✅ Pin: Message ${action} successfully:`, data.message_id)
+        })
+      } else {
+        console.warn('📌 Messaging: Message not found for pin update:', data.message_id)
+      }
     },
     messages_read: (data) => messages.value.forEach(m => { if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true; }),
     message_request: (data) => {

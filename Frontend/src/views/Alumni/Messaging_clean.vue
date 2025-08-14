@@ -448,13 +448,23 @@ async function handleMessageAction(actionData) {
         break
         
       case 'pin':
-        await api.post(`/message/${message.id}/pin/`)
-        updateMessageInList(message.id, { is_pinned: true })
+        // Send pin request via WebSocket for real-time updates
+        if (privateWs.value?.readyState === WebSocket.OPEN) {
+          privateWs.value.send(JSON.stringify({
+            action: 'pin_message',
+            message_id: message.id
+          }))
+        }
         break
         
       case 'unpin':
-        await api.delete(`/message/${message.id}/pin/`)
-        updateMessageInList(message.id, { is_pinned: false })
+        // Send unpin request via WebSocket for real-time updates  
+        if (privateWs.value?.readyState === WebSocket.OPEN) {
+          privateWs.value.send(JSON.stringify({
+            action: 'pin_message',
+            message_id: message.id
+          }))
+        }
         break
         
       case 'edit':
@@ -635,6 +645,7 @@ function handleWebSocketMessage(data, scope) {
     reaction_added: handleReactionAdded,
     message_edited: handleMessageEdited,
     message_deleted: handleMessageDeleted,
+    message_pinned: handleMessagePinned,
     messages_read: handleMessagesRead,
     message_request: handleMessageRequest,
     request_accepted: handleRequestAccepted,
@@ -736,6 +747,17 @@ function handleMessageEdited(data) {
 
 function handleMessageDeleted(data) {
   messages.value = messages.value.filter(m => m.id !== data.message_id)
+}
+
+function handleMessagePinned(data) {
+  console.log('📌 Message pin status updated:', data)
+  updateMessageInList(data.message_id, { 
+    is_pinned: data.is_pinned 
+  })
+  
+  // Show notification for pin/unpin
+  const action = data.is_pinned ? 'pinned' : 'unpinned'
+  console.log(`📌 Message ${action} successfully`)
 }
 
 function handleMessagesRead(data) {
