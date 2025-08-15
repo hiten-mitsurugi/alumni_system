@@ -142,32 +142,7 @@ class BlockedUser(models.Model):
     class Meta:
         app_label = 'messaging_app'
 
-# --- MutedConversation ---
-class MutedConversation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='muted_by_user',
-        on_delete=models.CASCADE
-    )
-    receiver = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='muted_conversations',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
-    group = models.ForeignKey(
-        GroupChat,
-        related_name='muted_groups',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
-    muted_until = models.DateTimeField(null=True, blank=True)
 
-    class Meta:
-        app_label = 'messaging_app'
 
 # --- Reaction ---
 class Reaction(models.Model):
@@ -188,3 +163,21 @@ class Reaction(models.Model):
     class Meta:
         app_label = 'messaging_app'
         unique_together = ('user', 'message', 'emoji')  # Prevent duplicate reactions
+
+# --- Link Preview ---
+class LinkPreview(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    message = models.ForeignKey(
+        'Message',
+        on_delete=models.CASCADE,
+        related_name='link_previews'
+    )
+    url = models.URLField(max_length=2048)
+    title = models.CharField(max_length=500, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    image_url = models.URLField(max_length=2048, blank=True, null=True)
+    domain = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'messaging_app'

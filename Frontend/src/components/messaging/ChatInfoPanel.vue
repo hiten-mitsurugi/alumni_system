@@ -50,25 +50,6 @@
       <!-- Action Buttons -->
       <div class="p-4 border-b border-gray-200">
         <div class="grid grid-cols-2 gap-3">
-          <!-- Mute/Unmute -->
-          <button 
-            @click="toggleMute"
-            :class="[
-              'flex flex-col items-center p-3 rounded-lg transition-all duration-200',
-              isMuted 
-                ? 'bg-orange-50 text-orange-600 hover:bg-orange-100' 
-                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-            ]"
-          >
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path v-if="!isMuted" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6 10H4a2 2 0 00-2 2v0a2 2 0 002 2h2l6 6V4l-6 6z" />
-              <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-            </svg>
-            <span class="text-xs font-medium">{{ isMuted ? 'Unmute' : 'Mute' }}</span>
-          </button>
-
           <!-- Block/Unblock (only for private chats) -->
           <button 
             v-if="conversation.type === 'private'"
@@ -81,8 +62,8 @@
             ]"
           >
             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636" />
+              <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6"></path>
             </svg>
             <span class="text-xs font-medium">{{ isBlocked ? 'Unblock' : 'Block' }}</span>
           </button>
@@ -260,15 +241,29 @@
             rel="noopener noreferrer"
             class="block p-3 mx-3 mb-2 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
           >
-            <div class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-start gap-3">
+              <!-- Link preview image if available -->
+              <div v-if="link.image_url" class="w-12 h-8 flex-shrink-0 rounded overflow-hidden bg-gray-200">
+                <img 
+                  :src="link.image_url" 
+                  :alt="link.title"
+                  class="w-full h-full object-cover"
+                  @error="handleImageError"
+                />
+              </div>
+              <!-- Default icon if no image -->
+              <svg v-else class="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
               <div class="flex-1 min-w-0">
-                <p class="text-sm text-gray-800 truncate">{{ link.title || link.url }}</p>
-                <p class="text-xs text-gray-500">{{ link.domain }}</p>
-                <p class="text-xs text-gray-400">{{ formatDate(link.timestamp) }}</p>
+                <p class="text-sm font-medium text-gray-800 truncate">{{ link.title || link.url }}</p>
+                <p v-if="link.description" class="text-xs text-gray-600 line-clamp-2 mt-1">{{ link.description }}</p>
+                <div class="flex items-center gap-2 mt-1">
+                  <p class="text-xs text-gray-500">{{ link.domain }}</p>
+                  <span class="text-xs text-gray-400">•</span>
+                  <p class="text-xs text-gray-400">{{ formatDate(link.timestamp) }}</p>
+                </div>
               </div>
             </div>
           </a>
@@ -354,10 +349,9 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['close', 'mute', 'unmute', 'block', 'unblock', 'scroll-to-message'])
+const emit = defineEmits(['close', 'block', 'unblock', 'scroll-to-message'])
 
 // State
-const isMuted = ref(false)
 const isBlocked = ref(false)
 const pinnedMessages = ref([])
 const sharedImages = ref([])
@@ -425,13 +419,6 @@ const formatFileSize = (bytes) => {
 // API functions
 const fetchChatInfo = async () => {
   try {
-    // Check if conversation is muted
-    const muteResponse = await api.get('/message/mute/')
-    isMuted.value = muteResponse.data.some(mute => 
-      (props.conversation.type === 'private' && mute.receiver?.id === props.conversation.mate.id) ||
-      (props.conversation.type === 'group' && mute.group?.id === props.conversation.group.id)
-    )
-
     // Check if user is blocked (only for private chats)
     if (props.conversation.type === 'private') {
       const blockResponse = await api.get('/message/block/')
@@ -502,7 +489,7 @@ const processSharedContent = () => {
       })
     }
 
-    // Extract links from message content
+    // Extract links from message content and link previews
     const urlRegex = /(https?:\/\/[^\s]+)/g
     const matches = message.content.match(urlRegex)
     if (matches) {
@@ -522,6 +509,33 @@ const processSharedContent = () => {
         }
       })
     }
+
+    // Also extract from link previews if available
+    if (message.link_previews && message.link_previews.length > 0) {
+      message.link_previews.forEach(preview => {
+        // Check if we already added this URL from regex extraction
+        const existingLink = links.find(link => link.url === preview.url)
+        if (existingLink) {
+          // Update existing link with richer data from preview
+          existingLink.title = preview.title || preview.url
+          existingLink.description = preview.description
+          existingLink.image_url = preview.image_url
+          existingLink.domain = preview.domain
+        } else {
+          // Add new link from preview
+          links.push({
+            id: preview.id,
+            url: preview.url,
+            title: preview.title || preview.url,
+            description: preview.description,
+            image_url: preview.image_url,
+            domain: preview.domain,
+            timestamp: message.timestamp,
+            messageId: message.id
+          })
+        }
+      })
+    }
   })
 
   console.log('ChatInfoPanel: Final results - Images:', images.length, 'Files:', files.length, 'Links:', links.length)
@@ -535,32 +549,6 @@ const processSharedContent = () => {
 }
 
 // Actions
-const toggleMute = async () => {
-  try {
-    if (isMuted.value) {
-      // Unmute
-      await api.delete('/message/mute/', {
-        data: {
-          receiver_id: props.conversation.type === 'private' ? props.conversation.mate.id : null,
-          group_id: props.conversation.type === 'group' ? props.conversation.group.id : null
-        }
-      })
-      isMuted.value = false
-      emit('unmute')
-    } else {
-      // Mute
-      await api.post('/message/mute/', {
-        receiver_id: props.conversation.type === 'private' ? props.conversation.mate.id : null,
-        group_id: props.conversation.type === 'group' ? props.conversation.group.id : null
-      })
-      isMuted.value = true
-      emit('mute')
-    }
-  } catch (error) {
-    console.error('Error toggling mute:', error)
-  }
-}
-
 const toggleBlock = async () => {
   if (props.conversation.type !== 'private') return
 
@@ -615,6 +603,11 @@ watch(() => props.messages, () => {
   processSharedContent()
   fetchPinnedMessages()
 }, { deep: true })
+
+// Handle image loading errors for link previews
+const handleImageError = (event) => {
+  event.target.style.display = 'none'
+}
 
 // Lifecycle
 onMounted(() => {

@@ -40,19 +40,35 @@
             <div 
               v-for="(attachment, index) in imageAttachments" 
               :key="index"
-              class="relative"
+              class="relative group"
             >
               <img
                 :src="getAttachmentUrl(attachment)"
-                :alt="attachment.name || 'Image'"
-                class="max-w-full h-auto object-cover cursor-pointer"
+                :alt="attachment.file_name || attachment.name || 'Image'"
+                class="max-w-full h-auto object-cover cursor-pointer transition-opacity group-hover:opacity-90"
                 :class="isOwnMessage ? 'rounded-xl rounded-br-none' : 'rounded-xl rounded-bl-none'"
-                style="max-height: 200px; max-width: 250px; min-width: 150px;"
-                @click="openImageModal(getAttachmentUrl(attachment))"
+                style="max-height: 200px; max-width: 250px; min-width: 150px; cursor: pointer;"
+                @click.stop="openImageModal(getAttachmentUrl(attachment))"
               />
-              <!-- Image overlay for file name/size if available -->
-              <div v-if="attachment.name" class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                {{ attachment.name }}
+              <!-- Enhanced image overlay with filename and size -->
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 transition-opacity"
+                   :class="isOwnMessage ? 'rounded-br-none rounded-bl-xl' : 'rounded-bl-none rounded-br-xl'">
+                <div class="text-white text-xs">
+                  <p class="font-medium truncate" v-if="attachment.file_name || attachment.name">
+                    {{ attachment.file_name || attachment.name }}
+                  </p>
+                  <p class="text-white/80 text-xs" v-if="attachment.file_size">
+                    {{ getFileSize(attachment) }}
+                  </p>
+                </div>
+              </div>
+              <!-- View full size indicator on hover -->
+              <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                   :class="isOwnMessage ? 'rounded-xl rounded-br-none' : 'rounded-xl rounded-bl-none'"
+                   @click.stop="openImageModal(getAttachmentUrl(attachment))">
+                <div class="bg-black/60 text-white px-3 py-1 rounded-full text-sm font-medium pointer-events-none">
+                  Click to view
+                </div>
               </div>
             </div>
           </div>
@@ -70,32 +86,45 @@
               :key="index"
               class="flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all"
               :class="isOwnMessage ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'"
-              @click="downloadFile(getAttachmentUrl(attachment), attachment.name)"
+              @click="downloadFile(getAttachmentUrl(attachment), attachment.file_name || attachment.name)"
             >
               <!-- File Icon based on type -->
               <div class="flex-shrink-0">
-                <svg v-if="getFileType(attachment) === 'pdf'" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <svg v-if="getFileType(attachment) === 'pdf'" class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                 </svg>
-                <svg v-else-if="getFileType(attachment) === 'doc'" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <svg v-else-if="getFileType(attachment).includes('doc')" class="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                 </svg>
-                <svg v-else class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <svg v-else-if="getFileType(attachment).includes('sheet') || getFileType(attachment).includes('excel')" class="w-8 h-8 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                </svg>
+                <svg v-else-if="getFileType(attachment).includes('ppt') || getFileType(attachment).includes('presentation')" class="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                </svg>
+                <svg v-else-if="getFileType(attachment).includes('video') || getFileType(attachment) === 'mp4'" class="w-8 h-8 text-purple-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z" />
+                </svg>
+                <svg v-else class="w-8 h-8" :class="isOwnMessage ? 'text-white' : 'text-gray-600'" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-medium truncate">{{ attachment.name || 'File' }}</p>
-                <p class="text-xs opacity-75">{{ getFileSize(attachment) }} • {{ getFileType(attachment).toUpperCase() }}</p>
+                <p class="font-semibold text-sm truncate" :title="attachment.file_name || attachment.name || 'File'">
+                  {{ attachment.file_name || attachment.name || 'Unnamed file' }}
+                </p>
+                <p class="text-xs" :class="isOwnMessage ? 'text-white text-opacity-80' : 'text-gray-500'">
+                  {{ getFileSize(attachment) }}{{ getFileType(attachment) ? ' • ' + getFileType(attachment).toUpperCase() : '' }}
+                </p>
               </div>
               <!-- Download icon -->
-              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 flex-shrink-0" :class="isOwnMessage ? 'text-white' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
           </div>
           <!-- Text content below files if both exist -->
-          <div v-if="message.content && message.content.trim()" class="px-4 py-2 border-t border-gray-300">
+          <div v-if="message.content && message.content.trim()" class="px-4 py-2 border-t" :class="isOwnMessage ? 'border-blue-400' : 'border-gray-300'">
             <p class="text-sm">{{ message.content }}</p>
           </div>
         </template>
@@ -183,6 +212,57 @@
               <p v-else class="text-sm" v-html="formatMessageContent(message.content)"></p>
               <!-- Edit indicator -->
               <span v-if="message.edited_at" class="text-xs opacity-75 ml-1">(edited)</span>
+              
+              <!-- Link Previews -->
+              <div v-if="message.link_previews && message.link_previews.length > 0" class="mt-3 space-y-2">
+                <div 
+                  v-for="preview in message.link_previews" 
+                  :key="preview.id"
+                  class="border rounded-lg overflow-hidden cursor-pointer hover:bg-opacity-90 transition-all"
+                  :class="isOwnMessage ? 'border-blue-300 bg-blue-50' : 'border-gray-300 bg-white'"
+                  @click="openLink(preview.url)"
+                >
+                  <!-- Link preview header with image -->
+                  <div v-if="preview.image_url" class="aspect-video bg-gray-100 overflow-hidden">
+                    <img 
+                      :src="preview.image_url" 
+                      :alt="preview.title"
+                      class="w-full h-full object-cover"
+                      @error="handleImageError"
+                    />
+                  </div>
+                  
+                  <!-- Link preview content -->
+                  <div class="p-3">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1 min-w-0">
+                        <h4 v-if="preview.title" 
+                            class="font-medium text-sm line-clamp-2 mb-1"
+                            :class="isOwnMessage ? 'text-blue-900' : 'text-gray-900'">
+                          {{ preview.title }}
+                        </h4>
+                        <p v-if="preview.description" 
+                           class="text-xs line-clamp-2 mb-2"
+                           :class="isOwnMessage ? 'text-blue-700' : 'text-gray-600'">
+                          {{ preview.description }}
+                        </p>
+                        <div class="flex items-center gap-2">
+                          <svg class="w-3 h-3" :class="isOwnMessage ? 'text-blue-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          <span class="text-xs font-medium truncate" 
+                                :class="isOwnMessage ? 'text-blue-700' : 'text-gray-700'">
+                            {{ preview.domain }}
+                          </span>
+                        </div>
+                      </div>
+                      <svg class="w-4 h-4 flex-shrink-0 ml-2" :class="isOwnMessage ? 'text-blue-600' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </template>
@@ -455,15 +535,26 @@ const isEmojiOnlyMessage = computed(() => {
   return textWithoutEmojis.length === 0 && contentToCheck.trim().length > 0
 })
 
-// Format message content with enhanced emoji rendering
+// Format message content with enhanced emoji rendering and link detection
 const formatMessageContent = (content) => {
   if (!content) return ''
+  
+  // Enhanced URL regex pattern to match various URL formats
+  const urlRegex = /(https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?)/gi
+  
+  // Replace URLs with clickable links - different colors for sender vs receiver
+  let formattedContent = content.replace(urlRegex, (url) => {
+    const linkClasses = isOwnMessage.value 
+      ? "text-white hover:text-gray-200 underline break-all" // White for sender (blue bubble)
+      : "text-blue-600 hover:text-blue-800 underline break-all" // Blue for receiver (gray bubble)
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="${linkClasses}">${url}</a>`
+  })
   
   // Enhanced emoji regex to match more emoji ranges
   const emojiRegex = /([\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}])/gu
   
   // Replace emojis with larger styled versions
-  const formattedContent = content.replace(emojiRegex, '<span class="inline-block text-lg">$1</span>')
+  formattedContent = formattedContent.replace(emojiRegex, '<span class="inline-block text-lg">$1</span>')
   
   // Replace line breaks with <br> tags
   return formattedContent.replace(/\n/g, '<br>')
@@ -479,43 +570,60 @@ const getAttachmentUrl = (attachment) => {
 const getFileType = (attachment) => {
   // Use file_type from backend first, then fallback to file extension
   if (attachment.file_type) {
+    // Return the subtype (e.g., 'pdf' from 'application/pdf')
     return attachment.file_type.split('/').pop() || 'file'
   }
-  if (!attachment.file) return 'file'
-  const extension = attachment.file.split('.').pop()?.toLowerCase()
+  
+  // Fallback: extract from filename
+  const fileName = attachment.file_name || attachment.name || attachment.file || ''
+  if (!fileName) return 'file'
+  
+  const extension = fileName.split('.').pop()?.toLowerCase()
   return extension || 'file'
 }
 
 const getFileSize = (attachment) => {
-  // If size is available in attachment object
-  if (attachment.size) {
-    const bytes = attachment.size
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
-  return 'Unknown size'
+  // Use file_size from backend first
+  const bytes = attachment.file_size || attachment.size || 0
+  
+  if (bytes === 0) return 'Unknown size'
+  
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 // Image modal functionality
 const openImageModal = (imageUrl) => {
+  console.log('Opening image modal for:', imageUrl)
+  
   // Create a simple modal to view full-size image
   const modal = document.createElement('div')
-  modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75'
+  modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'
+  modal.style.zIndex = '9999'
   modal.innerHTML = `
-    <div class="relative max-w-4xl max-h-full p-4">
-      <img src="${imageUrl}" class="max-w-full max-h-full object-contain" />
-      <button class="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl">&times;</button>
+    <div class="relative max-w-4xl max-h-full p-4 flex items-center justify-center">
+      <img src="${imageUrl}" class="max-w-full max-h-full object-contain" style="max-height: 90vh; max-width: 90vw;" />
+      <button class="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center">&times;</button>
     </div>
   `
   
+  // Close modal on click
   modal.addEventListener('click', (e) => {
-    if (e.target === modal || e.target.textContent === '×') {
+    if (e.target === modal || e.target.textContent === '×' || e.target.tagName === 'BUTTON') {
       document.body.removeChild(modal)
     }
   })
+  
+  // Close modal on Escape key
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      document.body.removeChild(modal)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }
+  document.addEventListener('keydown', handleEscape)
   
   document.body.appendChild(modal)
 }
@@ -655,5 +763,33 @@ const scrollToOriginalMessage = () => {
     emit('scroll-to-message', replyMessage.value.id)
   }
 }
+
+// Link functionality
+const openLink = (url) => {
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+// Handle image loading errors for link previews
+const handleImageError = (event) => {
+  event.target.style.display = 'none'
+}
 </script>
+
+<style scoped>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.break-all {
+  word-break: break-all;
+}
+
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+</style>
 

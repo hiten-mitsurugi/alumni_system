@@ -8,6 +8,7 @@
     />
     
     <div class="p-4">
+      <!-- Message Input -->
       <div class="flex items-center gap-2">
         <!-- Hidden File Input -->
         <input
@@ -128,7 +129,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> <!-- End v-else -->
     </div>
   </div>
 </template>

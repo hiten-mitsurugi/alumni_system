@@ -5,9 +5,9 @@ from .models import (
     GroupChat,
     MessageRequest,
     BlockedUser,
-    MutedConversation,
     Attachment,
-    Reaction
+    Reaction,
+    LinkPreview
 )
 from auth_app.models import Profile  # Import Profile from auth_app
 
@@ -83,6 +83,12 @@ class ReactionSerializer(serializers.ModelSerializer):
         model = Reaction
         fields = ['id', 'user', 'emoji']
 
+# ✅ Link Preview Serializer
+class LinkPreviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LinkPreview
+        fields = ['id', 'url', 'title', 'description', 'image_url', 'domain', 'created_at']
+
 # ✅ Message Serializer
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSearchSerializer(read_only=True)
@@ -90,6 +96,7 @@ class MessageSerializer(serializers.ModelSerializer):
     reply_to = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(many=True, read_only=True)
     reactions = ReactionSerializer(many=True, read_only=True)
+    link_previews = LinkPreviewSerializer(many=True, read_only=True)
 
     class Meta:
         model = Message
@@ -105,7 +112,8 @@ class MessageSerializer(serializers.ModelSerializer):
             'reply_to',
             'attachments',
             'is_pinned',
-            'reactions'
+            'reactions',
+            'link_previews'
         ]
 
     def get_reply_to(self, obj):
@@ -172,11 +180,5 @@ class BlockedUserSerializer(serializers.ModelSerializer):
         model = BlockedUser
         fields = ['id', 'blocked_user', 'timestamp']
 
-# ✅ Muted Conversation Serializer
-class MutedConversationSerializer(serializers.ModelSerializer):
-    receiver = UserSearchSerializer(read_only=True)
-    group = GroupChatSerializer(read_only=True)
 
-    class Meta:
-        model = MutedConversation
-        fields = ['id', 'receiver', 'group', 'muted_until']
+

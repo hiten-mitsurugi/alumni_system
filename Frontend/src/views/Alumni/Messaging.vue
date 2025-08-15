@@ -280,7 +280,9 @@ const fetchMessages = async conv => {
       ? `/message/private/${conv.mate.id}/`
       : `/message/group/${conv.group.id}/`;
     messages.value = (await api.get(url)).data;
-  } catch (e) { console.error('Msg fetch error', e); }
+  } catch (e) { 
+    console.error('Msg fetch error', e);
+  }
 };
 
 const fetchPendingMessages = async () => {
@@ -886,8 +888,12 @@ function handleWsMessage(data, scope) {
   // Handle error messages from backend
   if (data.error) {
     console.error('🔴 WebSocket Error:', data.error);
-    // You can add user notification here if needed
-    // For now, just log the error and return
+    
+    // Remove any temporary messages on error
+    if (data.temp_id) {
+      messages.value = messages.value.filter(m => m.id !== data.temp_id);
+    }
+    
     return;
   }
   

@@ -5,8 +5,10 @@ from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
-from .models import Message, GroupChat, MessageRequest, BlockedUser, MutedConversation
-from .serializers import UserSerializer, GroupChatSerializer, MessageSerializer, MessageRequestSerializer, BlockedUserSerializer, MutedConversationSerializer, AttachmentSerializer, ReactionSerializer, UserSearchSerializer
+from .models import Message, GroupChat, MessageRequest, BlockedUser
+from .serializers import UserSerializer, GroupChatSerializer, MessageSerializer, MessageRequestSerializer, BlockedUserSerializer, AttachmentSerializer, ReactionSerializer, UserSearchSerializer
+from .link_utils import create_link_previews_for_message
+import logging
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from .models import Attachment
@@ -15,6 +17,9 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 import logging
+
+logger = logging.getLogger(__name__)
+
 from django.contrib.auth import get_user_model
 CustomUser = get_user_model()
 
@@ -62,56 +67,78 @@ class ConversationListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
+        from django.db.models import F, Max, Q
+        
+        current_user = request.user
+
+        # Get conversations from both sent and received messages
+        sent_conversations = Message.objects.filter(
+            sender=current_user,
+            receiver__isnull=False
+        ).values('receiver').annotate(
+            other_user_id=F('receiver'),
+            last_message_time=Max('timestamp')
+        )
+
+        received_conversations = Message.objects.filter(
+            receiver=current_user,
+            sender__isnull=False
+        ).values('sender').annotate(
+            other_user_id=F('sender'),
+            last_message_time=Max('timestamp')
+        )
+
+        # Combine and get unique conversations
+        all_conversations = list(sent_conversations) + list(received_conversations)
+        
+        # Group by other_user_id and get the latest timestamp
+        conversation_dict = {}
+        for conv in all_conversations:
+            user_id = conv['other_user_id']
+            if user_id not in conversation_dict or conv['last_message_time'] > conversation_dict[user_id]['last_message_time']:
+                conversation_dict[user_id] = conv
+
+        # Get conversation details for each user
         conversations = []
+        for user_id, conv_data in conversation_dict.items():
+            try:
+                other_user = CustomUser.objects.get(id=user_id)
+                
+                # Get the latest message between these users
+                latest_message = Message.objects.filter(
+                    Q(sender=current_user, receiver=other_user) |
+                    Q(sender=other_user, receiver=current_user)
+                ).order_by('-timestamp').first()
 
-        # Private conversations (only with accepted contacts)
-        private_users = CustomUser.objects.filter(
-            Q(sent_messages__receiver=user) | Q(received_messages__sender=user)
-        ).distinct()
-        for other_user in private_users:
-            latest_message = Message.objects.filter(
-                (Q(sender=user) & Q(receiver=other_user)) |
-                (Q(sender=other_user) & Q(receiver=user))
-            ).order_by('-timestamp').first()
-            if latest_message:
-                unread_count = Message.objects.filter(
-                    sender=other_user, receiver=user, is_read=False
-                ).count()
-                is_muted = MutedConversation.objects.filter(
-                    user=user, receiver=other_user
-                ).exists()
-                is_blocked = BlockedUser.objects.filter(
-                    user=user, blocked_user=other_user
-                ).exists()
-                conversations.append({
-                    'type': 'private',
-                    'id': str(other_user.id),
-                    'mate': UserSearchSerializer(other_user, context={'request': request}).data,
-                    'lastMessage': latest_message.content if latest_message else '',
-                    'timestamp': latest_message.timestamp.isoformat() if latest_message else None,
-                    'unreadCount': unread_count,
-                    'isMuted': is_muted,
-                    'isBlocked': is_blocked
-                })
+                if latest_message:
+                    # Create conversation object
+                    conversation = {
+                        'type': 'private',
+                        'mate': {
+                            'id': other_user.id,
+                            'username': other_user.username,
+                            'first_name': other_user.first_name,
+                            'last_name': other_user.last_name,
+                            'profile_picture': getattr(other_user.profile, 'profile_picture', None) if hasattr(other_user, 'profile') else None,
+                            'status': getattr(other_user.profile, 'status', 'offline') if hasattr(other_user, 'profile') else 'offline',
+                            'last_seen': getattr(other_user.profile, 'last_seen', None) if hasattr(other_user, 'profile') else None,
+                        },
+                        'lastMessage': latest_message.content[:50] + ('...' if len(latest_message.content) > 50 else ''),
+                        'timestamp': latest_message.timestamp.isoformat(),
+                        'unreadCount': Message.objects.filter(
+                            sender=other_user,
+                            receiver=current_user,
+                            is_read=False
+                        ).count()
+                    }
+                    conversations.append(conversation)
+            except CustomUser.DoesNotExist:
+                continue
 
-        # Group conversations
-        groups = GroupChat.objects.filter(members=user)
-        for group in groups:
-            latest_message = Message.objects.filter(group=group).order_by('-timestamp').first()
-            is_muted = MutedConversation.objects.filter(user=user, group=group).exists()
-            conversations.append({
-                'type': 'group',
-                'id': str(group.id),
-                'group': GroupChatSerializer(group).data,
-                'lastMessage': latest_message.content if latest_message else '',
-                'timestamp': latest_message.timestamp.isoformat() if latest_message else None,
-                'unreadCount': 0,  # Placeholder; enhance later
-                'isMuted': is_muted
-            })
+        # Sort by timestamp (newest first)
+        conversations.sort(key=lambda x: x['timestamp'], reverse=True)
 
-        conversations.sort(key=lambda x: x['timestamp'] or '1970-01-01T00:00:00Z', reverse=True)
-        return Response(conversations)
+        return Response(conversations, status=status.HTTP_200_OK)
 
 class SendMessageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -128,10 +155,6 @@ class SendMessageView(APIView):
             receiver = CustomUser.objects.get(id=receiver_id)
         except settings.AUTH_USER_MODEL.DoesNotExist:
             return Response({'error': 'Receiver not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Check if receiver has blocked the sender
-        if BlockedUser.objects.filter(user=receiver, blocked_user=request.user).exists():
-            return Response({'error': 'You are blocked by this user'}, status=status.HTTP_403_FORBIDDEN)
 
         # Check if there's an existing conversation (either messages exist OR accepted message requests exist)
         has_conversation = Message.objects.filter(
@@ -162,9 +185,30 @@ class SendMessageView(APIView):
                 receiver=receiver,
                 content=content
             )
+            
+            # Add reply_to if provided
+            if reply_to_id:
+                try:
+                    reply_message = Message.objects.get(id=reply_to_id)
+                    message.reply_to = reply_message
+                    message.save()
+                except Message.DoesNotExist:
+                    pass
+            
+            # Add attachments
             for attachment_id in attachment_ids:
-                attachment = Attachment.objects.get(id=attachment_id)
-                message.attachments.add(attachment)
+                try:
+                    attachment = Attachment.objects.get(id=attachment_id)
+                    message.attachments.add(attachment)
+                except Attachment.DoesNotExist:
+                    pass
+            
+            # Generate link previews automatically
+            try:
+                create_link_previews_for_message(message)
+            except Exception as e:
+                logger.error(f"Failed to create link previews for message {message.id}: {str(e)}")
+            
             serializer = MessageSerializer(message)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -177,7 +221,7 @@ class MessageListView(APIView):
         except (CustomUser.DoesNotExist, ValueError):
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Fetch messages as usual...
+        # Fetch messages
         messages = Message.objects.filter(
             sender=request.user, receiver=receiver
         ) | Message.objects.filter(
@@ -299,40 +343,7 @@ class BlockUserView(APIView):
         BlockedUser.objects.filter(user=request.user, blocked_user_id=user_id).delete()
         return Response({'status': 'user unblocked'})
 
-class MuteConversationView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        muted_conversations = MutedConversation.objects.filter(user=request.user)
-        serializer = MutedConversationSerializer(muted_conversations, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        receiver_id = request.data.get('receiver_id')
-        group_id = request.data.get('group_id')
-        muted_until = request.data.get('muted_until')
-        MutedConversation.objects.create(
-            user=request.user,
-            receiver_id=receiver_id if receiver_id else None,
-            group_id=group_id if group_id else None,
-            muted_until=muted_until
-        )
-        return Response({'status': 'conversation muted'})
-    
-    def delete(self, request):
-        receiver_id = request.data.get('receiver_id')
-        group_id = request.data.get('group_id')
-        
-        muted_conversation = MutedConversation.objects.filter(
-            user=request.user,
-            receiver_id=receiver_id if receiver_id else None,
-            group_id=group_id if group_id else None
-        ).first()
-        
-        if muted_conversation:
-            muted_conversation.delete()
-            return Response({'status': 'conversation unmuted'})
-        return Response({'error': 'Conversation not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class SearchUsersView(APIView):
     permission_classes = [IsAuthenticated]

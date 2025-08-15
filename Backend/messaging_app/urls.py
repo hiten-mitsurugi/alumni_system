@@ -3,7 +3,7 @@ from .views import (
     SearchView, ConversationListView, MessageListView, SendMessageView,
     GroupChatCreateView, GroupChatManageView, GroupChatListView,
     ConversationUsersView, MessageRequestView, BlockUserView,
-    MuteConversationView, PinMessageView, BumpMessageView, UploadView
+    PinMessageView, BumpMessageView, UploadView
 )
 
 urlpatterns = [
@@ -25,8 +25,6 @@ urlpatterns = [
     
     path('block/', BlockUserView.as_view(), name='block_user'),
     path('block/<uuid:user_id>/', BlockUserView.as_view(), name='unblock_user'),
-    
-    path('mute/', MuteConversationView.as_view(), name='mute_conversation'),
     
     path('pin/<uuid:message_id>/', PinMessageView.as_view(), name='pin_message'),
     path('bump/<uuid:message_id>/', BumpMessageView.as_view(), name='bump_message'),

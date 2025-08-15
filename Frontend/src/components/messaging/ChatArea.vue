@@ -51,41 +51,44 @@
       class="flex-1 overflow-y-auto p-4 chat-messages-container bg-gray-50"
       style="min-height: 0; max-height: calc(100vh - 300px);"
     >
-      <div
-        v-for="(message, index) in messages"
-        :key="message.id"
-        :class="[
-          // Reduce spacing for reply threads
-          isReplyMessage(message, index) ? 'mb-2' : 'mb-4'
-        ]"
-      >
-        <MessageBubble
-          :message="message"
-          :messages="messages"
-          :currentUser="currentUser"
-          @message-action="handleMessageAction"
-          @scroll-to-message="scrollToMessage"
-        />
-      </div>
-
-      <!-- Individual Pinned Message Indicators (inside messages container) -->
-      <div 
-        v-if="pinnedMessages.length > 0" 
-        class="pinned-indicators-container"
-      >
-        <div 
-          v-for="pinnedMessage in pinnedMessages"
-          :key="pinnedMessage.id"
-          class="pinned-indicator-container"
-          @click="scrollToMessage(pinnedMessage.id)"
+      <!-- Messages Display -->
+      <div>
+        <div
+          v-for="(message, index) in messages"
+          :key="message.id"
+          :class="[
+            // Reduce spacing for reply threads
+            isReplyMessage(message, index) ? 'mb-2' : 'mb-4'
+          ]"
         >
-          <div class="pinned-indicator">
-            <svg class="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
-              <path fill-rule="evenodd" d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
-              <path d="M9 11H7v5a1 1 0 001 1h4a1 1 0 001-1v-5h-2V9H9v2z"/>
-            </svg>
-            <span class="pinned-text">pinned message</span>
+          <MessageBubble
+            :message="message"
+            :messages="messages"
+            :currentUser="currentUser"
+            @message-action="handleMessageAction"
+            @scroll-to-message="scrollToMessage"
+          />
+        </div>
+
+        <!-- Individual Pinned Message Indicators (inside messages container) -->
+        <div 
+          v-if="pinnedMessages.length > 0" 
+          class="pinned-indicators-container"
+        >
+          <div 
+            v-for="pinnedMessage in pinnedMessages"
+            :key="pinnedMessage.id"
+            class="pinned-indicator-container"
+            @click="scrollToMessage(pinnedMessage.id)"
+          >
+            <div class="pinned-indicator">
+              <svg class="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
+                <path fill-rule="evenodd" d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                <path d="M9 11H7v5a1 1 0 001 1h4a1 1 0 001-1v-5h-2V9H9v2z"/>
+              </svg>
+              <span class="pinned-text">pinned message</span>
+            </div>
           </div>
         </div>
       </div>
