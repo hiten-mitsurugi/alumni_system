@@ -1,7 +1,7 @@
 <template>
-  <div :class="['flex gap-3', isOwnMessage && 'flex-row-reverse']" :data-message-id="message.id">
-    <!-- Avatar for other user's messages (not shown for own messages) -->
-    <div v-if="!isOwnMessage" class="flex-shrink-0">
+  <div :class="['flex gap-3', isSystemMessage ? 'justify-center' : isOwnMessage && 'flex-row-reverse']" :data-message-id="message.id">
+    <!-- Avatar for other user's messages (not shown for own messages or system messages) -->
+    <div v-if="!isOwnMessage && !isSystemMessage" class="flex-shrink-0">
       <img 
         :src="getProfilePictureUrl(message.sender)" 
         :alt="`${message.sender.first_name} ${message.sender.last_name}`"
@@ -9,7 +9,7 @@
       />
     </div>
 
-    <div :class="['flex flex-col max-w-[70%] relative group', isOwnMessage && 'items-end']">
+    <div :class="['flex flex-col max-w-[70%] relative group', isSystemMessage ? 'items-center' : isOwnMessage && 'items-end']">
       <!-- Pin indicator -->
       <div v-if="message.is_pinned" class="flex items-center gap-1 mb-1 text-xs text-amber-600">
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
@@ -27,6 +27,7 @@
         <div
           :class="[
             'relative shadow-sm flex-1',
+            isSystemMessage ? 'bg-yellow-100 text-gray-700 rounded-xl border-l-4 border-yellow-400 italic text-center' :
             isOwnMessage ? 'bg-blue-500 text-white rounded-xl rounded-br-none' : 'bg-gray-100 text-gray-900 rounded-xl rounded-bl-none',
             // No padding for images, normal padding for text/files
             hasImageAttachment ? 'p-0 overflow-hidden' : 'px-4 py-2 break-words'
@@ -358,6 +359,11 @@ const isOwnMessage = computed(() => {
     isOwnMessage: result
   })
   return result
+})
+
+// Check if this is a system message
+const isSystemMessage = computed(() => {
+  return props.message.isSystemMessage || props.message.sender?.id === 'system'
 })
 
 // Check if this is a bump message

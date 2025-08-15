@@ -40,16 +40,34 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSearchSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
     profile = UserProfileSerializer(read_only=True)
+    is_blocked_by_me = serializers.SerializerMethodField()
+    is_blocked_by_them = serializers.SerializerMethodField()
+    can_send_message = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'year_graduated', 'profile_picture', 'profile']
+        fields = ['id', 'username', 'first_name', 'last_name', 'year_graduated', 'profile_picture', 'profile', 'is_blocked_by_me', 'is_blocked_by_them', 'can_send_message']
 
     def get_profile_picture(self, obj):
         if obj.profile_picture:
             request = self.context.get('request')
             return request.build_absolute_uri(obj.profile_picture.url) if request else obj.profile_picture.url
         return None
+    
+    def get_is_blocked_by_me(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and hasattr(request.user, 'is_authenticated') and request.user.is_authenticated:
+            return BlockedUser.objects.filter(user=request.user, blocked_user=obj).exists()
+        return False
+    
+    def get_is_blocked_by_them(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and hasattr(request.user, 'is_authenticated') and request.user.is_authenticated:
+            return BlockedUser.objects.filter(user=obj, blocked_user=request.user).exists()
+        return False
+    
+    def get_can_send_message(self, obj):
+        return not (self.get_is_blocked_by_me(obj) or self.get_is_blocked_by_them(obj))
 
 
 # ✅ Group Search Serializer
@@ -151,17 +169,31 @@ class MessageSerializer(serializers.ModelSerializer):
 class GroupChatSerializer(serializers.ModelSerializer):
     members = UserSearchSerializer(many=True, read_only=True)
     admins = UserSearchSerializer(many=True, read_only=True)
+    group_picture = serializers.SerializerMethodField()
+    member_count = serializers.SerializerMethodField()
 
     class Meta:
         model = GroupChat
         fields = [
             'id',
             'name',
+            'description',
             'group_picture',
             'members',
             'admins',
-            'created_at'
+            'member_count',
+            'created_at',
+            'updated_at'
         ]
+        
+    def get_group_picture(self, obj):
+        if obj.group_picture:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.group_picture.url) if request else obj.group_picture.url
+        return None
+        
+    def get_member_count(self, obj):
+        return obj.members.count()
 
 # ✅ Message Request Serializer
 class MessageRequestSerializer(serializers.ModelSerializer):

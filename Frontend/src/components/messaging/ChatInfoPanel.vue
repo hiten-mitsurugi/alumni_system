@@ -331,6 +331,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import api from '../../services/api'
+import messagingService from '../../services/messaging'
 
 // Props
 const props = defineProps({
@@ -421,10 +422,7 @@ const fetchChatInfo = async () => {
   try {
     // Check if user is blocked (only for private chats)
     if (props.conversation.type === 'private') {
-      const blockResponse = await api.get('/message/block/')
-      isBlocked.value = blockResponse.data.some(block => 
-        block.blocked_user.id === props.conversation.mate.id
-      )
+      isBlocked.value = await messagingService.isUserBlocked(props.conversation.mate.id)
     }
 
     // Fetch pinned messages
@@ -555,19 +553,22 @@ const toggleBlock = async () => {
   try {
     if (isBlocked.value) {
       // Unblock
-      await api.delete(`/message/block/${props.conversation.mate.id}/`)
+      await messagingService.unblockUser(props.conversation.mate.id)
       isBlocked.value = false
       emit('unblock')
+      console.log('User unblocked successfully')
     } else {
       // Block
-      await api.post('/message/block/', {
-        user_id: props.conversation.mate.id
-      })
+      await messagingService.blockUser(props.conversation.mate.id)
       isBlocked.value = true
       emit('block')
+      console.log('User blocked successfully')
     }
   } catch (error) {
     console.error('Error toggling block:', error)
+    // Show user-friendly error message
+    const message = error.response?.data?.error || 'Failed to update block status'
+    alert(message) // You can replace this with a toast notification
   }
 }
 

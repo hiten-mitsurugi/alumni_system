@@ -94,9 +94,39 @@
       </div>
     </div>
 
-    <!-- Message input -->
+    <!-- Message input or blocked indicator -->
     <div class="flex-shrink-0 border-t border-gray-200 bg-white p-2">
+      <!-- Show blocked message if conversation is blocked -->
+      <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem" 
+           class="p-4 text-center">
+        <div v-if="conversation.isBlockedByMe" 
+             class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex items-center justify-center space-x-2 text-red-600">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+            </svg>
+            <span class="font-medium">You have blocked this user</span>
+          </div>
+          <p class="text-sm text-red-500 mt-2">
+            You cannot send messages to blocked users. Unblock them to continue messaging.
+          </p>
+        </div>
+        <div v-else-if="conversation.isBlockedByThem" 
+             class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div class="flex items-center justify-center space-x-2 text-orange-600">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+            </svg>
+            <span class="font-medium">You are blocked by this user</span>
+          </div>
+          <p class="text-sm text-orange-500 mt-2">
+            This user has blocked you. You cannot send messages to them.
+          </p>
+        </div>
+      </div>
+      <!-- Normal message input for non-blocked conversations -->
       <MessageInput 
+        v-else
         :replyingTo="replyingTo"
         @send-message="sendMessage" 
         @cancel-reply="cancelReply"

@@ -30,6 +30,14 @@
                 {{ pendingMessages.length > 99 ? '99+' : pendingMessages.length }}
               </span>
             </button>
+            <button @click="showBlockedUsers = true"
+              class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+              title="Blocked Users">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6"></path>
+              </svg>
+            </button>
             <button @click="showCreateGroup = true"
               class="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
               title="Create Group">
@@ -72,22 +80,41 @@
           :class="['flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-white', selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : 'hover:shadow-sm']">
           <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-4">
             <img :src="getProfilePictureUrl(conversation.mate)" class="w-12 h-12 rounded-full object-cover" />
-            <div
+            <!-- Blocked indicator -->
+            <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem" 
+                 class="absolute -bottom-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
+              <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <!-- Online status indicator (only for non-blocked users) -->
+            <div v-else
               :class="['absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white', getStatusColor(conversation.mate)]" />
           </div>
 
           <div v-else class="relative flex-shrink-0 mr-4">
-            <img :src="conversation.group.group_picture || '/default-group.png'" alt="Group Avatar"
+            <img :src="conversation.group?.group_picture || '/default-group.png'" alt="Group Avatar"
               class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
             <div
               class="absolute -bottom-1 -right-1 bg-green-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
-              {{ conversation.group.members.length }}</div>
+              {{ conversation.group?.members?.length || 0 }}</div>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between mb-1">
               <h3 class="font-semibold text-gray-900 truncate text-lg">{{ conversation.type === 'private' ?
-                `${conversation.mate.first_name} ${conversation.mate.last_name}` : conversation.group.name }}</h3>
+                `${conversation.mate.first_name} ${conversation.mate.last_name}` : conversation.group?.name || 'Unnamed Group' }}</h3>
               <div class="flex items-center gap-2">
+                <!-- Block status indicators -->
+                <span v-if="conversation.isBlockedByMe" 
+                      class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full" 
+                      title="You have blocked this user">
+                  Blocked
+                </span>
+                <span v-else-if="conversation.isBlockedByThem" 
+                      class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full" 
+                      title="This user has blocked you">
+                  Blocked you
+                </span>
                 <svg v-if="conversation.isMuted" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
                   viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -99,12 +126,17 @@
               </div>
             </div>
             <div class="flex items-center justify-between">
-              <p class="text-sm text-gray-600 truncate pr-2">{{ conversation.lastMessage }}</p>
-              <div v-if="conversation.type === 'private'" class="flex flex-col items-end text-xs">
+              <p class="text-sm text-gray-600 truncate pr-2"
+                 :class="{ 'italic text-gray-400': conversation.isBlockedByMe || conversation.isBlockedByThem }">
+                {{ conversation.isBlockedByMe ? 'Messages blocked' : 
+                   conversation.isBlockedByThem ? 'You are blocked by this user' : 
+                   conversation.lastMessage }}
+              </p>
+              <div v-if="conversation.type === 'private' && !conversation.isBlockedByMe && !conversation.isBlockedByThem" class="flex flex-col items-end text-xs">
                 <span :class="getStatusTextColor(conversation.mate)">{{ getStatusText(conversation.mate) }}</span>
                 <span class="text-gray-400 mt-0.5">{{ formatLastSeen(conversation.mate) }}</span>
               </div>
-              <span v-if="conversation.unreadCount > 0"
+              <span v-if="conversation.unreadCount > 0 && !conversation.isBlockedByMe && !conversation.isBlockedByThem"
                 class="bg-green-500 text-white text-xs rounded-full px-2 py-1 min-w-[24px] text-center font-medium">{{
                   conversation.unreadCount }}</span>
             </div>
@@ -152,6 +184,11 @@
       @close="showPendingMessages = false" @accept="acceptPendingMessage" @reject="rejectPendingMessage" />
     <CreateGroupModal v-if="showCreateGroup" :available-mates="availableMates" @close="showCreateGroup = false"
       @create-group="createGroup" />
+    <BlockedUsersModal 
+      v-if="showBlockedUsers" 
+      :show="showBlockedUsers"
+      @close="showBlockedUsers = false" 
+      @user-unblocked="handleUserUnblocked" />
   </div>
 </template>
 
@@ -160,11 +197,13 @@ import { ref, computed, onMounted, onUnmounted, nextTick, triggerRef } from 'vue
 import debounce from 'lodash/debounce';
 import { useAuthStore } from '@/stores/auth';
 import api from '../../services/api';
+import messagingService from '../../services/messaging';
 import ChatArea from '../../components/messaging/ChatArea.vue';
 import EmptyState from '../../components/messaging/EmptyState.vue';
 import PendingMessagesModal from '../../components/messaging/PendingMessagesModal.vue';
 import CreateGroupModal from '../../components/messaging/CreateGroupModal.vue';
 import ChatInfoPanel from '../../components/messaging/ChatInfoPanel.vue';
+import BlockedUsersModal from '../../components/messaging/BlockedUsersModal.vue';
 
 // === STATE ===
 const authStore = useAuthStore();
@@ -179,12 +218,14 @@ const availableMates = ref([]);
 const showPendingMessages = ref(false);
 const showCreateGroup = ref(false);
 const showChatInfo = ref(false);
+const showBlockedUsers = ref(false);
 const searchQuery = ref('');
 const searchResults = ref([]);
 const searchInput = ref(null);
 
 const privateWs = ref(null);
 const groupWs = ref(null);
+const notificationWs = ref(null);
 
 // Heartbeat system to keep WebSocket connections alive
 let heartbeatInterval = null;
@@ -233,8 +274,27 @@ async function validateToken() {
     await api.get('/user/');
     return (isAuthenticated.value = true);
   } catch (error) {
-    if ([401, 403].includes(error.response?.status) && await authStore.tryRefreshToken()) {
+    // Only treat 401 errors as authentication issues
+    // 403 errors might be blocking-related, not authentication issues
+    if (error.response?.status === 401 && await authStore.tryRefreshToken()) {
       return (isAuthenticated.value = true);
+    }
+    // For 403 errors, check if it's actually an auth issue by examining the error message
+    if (error.response?.status === 403) {
+      const errorMessage = error.response?.data?.error || error.response?.data?.detail || '';
+      const isAuthError = errorMessage.toLowerCase().includes('token') || 
+                         errorMessage.toLowerCase().includes('authentication') ||
+                         errorMessage.toLowerCase().includes('credential');
+      
+      if (isAuthError && await authStore.tryRefreshToken()) {
+        return (isAuthenticated.value = true);
+      }
+      
+      // If it's not an auth error (likely blocking), don't log out
+      if (!isAuthError) {
+        console.log('403 error not related to authentication, keeping user logged in');
+        return (isAuthenticated.value = true);
+      }
     }
     isAuthenticated.value = false;
   }
@@ -243,12 +303,11 @@ async function validateToken() {
 async function refreshToken() {
   try {
     if (!authStore.refreshToken) return null;
-    const { data } = await api.post('/token/refresh/');
-    authStore.setToken(data.access, authStore.refreshToken);
-    return data.access;
+    // Use the auth store's built-in refresh method instead of custom logic
+    const success = await authStore.tryRefreshToken();
+    return success ? authStore.token : null;
   } catch (e) {
-    // For token refresh errors, use regular logout since it's an automatic process
-    authStore.logout();
+    console.error('Token refresh failed in messaging component:', e);
     return null;
   }
 }
@@ -262,7 +321,7 @@ const fetchCurrentUser = async () => {
 
 const fetchConversations = async () => {
   try {
-    const { data } = await api.get('/message/conversations/');
+    const data = await messagingService.getConversations();
     conversations.value = (Array.isArray(data) ? data : []).map(conv => ({
       ...conv,
       id: conv.id || (conv.type === 'private' ? conv.mate.id : conv.group.id),
@@ -271,17 +330,30 @@ const fetchConversations = async () => {
     }));
     
     console.log('Messaging.vue: Fetched conversations:', conversations.value);
-  } catch (e) { console.error('Conv fetch error', e); }
+  } catch (e) { 
+    console.error('Conv fetch error', e);
+    // Handle blocking-related errors gracefully
+    if (e.response?.status === 403) {
+      console.log('Some conversations may be hidden due to blocking');
+    }
+  }
 };
 
 const fetchMessages = async conv => {
   try {
-    const url = conv.type === 'private'
-      ? `/message/private/${conv.mate.id}/`
-      : `/message/group/${conv.group.id}/`;
-    messages.value = (await api.get(url)).data;
+    const data = conv.type === 'private'
+      ? await messagingService.getMessages(conv.mate.id)
+      : await messagingService.getGroupMessages(conv.group?.id);
+    messages.value = data;
   } catch (e) { 
-    console.error('Msg fetch error', e);
+    console.error('Messages fetch error', e);
+    // Handle blocking-related errors
+    if (e.response?.status === 403) {
+      console.log('Cannot access messages due to blocking');
+      messages.value = [];
+      // Don't show alert - just silently handle the blocking
+      // The chat area will show the blocking message instead
+    }
   }
 };
 
@@ -686,13 +758,50 @@ async function handleMessageAction(actionData) {
   }
 }
 
-const createGroup = async ({ name, members }) => {
+const createGroup = async (groupData) => {
   try {
-    const { data } = await api.post('/message/group/create/', { name, members });
-    conversations.value.unshift(data);
+    let requestData;
+    let config = {};
+    
+    // Check if it's FormData (new format with file upload support)
+    if (groupData instanceof FormData) {
+      requestData = groupData;
+      // For FormData, don't set Content-Type header - let browser set it with boundary
+      config.headers = {};
+    } else {
+      // Legacy format for backward compatibility
+      requestData = { name: groupData.name, members: groupData.members };
+      config.headers = { 'Content-Type': 'application/json' };
+    }
+    
+    const { data } = await api.post('/message/group/create/', requestData, config);
+    
+    // Transform the group data into the conversation format expected by the frontend
+    const groupConversation = {
+      id: data.id,
+      type: 'group',
+      group: data, // The group data from backend
+      lastMessage: '',
+      timestamp: data.created_at || new Date().toISOString(),
+      unreadCount: 0
+    };
+    
+    conversations.value.unshift(groupConversation);
     showCreateGroup.value = false;
-    selectConversation(conversations.value[0]);
-  } catch (e) { console.error('Group create error', e); }
+    selectConversation(groupConversation);
+  } catch (e) { 
+    console.error('Group create error', e);
+    console.error('Error response:', e.response);
+    console.error('Error status:', e.response?.status);
+    console.error('Error data:', e.response?.data);
+    
+    // Show error to user
+    if (e.response?.data?.error) {
+      alert(e.response.data.error);
+    } else {
+      alert('Failed to create group. Please try again.');
+    }
+  }
 };
 
 const acceptPendingMessage = async (id) => {
@@ -709,6 +818,41 @@ const rejectPendingMessage = async (id) => {
     pendingMessages.value = pendingMessages.value.filter(m => m.id !== id);
     fetchConversations();
   } catch (e) { console.error('Reject error', e); }
+};
+
+// === BLOCK/UNBLOCK HANDLERS ===
+const handleUserUnblocked = (user) => {
+  console.log('🔓 User unblocked from BlockedUsersModal:', user);
+  
+  // Immediately update conversations to remove blocking status
+  conversations.value.forEach(conv => {
+    if (conv.type === 'private' && conv.mate.id === user.id) {
+      console.log('🔓 Immediately updating conversation blocking status for:', conv.mate.first_name);
+      conv.isBlockedByMe = false;
+      conv.canSendMessage = true;
+      // Update the conversation preview text if it was showing blocking message
+      if (conv.lastMessage === 'Messages blocked') {
+        conv.lastMessage = 'Start a conversation';
+      }
+    }
+  });
+  
+  // Update selected conversation if it matches the unblocked user
+  if (selectedConversation.value?.type === 'private' && 
+      selectedConversation.value.mate.id === user.id) {
+    console.log('🔓 Immediately updating selected conversation blocking status');
+    selectedConversation.value.isBlockedByMe = false;
+    selectedConversation.value.canSendMessage = true;
+  }
+  
+  // Force Vue reactivity to update the UI immediately
+  nextTick(() => {
+    conversations.value = [...conversations.value];
+    console.log('✅ Real-time: Conversation blocking status updated immediately for:', user.first_name, user.last_name);
+  });
+  
+  // Still refresh conversations to ensure data consistency, but UI already updated
+  fetchConversations();
 };
 
 // === CHAT INFO HANDLERS ===
@@ -730,18 +874,50 @@ const handleUnmute = () => {
 
 const handleBlock = () => {
   console.log('User blocked');
-  // Update conversation block status if needed
+  // The conversation will automatically be hidden from the list
+  // due to backend filtering in fetchConversations
+  fetchConversations();
+  // Close the current conversation since it's now blocked
   if (selectedConversation.value) {
-    selectedConversation.value.isBlocked = true;
+    selectedConversation.value = null;
+    messages.value = [];
+    showChatInfo.value = false;
   }
 };
 
 const handleUnblock = () => {
-  console.log('User unblocked');
-  // Update conversation block status if needed
+  console.log('🔓 User unblocked from ChatInfoPanel');
+  
+  // Immediately update selected conversation blocking status
   if (selectedConversation.value) {
-    selectedConversation.value.isBlocked = false;
+    console.log('🔓 Immediately updating selected conversation after unblock');
+    selectedConversation.value.isBlockedByMe = false;
+    selectedConversation.value.canSendMessage = true;
   }
+  
+  // Update the conversation in the conversations list as well
+  if (selectedConversation.value) {
+    const conv = conversations.value.find(c => 
+      c.type === 'private' && c.mate.id === selectedConversation.value.mate.id
+    );
+    if (conv) {
+      conv.isBlockedByMe = false;
+      conv.canSendMessage = true;
+      // Update the conversation preview text if it was showing blocking message
+      if (conv.lastMessage === 'Messages blocked') {
+        conv.lastMessage = 'Start a conversation';
+      }
+    }
+  }
+  
+  // Force Vue reactivity to update UI immediately
+  nextTick(() => {
+    conversations.value = [...conversations.value];
+    console.log('✅ Real-time: Conversation unblocked immediately via ChatInfoPanel');
+  });
+  
+  // Refresh conversations to ensure data consistency
+  fetchConversations();
 };
 
 const scrollToMessage = (messageId) => {
@@ -774,6 +950,8 @@ const scrollToMessage = (messageId) => {
 function setupWebSockets() {
   getValidToken().then(token => {
     if (!token) return (isAuthenticated.value = false);
+    
+    // Set up private messaging WebSocket
     privateWs.value = new WebSocket(`ws://localhost:8000/ws/private/?token=${token}`);
 
     privateWs.value.onopen = () => {
@@ -788,8 +966,10 @@ function setupWebSockets() {
     privateWs.value.onerror = async (error) => {
       console.error('Messaging.vue: Private WS error:', error);
       stopHeartbeat();
-      if (await refreshToken()) setupWebSockets();
-      else isAuthenticated.value = false;
+      // Don't automatically logout on WebSocket errors
+      // WebSocket can fail for many reasons (network, blocking, etc.)
+      // Only reconnect if we still have valid authentication
+      console.log('Messaging.vue: WebSocket error occurred, but keeping user logged in');
     };
     privateWs.value.onmessage = (e) => {
       const data = JSON.parse(e.data);
@@ -824,7 +1004,45 @@ function setupWebSockets() {
       
       handleWsMessage(data, 'private');
     };
+    
+    // Set up notification WebSocket for real-time blocking/unblocking events
+    setupNotificationWebSocket(token);
   });
+}
+
+function setupNotificationWebSocket(token) {
+  console.log('🔔 Setting up notification WebSocket...');
+  notificationWs.value = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${token}`);
+  
+  notificationWs.value.onopen = () => {
+    console.log('🔔 Messaging.vue: Notification WS connected successfully!');
+  };
+  
+  notificationWs.value.onclose = () => {
+    console.log('🔔 Messaging.vue: Notification WS closed');
+  };
+  
+  notificationWs.value.onerror = (error) => {
+    console.error('🔔 Messaging.vue: Notification WS error:', error);
+  };
+  
+  notificationWs.value.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    console.log('🔔 Notification WebSocket RECEIVED:', data);
+    
+    // Handle blocking/unblocking notifications
+    if (data.type === 'user_unblocked' || data.type === 'user_blocked') {
+      console.log('🔔 Processing blocking/unblocking event:', data.type);
+      handleWsMessage(data, 'notification');
+    } 
+    // Handle status update notifications
+    else if (data.type === 'status_update') {
+      console.log('🔔 Processing status update event:', data);
+      handleWsMessage(data, 'notification');
+    } else {
+      console.log('🔔 Received other notification:', data.type);
+    }
+  };
 }
 
 function setupGroupWebSocket(conv) {
@@ -876,8 +1094,10 @@ function setupGroupWebSocket(conv) {
     groupWs.value.onerror = async (error) => {
       console.error('Messaging.vue: Group WS error:', error);
       stopHeartbeat();
-      if (await refreshToken()) setupGroupWebSocket(conv);
-      else isAuthenticated.value = false;
+      // Don't automatically logout on WebSocket errors
+      // WebSocket can fail for many reasons (network, blocking, etc.)
+      // Only reconnect if we still have valid authentication
+      console.log('Messaging.vue: Group WebSocket error occurred, but keeping user logged in');
     };
   });
 }
@@ -888,6 +1108,37 @@ function handleWsMessage(data, scope) {
   // Handle error messages from backend
   if (data.error) {
     console.error('🔴 WebSocket Error:', data.error);
+    
+    // Handle blocking errors specifically
+    if (data.blocked) {
+      console.log('🚫 User is blocked, showing blocking message in chat area');
+      
+      // Add a system message to show the blocking error in chat
+      const blockingMessage = {
+        id: `system-${Date.now()}`,
+        content: data.error,
+        timestamp: new Date().toISOString(),
+        isSystemMessage: true,
+        blockingType: data.type, // 'blocked_by_me' or 'blocked_by_them'
+        sender: { 
+          id: 'system', 
+          first_name: 'System', 
+          last_name: '' 
+        }
+      };
+      
+      messages.value.push(blockingMessage);
+      
+      // Update conversation blocking status
+      if (selectedConversation.value && data.type) {
+        if (data.type === 'blocked_by_me') {
+          selectedConversation.value.isBlockedByMe = true;
+        } else if (data.type === 'blocked_by_them') {
+          selectedConversation.value.isBlockedByThem = true;
+        }
+        selectedConversation.value.canSendMessage = false;
+      }
+    }
     
     // Remove any temporary messages on error
     if (data.temp_id) {
@@ -1022,13 +1273,16 @@ function handleWsMessage(data, scope) {
       updateConversation(data.message);
     },
     status_update: (data) => {
-      console.log('Messaging.vue: Processing status_update:', data);
+      console.log('🟢 Messaging.vue: Processing status_update:', data);
       // Update user status in conversations list
       const userId = data.user_id;
       const newStatus = data.status;
       const lastSeen = data.last_seen;
       
+      console.log(`🟢 Status update: User ${userId} → ${newStatus} at ${lastSeen}`);
+      
       // Update conversations list
+      let conversationUpdated = false;
       conversations.value.forEach(conv => {
         if (conv.type === 'private' && conv.mate.id === userId) {
           if (!conv.mate.profile) {
@@ -1036,7 +1290,8 @@ function handleWsMessage(data, scope) {
           }
           conv.mate.profile.status = newStatus;
           conv.mate.profile.last_seen = lastSeen;
-          console.log(`Updated conversation ${conv.mate.first_name} ${conv.mate.last_name} status to ${newStatus}`);
+          conversationUpdated = true;
+          console.log(`🟢 Updated conversation ${conv.mate.first_name} ${conv.mate.last_name} status to ${newStatus}`);
         }
       });
       
@@ -1048,7 +1303,29 @@ function handleWsMessage(data, scope) {
         }
         selectedConversation.value.mate.profile.status = newStatus;
         selectedConversation.value.mate.profile.last_seen = lastSeen;
-        console.log(`Updated selected conversation status to ${newStatus}`);
+        console.log(`🟢 Updated selected conversation status to ${newStatus}`);
+      }
+      
+      // Update available mates list if needed
+      if (availableMates.value.some(mate => mate.id === userId)) {
+        availableMates.value.forEach(mate => {
+          if (mate.id === userId) {
+            if (!mate.profile) {
+              mate.profile = {};
+            }
+            mate.profile.status = newStatus;
+            mate.profile.last_seen = lastSeen;
+            console.log(`🟢 Updated available mate ${mate.first_name} ${mate.last_name} status to ${newStatus}`);
+          }
+        });
+      }
+      
+      // Force Vue reactivity to update UI immediately
+      if (conversationUpdated) {
+        nextTick(() => {
+          conversations.value = [...conversations.value];
+          console.log('🟢 ✅ Real-time: Status indicators updated immediately');
+        });
       }
     },
     reaction_added: (data) => {
@@ -1159,6 +1436,79 @@ function handleWsMessage(data, scope) {
     },
     connected: (data) => {
       console.log('Messaging.vue: WebSocket connection established');
+    },
+    user_unblocked: (data) => {
+      console.log('🔓 Real-time: User unblocked event received:', data);
+      
+      // This handler is for when the CURRENT USER gets unblocked by someone else
+      // Update conversations to remove "Blocked you" status
+      conversations.value.forEach(conv => {
+        if (conv.type === 'private' && conv.mate.id === data.unblocked_by) {
+          console.log('🔓 Real-time: Removing "blocked you" status from conversation with:', conv.mate.first_name);
+          conv.isBlockedByThem = false;
+          conv.canSendMessage = true;
+          // Update the conversation preview text if it was showing blocking message
+          if (conv.lastMessage === 'You are blocked by this user') {
+            conv.lastMessage = 'Start a conversation';
+          }
+        }
+      });
+      
+      // Update selected conversation if it matches
+      if (selectedConversation.value?.type === 'private' && 
+          selectedConversation.value.mate.id === data.unblocked_by) {
+        console.log('🔓 Real-time: Removing "blocked you" status from selected conversation');
+        selectedConversation.value.isBlockedByThem = false;
+        selectedConversation.value.canSendMessage = true;
+      }
+      
+      // Force Vue reactivity to update UI immediately
+      nextTick(() => {
+        conversations.value = [...conversations.value];
+        console.log('✅ Real-time: User unblocked status updated immediately');
+      });
+    },
+    user_blocked: (data) => {
+      console.log('🚫 Real-time: User blocked event received:', data);
+      
+      // This handler is for when the CURRENT USER gets blocked by someone else
+      // Update conversations to show "Blocked you" status
+      conversations.value.forEach(conv => {
+        if (conv.type === 'private' && conv.mate.id === data.blocked_by) {
+          console.log('🚫 Real-time: Adding "blocked you" status to conversation with:', conv.mate.first_name);
+          conv.isBlockedByThem = true;
+          conv.canSendMessage = false;
+          conv.lastMessage = 'You are blocked by this user';
+        }
+      });
+      
+      // Update selected conversation if it matches
+      if (selectedConversation.value?.type === 'private' && 
+          selectedConversation.value.mate.id === data.blocked_by) {
+        console.log('🚫 Real-time: Adding "blocked you" status to selected conversation');
+        selectedConversation.value.isBlockedByThem = true;
+        selectedConversation.value.canSendMessage = false;
+        
+        // Add a system message to the chat to notify the user
+        const blockingMessage = {
+          id: `system-${Date.now()}`,
+          content: 'You have been blocked by this user. You cannot send messages.',
+          timestamp: new Date().toISOString(),
+          isSystemMessage: true,
+          sender: { 
+            id: 'system', 
+            first_name: 'System', 
+            last_name: '' 
+          }
+        };
+        messages.value.push(blockingMessage);
+      }
+      
+      // Force Vue reactivity to update UI immediately
+      nextTick(() => {
+        conversations.value = [...conversations.value];
+        console.log('✅ Real-time: User blocked status updated immediately');
+      });
     }
   };
   
@@ -1181,29 +1531,41 @@ const formatTimestamp = ts => ts ? new Date(ts).toLocaleTimeString([], { hour: '
 
 // Status helper functions for online/offline indicators
 const getStatusColor = (user) => {
-  if (!user?.profile?.last_seen) return 'bg-gray-400'; // Default offline color
-  return isRecentlyActive(user) ? 'bg-green-500' : 'bg-gray-400';
+  if (!user?.profile?.last_seen) {
+    console.log(`getStatusColor: User ${user?.id} has no last_seen, returning gray`);
+    return 'bg-gray-400'; // Default offline color
+  }
+  const isActive = isRecentlyActive(user);
+  const color = isActive ? 'bg-green-500' : 'bg-gray-400';
+  console.log(`getStatusColor: User ${user.id} (${user.first_name}) → ${color} (isActive: ${isActive})`);
+  return color;
 };
 
 const getStatusTextColor = (user) => {
-  return isRecentlyActive(user) ? 'text-green-600' : 'text-gray-500';
+  const isActive = isRecentlyActive(user);
+  return isActive ? 'text-green-600' : 'text-gray-500';
 };
 
 const getStatusText = (user) => {
   if (!user?.profile?.last_seen) return 'Offline';
-  return isRecentlyActive(user) ? 'Online' : 'Offline';
+  const isActive = isRecentlyActive(user);
+  return isActive ? 'Online' : 'Offline';
 };
 
 const isRecentlyActive = (user) => {
-  if (!user?.profile?.last_seen) return false;
+  if (!user?.profile?.last_seen) {
+    console.log(`isRecentlyActive: User ${user?.id} has no last_seen`);
+    return false;
+  }
   const lastSeen = new Date(user.profile.last_seen);
   const now = new Date();
   const diffMinutes = (now - lastSeen) / (1000 * 60);
   // Consider active if seen within last 2 minutes AND status is online
   const isRecent = diffMinutes <= 2;
   const isOnlineStatus = user.profile.status === 'online';
-  console.log(`isRecentlyActive for user ${user.id}: lastSeen=${lastSeen.toISOString()}, diffMinutes=${diffMinutes.toFixed(2)}, status=${user.profile.status}, isRecent=${isRecent}, isOnlineStatus=${isOnlineStatus}`);
-  return isRecent && isOnlineStatus;
+  const result = isRecent && isOnlineStatus;
+  console.log(`isRecentlyActive for user ${user.id} (${user.first_name}): lastSeen=${lastSeen.toISOString()}, diffMinutes=${diffMinutes.toFixed(2)}, status=${user.profile.status}, isRecent=${isRecent}, isOnlineStatus=${isOnlineStatus}, result=${result}`);
+  return result;
 };
 
 const formatLastSeen = (user) => {
@@ -1266,6 +1628,7 @@ onUnmounted(() => {
   console.log('Messaging.vue: Component unmounting');
   privateWs.value?.close();
   groupWs.value?.close();
+  notificationWs.value?.close();
   stopHeartbeat();
   
   // Remove global status update listener

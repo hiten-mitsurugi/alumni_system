@@ -526,14 +526,28 @@ function updateConversation(message) {
 /**
  * Create a new group
  */
-async function createGroup({ name, members }) {
+async function createGroup(formData) {
   try {
-    const { data } = await api.post('/message/group/create/', { name, members })
-    conversations.value.unshift(data)
+    // Handle both FormData (new) and object (legacy) formats
+    if (formData instanceof FormData) {
+      // New format with file upload support
+      const response = await api.post('/message/group/create/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      conversations.value.unshift(response.data)
+    } else {
+      // Legacy format - simple object
+      const response = await api.post('/message/group/create/', formData)
+      conversations.value.unshift(response.data)
+    }
+    
     showCreateGroup.value = false
     selectConversation(conversations.value[0])
   } catch (error) {
     console.error('Failed to create group:', error)
+    // TODO: Show error message to user
   }
 }
 

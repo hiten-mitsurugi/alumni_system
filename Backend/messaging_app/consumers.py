@@ -134,14 +134,51 @@ class MessagingBaseMixin:
                 }
             )
 
+    async def _is_user_blocked(self, blocker, blocked_user) -> bool:
+        """Check if blocker has blocked blocked_user."""
+        @database_sync_to_async
+        def _check_blocked():
+            from messaging_app.models import BlockedUser
+            return BlockedUser.objects.filter(
+                user=blocker,
+                blocked_user=blocked_user
+            ).exists()
+        
+        return await _check_blocked()
+
     async def serialize_message(self, message: Message) -> Dict[str, Any]:
         """Serialize message for WebSocket transmission with proper UUID handling."""
         @database_sync_to_async
         def _serialize():
-            # Create mock request for URL building
+            # Create mock request for URL building with user context
             from django.http import HttpRequest
             mock_request = HttpRequest()
             mock_request.META = {'HTTP_HOST': '127.0.0.1:8000', 'wsgi.url_scheme': 'http'}
+            
+            # Create a proper user object with is_authenticated attribute
+            mock_user = self.user
+            if hasattr(mock_user, 'is_authenticated'):
+                # User already has is_authenticated, use as-is
+                mock_request.user = mock_user
+            else:
+                # Create a wrapper to add is_authenticated
+                class MockAuthenticatedUser:
+                    def __init__(self, user):
+                        self._user = user
+                        self.is_authenticated = True
+                        
+                    def __getattr__(self, name):
+                        return getattr(self._user, name)
+                        
+                    @property
+                    def id(self):
+                        return self._user.id
+                        
+                    @property  
+                    def username(self):
+                        return self._user.username
+                
+                mock_request.user = MockAuthenticatedUser(mock_user)
             
             serializer = MessageSerializer(message, context={'request': mock_request})
             data = serializer.data
@@ -287,6 +324,24 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         try:
             receiver = await database_sync_to_async(User.objects.get)(id=receiver_id)
             
+            # Check blocking status
+            is_blocked_by_receiver = await self._is_user_blocked(receiver, self.user)
+            is_blocked_by_sender = await self._is_user_blocked(self.user, receiver)
+            
+            if is_blocked_by_receiver:
+                return await self.send_json({
+                    'error': 'You cannot send messages to this user. You have been blocked.',
+                    'blocked': True,
+                    'type': 'blocked_by_them'
+                })
+                
+            if is_blocked_by_sender:
+                return await self.send_json({
+                    'error': 'You cannot send messages to a user you have blocked. Please unblock them first.',
+                    'blocked': True,
+                    'type': 'blocked_by_me'
+                })
+            
             # Check if conversation exists
             conversation_exists = await self._check_conversation_exists(receiver)
             
@@ -310,8 +365,8 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         except User.DoesNotExist:
             await self.send_json({'error': 'Receiver not found'})
         except Exception as e:
-            logger.error(f"Error sending message: {e}")
-            await self.send_json({'error': 'Failed to send message'})
+            logger.error(f"Error sending message: {e}", exc_info=True)
+            await self.send_json({'error': f'Failed to send message: {str(e)}'})
 
     async def _check_conversation_exists(self, receiver) -> bool:
         """Check if conversation exists between users."""
@@ -897,8 +952,8 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
             )
             
         except Exception as e:
-            logger.error(f"Error sending group message: {e}")
-            await self.send_json({'error': 'Failed to send message'})
+            logger.error(f"Error sending group message: {e}", exc_info=True)
+            await self.send_json({'error': f'Failed to send group message: {str(e)}'})
 
     async def handle_group_bump(self, data: Dict[str, Any]):
         """Handle bumping a message in group chat."""
