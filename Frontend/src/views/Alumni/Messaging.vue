@@ -1135,6 +1135,11 @@ function setupNotificationWebSocket(token) {
     else if (data.type === 'group_member_left') {
       console.log('🔔 Processing group member left event:', data);
       handleGroupMemberLeftNotification(data);
+    }
+    // Handle group member added notifications
+    else if (data.type === 'group_member_added') {
+      console.log('🔔 Processing group member added event:', data);
+      handleGroupMemberAddedNotification(data);
     } else {
       console.log('🔔 Received other notification:', data.type);
     }
@@ -1709,7 +1714,7 @@ function handleGroupCreatedNotification(data) {
       id: data.group.id,
       type: 'group',
       group: data.group,
-      lastMessage: `Created by ${data.creator.first_name} ${data.creator.last_name}`,
+      lastMessage: `Added to group by ${data.creator.first_name} ${data.creator.last_name}`,
       timestamp: data.group.created_at || new Date().toISOString(),
       unreadCount: 0
     };
@@ -1729,13 +1734,6 @@ function handleGroupCreatedNotification(data) {
         console.log('✅ Real-time: New group added to conversation list:', data.group.name);
       });
       
-      // Show a subtle notification to the user
-      const notificationMessage = `🎉 You were added to group "${data.group.name}" by ${data.creator.first_name} ${data.creator.last_name}`;
-      console.log(notificationMessage);
-      
-      // TODO: Add toast notification here if you have a toast system
-      // toast.success(notificationMessage);
-      
     } else {
       console.log('Group already exists in conversations, skipping duplicate');
     }
@@ -1750,49 +1748,129 @@ function handleGroupMemberLeftNotification(data) {
   console.log('👋 Real-time: Group member left notification received:', data);
   
   try {
-    // Find the group conversation
-    const conversationIndex = conversations.value.findIndex(conv => 
-      conv.type === 'group' && conv.group.id === data.message.group
-    );
-    
-    if (conversationIndex !== -1) {
-      const conversation = conversations.value[conversationIndex];
+    // Check if this is for the current user (they left the group or were removed)
+    if (data.user_left_group || data.group_id) {
+      // Find the group conversation
+      const conversationIndex = conversations.value.findIndex(conv => 
+        conv.type === 'group' && conv.group.id === data.group_id
+      );
       
-      // Update the last message to show the system message
-      conversation.lastMessage = data.message.content;
-      conversation.timestamp = data.message.timestamp;
-      
-      // If this conversation is currently selected, add the system message to messages
-      if (selectedConversation.value && 
-          selectedConversation.value.type === 'group' && 
-          selectedConversation.value.group.id === data.message.group) {
+      if (conversationIndex !== -1) {
+        // Remove the group from the conversation list (user left or was removed from group)
+        conversations.value.splice(conversationIndex, 1);
         
-        const systemMessage = {
-          id: data.message.id,
-          content: data.message.content,
-          timestamp: data.message.timestamp,
-          sender: data.message.sender,
-          group: data.message.group
-        };
+        // If this was the selected conversation, clear it
+        if (selectedConversation.value && 
+            selectedConversation.value.type === 'group' && 
+            selectedConversation.value.group.id === data.group_id) {
+          selectedConversation.value = null;
+          messages.value = [];
+          showChatInfo.value = false;
+        }
         
-        // Add the system message to the current messages
-        messages.value.push(systemMessage);
-        
-        // Scroll to bottom to show the new message
-        nextTick(() => {
-          scrollToBottom();
-        });
+        console.log('✅ Real-time: Removed group from conversation list after leaving/being removed');
       }
+    } 
+    // Handle system message for remaining members
+    else if (data.system_message && data.left_user) {
+      // Find the group conversation
+      const conversationIndex = conversations.value.findIndex(conv => 
+        conv.type === 'group' && conv.group.id === data.group_id
+      );
       
-      // Move this conversation to the top of the list
-      conversations.value.splice(conversationIndex, 1);
-      conversations.value.unshift(conversation);
-      
-      console.log('✅ Real-time: Group member left message processed');
+      if (conversationIndex !== -1) {
+        const conversation = conversations.value[conversationIndex];
+        
+        // Update the last message to show the system message
+        conversation.lastMessage = data.system_message.content;
+        conversation.timestamp = data.system_message.timestamp;
+        
+        console.log('✅ Real-time: Updated group conversation with member left message');
+        
+        // If this conversation is currently selected, add the system message to messages
+        if (selectedConversation.value && 
+            selectedConversation.value.type === 'group' && 
+            selectedConversation.value.group.id === data.group_id) {
+          
+          const systemMessage = {
+            id: data.system_message.id,
+            content: data.system_message.content,
+            timestamp: data.system_message.timestamp,
+            sender: null,
+            group: data.group_id,
+            isSystemMessage: true
+          };
+          
+          // Add the system message to the current messages
+          messages.value.push(systemMessage);
+          
+          // Scroll to bottom to show the new message
+          nextTick(() => {
+            scrollToBottom();
+          });
+        }
+      }
     }
     
   } catch (error) {
     console.error('Error handling group member left notification:', error);
+  }
+}
+
+// Function to handle real-time group member added notifications
+function handleGroupMemberAddedNotification(data) {
+  console.log('➕ Real-time: Group member added notification received:', data);
+  
+  try {
+    // Handle system message for existing members seeing the addition
+    if (data.system_message && data.added_user) {
+      // Find the group conversation
+      const conversationIndex = conversations.value.findIndex(conv => 
+        conv.type === 'group' && conv.group.id === data.group_id
+      );
+      
+      if (conversationIndex !== -1) {
+        const conversation = conversations.value[conversationIndex];
+        
+        // Update the last message to show the system message
+        conversation.lastMessage = data.system_message.content;
+        conversation.timestamp = data.system_message.timestamp;
+        
+        console.log('✅ Real-time: Updated group conversation with member added message');
+        
+        // If this conversation is currently selected, add the system message to messages
+        if (selectedConversation.value && 
+            selectedConversation.value.type === 'group' && 
+            selectedConversation.value.group.id === data.group_id) {
+          
+          const systemMessage = {
+            id: data.system_message.id,
+            content: data.system_message.content,
+            timestamp: data.system_message.timestamp,
+            sender: null,
+            group: data.group_id,
+            isSystemMessage: true
+          };
+          
+          // Add the system message to the current messages
+          messages.value.push(systemMessage);
+          
+          // Scroll to bottom to show the new message
+          nextTick(() => {
+            scrollToBottom();
+          });
+        }
+        
+        // Move this conversation to the top of the list
+        conversations.value.splice(conversationIndex, 1);
+        conversations.value.unshift(conversation);
+        
+        console.log('✅ Real-time: Group member added message processed');
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error handling group member added notification:', error);
   }
 }
 
@@ -1905,33 +1983,16 @@ onUnmounted(() => {
   window.removeEventListener('statusUpdate', handleGlobalStatusUpdate);
 });
 
-// === LIFECYCLE ===
-onMounted(async () => {
-  if (await validateToken()) {
-    await Promise.all([fetchCurrentUser(), fetchConversations(), fetchPendingMessages(), fetchAvailableMates()]);
-    
-    // Auto-select the most recent conversation
-    selectLastConversation();
-    
-    setupWebSockets();
-    
-    // ✅ NEW: Setup connections to all user's groups for real-time messaging
-    setupAllGroupConnections();
-    
-    // Listen for global status updates via window events
-    window.addEventListener('user-status-update', handleGlobalStatusUpdate);
-    console.log('Messaging.vue: Added window event listener for user-status-update');
-  }
-});
-
 onUnmounted(() => {
   stopHeartbeat(); // Stop heartbeat when component unmounts
   privateWs.value?.close();
   groupWs.value?.close();
+  notificationWs.value?.close(); // Add notification websocket cleanup
   
-  // Remove global status update listener
+  // Remove global status update listeners
+  window.removeEventListener('statusUpdate', handleGlobalStatusUpdate);
   window.removeEventListener('user-status-update', handleGlobalStatusUpdate);
-  console.log('Messaging.vue: Removed window event listener for user-status-update');
+  console.log('Messaging.vue: Removed window event listeners');
 });
 </script>
 

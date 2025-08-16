@@ -93,7 +93,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         logger.info(f"NotificationConsumer: Sending group_created event to user {self.scope['user']}")
         await self.send(text_data=json.dumps({
             'type': 'group_created',
-            'message': event['message'],
             'group': event['group'],
             'creator': event['creator']
         }))
@@ -106,4 +105,26 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'message': event.get('message', 'Messages marked as read'),
             'conversation_id': event.get('conversation_id'),
             'user_id': event.get('user_id')
+        }))
+
+    # Handler for group member added notifications
+    async def group_member_added(self, event):
+        logger.info(f"NotificationConsumer: Sending group_member_added event to user {self.scope['user']}")
+        await self.send(text_data=json.dumps({
+            'type': 'group_member_added',
+            'group_id': event.get('group_id'),
+            'group_name': event.get('group_name'),
+            'added_user': event.get('added_user', {}),
+            'added_by': event.get('added_by', {}),
+            'system_message': event.get('system_message', {})
+        }))
+
+    # Handler for group member left notifications
+    async def group_member_left(self, event):
+        logger.info(f"NotificationConsumer: Sending group_member_left event to user {self.scope['user']}")
+        await self.send(text_data=json.dumps({
+            'type': 'group_member_left',
+            'group_id': event.get('group_id'),
+            'group_name': event.get('group_name'),
+            'removed_by': event.get('removed_by', {})
         }))

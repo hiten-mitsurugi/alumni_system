@@ -1226,7 +1226,7 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         await self.send_json({'type': 'request_response_notification', **event})
     async def group_member_left(self, event): 
         await self.send_json({'type': 'group_member_left', **event})
+    async def group_member_added(self, event): 
+        await self.send_json({'type': 'group_member_added', **event})
     async def status_update(self, event): 
         await self.send_json({'type': 'status_update', **event})
-    async def group_created(self, event): 
-        await self.send_json({'type': 'group_created', **event})

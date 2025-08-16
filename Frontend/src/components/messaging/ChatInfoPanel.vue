@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="w-80 bg-white border-l border-gray-200 flex flex-col">
+    <div class="w-96 bg-white border-l border-gray-200 flex flex-col">
     <!-- Header -->
     <div class="p-4 border-b border-gray-200">
       <div class="flex items-center justify-between">
@@ -14,7 +14,7 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-scroll chat-info-scroll" ref="scrollContainer">
       <!-- User/Group Profile Section -->
       <div class="p-4 border-b border-gray-200">
         <div class="text-center">
@@ -916,12 +916,20 @@ const addMemberToGroup = async (user) => {
     // Regular members create requests, admins add directly
     if (isGroupAdmin.value) {
       // Admin: Add member directly
-      await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
+      const response = await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
         action: 'add_member',
         user_id: user.id
       })
       
-      alert('Member added successfully!')
+      console.log('Add member response:', response.data)
+      
+      // Check for success in response
+      if (response.data && (response.data.success || response.data.message)) {
+        alert(response.data.message || 'Member added successfully!')
+      } else {
+        alert('Member added successfully!')
+      }
+      
       await fetchGroupMembers()
       showAddMemberForm.value = false
       memberSearchQuery.value = ''
@@ -1048,10 +1056,19 @@ const removeMember = async (member) => {
   }
 
   try {
-    await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
+    const response = await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
       action: 'remove_member',
       user_id: member.id
     })
+    
+    console.log('Remove member response:', response.data)
+    
+    // Check for success in response
+    if (response.data && (response.data.success || response.data.message)) {
+      alert(response.data.message || 'Member removed successfully!')
+    } else {
+      alert('Member removed successfully!')
+    }
     
     // Refresh members list
     await fetchGroupMembers()
@@ -1199,5 +1216,30 @@ onMounted(() => {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+/* Custom scrollbar styling for chat info panel */
+.chat-info-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-info-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.chat-info-scroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.chat-info-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* For Firefox */
+.chat-info-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
 }
 </style>

@@ -27,7 +27,7 @@
         <div
           :class="[
             'relative shadow-sm flex-1',
-            isSystemMessage ? 'bg-yellow-100 text-gray-700 rounded-xl border-l-4 border-yellow-400 italic text-center' :
+            isSystemMessage ? 'bg-yellow-100 rounded-xl border-l-4 border-yellow-400 italic text-center super-tiny-system-msg' :
             isOwnMessage ? 'bg-blue-500 text-white rounded-xl rounded-br-none' : 'bg-gray-100 text-gray-900 rounded-xl rounded-bl-none',
             // No padding for images, normal padding for text/files
             hasImageAttachment ? 'p-0 overflow-hidden' : 'px-4 py-2 break-words'
@@ -363,7 +363,7 @@ const isOwnMessage = computed(() => {
 
 // Check if this is a system message
 const isSystemMessage = computed(() => {
-  return props.message.isSystemMessage || 
+  const result = props.message.isSystemMessage || 
          props.message.sender?.id === 'system' ||
          props.message.message_type === 'system' ||
          props.message.sender === null ||
@@ -374,6 +374,12 @@ const isSystemMessage = computed(() => {
            props.message.content.includes(' was added to the group') ||
            props.message.content.includes(' was removed from the group')
          ))
+  
+  if (result) {
+    console.log('🔍 System message detected:', props.message.content, props.message);
+  }
+  
+  return result;
 })
 
 // Check if this is a bump message
@@ -806,6 +812,26 @@ const handleImageError = (event) => {
 
 .aspect-video {
   aspect-ratio: 16 / 9;
+}
+
+/* Super small font for system messages */
+.system-message-tiny {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  opacity: 0.8;
+}
+
+/* Even more specific selector for super tiny system messages */
+.super-tiny-system-msg,
+.super-tiny-system-msg * {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+}
+
+.super-tiny-system-msg {
+  opacity: 0.9 !important;
 }
 </style>
 
