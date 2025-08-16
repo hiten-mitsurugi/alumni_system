@@ -32,7 +32,7 @@ const BASE_URL = 'http://127.0.0.1:8000';
 // Load current user data
 onMounted(async () => {
   console.log('Component mounted, loading user data...');
-  
+
   // First, try to fetch fresh user data if we have a token
   if (authStore.token && !authStore.user) {
     try {
@@ -41,7 +41,7 @@ onMounted(async () => {
       console.error('Failed to fetch user on mount:', error);
     }
   }
-  
+
   if (authStore.user) {
     console.log('Loading user data into profile form:', authStore.user);
     Object.assign(profile, {
@@ -57,7 +57,7 @@ onMounted(async () => {
       gender: authStore.user.gender || '',
       civil_status: authStore.user.civil_status || ''
     });
-    
+
     console.log('Loaded profile data:', profile);
     console.log('User birth_date:', authStore.user.birth_date, 'typeof:', typeof authStore.user.birth_date);
     console.log('User profile_picture:', authStore.user.profile_picture);
@@ -69,7 +69,7 @@ const currentProfilePicture = computed(() => {
   console.log('profilePicturePreview:', profilePicturePreview.value);
   console.log('authStore.user:', authStore.user);
   console.log('authStore.user.profile_picture:', authStore.user?.profile_picture);
-  
+
   // Priority: preview > stored user profile picture > default
   if (profilePicturePreview.value) {
     console.log('Using preview image');
@@ -112,12 +112,12 @@ const updateProfile = async () => {
     console.log('Auth store token:', authStore.token);
     console.log('Auth store user:', authStore.user);
     console.log('Profile picture file:', profilePictureFile.value);
-    
+
     // If there's a profile picture, use FormData, otherwise use JSON
     if (profilePictureFile.value) {
       console.log('Using FormData for file upload...');
       const formData = new FormData();
-      
+
       // Add profile data
       Object.keys(profile).forEach(key => {
         const value = profile[key];
@@ -134,26 +134,26 @@ const updateProfile = async () => {
           }
         }
       });
-      
+
       // Add profile picture
       formData.append('profile_picture', profilePictureFile.value);
       console.log('Added profile picture to formData');
-      
+
       console.log('Making FormData API call to /user/profile/...');
       const response = await api.put('/user/profile/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+
       console.log('API response received:', response.data);
-      
+
       // Update auth store with new user data
       authStore.setUser(response.data);
-      
+
     } else {
       console.log('Using JSON for text-only update...');
-      
+
       // Test with simple JSON (without file upload)
       const jsonData = {
         first_name: profile.first_name,
@@ -168,7 +168,7 @@ const updateProfile = async () => {
         gender: profile.gender,
         civil_status: profile.civil_status
       };
-      
+
       // Remove null/empty values to avoid validation errors
       Object.keys(jsonData).forEach(key => {
         const value = jsonData[key];
@@ -176,10 +176,10 @@ const updateProfile = async () => {
           delete jsonData[key];
         }
       });
-      
+
       console.log('Cleaned JSON data:', jsonData);
       console.log('API base URL:', api.defaults.baseURL);
-      
+
       // Try JSON request
       console.log('Making JSON API call to /user/profile/...');
       const response = await api.put('/user/profile/', jsonData, {
@@ -200,7 +200,7 @@ const updateProfile = async () => {
     // Clear preview and file after successful update
     profilePictureFile.value = null;
     profilePicturePreview.value = '';
-    
+
     // Force refresh user data to get updated profile picture URL
     console.log('Refreshing user data...');
     await authStore.fetchUser();
@@ -212,7 +212,7 @@ const updateProfile = async () => {
     console.error('Error status:', error.response?.status);
     console.error('Error headers:', error.response?.headers);
     console.error('Full error object:', error);
-    
+
     let errorMessage = 'Failed to update profile';
     if (error.response?.data?.detail) {
       errorMessage = error.response.data.detail;
@@ -223,7 +223,7 @@ const updateProfile = async () => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
+
     message.value = errorMessage;
     messageType.value = 'error';
   } finally {
@@ -238,21 +238,21 @@ const triggerFileInput = () => {
 // Helper function to format date
 const formatDate = (dateString) => {
   if (!dateString || dateString.trim() === '') return null;
-  
+
   // If already in YYYY-MM-DD format, return as is
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
-  
+
   // Try to parse and format the date
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return null;
-    
+
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    
+
     return `${year}-${month}-${day}`;
   } catch (error) {
     console.error('Date formatting error:', error);
