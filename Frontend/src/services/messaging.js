@@ -77,6 +77,16 @@ class MessagingService {
     }
   }
 
+  async getGroupConversations() {
+    try {
+      const response = await api.get('/message/group/')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching group conversations:', error)
+      throw error
+    }
+  }
+
   async sendMessage(receiverId, content, attachmentIds = [], replyToId = null) {
     try {
       const response = await api.post('/message/send/', {

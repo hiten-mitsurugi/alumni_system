@@ -363,7 +363,17 @@ const isOwnMessage = computed(() => {
 
 // Check if this is a system message
 const isSystemMessage = computed(() => {
-  return props.message.isSystemMessage || props.message.sender?.id === 'system'
+  return props.message.isSystemMessage || 
+         props.message.sender?.id === 'system' ||
+         props.message.message_type === 'system' ||
+         props.message.sender === null ||
+         // Detect system messages by content pattern
+         (props.message.content && (
+           props.message.content.includes(' left the group') ||
+           props.message.content.includes(' joined the group') ||
+           props.message.content.includes(' was added to the group') ||
+           props.message.content.includes(' was removed from the group')
+         ))
 })
 
 // Check if this is a bump message

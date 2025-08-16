@@ -1,9 +1,10 @@
 from django.urls import path
 from .views import (
     SearchView, ConversationListView, MessageListView, SendMessageView,
-    GroupChatCreateView, GroupChatManageView, GroupChatListView,
+    GroupChatCreateView, GroupChatManageView, GroupChatListView, GroupMembersView,
     ConversationUsersView, MessageRequestView, BlockUserView,
-    PinMessageView, BumpMessageView, UploadView
+    PinMessageView, BumpMessageView, UploadView,
+    GroupMemberRequestView, GroupMemberRequestManageView
 )
 
 urlpatterns = [
@@ -19,6 +20,9 @@ urlpatterns = [
     
     path('group/create/', GroupChatCreateView.as_view(), name='group_create'),
     path('group/<uuid:group_id>/manage/', GroupChatManageView.as_view(), name='group_manage'),
+    path('group/<uuid:group_id>/members/', GroupMembersView.as_view(), name='group_members'),
+    path('group/<uuid:group_id>/member-requests/', GroupMemberRequestView.as_view(), name='group_member_requests'),
+    path('member-request/<uuid:request_id>/manage/', GroupMemberRequestManageView.as_view(), name='manage_member_request'),
     path('group/', GroupChatListView.as_view(), name='group_list'),
 
     path('requests/', MessageRequestView.as_view(), name='message_requests'),

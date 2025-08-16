@@ -7,7 +7,8 @@ from .models import (
     BlockedUser,
     Attachment,
     Reaction,
-    LinkPreview
+    LinkPreview,
+    GroupMemberRequest
 )
 from auth_app.models import Profile  # Import Profile from auth_app
 
@@ -140,7 +141,7 @@ class MessageSerializer(serializers.ModelSerializer):
                 'id': str(obj.reply_to.id),  # ✅ FIX: Convert UUID to string
                 'content': obj.reply_to.content,
                 'sender': {
-                    'id': obj.reply_to.sender.id,
+                    'id': str(obj.reply_to.sender.id),  # ✅ FIX: Convert sender UUID to string
                     'first_name': obj.reply_to.sender.first_name,
                     'last_name': obj.reply_to.sender.last_name,
                     'profile_picture': self.get_profile_picture_url(obj.reply_to.sender)
@@ -211,6 +212,29 @@ class BlockedUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlockedUser
         fields = ['id', 'blocked_user', 'timestamp']
+
+# ✅ Group Member Request Serializer
+class GroupMemberRequestSerializer(serializers.ModelSerializer):
+    requested_user = UserSearchSerializer(read_only=True)
+    requester = UserSearchSerializer(read_only=True)
+    reviewed_by = UserSearchSerializer(read_only=True)
+    group_name = serializers.CharField(source='group.name', read_only=True)
+
+    class Meta:
+        model = GroupMemberRequest
+        fields = [
+            'id',
+            'group',
+            'group_name',
+            'requested_user',
+            'requester',
+            'status',
+            'message',
+            'admin_response',
+            'reviewed_by',
+            'created_at',
+            'reviewed_at'
+        ]
 
 
 

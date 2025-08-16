@@ -44293,3 +44293,2476 @@ Traceback (most recent call last):
   File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
     raise ValueError("No handler for message type %s" % message["type"])
 ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type message_request
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type message_request
+Exception inside application: No handler for message type message_request
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type message_request
+Exception inside application: No handler for message type message_request
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type message_request
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted
+Exception inside application: No handler for message type request_accepted
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_accepted
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error bumping group message: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Error sending group message: can not serialize 'UUID' object
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\messaging_app\consumers.py", line 949, in handle_group_message
+    await self.channel_layer.group_send(
+    ...<2 lines>...
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 539, in group_send
+    ) = self._map_channel_keys_to_connection(channel_names, message)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 639, in _map_channel_keys_to_connection
+    channel_key_to_message[key] = self.serialize(value)
+                                  ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels_redis\core.py", line 659, in serialize
+    value = msgpack.packb(message, use_bin_type=True)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\msgpack\__init__.py", line 36, in packb
+    return Packer(**kwargs).pack(o)
+           ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "msgpack\\_packer.pyx", line 279, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 276, in msgpack._cmsgpack.Packer.pack
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 213, in msgpack._cmsgpack.Packer._pack_inner
+  File "msgpack\\_packer.pyx", line 270, in msgpack._cmsgpack.Packer._pack
+  File "msgpack\\_packer.pyx", line 257, in msgpack._cmsgpack.Packer._pack_inner
+TypeError: can not serialize 'UUID' object
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Exception inside application: No handler for message type chat_message
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type chat_message
+Logout failed: Token is invalid or expired
+Logout failed: Token is invalid or expired
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Exception inside application: No handler for message type group_created
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_created
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Error creating member request: duplicate key value violates unique constraint "messaging_app_groupmembe_group_id_requested_user__2d63258a_uniq"
+DETAIL:  Key (group_id, requested_user_id)=(38fa0a6c-d227-415f-86f1-a6e58b0db7a9, 4) already exists.
+
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/member-requests/
+Logout failed: Token is invalid or expired
+Error creating member request: duplicate key value violates unique constraint "messaging_app_groupmembe_group_id_requested_user__2d63258a_uniq"
+DETAIL:  Key (group_id, requested_user_id)=(38fa0a6c-d227-415f-86f1-a6e58b0db7a9, 4) already exists.
+
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/member-requests/
+Error creating member request: duplicate key value violates unique constraint "messaging_app_groupmembe_group_id_requested_user__2d63258a_uniq"
+DETAIL:  Key (group_id, requested_user_id)=(38fa0a6c-d227-415f-86f1-a6e58b0db7a9, 4) already exists.
+
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/member-requests/
+Error creating member request: duplicate key value violates unique constraint "messaging_app_groupmembe_group_id_requested_user__2d63258a_uniq"
+DETAIL:  Key (group_id, requested_user_id)=(38fa0a6c-d227-415f-86f1-a6e58b0db7a9, 4) already exists.
+
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/member-requests/
+Error creating member request: duplicate key value violates unique constraint "messaging_app_groupmembe_group_id_requested_user__2d63258a_uniq"
+DETAIL:  Key (group_id, requested_user_id)=(38fa0a6c-d227-415f-86f1-a6e58b0db7a9, 4) already exists.
+
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/member-requests/
+Logout failed: Token is invalid or expired
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Logout failed: Token is invalid or expired
+Logout failed: Token is invalid or expired
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type member_request_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type member_request_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Exception inside application: No handler for message type request_response_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type request_response_notification
+Error in GroupChatManageView POST: Message() got unexpected keyword arguments: 'conversation', 'message_type'
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/manage/
+Error in GroupChatManageView POST: Message() got unexpected keyword arguments: 'conversation', 'message_type'
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/manage/
+Error in GroupChatManageView POST: Message() got unexpected keyword arguments: 'conversation', 'message_type'
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/manage/
+Exception inside application: No handler for message type group_added_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_added_notification
+Exception inside application: No handler for message type group_added_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_added_notification
+Exception inside application: No handler for message type group_added_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_added_notification
+Exception inside application: No handler for message type group_added_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_added_notification
+Exception inside application: No handler for message type group_added_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_added_notification
+Exception inside application: No handler for message type group_added_notification
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\auth_app\middleware.py", line 63, in __call__
+    return await super().__call__(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\middleware.py", line 24, in __call__
+    return await self.inner(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\routing.py", line 132, in __call__
+    return await application(
+           ^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 94, in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 58, in __call__
+    await await_many_dispatch(
+        [receive, self.channel_receive], self.dispatch
+    )
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\utils.py", line 50, in await_many_dispatch
+    await dispatch(result)
+  File "C:\Users\USER\OneDrive\Desktop\Proejct\alumni_system-roman-branch (1)\alumni_system-roman-branch\Backend\env\Lib\site-packages\channels\consumer.py", line 75, in dispatch
+    raise ValueError("No handler for message type %s" % message["type"])
+ValueError: No handler for message type group_added_notification
+Error in GroupChatManageView POST: cannot access local variable 'GroupChatSerializer' where it is not associated with a value
+Internal Server Error: /api/message/group/38fa0a6c-d227-415f-86f1-a6e58b0db7a9/manage/

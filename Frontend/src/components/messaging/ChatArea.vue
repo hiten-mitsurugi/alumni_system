@@ -5,10 +5,12 @@
       <div class="flex items-center gap-3">
         <!-- Safe avatar with status indicator -->
         <div class="relative">
-          <img :src="conversation.type === 'private'
-              ? getProfilePictureUrl(conversation.mate)
-              : conversation.group?.group_picture || '/default-group.png'
-            " alt="Avatar" class="w-10 h-10 rounded-full object-cover" />
+          <img 
+            :src="avatarUrl" 
+            :key="conversation?.group?.group_picture || conversation?.mate?.profile_picture || Date.now()"
+            alt="Avatar" 
+            class="w-10 h-10 rounded-full object-cover" 
+          />
           <!-- Online/Offline status indicator for private chats -->
           <div v-if="conversation.type === 'private'" 
                :class="['absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white', getStatusColor(conversation.mate)]">
@@ -157,10 +159,19 @@ const pinnedMessages = computed(() => {
   return props.messages?.filter(message => message.is_pinned) || []
 })
 
+// Computed property for avatar URL (ensures reactivity)
+const avatarUrl = computed(() => {
+  if (props.conversation?.type === 'private') {
+    return getProfilePictureUrl(props.conversation.mate)
+  } else {
+    return getProfilePictureUrl(props.conversation?.group) || '/default-group.png'
+  }
+})
+
 // Safe profile picture helper (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
   const BASE_URL = 'http://127.0.0.1:8000'
-  const pic = entity?.profile_picture
+  const pic = entity?.profile_picture || entity?.group_picture
   return pic
     ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
     : '/default-avatar.png'

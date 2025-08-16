@@ -93,7 +93,7 @@
           </div>
 
           <div v-else class="relative flex-shrink-0 mr-4">
-            <img :src="conversation.group?.group_picture || '/default-group.png'" alt="Group Avatar"
+            <img :src="getProfilePictureUrl(conversation.group) || '/default-group.png'" alt="Group Avatar"
               class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
             <div
               class="absolute -bottom-1 -right-1 bg-green-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
@@ -173,12 +173,16 @@
       :conversation="selectedConversation" 
       :messages="messages"
       :current-user="currentUser"
+      :member-request-notification-trigger="memberRequestNotificationTrigger"
+      :group-member-update-trigger="groupMemberUpdateTrigger"
       @close="showChatInfo = false"
       @mute="handleMute"
       @unmute="handleUnmute"
       @block="handleBlock"
       @unblock="handleUnblock"
       @scroll-to-message="scrollToMessage"
+      @group-photo-updated="handleGroupPhotoUpdated"
+      @leave-group="handleLeaveGroup"
     />
     <PendingMessagesModal v-if="showPendingMessages" :pending-messages="pendingMessages"
       @close="showPendingMessages = false" @accept="acceptPendingMessage" @reject="rejectPendingMessage" />
@@ -222,6 +226,10 @@ const showBlockedUsers = ref(false);
 const searchQuery = ref('');
 const searchResults = ref([]);
 const searchInput = ref(null);
+
+// Real-time notification triggers
+const memberRequestNotificationTrigger = ref(0);
+const groupMemberUpdateTrigger = ref(0);
 
 const privateWs = ref(null);
 const groupWs = ref(null);
@@ -321,15 +329,43 @@ const fetchCurrentUser = async () => {
 
 const fetchConversations = async () => {
   try {
-    const data = await messagingService.getConversations();
-    conversations.value = (Array.isArray(data) ? data : []).map(conv => ({
+    // Fetch both private conversations and group conversations
+    const [privateConversations, groupConversations] = await Promise.all([
+      messagingService.getConversations().catch(err => {
+        console.error('Error fetching private conversations:', err);
+        return [];
+      }),
+      messagingService.getGroupConversations().catch(err => {
+        console.error('Error fetching group conversations:', err);
+        return [];
+      })
+    ]);
+    
+    // Transform private conversations
+    const transformedPrivateConversations = (Array.isArray(privateConversations) ? privateConversations : []).map(conv => ({
       ...conv,
-      id: conv.id || (conv.type === 'private' ? conv.mate.id : conv.group.id),
-      // Ensure we have a timestamp for sorting
+      id: conv.id || conv.mate.id,
+      type: 'private',
       timestamp: conv.timestamp || conv.lastMessageTime || new Date().toISOString()
     }));
     
+    // Transform group conversations to match the expected format
+    const transformedGroupConversations = (Array.isArray(groupConversations) ? groupConversations : []).map(group => ({
+      id: group.id,
+      type: 'group',
+      group: group,
+      lastMessage: '', // Will be populated if there are messages
+      timestamp: group.updated_at || group.created_at || new Date().toISOString(),
+      unreadCount: 0
+    }));
+    
+    // Combine and sort by timestamp
+    const allConversations = [...transformedPrivateConversations, ...transformedGroupConversations];
+    conversations.value = allConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
     console.log('Messaging.vue: Fetched conversations:', conversations.value);
+    console.log('Messaging.vue: Private conversations:', transformedPrivateConversations.length);
+    console.log('Messaging.vue: Group conversations:', transformedGroupConversations.length);
   } catch (e) { 
     console.error('Conv fetch error', e);
     // Handle blocking-related errors gracefully
@@ -946,6 +982,56 @@ const scrollToMessage = (messageId) => {
   }
 };
 
+const handleGroupPhotoUpdated = (data) => {
+  console.log('Messaging: Group photo updated:', data);
+  
+  // Update the conversation in the conversations list
+  const conversationIndex = conversations.value.findIndex(conv => 
+    conv.type === 'group' && conv.group.id === data.groupId
+  );
+  
+  if (conversationIndex !== -1) {
+    conversations.value[conversationIndex].group.group_picture = data.newPhotoUrl;
+    
+    // Also update the selected conversation if it's the same group
+    if (selectedConversation.value && 
+        selectedConversation.value.type === 'group' && 
+        selectedConversation.value.group.id === data.groupId) {
+      selectedConversation.value.group.group_picture = data.newPhotoUrl;
+    }
+    
+    // Force reactivity update
+    nextTick(() => {
+      conversations.value = [...conversations.value];
+      console.log('✅ Messaging: Group photo updated in conversation list and selected conversation');
+    });
+  }
+};
+
+const handleLeaveGroup = (data) => {
+  console.log('Messaging: User left group:', data);
+  
+  // Remove the conversation from the list
+  const conversationIndex = conversations.value.findIndex(conv => 
+    conv.type === 'group' && conv.group.id === data.groupId
+  );
+  
+  if (conversationIndex !== -1) {
+    conversations.value.splice(conversationIndex, 1);
+    
+    // If this was the selected conversation, clear it
+    if (selectedConversation.value && 
+        selectedConversation.value.type === 'group' && 
+        selectedConversation.value.group.id === data.groupId) {
+      selectedConversation.value = null;
+      messages.value = [];
+      showChatInfo.value = false;
+    }
+    
+    console.log('✅ Messaging: Group removed from conversation list');
+  }
+};
+
 // === WEBSOCKETS ===
 function setupWebSockets() {
   getValidToken().then(token => {
@@ -1039,6 +1125,16 @@ function setupNotificationWebSocket(token) {
     else if (data.type === 'status_update') {
       console.log('🔔 Processing status update event:', data);
       handleWsMessage(data, 'notification');
+    } 
+    // Handle group creation notifications
+    else if (data.type === 'group_created') {
+      console.log('🔔 Processing group creation event:', data);
+      handleGroupCreatedNotification(data);
+    }
+    // Handle group member left notifications
+    else if (data.type === 'group_member_left') {
+      console.log('🔔 Processing group member left event:', data);
+      handleGroupMemberLeftNotification(data);
     } else {
       console.log('🔔 Received other notification:', data.type);
     }
@@ -1509,6 +1605,83 @@ function handleWsMessage(data, scope) {
         conversations.value = [...conversations.value];
         console.log('✅ Real-time: User blocked status updated immediately');
       });
+    },
+    member_request_notification: (data) => {
+      console.log('🔔 Real-time: Member request notification received:', data);
+      
+      // Trigger reactive update for ChatInfoPanel
+      if (selectedConversation.value?.type === 'group' && 
+          selectedConversation.value.group.id === data.group_id) {
+        console.log('🔔 Real-time: Triggering pending requests refresh for current group');
+        memberRequestNotificationTrigger.value++;
+      }
+    },
+    group_added_notification: (data) => {
+      console.log('🔔 Real-time: Group added notification received:', data);
+      
+      // Add system message to the chat if this is the current group
+      if (selectedConversation.value?.type === 'group' && 
+          selectedConversation.value.group.id === data.group_id) {
+        const systemMessage = {
+          id: `system-${Date.now()}`,
+          content: `${data.added_user_name} was added to the group`,
+          timestamp: new Date().toISOString(),
+          isSystemMessage: true,
+          sender: { 
+            id: 'system', 
+            first_name: 'System', 
+            last_name: '' 
+          }
+        };
+        messages.value.push(systemMessage);
+        
+        // Trigger group members refresh
+        groupMemberUpdateTrigger.value++;
+      }
+      
+      // If the current user was added to a new group, refresh conversations
+      if (data.added_user_id === authStore.user.id) {
+        console.log('🔔 Real-time: Current user was added to a group, refreshing conversations');
+        fetchConversations();
+      }
+    },
+    request_response_notification: (data) => {
+      console.log('🔔 Real-time: Request response notification received:', data);
+      
+      // Show notification to requester about approval/rejection
+      if (data.requester_id === authStore.user.id) {
+        const action = data.status === 'approved' ? 'approved' : 'rejected';
+        const systemMessage = {
+          id: `system-${Date.now()}`,
+          content: `Your request to add ${data.target_user_name} to the group was ${action}`,
+          timestamp: new Date().toISOString(),
+          isSystemMessage: true,
+          sender: { 
+            id: 'system', 
+            first_name: 'System', 
+            last_name: '' 
+          }
+        };
+        
+        // Add to current conversation if it's the same group
+        if (selectedConversation.value?.type === 'group' && 
+            selectedConversation.value.group.id === data.group_id) {
+          messages.value.push(systemMessage);
+        }
+        
+        // Refresh conversations if user was approved (new member will show)
+        if (data.status === 'approved') {
+          fetchConversations();
+        }
+      }
+      
+      // If current user is admin in the group, trigger refresh of pending requests
+      if (selectedConversation.value?.type === 'group' && 
+          selectedConversation.value.group.id === data.group_id &&
+          selectedConversation.value.group?.admins?.some(admin => admin.id === authStore.user.id)) {
+        console.log('🔔 Real-time: Admin received request response, refreshing pending requests');
+        memberRequestNotificationTrigger.value++;
+      }
     }
   };
   
@@ -1524,6 +1697,103 @@ function handleWsMessage(data, scope) {
 function updateConversationWithRequest(messageRequest) {
   // This function can be expanded to add new conversations from message requests
   console.log('Updating conversation with request:', messageRequest);
+}
+
+// Function to handle real-time group creation notifications
+function handleGroupCreatedNotification(data) {
+  console.log('🎉 Real-time: Group created notification received:', data);
+  
+  try {
+    // Transform the group data to match the conversation format
+    const newGroupConversation = {
+      id: data.group.id,
+      type: 'group',
+      group: data.group,
+      lastMessage: `Created by ${data.creator.first_name} ${data.creator.last_name}`,
+      timestamp: data.group.created_at || new Date().toISOString(),
+      unreadCount: 0
+    };
+    
+    // Check if this group is already in the conversations list
+    const existingGroupIndex = conversations.value.findIndex(conv => 
+      conv.type === 'group' && conv.group.id === data.group.id
+    );
+    
+    if (existingGroupIndex === -1) {
+      // Add the new group to the top of the conversations list
+      conversations.value.unshift(newGroupConversation);
+      
+      // Force Vue reactivity
+      nextTick(() => {
+        conversations.value = [...conversations.value];
+        console.log('✅ Real-time: New group added to conversation list:', data.group.name);
+      });
+      
+      // Show a subtle notification to the user
+      const notificationMessage = `🎉 You were added to group "${data.group.name}" by ${data.creator.first_name} ${data.creator.last_name}`;
+      console.log(notificationMessage);
+      
+      // TODO: Add toast notification here if you have a toast system
+      // toast.success(notificationMessage);
+      
+    } else {
+      console.log('Group already exists in conversations, skipping duplicate');
+    }
+    
+  } catch (error) {
+    console.error('Error handling group created notification:', error);
+  }
+}
+
+// Function to handle real-time group member left notifications
+function handleGroupMemberLeftNotification(data) {
+  console.log('👋 Real-time: Group member left notification received:', data);
+  
+  try {
+    // Find the group conversation
+    const conversationIndex = conversations.value.findIndex(conv => 
+      conv.type === 'group' && conv.group.id === data.message.group
+    );
+    
+    if (conversationIndex !== -1) {
+      const conversation = conversations.value[conversationIndex];
+      
+      // Update the last message to show the system message
+      conversation.lastMessage = data.message.content;
+      conversation.timestamp = data.message.timestamp;
+      
+      // If this conversation is currently selected, add the system message to messages
+      if (selectedConversation.value && 
+          selectedConversation.value.type === 'group' && 
+          selectedConversation.value.group.id === data.message.group) {
+        
+        const systemMessage = {
+          id: data.message.id,
+          content: data.message.content,
+          timestamp: data.message.timestamp,
+          sender: data.message.sender,
+          group: data.message.group
+        };
+        
+        // Add the system message to the current messages
+        messages.value.push(systemMessage);
+        
+        // Scroll to bottom to show the new message
+        nextTick(() => {
+          scrollToBottom();
+        });
+      }
+      
+      // Move this conversation to the top of the list
+      conversations.value.splice(conversationIndex, 1);
+      conversations.value.unshift(conversation);
+      
+      console.log('✅ Real-time: Group member left message processed');
+    }
+    
+  } catch (error) {
+    console.error('Error handling group member left notification:', error);
+  }
 }
 
 // === UTILS ===
@@ -1644,6 +1914,9 @@ onMounted(async () => {
     selectLastConversation();
     
     setupWebSockets();
+    
+    // ✅ NEW: Setup connections to all user's groups for real-time messaging
+    setupAllGroupConnections();
     
     // Listen for global status updates via window events
     window.addEventListener('user-status-update', handleGlobalStatusUpdate);

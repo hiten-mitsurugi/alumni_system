@@ -183,11 +183,29 @@ class MessagingBaseMixin:
             serializer = MessageSerializer(message, context={'request': mock_request})
             data = serializer.data
             
-            # Convert UUIDs to strings for JSON serialization
-            if data.get('id'):
-                data['id'] = str(data['id'])
-            if data.get('reply_to') and data['reply_to'].get('id'):
-                data['reply_to']['id'] = str(data['reply_to']['id'])
+            # ✅ FIX: Convert ALL UUIDs to strings for WebSocket serialization
+            def convert_uuids_to_strings(obj):
+                """Recursively convert UUID objects to strings in nested dictionaries."""
+                if isinstance(obj, dict):
+                    for key, value in obj.items():
+                        if hasattr(value, 'hex'):  # UUID objects have a 'hex' attribute
+                            obj[key] = str(value)
+                        elif isinstance(value, dict):
+                            convert_uuids_to_strings(value)
+                        elif isinstance(value, list):
+                            for item in value:
+                                if isinstance(item, dict):
+                                    convert_uuids_to_strings(item)
+                                elif hasattr(item, 'hex'):
+                                    # This shouldn't happen in our data structure, but just in case
+                                    pass
+                elif isinstance(obj, list):
+                    for item in obj:
+                        if isinstance(item, dict):
+                            convert_uuids_to_strings(item)
+            
+            # Convert all UUIDs in the serialized data
+            convert_uuids_to_strings(data)
                 
             return data
             
@@ -808,6 +826,12 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         await self.send_json({'type': 'user_stop_typing', **event})
     async def status_update(self, event): 
         await self.send_json({'type': 'status_update', **event})
+    async def member_request_notification(self, event): 
+        await self.send_json({'type': 'member_request_notification', **event})
+    async def group_added_notification(self, event): 
+        await self.send_json({'type': 'group_added_notification', **event})
+    async def request_response_notification(self, event): 
+        await self.send_json({'type': 'request_response_notification', **event})
 
 
 class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
@@ -1194,5 +1218,15 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         await self.send_json({'type': 'user_typing', **event})
     async def user_stop_typing(self, event): 
         await self.send_json({'type': 'user_stop_typing', **event})
+    async def member_request_notification(self, event): 
+        await self.send_json({'type': 'member_request_notification', **event})
+    async def group_added_notification(self, event): 
+        await self.send_json({'type': 'group_added_notification', **event})
+    async def request_response_notification(self, event): 
+        await self.send_json({'type': 'request_response_notification', **event})
+    async def group_member_left(self, event): 
+        await self.send_json({'type': 'group_member_left', **event})
     async def status_update(self, event): 
         await self.send_json({'type': 'status_update', **event})
+    async def group_created(self, event): 
+        await self.send_json({'type': 'group_created', **event})

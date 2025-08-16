@@ -1,5 +1,6 @@
 <template>
-  <div class="w-80 bg-white border-l border-gray-200 flex flex-col">
+  <div>
+    <div class="w-80 bg-white border-l border-gray-200 flex flex-col">
     <!-- Header -->
     <div class="p-4 border-b border-gray-200">
       <div class="flex items-center justify-between">
@@ -19,17 +20,37 @@
         <div class="text-center">
           <div class="relative inline-block">
             <img 
-              :src="conversation.type === 'private' 
-                ? getProfilePictureUrl(conversation.mate) 
-                : conversation.group?.group_picture || '/default-group.png'"
+              :src="currentAvatarUrl"
+              :key="conversation.type === 'group' ? conversation.group?.group_picture : conversation.mate?.profile_picture"
               alt="Profile"
               class="w-20 h-20 rounded-full object-cover mx-auto mb-3"
             />
+            <!-- Change group photo button (only for group admins) -->
+            <button 
+              v-if="conversation.type === 'group' && isGroupAdmin"
+              @click="triggerGroupPhotoUpload"
+              class="absolute bottom-1 right-1 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white hover:bg-green-700 transition-colors shadow-lg"
+              title="Change group photo"
+            >
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
             <!-- Online status for private chats -->
             <div v-if="conversation.type === 'private'" 
                  :class="['absolute bottom-2 right-2 w-4 h-4 rounded-full border-2 border-white', getStatusColor(conversation.mate)]">
             </div>
           </div>
+          <!-- Hidden file input for group photo upload -->
+          <input 
+            ref="groupPhotoInput" 
+            type="file" 
+            accept="image/*" 
+            class="hidden" 
+            @change="handleGroupPhotoUpload"
+          />
           <h4 class="font-semibold text-gray-900 text-lg">
             {{ conversation.type === 'private' 
                 ? `${conversation.mate.first_name} ${conversation.mate.last_name}` 
@@ -80,18 +101,255 @@
             <span class="text-xs font-medium">Search</span>
           </button>
 
-          <!-- Group Info (only for groups) -->
+          <!-- Leave Group (only for group chats) -->
           <button 
             v-if="conversation.type === 'group'"
-            @click="showGroupInfo = true"
-            class="flex flex-col items-center p-3 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-all duration-200"
+            @click="leaveGroup"
+            class="flex flex-col items-center p-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all duration-200"
           >
             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span class="text-xs font-medium">Leave</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Group Members (only for groups) -->
+      <div v-if="conversation.type === 'group'" class="border-b border-gray-200">
+        <button 
+          @click="showGroupMembers = !showGroupMembers"
+          class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                     d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-5.523-3.582-10-8-10s-8 4.477-8 10v2m8-10a3 3 0 110-6 3 3 0 010 6zm0 10a3 3 0 110-6 3 3 0 010 6z" />
             </svg>
-            <span class="text-xs font-medium">Members</span>
-          </button>
+            <span class="font-medium text-gray-900">Members</span>
+            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+              {{ groupMembers.length }}
+            </span>
+          </div>
+          <svg 
+            :class="['w-4 h-4 text-gray-400 transition-transform', showGroupMembers ? 'rotate-180' : '']" 
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        <!-- Members List -->
+        <div v-if="showGroupMembers" class="max-h-64 overflow-y-auto">
+          <div v-if="groupMembers.length === 0" class="p-4 text-center text-gray-500 text-sm">
+            No members found
+            <div class="text-xs mt-1">Debug: API called, response processed</div>
+          </div>
+          <div 
+            v-for="member in groupMembers" 
+            :key="member.id"
+            class="p-3 mx-3 mb-2 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-200 border border-green-200"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <img 
+                    :src="getProfilePictureUrl(member)" 
+                    alt="Member avatar"
+                    class="w-10 h-10 rounded-full object-cover"
+                  />
+                  <!-- Online status indicator -->
+                  <div :class="['absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white', getStatusColor(member)]" />
+                </div>
+                <div>
+                  <p class="font-medium text-gray-900 text-sm">{{ member.first_name }} {{ member.last_name }}</p>
+                  <p class="text-xs text-gray-500">@{{ member.username }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <!-- Admin badge -->
+                <span 
+                  v-if="isGroupCreator(member)"
+                  class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium"
+                >
+                  Admin
+                </span>
+                
+                <!-- Remove member button for admins -->
+                <button 
+                  v-if="isGroupAdmin && member.id !== currentUser.id && !isGroupCreator(member)"
+                  @click="removeMember(member)"
+                  class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Remove member"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Add Member Section (for all members, but different behavior) -->
+          <div class="p-3 mx-3 mb-2">
+            <div v-if="!showAddMemberForm" class="text-center">
+              <button 
+                @click="showAddMemberForm = true"
+                class="w-full flex items-center justify-center gap-2 p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                {{ isGroupAdmin ? 'Add Member' : 'Request to Add Member' }}
+              </button>
+            </div>
+            
+            <!-- Add Member Form -->
+            <div v-if="showAddMemberForm" class="space-y-3">
+              <div class="relative">
+                <input 
+                  v-model="memberSearchQuery"
+                  @input="searchAvailableMembers"
+                  type="text"
+                  placeholder="Search users to add..."
+                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                />
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              
+              <!-- Optional message for non-admins -->
+              <div v-if="!isGroupAdmin" class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Optional message to admins:</label>
+                <textarea 
+                  v-model="requestMessage"
+                  placeholder="Why should this person be added to the group?"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                  rows="2"
+                ></textarea>
+              </div>
+
+              <!-- Available Users -->
+              <div v-if="availableUsers.length > 0" class="max-h-32 overflow-y-auto space-y-2">
+                <div 
+                  v-for="user in availableUsers" 
+                  :key="user.id"
+                  class="flex items-center justify-between p-2 bg-white rounded border hover:bg-gray-50 transition-colors"
+                >
+                  <div class="flex items-center gap-2">
+                    <img 
+                      :src="getProfilePictureUrl(user)" 
+                      alt="User avatar"
+                      class="w-6 h-6 rounded-full object-cover"
+                    />
+                    <div>
+                      <p class="font-medium text-gray-900 text-xs">{{ user.first_name }} {{ user.last_name }}</p>
+                      <p class="text-xs text-gray-500">@{{ user.username }}</p>
+                    </div>
+                  </div>
+                  <button 
+                    @click="addMemberToGroup(user)"
+                    class="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              
+              <div v-if="memberSearchQuery && availableUsers.length === 0" class="text-center text-gray-500 text-xs py-2">
+                No users found
+              </div>
+              
+              <button 
+                @click="cancelAddMember"
+                class="w-full p-2 text-gray-600 hover:text-gray-800 text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Member Requests (for admins only) -->
+      <div v-if="conversation.type === 'group' && isGroupAdmin && pendingRequests.length > 0" class="border-b border-gray-200">
+        <button 
+          @click="showPendingRequests = !showPendingRequests"
+          class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="font-medium text-gray-900">Pending Requests</span>
+            <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+              {{ pendingRequests.length }}
+            </span>
+          </div>
+          <svg 
+            :class="['w-4 h-4 text-gray-400 transition-transform', showPendingRequests ? 'rotate-180' : '']" 
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        <!-- Pending Requests List -->
+        <div v-if="showPendingRequests" class="max-h-64 overflow-y-auto">
+          <div 
+            v-for="request in pendingRequests" 
+            :key="request.id"
+            class="p-4 mx-3 mb-2 bg-orange-50 rounded-lg border border-orange-200"
+          >
+            <div class="space-y-3">
+              <!-- Request Info -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <img 
+                    :src="getProfilePictureUrl(request.requested_user)" 
+                    alt="User avatar"
+                    class="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div>
+                    <div class="font-medium text-gray-900">
+                      {{ request.requested_user.first_name }} {{ request.requested_user.last_name }}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      Requested by {{ request.requester.first_name }} {{ request.requester.last_name }}
+                    </div>
+                  </div>
+                </div>
+                <div class="text-xs text-gray-500">
+                  {{ formatDate(request.created_at) }}
+                </div>
+              </div>
+              
+              <!-- Request Message -->
+              <div v-if="request.message" class="text-sm text-gray-700 bg-white p-2 rounded border">
+                "{{ request.message }}"
+              </div>
+              
+              <!-- Action Buttons -->
+              <div class="flex gap-2">
+                <button 
+                  @click="handleMemberRequest(request.id, 'approve')"
+                  class="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Approve
+                </button>
+                <button 
+                  @click="handleMemberRequest(request.id, 'reject')"
+                  class="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -326,10 +584,11 @@
       </div>
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import api from '../../services/api'
 import messagingService from '../../services/messaging'
 
@@ -346,11 +605,19 @@ const props = defineProps({
   currentUser: {
     type: Object,
     required: true
+  },
+  memberRequestNotificationTrigger: {
+    type: Number,
+    default: 0
+  },
+  groupMemberUpdateTrigger: {
+    type: Number,
+    default: 0
   }
 })
 
 // Emits
-const emit = defineEmits(['close', 'block', 'unblock', 'scroll-to-message'])
+const emit = defineEmits(['close', 'block', 'unblock', 'scroll-to-message', 'group-photo-updated', 'leave-group'])
 
 // State
 const isBlocked = ref(false)
@@ -365,8 +632,31 @@ const showSharedImages = ref(false)
 const showSharedLinks = ref(false)
 const showSharedFiles = ref(false)
 const showSearchMessages = ref(false)
-const showGroupInfo = ref(false)
+const showGroupMembers = ref(false)
+const showAddMemberForm = ref(false)
 const showAllImages = ref(false)
+
+// Group management state
+const groupMembers = ref([])
+const availableUsers = ref([])
+const memberSearchQuery = ref('')
+const selectedNewMember = ref(null)
+const requestMessage = ref('')
+const pendingRequests = ref([])
+const showPendingRequests = ref(false)
+const isGroupAdmin = ref(false)
+
+// Group photo upload refs
+const groupPhotoInput = ref(null)
+
+// Computed properties for reactive avatar URL
+const currentAvatarUrl = computed(() => {
+  if (props.conversation.type === 'private') {
+    return getProfilePictureUrl(props.conversation.mate)
+  } else {
+    return getProfilePictureUrl(props.conversation.group) || '/default-group.png'
+  }
+})
 
 // Helper functions
 const getProfilePictureUrl = (entity) => {
@@ -417,12 +707,47 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+// Group management functions
+const isGroupCreator = (user) => {
+  // Check if user is in the admins list (since groups use admins field instead of created_by)
+  return props.conversation.group?.admins?.some(admin => admin.id === user.id) || false
+}
+
+const checkGroupAdminStatus = () => {
+  if (props.conversation.type !== 'group') {
+    isGroupAdmin.value = false
+    return
+  }
+  
+  // User is admin if they are in the admins list
+  isGroupAdmin.value = props.conversation.group?.admins?.some(admin => admin.id === props.currentUser.id) || false
+  console.log('ChatInfoPanel: Group admin status:', isGroupAdmin.value)
+}
+
 // API functions
 const fetchChatInfo = async () => {
   try {
+    console.log('ChatInfoPanel: fetchChatInfo called')
+    console.log('ChatInfoPanel: Current conversation:', props.conversation)
+    console.log('ChatInfoPanel: Conversation type:', props.conversation?.type)
+    console.log('ChatInfoPanel: Conversation group:', props.conversation?.group)
+    
     // Check if user is blocked (only for private chats)
     if (props.conversation.type === 'private') {
       isBlocked.value = await messagingService.isUserBlocked(props.conversation.mate.id)
+    }
+
+    // For group chats, check admin status and fetch members
+    if (props.conversation.type === 'group') {
+      console.log('ChatInfoPanel: Group conversation detected, fetching members')
+      console.log('ChatInfoPanel: Group ID:', props.conversation.group?.id)
+      checkGroupAdminStatus()
+      await fetchGroupMembers()
+      
+      // If admin, also fetch pending requests
+      if (isGroupAdmin.value) {
+        await fetchPendingRequests()
+      }
     }
 
     // Fetch pinned messages
@@ -432,6 +757,45 @@ const fetchChatInfo = async () => {
     processSharedContent()
   } catch (error) {
     console.error('Error fetching chat info:', error)
+  }
+}
+
+const fetchGroupMembers = async () => {
+  try {
+    if (props.conversation.type !== 'group') {
+      console.log('ChatInfoPanel: Not a group conversation, type:', props.conversation.type)
+      return
+    }
+    
+    console.log('ChatInfoPanel: Fetching members for group:', props.conversation.group.id)
+    console.log('ChatInfoPanel: Group data:', props.conversation.group)
+    
+    const { data } = await api.get(`/message/group/${props.conversation.group.id}/members/`)
+    console.log('ChatInfoPanel: Raw API response:', data)
+    groupMembers.value = data.members || []
+    console.log('ChatInfoPanel: Group members fetched:', groupMembers.value.length)
+    console.log('ChatInfoPanel: Members array:', groupMembers.value)
+  } catch (error) {
+    console.error('Error fetching group members:', error)
+    console.error('Error response:', error.response?.data)
+    groupMembers.value = []
+  }
+}
+
+const searchAvailableMembers = async () => {
+  if (!memberSearchQuery.value.trim()) {
+    availableUsers.value = []
+    return
+  }
+
+  try {
+    const { data } = await api.get(`/message/search/?q=${encodeURIComponent(memberSearchQuery.value)}`)
+    // Filter out users who are already members
+    const memberIds = groupMembers.value.map(member => member.id)
+    availableUsers.value = (data.users || []).filter(user => !memberIds.includes(user.id))
+  } catch (error) {
+    console.error('Error searching users:', error)
+    availableUsers.value = []
   }
 }
 
@@ -547,6 +911,188 @@ const processSharedContent = () => {
 }
 
 // Actions
+const addMemberToGroup = async (user) => {
+  try {
+    // Regular members create requests, admins add directly
+    if (isGroupAdmin.value) {
+      // Admin: Add member directly
+      await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
+        action: 'add_member',
+        user_id: user.id
+      })
+      
+      alert('Member added successfully!')
+      await fetchGroupMembers()
+      showAddMemberForm.value = false
+      memberSearchQuery.value = ''
+      availableUsers.value = []
+    } else {
+      // Regular member: Create a request
+      await createMemberRequest(user.id)
+    }
+  } catch (error) {
+    console.error('Error adding member:', error)
+    alert('Failed to add member')
+  }
+}
+
+const createMemberRequest = async (userId) => {
+  try {
+    const requestData = {
+      user_id: userId,
+      message: requestMessage.value.trim()
+    }
+    
+    await api.post(`/message/group/${props.conversation.group.id}/member-requests/`, requestData)
+    
+    alert('Member request sent to admins for approval!')
+    showAddMemberForm.value = false
+    memberSearchQuery.value = ''
+    requestMessage.value = ''
+    availableUsers.value = []
+    selectedNewMember.value = null
+  } catch (error) {
+    console.error('Error creating member request:', error)
+    if (error.response?.data?.error) {
+      alert(error.response.data.error)
+    } else {
+      alert('Failed to send member request')
+    }
+  }
+}
+
+const fetchPendingRequests = async () => {
+  try {
+    if (!isGroupAdmin.value) return
+    
+    const { data } = await api.get(`/message/group/${props.conversation.group.id}/member-requests/`)
+    pendingRequests.value = data
+    console.log('Pending requests fetched:', pendingRequests.value.length)
+  } catch (error) {
+    console.error('Error fetching pending requests:', error)
+    pendingRequests.value = []
+  }
+}
+
+const handleMemberRequest = async (requestId, action, adminResponse = '') => {
+  try {
+    const requestData = {
+      action, // 'approve' or 'reject'
+      admin_response: adminResponse
+    }
+    
+    await api.post(`/message/member-request/${requestId}/manage/`, requestData)
+    
+    alert(`Request ${action}d successfully!`)
+    await fetchPendingRequests()
+    await fetchGroupMembers() // Refresh members if approved
+  } catch (error) {
+    console.error(`Error ${action}ing request:`, error)
+    alert(`Failed to ${action} request`)
+  }
+}
+
+const cancelAddMember = () => {
+  showAddMemberForm.value = false
+  memberSearchQuery.value = ''
+  requestMessage.value = ''
+  availableUsers.value = []
+}
+
+// Group photo upload functions
+const triggerGroupPhotoUpload = () => {
+  groupPhotoInput.value?.click()
+}
+
+const handleGroupPhotoUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    const formData = new FormData()
+    formData.append('group_picture', file)
+    formData.append('action', 'update_picture')
+
+    console.log('Uploading group photo for group:', props.conversation.group.id)
+    
+    const response = await api.post(`/message/group/${props.conversation.group.id}/manage/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    console.log('Group photo updated successfully:', response.data)
+    
+    // Emit event to parent to update the conversation list and current conversation
+    if (response.data.group_picture) {
+      emit('group-photo-updated', {
+        groupId: props.conversation.group.id,
+        newPhotoUrl: response.data.group_picture
+      })
+      
+      // Force reactivity update
+      await nextTick()
+    }
+    
+    // Reset the file input
+    event.target.value = ''
+    
+  } catch (error) {
+    console.error('Error uploading group photo:', error)
+  }
+}
+
+const removeMember = async (member) => {
+  if (!confirm(`Remove ${member.first_name} ${member.last_name} from the group?`)) {
+    return
+  }
+
+  try {
+    await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
+      action: 'remove_member',
+      user_id: member.id
+    })
+    
+    // Refresh members list
+    await fetchGroupMembers()
+    
+    console.log('Member removed successfully:', member.first_name, member.last_name)
+  } catch (error) {
+    console.error('Error removing member:', error)
+    alert('Failed to remove member')
+  }
+}
+
+const leaveGroup = async () => {
+  if (!confirm('Are you sure you want to leave this group? You will no longer receive messages from this group.')) {
+    return
+  }
+
+  try {
+    console.log('Attempting to leave group:', props.conversation.group.id)
+    console.log('Group data:', props.conversation.group)
+    console.log('Current user:', props.currentUser)
+    
+    const response = await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
+      action: 'leave_group'
+    })
+    
+    console.log('Left group successfully:', response.data)
+    
+    // Emit event to parent to handle UI updates (close chat, remove from list)
+    emit('leave-group', {
+      groupId: props.conversation.group.id,
+      groupName: props.conversation.group.name
+    })
+    
+  } catch (error) {
+    console.error('Error leaving group:', error)
+    console.error('Error response:', error.response?.data)
+    console.error('Error status:', error.response?.status)
+    alert(`Failed to leave group: ${error.response?.data?.error || error.message}`)
+  }
+}
+
 const toggleBlock = async () => {
   if (props.conversation.type !== 'private') return
 
@@ -596,6 +1142,11 @@ const downloadFile = (file) => {
 // Watchers
 watch(() => props.conversation, (newConversation) => {
   if (newConversation) {
+    // Reset inline states
+    showAddMemberForm.value = false
+    memberSearchQuery.value = ''
+    availableUsers.value = []
+    
     fetchChatInfo()
   }
 }, { immediate: true })
@@ -604,6 +1155,31 @@ watch(() => props.messages, () => {
   processSharedContent()
   fetchPinnedMessages()
 }, { deep: true })
+
+// Watch for member search query changes
+watch(memberSearchQuery, () => {
+  if (memberSearchQuery.value.length >= 2) {
+    searchAvailableMembers()
+  } else {
+    availableUsers.value = []
+  }
+})
+
+// Watch for real-time member request notifications
+watch(() => props.memberRequestNotificationTrigger, (newVal, oldVal) => {
+  if (newVal > oldVal && props.conversation?.type === 'group' && isGroupAdmin.value) {
+    console.log('🔔 ChatInfoPanel: Real-time member request notification, refreshing pending requests')
+    fetchPendingRequests()
+  }
+})
+
+// Watch for real-time group member updates
+watch(() => props.groupMemberUpdateTrigger, (newVal, oldVal) => {
+  if (newVal > oldVal && props.conversation?.type === 'group') {
+    console.log('🔔 ChatInfoPanel: Real-time group member update, refreshing members')
+    fetchChatInfo()
+  }
+})
 
 // Handle image loading errors for link previews
 const handleImageError = (event) => {
