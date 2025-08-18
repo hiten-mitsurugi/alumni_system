@@ -55,6 +55,16 @@ class Message(models.Model):
         blank=True,
         related_name='replies'
     )
+    # Forwarding fields
+    forwarded_from = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='forwarded_messages',
+        help_text='Original message that was forwarded'
+    )
+    is_forwarded = models.BooleanField(default=False, help_text='Whether this message is a forwarded message')
 
     class Meta:
         app_label = 'messaging_app'

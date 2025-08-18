@@ -18,6 +18,15 @@
         <span>Pinned</span>
       </div>
 
+      <!-- Forward indicator -->
+      <div v-if="message.is_forwarded" class="flex items-center gap-1 mb-1 text-xs text-green-600">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+        </svg>
+        <span>Forwarded</span>
+      </div>
+
       <!-- Reply indicator with enhanced threading - REMOVED standalone version -->
       <!-- This will now be integrated inside the main message bubble -->
 
@@ -203,6 +212,42 @@
                   ]">
                     {{ replyMessage.content || 'Attachment' }}
                   </p>
+                </div>
+              </div>
+
+              <!-- Forwarded from preview (similar to reply) -->
+              <div v-if="message.forwarded_from" class="mb-3">
+                <div :class="[
+                  'border-l-4 pl-3 py-2 rounded-r-md transition-all duration-200',
+                  isOwnMessage 
+                    ? 'border-green-300 bg-green-100 bg-opacity-30' 
+                    : 'border-green-500 bg-green-50'
+                ]">
+                  <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                    <span :class="[
+                      'font-medium text-xs',
+                      isOwnMessage ? 'text-white text-opacity-90' : 'text-green-600'
+                    ]">
+                      Forwarded from {{ message.forwarded_from.sender.first_name }} {{ message.forwarded_from.sender.last_name }}
+                    </span>
+                  </div>
+                  <p :class="[
+                    'text-xs line-clamp-2 leading-tight',
+                    isOwnMessage ? 'text-white text-opacity-80' : 'text-gray-700'
+                  ]">
+                    {{ message.forwarded_from.content || 'Attachment' }}
+                  </p>
+                  <span :class="[
+                    'text-xs opacity-75',
+                    isOwnMessage ? 'text-white text-opacity-60' : 'text-gray-500'
+                  ]">
+                    {{ formatTimestamp(message.forwarded_from.timestamp) }}
+                    {{ message.forwarded_from.was_group_message ? `• ${message.forwarded_from.original_group_name}` : '' }}
+                  </span>
                 </div>
               </div>
 

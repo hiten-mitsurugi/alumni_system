@@ -193,6 +193,12 @@
       :show="showBlockedUsers"
       @close="showBlockedUsers = false" 
       @user-unblocked="handleUserUnblocked" />
+    <ForwardModal
+      v-if="showForwardModal"
+      :message="messageToForward"
+      @close="showForwardModal = false"
+      @forward="handleForwardComplete"
+    />
   </div>
 </template>
 
@@ -208,6 +214,7 @@ import PendingMessagesModal from '../../components/messaging/PendingMessagesModa
 import CreateGroupModal from '../../components/messaging/CreateGroupModal.vue';
 import ChatInfoPanel from '../../components/messaging/ChatInfoPanel.vue';
 import BlockedUsersModal from '../../components/messaging/BlockedUsersModal.vue';
+import ForwardModal from '../../components/messaging/ForwardModal.vue';
 
 // === STATE ===
 const authStore = useAuthStore();
@@ -223,6 +230,8 @@ const showPendingMessages = ref(false);
 const showCreateGroup = ref(false);
 const showChatInfo = ref(false);
 const showBlockedUsers = ref(false);
+const showForwardModal = ref(false);
+const messageToForward = ref(null);
 const searchQuery = ref('');
 const searchResults = ref([]);
 const searchInput = ref(null);
@@ -633,8 +642,10 @@ async function handleMessageAction(actionData) {
         break
         
       case 'forward':
-        // TODO: Open forward modal
+        // Open forward modal
         console.log('Messaging: Forward message:', message.id)
+        messageToForward.value = message
+        showForwardModal.value = true
         break
         
       case 'pin':
@@ -1949,6 +1960,22 @@ const handleGlobalStatusUpdate = (event) => {
     triggerRef(availableMates);
   }
 };
+
+// Handle forward completion
+function handleForwardComplete(result) {
+  showForwardModal.value = false
+  messageToForward.value = null
+  
+  if (result.success) {
+    // Show success toast/notification
+    console.log('✅ Message forwarded successfully:', result.message)
+    // You can add a toast notification here if you have one
+  } else {
+    // Show error toast/notification
+    console.error('❌ Failed to forward message:', result.message)
+    // You can add an error toast notification here if you have one
+  }
+}
 
 // === LIFECYCLE ===
 onMounted(async () => {

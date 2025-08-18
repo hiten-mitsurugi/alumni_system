@@ -113,6 +113,7 @@ class MessageSerializer(serializers.ModelSerializer):
     sender = UserSearchSerializer(read_only=True)
     receiver = UserSearchSerializer(read_only=True)
     reply_to = serializers.SerializerMethodField()
+    forwarded_from = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(many=True, read_only=True)
     reactions = ReactionSerializer(many=True, read_only=True)
     link_previews = LinkPreviewSerializer(many=True, read_only=True)
@@ -129,6 +130,8 @@ class MessageSerializer(serializers.ModelSerializer):
             'edited_at',  # Add edited_at field
             'is_read',
             'reply_to',
+            'forwarded_from',
+            'is_forwarded',
             'attachments',
             'is_pinned',
             'reactions',
@@ -146,6 +149,23 @@ class MessageSerializer(serializers.ModelSerializer):
                     'last_name': obj.reply_to.sender.last_name,
                     'profile_picture': self.get_profile_picture_url(obj.reply_to.sender)
                 }
+            }
+        return None
+
+    def get_forwarded_from(self, obj):
+        if obj.forwarded_from:
+            return {
+                'id': str(obj.forwarded_from.id),
+                'content': obj.forwarded_from.content,
+                'sender': {
+                    'id': str(obj.forwarded_from.sender.id),
+                    'first_name': obj.forwarded_from.sender.first_name,
+                    'last_name': obj.forwarded_from.sender.last_name,
+                    'profile_picture': self.get_profile_picture_url(obj.forwarded_from.sender)
+                },
+                'timestamp': obj.forwarded_from.timestamp.isoformat(),
+                'was_group_message': bool(obj.forwarded_from.group),
+                'original_group_name': obj.forwarded_from.group.name if obj.forwarded_from.group else None
             }
         return None
 

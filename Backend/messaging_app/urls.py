@@ -4,7 +4,7 @@ from .views import (
     GroupChatCreateView, GroupChatManageView, GroupChatListView, GroupMembersView,
     ConversationUsersView, MessageRequestView, BlockUserView,
     PinMessageView, BumpMessageView, UploadView,
-    GroupMemberRequestView, GroupMemberRequestManageView
+    GroupMemberRequestView, GroupMemberRequestManageView, ForwardMessageView
 )
 
 urlpatterns = [
@@ -32,5 +32,6 @@ urlpatterns = [
     
     path('pin/<uuid:message_id>/', PinMessageView.as_view(), name='pin_message'),
     path('bump/<uuid:message_id>/', BumpMessageView.as_view(), name='bump_message'),
+    path('forward/', ForwardMessageView.as_view(), name='forward_message'),
     path('upload/', UploadView.as_view(), name='upload_attachment'),
 ]
