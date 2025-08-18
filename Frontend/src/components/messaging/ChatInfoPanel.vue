@@ -778,8 +778,16 @@ const checkGroupAdminStatus = () => {
   }
   
   // User is admin if they are in the admins list
-  isGroupAdmin.value = props.conversation.group?.admins?.some(admin => admin.id === props.currentUser.id) || false
-  console.log('ChatInfoPanel: Group admin status:', isGroupAdmin.value)
+  const admins = props.conversation.group?.admins || []
+  const currentUserId = props.currentUser?.id
+  
+  console.log('🔥 ChatInfoPanel: Checking admin status:')
+  console.log('🔥 ChatInfoPanel: Current user ID:', currentUserId)
+  console.log('🔥 ChatInfoPanel: Group admins:', admins)
+  console.log('🔥 ChatInfoPanel: Admin IDs:', admins.map(admin => admin.id))
+  
+  isGroupAdmin.value = admins.some(admin => admin.id === currentUserId) || false
+  console.log('🔥 ChatInfoPanel: Final admin status:', isGroupAdmin.value)
 }
 
 // API functions
@@ -830,9 +838,23 @@ const fetchGroupMembers = async () => {
     
     const { data } = await api.get(`/message/group/${props.conversation.group.id}/members/`)
     console.log('ChatInfoPanel: Raw API response:', data)
+    
+    // The backend returns full GroupChatSerializer data, not just {members: [...]}
+    // So the members are at data.members and admins are at data.admins
     groupMembers.value = data.members || []
+    
+    // Update the conversation's group admin data to ensure isGroupAdmin is computed correctly
+    if (props.conversation.group && data.admins) {
+      props.conversation.group.admins = data.admins
+      console.log('ChatInfoPanel: Updated admins data:', data.admins)
+      
+      // Recompute admin status after updating admin data
+      checkGroupAdminStatus()
+    }
+    
     console.log('ChatInfoPanel: Group members fetched:', groupMembers.value.length)
     console.log('ChatInfoPanel: Members array:', groupMembers.value)
+    console.log('ChatInfoPanel: Admins array:', data.admins)
   } catch (error) {
     console.error('Error fetching group members:', error)
     console.error('Error response:', error.response?.data)
@@ -971,15 +993,20 @@ const processSharedContent = () => {
 // Actions
 const addMemberToGroup = async (user) => {
   try {
+    console.log('🔥 ChatInfoPanel: addMemberToGroup called')
+    console.log('🔥 ChatInfoPanel: isGroupAdmin.value:', isGroupAdmin.value)
+    console.log('🔥 ChatInfoPanel: User to add:', user)
+    
     // Regular members create requests, admins add directly
     if (isGroupAdmin.value) {
+      console.log('🔥 ChatInfoPanel: Admin path - adding member directly')
       // Admin: Add member directly
       const response = await api.post(`/message/group/${props.conversation.group.id}/manage/`, {
         action: 'add_member',
         user_id: user.id
       })
       
-      console.log('Add member response:', response.data)
+      console.log('🔥 ChatInfoPanel: Add member response:', response.data)
       
       // Check for success in response
       if (response.data && (response.data.success || response.data.message)) {
@@ -993,6 +1020,7 @@ const addMemberToGroup = async (user) => {
       memberSearchQuery.value = ''
       availableUsers.value = []
     } else {
+      console.log('🔥 ChatInfoPanel: Regular member path - creating request')
       // Regular member: Create a request
       await createMemberRequest(user.id)
     }

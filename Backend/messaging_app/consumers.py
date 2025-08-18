@@ -14,7 +14,7 @@ from channels.db import database_sync_to_async
 from django.utils import timezone
 from django.core.cache import cache
 
-from messaging_app.models import Message, MessageRequest, GroupChat, Reaction, Attachment
+from messaging_app.models import Message, MessageRequest, GroupChat, Reaction, Attachment, MessageRead
 from messaging_app.serializers import MessageSerializer
 
 logger = logging.getLogger(__name__)
@@ -912,6 +912,7 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                 'pin_message': self.handle_group_pin,
                 'typing': self.handle_group_typing,
                 'stop_typing': self.handle_group_stop_typing,
+                'mark_as_read': self.handle_group_mark_as_read,
                 'ping': self.handle_ping  # Add ping handler
             }
             
@@ -1239,6 +1240,40 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
             {'type': 'user_stop_typing', 'user_id': self.user.id}
         )
 
+    async def handle_group_mark_as_read(self, data: Dict[str, Any]):
+        """Mark group messages as read for the current user."""
+        group_id = data.get('group_id')
+        
+        if not group_id or str(group_id) != str(self.group_id):
+            return
+            
+        @database_sync_to_async
+        def _mark_group_read():
+            # Get all unread messages in this group from other users
+            unread_messages = Message.objects.filter(
+                group_id=group_id
+            ).exclude(sender=self.user)
+            
+            # Only mark messages as read that don't already have a MessageRead record
+            for message in unread_messages:
+                MessageRead.objects.get_or_create(
+                    message=message,
+                    user=self.user,
+                    defaults={'read_at': timezone.now()}
+                )
+            
+        await _mark_group_read()
+        
+        # Notify other group members that this user has read messages
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                'type': 'group_messages_read',
+                'user_id': self.user.id,
+                'group_id': str(group_id)
+            }
+        )
+
     # Group event handlers
     async def chat_message(self, event): 
         await self.send_json({'type': 'chat_message', **event})
@@ -1264,5 +1299,7 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         await self.send_json({'type': 'group_member_left', **event})
     async def group_member_added(self, event): 
         await self.send_json({'type': 'group_member_added', **event})
+    async def group_messages_read(self, event): 
+        await self.send_json({'type': 'group_messages_read', **event})
     async def status_update(self, event): 
         await self.send_json({'type': 'status_update', **event})

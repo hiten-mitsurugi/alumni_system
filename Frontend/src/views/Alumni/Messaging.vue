@@ -95,18 +95,6 @@
           <div v-else class="relative flex-shrink-0 mr-4">
             <img :src="getProfilePictureUrl(conversation.group) || '/default-group.png'" alt="Group Avatar"
               class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
-            <div class="absolute -bottom-1 -right-1">
-              <template v-if="conversation.unreadCount > 0">
-                <span class="bg-green-600 text-white text-xs rounded-full min-w-[24px] h-6 px-2 flex items-center justify-center font-medium shadow">
-                  {{ conversation.unreadCount }}
-                </span>
-              </template>
-              <template v-else>
-                <span class="bg-green-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
-                  {{ conversation.group?.members?.length || 0 }}
-                </span>
-              </template>
-            </div>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between mb-1">
@@ -253,17 +241,41 @@ const privateWs = ref(null);
 const groupWs = ref(null);
 const notificationWs = ref(null);
 
+// 🔧 FIX: Enhanced heartbeat system to track multiple WebSocket connections
 // Heartbeat system to keep WebSocket connections alive
 let heartbeatInterval = null;
+let heartbeatIntervals = new Set(); // Track multiple WebSocket heartbeats
+let connectionStates = new Map(); // Track connection health
 
 function startHeartbeat(ws) {
   stopHeartbeat(); // Clear any existing interval
   heartbeatInterval = setInterval(() => {
     if (ws && ws.readyState === WebSocket.OPEN) {
-      console.log('Messaging.vue: Sending heartbeat ping');
+      if (isDev) debugLog('Messaging.vue: Sending heartbeat ping');
       ws.send(JSON.stringify({ action: 'ping' }));
     }
   }, 30000); // Send ping every 30 seconds
+}
+
+// 🔧 FIX: Enhanced heartbeat for specific WebSocket types
+function startTypedHeartbeat(ws, wsType) {
+  const intervalId = setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: 'ping' }));
+      connectionStates.set(wsType, 'healthy');
+    } else {
+      connectionStates.set(wsType, 'disconnected');
+      if (isDev) debugLog(`${wsType} WebSocket disconnected, stopping heartbeat`);
+      clearInterval(intervalId);
+      heartbeatIntervals.delete(intervalId);
+    }
+  }, 30000);
+  
+  heartbeatIntervals.add(intervalId);
+  connectionStates.set(wsType, 'connected');
+  
+  if (isDev) debugLog(`Heartbeat setup for ${wsType} WebSocket`);
+  return intervalId;
 }
 
 function stopHeartbeat() {
@@ -272,6 +284,20 @@ function stopHeartbeat() {
     heartbeatInterval = null;
   }
 }
+
+// 🔧 FIX: Stop all heartbeat intervals
+function stopAllHeartbeats() {
+  stopHeartbeat();
+  heartbeatIntervals.forEach(intervalId => clearInterval(intervalId));
+  heartbeatIntervals.clear();
+  connectionStates.clear();
+}
+
+// === HELPER FUNCTIONS ===
+// 🔧 FIX: Performance optimization - reduce console logging in production
+const isDev = import.meta.env.DEV;
+const debugLog = isDev ? console.log : () => {};
+const debugError = console.error; // Always log errors
 
 // === Helper to always return correct avatar URL for user/group (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
@@ -371,10 +397,10 @@ const fetchConversations = async () => {
     const transformedGroupConversations = (Array.isArray(groupConversations) ? groupConversations : []).map(group => ({
       id: group.id,
       type: 'group',
-      group: group,
-      lastMessage: '', // Will be populated if there are messages
-      timestamp: group.updated_at || group.created_at || new Date().toISOString(),
-      unreadCount: 0
+      group: group.group || group, // Handle both nested and flat group structure
+      lastMessage: group.lastMessage || '', // Use backend-provided lastMessage
+      timestamp: group.timestamp || group.updated_at || group.created_at || new Date().toISOString(),
+      unreadCount: group.unreadCount || 0 // Use backend-provided unreadCount
     }));
     
     // Combine and sort by timestamp
@@ -483,11 +509,28 @@ async function selectSearchResult(r) {
   } else if (r.type === 'group') {
     let group = conversations.value.find(c => c.type === 'group' && c.group.id === r.id);
     if (!group) {
-      try {
-        await api.post(`/message/group/${r.id}/manage/`, { action: 'add_member', user_id: currentUser.value.id });
+      // Check if user is already a member of this group (admin/creator check)
+      const isUserMember = r.members && r.members.some(member => member.id === currentUser.value.id);
+      
+      if (isUserMember) {
+        // User is already a member (admin/creator), just fetch conversations to get the group
+        console.log('User is already a member of this group, fetching conversations');
         await fetchConversations();
         group = conversations.value.find(c => c.type === 'group' && c.group.id === r.id);
-      } catch (e) { console.error('Join group error', e); }
+      } else {
+        // User is not a member, try to join the group
+        try {
+          await api.post(`/message/group/${r.id}/manage/`, { action: 'add_member', user_id: currentUser.value.id });
+          await fetchConversations();
+          group = conversations.value.find(c => c.type === 'group' && c.group.id === r.id);
+        } catch (e) { 
+          console.error('Join group error', e);
+          // Show error message to user if join fails
+          if (e.response?.data?.error) {
+            alert(e.response.data.error);
+          }
+        }
+      }
     }
     if (group) selectConversation(group);
   }
@@ -496,30 +539,106 @@ async function selectSearchResult(r) {
 }
 
 function updateConversation(msg) {
+  // 🔧 FIX: More efficient conversation finding and updating
   const conv = conversations.value.find(c =>
     (c.type === 'private' && c.mate.id === msg.sender.id) ||
     (c.type === 'group' && c.group.id === msg.group)
   );
+  
   if (conv) {
-    conv.lastMessage = msg.content;
-    conv.timestamp = msg.timestamp;
-    if (selectedConversation.value?.id !== conv.id) conv.unreadCount++;
-  } else if (msg.sender?.id !== currentUser.value.id) fetchConversations();
+    // 🔧 FIX: Only update if values actually changed to prevent unnecessary re-renders
+    let hasChanges = false;
+    
+    if (conv.lastMessage !== msg.content) {
+      conv.lastMessage = msg.content;
+      hasChanges = true;
+    }
+    
+    if (conv.timestamp !== msg.timestamp) {
+      conv.timestamp = msg.timestamp;
+      hasChanges = true;
+    }
+    
+    // 📋 REFERENCE: Apply private message logic to groups
+    // Private logic: if (selectedConversation.value?.id !== conv.id) conv.unreadCount++;
+    // Group logic: Same logic - increment unread count if conversation not selected
+    if (selectedConversation.value?.id !== conv.id) {
+      // Only increment for messages not from current user (same as private messages)
+      if (msg.sender?.id !== currentUser.value.id) {
+        const oldCount = conv.unreadCount || 0;
+        conv.unreadCount = oldCount + 1;
+        hasChanges = true;
+      }
+    }
+    
+    // 🔧 FIX: Only trigger reactivity if something actually changed
+    if (hasChanges && isDev) {
+      debugLog('Conversation updated:', conv.id, 'unread:', conv.unreadCount);
+    }
+  } else if (msg.sender?.id !== currentUser.value.id) {
+    // 🔧 FIX: Debounced fetch to prevent too many API calls
+    clearTimeout(window.fetchConversationsTimeout);
+    window.fetchConversationsTimeout = setTimeout(() => {
+      fetchConversations();
+    }, 500);
+  }
 }
 
 async function selectConversation(conv) {
-  selectedConversation.value = conv;
-  await fetchMessages(conv);
-  conv.type === 'group' ? setupGroupWebSocket(conv) : groupWs.value?.close();
-
-  // Reset unread count when opening the conversation
-  if (typeof conv.unreadCount === 'number' && conv.unreadCount > 0) {
-    conv.unreadCount = 0;
-    nextTick(() => { conversations.value = [...conversations.value]; });
+  // 🔧 FIX: Prevent multiple simultaneous conversation selections
+  if (conv.id === selectedConversation.value?.id) {
+    console.log('Messaging.vue: Same conversation already selected, skipping');
+    return;
   }
+  
+  console.log('Messaging.vue: Selecting conversation:', conv.id);
+  
+  // 🔧 FIX: Optimize conversation switching to reduce lag
+  selectedConversation.value = conv;
+  
+  // Clear messages immediately to prevent showing wrong messages during load
+  messages.value = [];
+  
+  try {
+    // 🔧 FIX: Fetch messages with timeout to prevent hanging
+    const fetchPromise = fetchMessages(conv);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Message fetch timeout')), 10000)
+    );
+    
+    await Promise.race([fetchPromise, timeoutPromise]);
+    
+    // Setup WebSocket and mark as read properly
+    if (conv.type === 'group') {
+      // 🔧 FIX: Ensure group WebSocket setup doesn't block UI
+      setupGroupWebSocket(conv).catch(err => {
+        console.error('Group WebSocket setup failed:', err);
+      });
+    } else {
+      // 🔧 FIX: Properly close group WebSocket when switching to private
+      if (groupWs.value) {
+        groupWs.value.close();
+        groupWs.value = null;
+      }
+      
+      // For private messages, mark as read immediately since private WS is already connected
+      if (privateWs.value?.readyState === WebSocket.OPEN) {
+        privateWs.value.send(JSON.stringify({ action: 'mark_as_read', receiver_id: conv.mate.id }));
+      }
+    }
 
-  if (conv.type === 'private' && privateWs.value?.readyState === WebSocket.OPEN) {
-    privateWs.value.send(JSON.stringify({ action: 'mark_as_read', receiver_id: conv.mate.id }));
+    // Reset unread count when opening the conversation
+    if (typeof conv.unreadCount === 'number' && conv.unreadCount > 0) {
+      conv.unreadCount = 0;
+      // 🔧 FIX: Debounced reactivity update to reduce lag
+      clearTimeout(window.unreadUpdateTimeout);
+      window.unreadUpdateTimeout = setTimeout(() => {
+        conversations.value = [...conversations.value];
+      }, 50);
+    }
+  } catch (error) {
+    console.error('Error selecting conversation:', error);
+    // Don't break the UI if conversation selection fails
   }
 }
 
@@ -1167,15 +1286,15 @@ function setupNotificationWebSocket(token) {
       console.log('🔔 Processing group member added event:', data);
       handleGroupMemberAddedNotification(data);
     } else if (data.type === 'group_message_preview') {
-      // Increment unread for the group in the list when a new group message arrives elsewhere
+      // 📋 REFERENCE: Use same logic as private messages
+      // Instead of duplicate logic, use the standardized updateConversation function
+      console.log('🔔 Processing group_message_preview:', data);
       const msg = data.message;
-      const conv = conversations.value.find(c => c.type === 'group' && c.group?.id === msg.group);
-      if (conv && (!selectedConversation.value || selectedConversation.value.id !== conv.id)) {
-        conv.lastMessage = msg.content;
-        conv.timestamp = msg.timestamp;
-        conv.unreadCount = (conv.unreadCount || 0) + 1;
-        nextTick(() => { conversations.value = [...conversations.value]; });
-      }
+      
+      // Use the same updateConversation function that handles both private and group messages
+      updateConversation(msg);
+      
+      console.log('📬 Real-time: Group conversation updated using private message reference logic');
     } else {
       console.log('🔔 Received other notification:', data.type);
     }
@@ -1183,59 +1302,92 @@ function setupNotificationWebSocket(token) {
 }
 
 function setupGroupWebSocket(conv) {
-  groupWs.value?.close();
-  getValidToken().then(token => {
-    if (!token) return;
-    groupWs.value = new WebSocket(`ws://localhost:8000/ws/group/${conv.group.id}/?token=${token}`);
-    
-    groupWs.value.onopen = () => {
-      console.log('Messaging.vue: Group WS connected');
-      startHeartbeat(groupWs.value);
-    };
-    
-    groupWs.value.onclose = () => {
-      console.log('Messaging.vue: Group WS closed');
-      stopHeartbeat();
-    };
-    
-    groupWs.value.onmessage = e => {
-      const data = JSON.parse(e.data);
-      console.log('🟢 Group WebSocket RECEIVED:', data);
-      
-      // Handle pong responses
-      if (data.action === 'pong') {
-        console.log('Messaging.vue: Received pong from group server');
+  // 🔧 FIX: Properly close existing connection to prevent multiple connections
+  if (groupWs.value) {
+    console.log('Messaging.vue: Closing existing group WebSocket');
+    groupWs.value.close();
+    groupWs.value = null;
+  }
+  
+  return new Promise((resolve) => {
+    getValidToken().then(token => {
+      if (!token) {
+        resolve();
         return;
       }
       
-      // ✅ Special debugging for edit events
-      if (data.type === 'message_edited') {
-        console.log('🔴 GROUP EDIT EVENT: Received message_edited via group WebSocket');
-        console.log('🔴 GROUP EDIT EVENT: Message ID:', data.message_id);
-        console.log('🔴 GROUP EDIT EVENT: New content:', data.new_content);
-        console.log('🔴 GROUP EDIT EVENT: Event data:', data);
-      }
+      console.log('Messaging.vue: Setting up group WebSocket for group:', conv.group.id);
+      groupWs.value = new WebSocket(`ws://localhost:8000/ws/group/${conv.group.id}/?token=${token}`);
       
-      // ✅ FIX: Special handling for group messages with reply_to data
-      if (data.type === 'chat_message' && data.message) {
-        if (data.message.reply_to) {
-          console.log('🟢 Group WebSocket: Incoming message HAS reply_to data');
-          console.log('🟢 Group WebSocket: Reply content:', data.message.reply_to.content);
-        } else if (data.message.reply_to_id) {
-          console.log('🟢 Group WebSocket: Incoming message has reply_to_id:', data.message.reply_to_id);
+      groupWs.value.onopen = () => {
+        console.log('Messaging.vue: Group WS connected');
+        startHeartbeat(groupWs.value);
+        
+        // 📋 REFERENCE: Apply private message logic - mark as read when connection opens
+        // Send mark_as_read immediately when WebSocket connects (same timing as private messages)
+        console.log('🔥 Messaging.vue: Sending group mark_as_read on connection for group:', conv.group.id);
+        const markReadPayload = { 
+          action: 'mark_as_read', 
+          group_id: conv.group.id 
+        };
+        console.log('🔥 Group mark_as_read payload:', markReadPayload);
+        groupWs.value.send(JSON.stringify(markReadPayload));
+        
+        resolve(); // Resolve promise when connected and marked as read
+      };
+      
+      groupWs.value.onclose = () => {
+        console.log('Messaging.vue: Group WS closed');
+        stopHeartbeat();
+      };
+      
+      groupWs.value.onmessage = e => {
+        const data = JSON.parse(e.data);
+        console.log('🟢 Group WebSocket RECEIVED:', data);
+        
+        // Handle pong responses
+        if (data.action === 'pong') {
+          console.log('Messaging.vue: Received pong from group server');
+          return;
         }
-      }
+        
+        // ✅ Special debugging for edit events
+        if (data.type === 'message_edited') {
+          console.log('🔴 GROUP EDIT EVENT: Received message_edited via group WebSocket');
+          console.log('🔴 GROUP EDIT EVENT: Message ID:', data.message_id);
+          console.log('🔴 GROUP EDIT EVENT: New content:', data.new_content);
+          console.log('🔴 GROUP EDIT EVENT: Event data:', data);
+        }
+        
+        // 🔧 FIX: Additional validation to ensure message belongs to current group
+        if (data.type === 'chat_message' && data.message) {
+          if (data.message.group !== conv.group.id) {
+            console.log('❌ Group WebSocket: Message not for current group, ignoring');
+            return;
+          }
+          
+          if (data.message.reply_to) {
+            console.log('🟢 Group WebSocket: Incoming message HAS reply_to data');
+            console.log('🟢 Group WebSocket: Reply content:', data.message.reply_to.content);
+          } else if (data.message.reply_to_id) {
+            console.log('🟢 Group WebSocket: Incoming message has reply_to_id:', data.message.reply_to_id);
+          }
+        }
+        
+        handleWsMessage(data, 'group');
+      };
       
-      handleWsMessage(data, 'group');
-    };
-    groupWs.value.onerror = async (error) => {
-      console.error('Messaging.vue: Group WS error:', error);
-      stopHeartbeat();
-      // Don't automatically logout on WebSocket errors
-      // WebSocket can fail for many reasons (network, blocking, etc.)
-      // Only reconnect if we still have valid authentication
-      console.log('Messaging.vue: Group WebSocket error occurred, but keeping user logged in');
-    };
+      groupWs.value.onerror = async (error) => {
+        console.error('Messaging.vue: Group WS error:', error);
+        stopHeartbeat();
+        // 🔧 FIX: Clean up on error to prevent connection leaks
+        if (groupWs.value) {
+          groupWs.value.close();
+          groupWs.value = null;
+        }
+        resolve(); // Resolve even on error to prevent hanging
+      };
+    });
   });
 }
 
@@ -1315,20 +1467,28 @@ function handleWsMessage(data, scope) {
       if (scope === 'private' && selectedConversation.value?.type === 'private') {
         const senderId = data.message.sender.id;
         const receiverId = data.message.receiver.id;
-        const currentUserId = authStore.user.id;
+        const currentUserId = currentUser.value.id;
         const selectedUserId = selectedConversation.value.mate.id;
         
         console.log('Messaging.vue: Message participants - sender:', senderId, 'receiver:', receiverId, 'current:', currentUserId, 'selected:', selectedUserId);
         
-        // Show message if it's between current user and selected conversation partner
-        if ((senderId === currentUserId && receiverId === selectedUserId) || 
-            (senderId === selectedUserId && receiverId === currentUserId)) {
+        // 🔧 FIX: More strict message filtering to prevent cross-contamination
+        const isMessageForCurrentConversation = 
+          (senderId === currentUserId && receiverId === selectedUserId) || 
+          (senderId === selectedUserId && receiverId === currentUserId);
+        
+        // 🔧 FIX: Additional validation to ensure message belongs to this conversation
+        if (isMessageForCurrentConversation && data.message.receiver && data.message.sender) {
           console.log('✅ Messaging.vue: Adding message to conversation (REAL-TIME)');
           
-          // Check if message already exists to prevent duplicates
-          const existingMessage = messages.value.find(m => m.id === data.message.id);
+          // 🔧 FIX: Prevent duplicate messages with more comprehensive check
+          const existingMessage = messages.value.find(m => 
+            m.id === data.message.id || 
+            (m.content === data.message.content && 
+             Math.abs(new Date(m.timestamp) - new Date(data.message.timestamp)) < 1000)
+          );
           if (existingMessage) {
-            console.log('⚠️ Message already exists, skipping duplicate:', data.message.id);
+            console.log('⚠️ Message already exists or duplicate detected, skipping:', data.message.id);
             return;
           }
           
@@ -1344,35 +1504,24 @@ function handleWsMessage(data, scope) {
           // Add the new message
           messages.value.push(newMessage);
           
-          // ✅ FIX: Force immediate reactivity update with multiple strategies
+          // 🔧 FIX: Optimized reactivity update to reduce lag
           nextTick(() => {
-            // Strategy 1: Force array reactivity with new reference
-            const oldLength = messages.value.length;
-            messages.value = [...messages.value];
-            console.log(`✅ Real-time: Forced array reactivity. Length: ${oldLength} -> ${messages.value.length}`);
-            
-            // Strategy 2: Trigger reactivity on the specific message if it has reply data
+            // Only trigger reactivity if needed - reduced frequency to prevent lag
             if (newMessage.reply_to) {
               console.log('✅ Real-time: Message with reply_to added to UI:', newMessage.id);
-              console.log('✅ Real-time: Reply content should be visible:', newMessage.reply_to.content);
-              
-              // Force Vue to re-render MessageBubble components
-              setTimeout(() => {
-                console.log('✅ Real-time: Delayed reactivity trigger for reply data');
-              }, 100);
             }
             
-            // Auto-scroll to bottom with a small delay to ensure rendering
-            setTimeout(() => {
+            // 🔧 FIX: Debounced auto-scroll to reduce performance impact
+            clearTimeout(window.autoScrollTimeout);
+            window.autoScrollTimeout = setTimeout(() => {
               const chatArea = document.querySelector('.chat-messages-container');
               if (chatArea) {
                 chatArea.scrollTop = chatArea.scrollHeight;
-                console.log('✅ Real-time: Auto-scrolled to bottom');
               }
-            }, 50);
+            }, 100);
           });
         } else {
-          console.log('Messaging.vue: Message not for current conversation');
+          console.log('❌ Messaging.vue: Message NOT for current conversation - filtering out');
         }
       }
       
@@ -1380,29 +1529,34 @@ function handleWsMessage(data, scope) {
           selectedConversation.value?.group.id === data.message.group) {
         console.log('Messaging.vue: Adding group message to conversation');
         
-        // Check if message already exists to prevent duplicates
-        const existingMessage = messages.value.find(m => m.id === data.message.id);
+        // 🔧 FIX: Enhanced duplicate detection for group messages
+        const existingMessage = messages.value.find(m => 
+          m.id === data.message.id || 
+          (m.content === data.message.content && 
+           m.sender.id === data.message.sender.id &&
+           Math.abs(new Date(m.timestamp) - new Date(data.message.timestamp)) < 1000)
+        );
         if (existingMessage) {
-          console.log('⚠️ Group message already exists, skipping duplicate:', data.message.id);
+          console.log('⚠️ Group message already exists or duplicate detected, skipping:', data.message.id);
           return;
         }
         
-        // ✅ FIX: Force reactive update for reply relationships
-        const newMessage = { ...data.message };
-        if (newMessage.reply_to) {
-          console.log('Messaging.vue: Group message has reply_to data, ensuring reactivity:', newMessage.reply_to);
+        // 🔧 FIX: Ensure message belongs to current group
+        if (data.message.group !== selectedConversation.value.group.id) {
+          console.log('❌ Group message not for current group - filtering out');
+          return;
         }
         
-        messages.value.push(newMessage);
+        messages.value.push(data.message);
         
-        // ✅ FIX: Force Vue reactivity to update computed properties
+        // 🔧 FIX: Optimized reactivity for group messages
         nextTick(() => {
-          // Trigger reactivity for any components watching messages
-          messages.value = [...messages.value];
-          
-          // Auto-scroll to bottom
-          const chatArea = document.querySelector('.chat-messages-container');
-          if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+          // Debounced auto-scroll for performance
+          clearTimeout(window.groupAutoScrollTimeout);
+          window.groupAutoScrollTimeout = setTimeout(() => {
+            const chatArea = document.querySelector('.chat-messages-container');
+            if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+          }, 100);
         });
       }
       
@@ -1529,7 +1683,54 @@ function handleWsMessage(data, scope) {
         console.warn('📌 Messaging: Message not found for pin update:', data.message_id)
       }
     },
-    messages_read: (data) => messages.value.forEach(m => { if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true; }),
+    messages_read: (data) => {
+      // 📋 REFERENCE: Private message read logic
+      messages.value.forEach(m => { 
+        if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true; 
+      });
+    },
+    group_messages_read: (data) => {
+      console.log('🔄 Messaging.vue: Group messages marked as read by user:', data.user_id, 'in group:', data.group_id);
+      
+      // Handle two scenarios for real-time updates:
+      // 1. If I'm in the same group chat - mark messages as read locally
+      // 2. Mark messages I SENT as "read" when others mark them as read (real-time feedback)
+      
+      if (selectedConversation.value?.type === 'group' && 
+          selectedConversation.value.group.id === parseInt(data.group_id)) {
+        
+        // Scenario 1: I'm viewing this group chat - mark incoming messages as read
+        if (data.user_id === currentUser.value.id) {
+          // This is me marking messages as read - mark messages from others
+          console.log('✅ I marked group messages as read - updating my local view');
+          messages.value.forEach(m => { 
+            if (m.sender.id !== currentUser.value.id) {
+              m.is_read = true;
+              console.log('✅ Group message marked as read:', m.id);
+            }
+          });
+        } else {
+          // Scenario 2: Someone else marked messages as read - mark MY messages as read (real-time feedback)
+          console.log('📬 Real-time: User', data.user_id, 'marked messages as read - updating read status for my messages');
+          messages.value.forEach(m => {
+            if (m.sender.id === currentUser.value.id) {
+              m.is_read = true;
+              console.log('📬 Real-time: My message marked as read by user', data.user_id, '- message:', m.id);
+            }
+          });
+        }
+        
+        // Force Vue reactivity update
+        nextTick(() => {
+          messages.value = [...messages.value];
+          console.log('✅ Real-time: Updated message read status in UI');
+        });
+      }
+      
+      // Always refresh conversation list to sync unread counts from backend
+      console.log('🔄 Refreshing group conversations to sync unread count from backend');
+      fetchConversations();
+    },
     message_request: (data) => {
       console.log('Messaging.vue: Received message request:', data);
       fetchPendingMessages(); // Refresh pending messages
@@ -1728,6 +1929,7 @@ function handleWsMessage(data, scope) {
   
   const action = actions[data.type || data.status];
   if (action) {
+    console.log('🎯 Messaging.vue: Executing action for type:', data.type || data.status);
     action(data);
   } else {
     console.warn('Messaging.vue: Unknown WebSocket message type:', data.type || data.status, data);
@@ -2025,26 +2227,49 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  console.log('Messaging.vue: Component unmounting');
-  privateWs.value?.close();
-  groupWs.value?.close();
-  notificationWs.value?.close();
-  stopHeartbeat();
+  if (isDev) debugLog('Messaging.vue: Component unmounting - cleaning up resources');
   
-  // Remove global status update listener
-  window.removeEventListener('statusUpdate', handleGlobalStatusUpdate);
-});
-
-onUnmounted(() => {
-  stopHeartbeat(); // Stop heartbeat when component unmounts
-  privateWs.value?.close();
-  groupWs.value?.close();
-  notificationWs.value?.close(); // Add notification websocket cleanup
+  // 🔧 FIX: Comprehensive cleanup to prevent memory leaks and lag
   
-  // Remove global status update listeners
+  // Stop all heartbeat intervals (enhanced system)
+  stopAllHeartbeats();
+  
+  // Close all WebSocket connections with proper close codes
+  if (privateWs.value) {
+    privateWs.value.close(1000, 'Component unmounting');
+    privateWs.value = null;
+  }
+  
+  if (groupWs.value) {
+    groupWs.value.close(1000, 'Component unmounting');
+    groupWs.value = null;
+  }
+  
+  if (notificationWs.value) {
+    notificationWs.value.close(1000, 'Component unmounting');
+    notificationWs.value = null;
+  }
+  
+  // Clear timeouts to prevent memory leaks
+  clearTimeout(window.autoScrollTimeout);
+  clearTimeout(window.groupAutoScrollTimeout);
+  clearTimeout(window.unreadUpdateTimeout);
+  clearTimeout(window.fetchConversationsTimeout);
+  clearTimeout(window.scrollTimeout);
+  clearTimeout(window.selectConversationTimeout);
+  
+  // Remove global event listeners
   window.removeEventListener('statusUpdate', handleGlobalStatusUpdate);
   window.removeEventListener('user-status-update', handleGlobalStatusUpdate);
-  console.log('Messaging.vue: Removed window event listeners');
+  
+  // Clear reactive data to free memory
+  conversations.value = [];
+  messages.value = [];
+  searchResults.value = [];
+  pendingMessages.value = [];
+  selectedConversation.value = null;
+  
+  if (isDev) debugLog('Messaging.vue: Cleanup completed - all resources freed');
 });
 </script>
 
