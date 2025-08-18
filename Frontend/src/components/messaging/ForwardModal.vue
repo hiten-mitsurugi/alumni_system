@@ -253,30 +253,49 @@ async function loadConversations() {
   try {
     loading.value = true
     const token = authStore.token
-    
-    const response = await fetch('http://localhost:8000/api/message/conversations/', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      console.log('ForwardModal: Loaded conversations:', data)
-      
-      // Log the structure of conversations for debugging
-      if (data && data.length > 0) {
-        console.log('ForwardModal: First conversation structure:', data[0])
-      }
-      
-      conversations.value = data
-    } else {
-      console.error('Failed to load conversations:', response.status, response.statusText)
-      // Try to read the response text to see what's actually returned
-      const responseText = await response.text()
-      console.error('Response text:', responseText)
-    }
+
+    // Fetch private conversations and group chats in parallel
+    const [privateRes, groupRes] = await Promise.all([
+      fetch('http://localhost:8000/api/message/conversations/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }),
+      fetch('http://localhost:8000/api/message/group/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+    ])
+
+    const privateData = privateRes.ok ? await privateRes.json() : []
+    const groupData = groupRes.ok ? await groupRes.json() : []
+
+    // Normalize private conversations and ensure a stable id
+    const privateConversations = (privateData || []).map(conv => ({
+      // Use mate.id as the unique key for private conversations
+      id: conv?.mate?.id ? `private-${conv.mate.id}` : `private-${Math.random().toString(36).slice(2)}`,
+      type: 'private',
+      ...conv
+    }))
+
+    // Map groups into conversation-like objects and ensure a stable id
+    const groupConversations = (groupData || []).map(group => ({
+      id: `group-${group.id}`,
+      type: 'group',
+      group,
+      // Expose members at the top level for existing helpers (e.g., description)
+      members: group.members
+    }))
+
+    const merged = [...privateConversations, ...groupConversations]
+
+    console.log('ForwardModal: Loaded private conversations:', privateConversations)
+    console.log('ForwardModal: Loaded group conversations:', groupConversations)
+
+    conversations.value = merged
   } catch (error) {
     console.error('Error loading conversations:', error)
   } finally {

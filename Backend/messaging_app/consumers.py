@@ -975,6 +975,42 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                 {'type': 'chat_message', 'message': serialized}
             )
             
+            # Also notify each group member on their personal channel for unread counters/highlights
+            try:
+                from asgiref.sync import async_to_sync
+                from channels.layers import get_channel_layer
+                channel_layer = get_channel_layer()
+                
+                @database_sync_to_async
+                def _member_ids():
+                    return list(self.group.members.values_list('id', flat=True))
+                
+                members = await _member_ids()
+                preview = {
+                    'id': str(message.id),
+                    'group': str(self.group.id),
+                    'content': message.content,
+                    'timestamp': message.timestamp.isoformat(),
+                    'sender': {
+                        'id': self.user.id,
+                        'first_name': self.user.first_name,
+                        'last_name': self.user.last_name,
+                    }
+                }
+                for member_id in members:
+                    # Skip sender if you prefer not to increment their unread
+                    if member_id == self.user.id:
+                        continue
+                    async_to_sync(channel_layer.group_send)(
+                        f'user_{member_id}',
+                        {
+                            'type': 'group_message_preview',
+                            'message': preview
+                        }
+                    )
+            except Exception as notify_err:
+                logger.error(f"Failed to send group message preview notifications: {notify_err}")
+            
         except Exception as e:
             logger.error(f"Error sending group message: {e}", exc_info=True)
             await self.send_json({'error': f'Failed to send group message: {str(e)}'})

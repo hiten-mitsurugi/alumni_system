@@ -128,3 +128,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'group_name': event.get('group_name'),
             'removed_by': event.get('removed_by', {})
         }))
+ 
+    # Handler for group message preview (unread counters/highlight)
+    async def group_message_preview(self, event):
+        logger.info(f"NotificationConsumer: Sending group_message_preview to user {self.scope['user']}")
+        await self.send(text_data=json.dumps({
+            'type': 'group_message_preview',
+            'message': event.get('message', {})
+        }))

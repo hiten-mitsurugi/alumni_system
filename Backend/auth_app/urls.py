@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     LoginView, RegisterView, UserCreateView, ApproveUserView, ApprovedAlumniListView, RejectUserView,
     ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView,
@@ -30,4 +31,6 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('check-alumni-directory/', CheckAlumniDirectoryView.as_view(), name='check_alumni_directory'),
     path('test-status-broadcast/', TestStatusBroadcastView.as_view(), name='test_status_broadcast'),
+    # JWT token refresh endpoint for frontend
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

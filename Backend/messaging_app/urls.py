@@ -4,11 +4,13 @@ from .views import (
     GroupChatCreateView, GroupChatManageView, GroupChatListView, GroupMembersView,
     ConversationUsersView, MessageRequestView, BlockUserView,
     PinMessageView, BumpMessageView, UploadView,
-    GroupMemberRequestView, GroupMemberRequestManageView, ForwardMessageView
+    GroupMemberRequestView, GroupMemberRequestManageView, ForwardMessageView,
+    MessageSearchView
 )
 
 urlpatterns = [
     path('search/', SearchView.as_view(), name='search'),  # ✅ only one search endpoint
+    path('search/messages/', MessageSearchView.as_view(), name='search_messages'),
     path('conversations/', ConversationListView.as_view(), name='conversation_list'),
     path('conversations/users/', ConversationUsersView.as_view(), name='conversation_users'),
     

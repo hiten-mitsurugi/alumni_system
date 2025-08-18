@@ -583,7 +583,60 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+    <!-- Search Messages Modal -->
+    <div v-if="showSearchMessages" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" @click.self="showSearchMessages = false">
+      <div class="bg-white w-full max-w-lg rounded-lg shadow-xl overflow-hidden">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h4 class="text-base font-semibold">Search Messages</h4>
+          <button @click="showSearchMessages = false" class="p-1 rounded hover:bg-gray-100">
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <div class="relative">
+            <input
+              v-model="messageSearchQuery"
+              @keyup.enter="performMessageSearch"
+              type="text"
+              placeholder="Search in this conversation"
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button @click="performMessageSearch" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">Search</button>
+            <button @click="clearMessageSearch" class="px-3 py-2 border rounded text-gray-700 hover:bg-gray-50">Clear</button>
+          </div>
+        </div>
+        <div class="border-t max-h-80 overflow-y-auto">
+          <div v-if="messageSearchLoading" class="p-4 text-gray-500">Searching…</div>
+          <div v-else-if="messageSearchResults.length === 0" class="p-4 text-gray-500">No results</div>
+          <div v-else>
+            <div
+              v-for="hit in messageSearchResults"
+              :key="hit.id"
+              class="px-4 py-3 border-b hover:bg-gray-50 cursor-pointer"
+              @click="jumpToMessage(hit.id)"
+            >
+              <div class="text-sm text-gray-500 flex items-center gap-2">
+                <span class="font-medium">{{ hit.sender.first_name }} {{ hit.sender.last_name }}</span>
+                <span>•</span>
+                <span>{{ formatDate(hit.timestamp) }}</span>
+              </div>
+              <div class="text-gray-800 text-sm mt-1">
+                {{ hit.content_snippet }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Search Messages Modal -->
   </div>
 </template>
 
@@ -635,6 +688,11 @@ const showSearchMessages = ref(false)
 const showGroupMembers = ref(false)
 const showAddMemberForm = ref(false)
 const showAllImages = ref(false)
+
+// Message search state (for Search Messages modal)
+const messageSearchQuery = ref('')
+const messageSearchResults = ref([])
+const messageSearchLoading = ref(false)
 
 // Group management state
 const groupMembers = ref([])
@@ -1154,6 +1212,37 @@ const downloadFile = (file) => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+
+// Search messages within current conversation
+async function performMessageSearch() {
+  const q = messageSearchQuery.value.trim()
+  if (!q) {
+    messageSearchResults.value = []
+    return
+  }
+  try {
+    messageSearchLoading.value = true
+    const scope = props.conversation.type === 'group' ? 'group' : 'private'
+    const id = scope === 'group' ? props.conversation.group?.id : props.conversation.mate?.id
+    const { data } = await api.get('/message/search/messages/', { params: { scope, id, q } })
+    messageSearchResults.value = Array.isArray(data) ? data : []
+  } catch (e) {
+    console.error('Message search failed', e)
+    messageSearchResults.value = []
+  } finally {
+    messageSearchLoading.value = false
+  }
+}
+
+function clearMessageSearch() {
+  messageSearchQuery.value = ''
+  messageSearchResults.value = []
+}
+
+function jumpToMessage(messageId) {
+  emit('scroll-to-message', messageId)
+  showSearchMessages.value = false
 }
 
 // Watchers

@@ -77,7 +77,7 @@
       <div class="flex-1 overflow-y-auto">
         <div v-for="conversation in filteredConversations" :key="conversation.id"
           @click="selectConversation(conversation)"
-          :class="['flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-white', selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : 'hover:shadow-sm']">
+          :class="['flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-white', selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : (conversation.unreadCount > 0 ? 'bg-green-50' : 'hover:shadow-sm')]">
           <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-4">
             <img :src="getProfilePictureUrl(conversation.mate)" class="w-12 h-12 rounded-full object-cover" />
             <!-- Blocked indicator -->
@@ -95,13 +95,22 @@
           <div v-else class="relative flex-shrink-0 mr-4">
             <img :src="getProfilePictureUrl(conversation.group) || '/default-group.png'" alt="Group Avatar"
               class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
-            <div
-              class="absolute -bottom-1 -right-1 bg-green-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
-              {{ conversation.group?.members?.length || 0 }}</div>
+            <div class="absolute -bottom-1 -right-1">
+              <template v-if="conversation.unreadCount > 0">
+                <span class="bg-green-600 text-white text-xs rounded-full min-w-[24px] h-6 px-2 flex items-center justify-center font-medium shadow">
+                  {{ conversation.unreadCount }}
+                </span>
+              </template>
+              <template v-else>
+                <span class="bg-green-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
+                  {{ conversation.group?.members?.length || 0 }}
+                </span>
+              </template>
+            </div>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between mb-1">
-              <h3 class="font-semibold text-gray-900 truncate text-lg">{{ conversation.type === 'private' ?
+              <h3 :class="['text-gray-900 truncate text-lg', conversation.unreadCount > 0 ? 'font-bold' : 'font-semibold']">{{ conversation.type === 'private' ?
                 `${conversation.mate.first_name} ${conversation.mate.last_name}` : conversation.group?.name || 'Unnamed Group' }}</h3>
               <div class="flex items-center gap-2">
                 <!-- Block status indicators -->
@@ -502,6 +511,12 @@ async function selectConversation(conv) {
   selectedConversation.value = conv;
   await fetchMessages(conv);
   conv.type === 'group' ? setupGroupWebSocket(conv) : groupWs.value?.close();
+
+  // Reset unread count when opening the conversation
+  if (typeof conv.unreadCount === 'number' && conv.unreadCount > 0) {
+    conv.unreadCount = 0;
+    nextTick(() => { conversations.value = [...conversations.value]; });
+  }
 
   if (conv.type === 'private' && privateWs.value?.readyState === WebSocket.OPEN) {
     privateWs.value.send(JSON.stringify({ action: 'mark_as_read', receiver_id: conv.mate.id }));
@@ -1151,6 +1166,16 @@ function setupNotificationWebSocket(token) {
     else if (data.type === 'group_member_added') {
       console.log('🔔 Processing group member added event:', data);
       handleGroupMemberAddedNotification(data);
+    } else if (data.type === 'group_message_preview') {
+      // Increment unread for the group in the list when a new group message arrives elsewhere
+      const msg = data.message;
+      const conv = conversations.value.find(c => c.type === 'group' && c.group?.id === msg.group);
+      if (conv && (!selectedConversation.value || selectedConversation.value.id !== conv.id)) {
+        conv.lastMessage = msg.content;
+        conv.timestamp = msg.timestamp;
+        conv.unreadCount = (conv.unreadCount || 0) + 1;
+        nextTick(() => { conversations.value = [...conversations.value]; });
+      }
     } else {
       console.log('🔔 Received other notification:', data.type);
     }
