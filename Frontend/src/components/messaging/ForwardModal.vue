@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="$emit('close')">
+  <div class="fixed inset-0 flex items-center justify-center z-50" @click.self="$emit('close')">
     <div class="bg-white rounded-lg shadow-xl w-96 max-h-[80vh] flex flex-col">
       <!-- Header -->
       <div class="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -179,9 +179,17 @@ const filteredConversations = computed(() => {
 
 function getConversationAvatar(conversation) {
   if (conversation.type === 'private') {
-    return conversation.mate?.profile_picture || '/default-avatar.png'
+    const profilePicture = conversation.mate?.profile_picture
+    if (profilePicture) {
+      return profilePicture
+    }
+    return '/default-avatar.png'
   } else if (conversation.type === 'group') {
-    return conversation.group?.group_picture || '/default-avatar.png'
+    const groupPicture = conversation.group?.group_picture
+    if (groupPicture) {
+      return groupPicture
+    }
+    return '/default-avatar.png'
   }
   return '/default-avatar.png'
 }
@@ -197,6 +205,7 @@ function getConversationName(conversation) {
     }
     return 'Unknown User'
   } else if (conversation.type === 'group') {
+    // The backend returns the group name in conversation.group.name
     return conversation.group?.name || 'Unnamed Group'
   }
   return 'Unknown Conversation'
@@ -208,12 +217,16 @@ function getConversationType(conversation) {
 
 function getConversationDescription(conversation) {
   if (conversation.type === 'group') {
-    const memberCount = conversation.members ? conversation.members.length : 0;
-    return `${memberCount} members`;
+    // The backend returns members in conversation.group.members array
+    const memberCount = conversation.group?.members?.length || 0;
+    return `${memberCount} member${memberCount !== 1 ? 's' : ''}`;
   } else {
-    // For private chat, show if the other user is online/offline if available
-    const otherMember = conversation.members?.find(m => m.id !== currentUser.value.id);
-    return otherMember ? `@${otherMember.username}` : 'Private chat';
+    // For private chat, show username if available
+    const mate = conversation.mate;
+    if (mate?.username) {
+      return `@${mate.username}`;
+    }
+    return 'Private chat';
   }
 }
 
@@ -273,6 +286,8 @@ async function loadConversations() {
     const privateData = privateRes.ok ? await privateRes.json() : []
     const groupData = groupRes.ok ? await groupRes.json() : []
 
+    console.log('ForwardModal: Raw group data from backend:', groupData)
+
     // Normalize private conversations and ensure a stable id
     const privateConversations = (privateData || []).map(conv => ({
       // Use mate.id as the unique key for private conversations
@@ -282,18 +297,26 @@ async function loadConversations() {
     }))
 
     // Map groups into conversation-like objects and ensure a stable id
-    const groupConversations = (groupData || []).map(group => ({
-      id: `group-${group.id}`,
-      type: 'group',
-      group,
-      // Expose members at the top level for existing helpers (e.g., description)
-      members: group.members
-    }))
+    const groupConversations = (groupData || []).map(group => {
+      console.log('ForwardModal: Processing group data:', group);
+      console.log('ForwardModal: Group name:', group.group?.name);
+      console.log('ForwardModal: Group picture:', group.group?.group_picture);
+      console.log('ForwardModal: Group members count:', group.group?.members?.length);
+      
+      return {
+        id: `group-${group.id}`,
+        type: 'group',
+        group: group.group, // Use the nested group object from backend
+        // Expose members at the top level for existing helpers (e.g., description)
+        members: group.group?.members || []
+      };
+    })
 
     const merged = [...privateConversations, ...groupConversations]
 
     console.log('ForwardModal: Loaded private conversations:', privateConversations)
     console.log('ForwardModal: Loaded group conversations:', groupConversations)
+    console.log('ForwardModal: Sample group for debugging:', groupConversations[0])
 
     conversations.value = merged
   } catch (error) {

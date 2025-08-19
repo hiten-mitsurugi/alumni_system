@@ -34,6 +34,11 @@
         <span>{{ isOwnMessage ? 'You forwarded a message' : `${message.sender.first_name} forwarded a message` }}</span>
       </div>
 
+      <!-- Bump indicator - OUTSIDE the bubble -->
+      <div v-if="isBumpMessage" class="flex items-center gap-1 mb-1 text-xs text-gray-500">
+        <span>🔔 Bumped message</span>
+      </div>
+
       <!-- Message Container with Menu Button -->
       <div class="relative flex items-start gap-2">
         <!-- Message Content / Attachment -->
@@ -157,13 +162,13 @@
             <div class="flex gap-2 mt-2">
               <button 
                 @click="saveEdit"
-                class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 cursor-pointer"
               >
                 Save
               </button>
               <button 
                 @click="cancelEdit"
-                class="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                class="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 cursor-pointer"
               >
                 Cancel
               </button>
@@ -171,17 +176,9 @@
           </div>
           <!-- Normal display -->
           <div v-else>
-            <!-- Special styling for bump messages - show original content cleanly -->
+            <!-- Bump message - show original content -->
             <div v-if="isBumpMessage && replyMessage" @click="scrollToOriginalMessage" class="cursor-pointer">
-              <!-- Small bump indicator at top -->
-              <div class="flex items-center gap-2 text-xs text-amber-600 mb-2 opacity-80">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-                <span>Bumped</span>
-              </div>
-              
-              <!-- Display original message content directly (clean style) -->
+              <!-- Display original message content directly -->
               <div v-if="replyMessage && /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]*$/u.test(replyMessage.content)" class="text-4xl p-2">
                 {{ replyMessage.content }}
               </div>
@@ -189,7 +186,7 @@
             </div>
             
             <!-- Special styling for forwarded messages - show original content cleanly -->
-            <div v-if="isForwardedMessage && message.forwarded_from">
+            <div v-else-if="isForwardedMessage && message.forwarded_from">
               <!-- Display original message content directly (clean style) -->
               <div v-if="message.forwarded_from && /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]*$/u.test(message.forwarded_from.content)" class="text-4xl p-2">
                 {{ message.forwarded_from.content }}
@@ -289,7 +286,7 @@
           <!-- Reaction Button -->
           <button
             @click="handleReactionButtonClick"
-            class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-yellow-100 transition-all duration-200"
+            class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-yellow-100 transition-all duration-200 cursor-pointer"
             title="Add reaction"
           >
             <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,7 +300,7 @@
           <!-- Reply Button -->
           <button
             @click="handleReply"
-            class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-blue-100 transition-all duration-200"
+            class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-blue-100 transition-all duration-200 cursor-pointer"
             title="Reply to message"
           >
             <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +311,7 @@
           <!-- Menu Button (Three Dots) -->
           <button
             @click="toggleMenu"
-            class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all duration-200"
+            class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all duration-200 cursor-pointer"
             title="Message options"
           >
             <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
@@ -697,7 +694,7 @@ const openImageModal = (imageUrl) => {
   modal.innerHTML = `
     <div class="relative max-w-4xl max-h-full p-4 flex items-center justify-center">
       <img src="${imageUrl}" class="max-w-full max-h-full object-contain" style="max-height: 90vh; max-width: 90vw;" />
-      <button class="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center">&times;</button>
+      <button class="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer">&times;</button>
     </div>
   `
   
