@@ -164,25 +164,50 @@ class BlockedUser(models.Model):
 
 
 
-# --- Reaction ---
-class Reaction(models.Model):
+# --- MessageReaction (Enhanced for Facebook-style reactions) ---
+class MessageReaction(models.Model):
+    REACTION_CHOICES = [
+        ('like', '👍'),      # Approve/Like
+        ('heart', '❤️'),     # Love/Heart
+        ('haha', '😂'),      # Haha/Laugh
+        ('sad', '😢'),       # Sad
+        ('angry', '😠'),     # Angry
+        ('care', '🤗'),      # Care/Hug
+        ('dislike', '👎'),   # Disapprove/Dislike
+    ]
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='reactions'
+        related_name='message_reactions'
     )
     message = models.ForeignKey(
         'Message',
         on_delete=models.CASCADE,
         related_name='reactions'
     )
-    emoji = models.CharField(max_length=10)  # example: "❤️", "😂", "👍"
-    reacted_at = models.DateTimeField(auto_now_add=True)
+    reaction_type = models.CharField(max_length=10, choices=REACTION_CHOICES)
+    emoji = models.CharField(max_length=10)  # Store the actual emoji
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         app_label = 'messaging_app'
-        unique_together = ('user', 'message', 'emoji')  # Prevent duplicate reactions
+        unique_together = ('user', 'message')  # One reaction per user per message
+        indexes = [
+            models.Index(fields=['message', 'reaction_type']),
+            models.Index(fields=['user', 'message']),
+        ]
+
+    def save(self, *args, **kwargs):
+        # Auto-set emoji based on reaction_type
+        if self.reaction_type and not self.emoji:
+            self.emoji = dict(self.REACTION_CHOICES).get(self.reaction_type, '👍')
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username} reacted {self.emoji} to message {self.message.id}"
 
 # --- Link Preview ---
 class LinkPreview(models.Model):

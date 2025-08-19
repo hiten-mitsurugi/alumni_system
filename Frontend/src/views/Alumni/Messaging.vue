@@ -930,12 +930,52 @@ async function handleMessageAction(actionData) {
         console.log('Messaging: Selected message:', message.id)
         break
         
+      case 'reaction_added':
+      case 'reaction_updated':
+      case 'reaction_removed':
+        // Handle reaction updates - refresh the specific message reactions
+        console.log('Messaging: Handling reaction update for message:', actionData.messageId)
+        
+        // The API call was already made by MessageBubble, just refresh the message
+        // in a real app, this might fetch updated reaction stats from backend
+        break
+        
       default:
         console.warn('Messaging: Unknown message action:', action)
     }
   } catch (error) {
     console.error('Messaging: Error handling message action:', error)
     // TODO: Show error toast to user
+  }
+}
+
+// Send reaction via WebSocket for real-time delivery
+function sendReaction(messageId, reactionType, isRemoving = false) {
+  try {
+    const action = isRemoving ? 'remove_reaction' : 'add_reaction';
+    const payload = {
+      action: action,
+      message_id: messageId,
+      reaction_type: reactionType
+    };
+    
+    console.log(`Messaging: Sending ${action} via WebSocket:`, payload);
+    
+    if (selectedConversation.value?.type === 'private') {
+      if (privateWs.value?.readyState === WebSocket.OPEN) {
+        privateWs.value.send(JSON.stringify(payload));
+      } else {
+        console.error('Messaging: Private WebSocket not open for reaction');
+      }
+    } else if (selectedConversation.value?.type === 'group') {
+      if (groupWs.value?.readyState === WebSocket.OPEN) {
+        groupWs.value.send(JSON.stringify(payload));
+      } else {
+        console.error('Messaging: Group WebSocket not open for reaction');
+      }
+    }
+  } catch (error) {
+    console.error('Messaging: Error sending reaction:', error);
   }
 }
 
@@ -1923,6 +1963,35 @@ function handleWsMessage(data, scope) {
           selectedConversation.value.group?.admins?.some(admin => admin.id === authStore.user.id)) {
         console.log('🔔 Real-time: Admin received request response, refreshing pending requests');
         memberRequestNotificationTrigger.value++;
+      }
+    },
+    message_reaction: (data) => {
+      console.log('👍 Real-time: Message reaction received:', data);
+      
+      // Find and update the message with the new reaction data
+      const messageToUpdate = messages.value.find(m => m.id === data.message_id);
+      if (messageToUpdate) {
+        console.log('👍 Real-time: Updating message reactions for:', data.message_id);
+        
+        // Update the reaction_stats on the message
+        if (data.reaction_stats) {
+          messageToUpdate.reaction_stats = data.reaction_stats;
+        }
+        
+        // Force reactivity update
+        nextTick(() => {
+          messages.value = [...messages.value];
+          console.log('✅ Real-time: Message reactions updated in UI');
+        });
+        
+        // Update conversation last activity (optional)
+        updateConversation({
+          sender: { id: data.user_id, first_name: data.user_name },
+          content: `${data.user_name} reacted ${data.emoji}`,
+          timestamp: data.timestamp
+        });
+      } else {
+        console.warn('👍 Real-time: Message not found for reaction update:', data.message_id);
       }
     }
   };

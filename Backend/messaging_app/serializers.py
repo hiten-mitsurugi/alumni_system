@@ -6,7 +6,7 @@ from .models import (
     MessageRequest,
     BlockedUser,
     Attachment,
-    Reaction,
+    MessageReaction,  # Updated to use MessageReaction instead of Reaction
     LinkPreview,
     GroupMemberRequest
 )
@@ -94,13 +94,19 @@ class AttachmentSerializer(serializers.ModelSerializer):
                 return obj.file.url
         return None
 
-# ✅ Reaction Serializer
-class ReactionSerializer(serializers.ModelSerializer):
+# ✅ Message Reaction Serializer (Enhanced for Facebook-style reactions)
+class MessageReactionSerializer(serializers.ModelSerializer):
     user = UserSearchSerializer(read_only=True)
+    emoji = serializers.CharField(read_only=True)  # Auto-populated from reaction_type
 
     class Meta:
-        model = Reaction
-        fields = ['id', 'user', 'emoji']
+        model = MessageReaction
+        fields = ['id', 'user', 'reaction_type', 'emoji', 'created_at']
+
+# ✅ Legacy Reaction Serializer (for backward compatibility)
+class ReactionSerializer(MessageReactionSerializer):
+    """Legacy serializer - redirects to MessageReactionSerializer"""
+    pass
 
 # ✅ Link Preview Serializer
 class LinkPreviewSerializer(serializers.ModelSerializer):
@@ -115,7 +121,8 @@ class MessageSerializer(serializers.ModelSerializer):
     reply_to = serializers.SerializerMethodField()
     forwarded_from = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(many=True, read_only=True)
-    reactions = ReactionSerializer(many=True, read_only=True)
+    reactions = MessageReactionSerializer(many=True, read_only=True)
+    reaction_stats = serializers.SerializerMethodField()  # Add reaction statistics
     link_previews = LinkPreviewSerializer(many=True, read_only=True)
 
     class Meta:
@@ -135,8 +142,48 @@ class MessageSerializer(serializers.ModelSerializer):
             'attachments',
             'is_pinned',
             'reactions',
+            'reaction_stats',  # Add reaction statistics
             'link_previews'
         ]
+
+    def get_reaction_stats(self, obj):
+        """Get reaction statistics for this message"""
+        from django.db.models import Count
+        
+        # Get reaction counts grouped by type
+        reaction_counts = MessageReaction.objects.filter(
+            message=obj
+        ).values('reaction_type', 'emoji').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        # Get reactions by type with user info
+        reactions_by_type = {}
+        for reaction_type_info in MessageReaction.REACTION_CHOICES:
+            reaction_type = reaction_type_info[0]
+            reactions = MessageReaction.objects.filter(
+                message=obj,
+                reaction_type=reaction_type
+            ).select_related('user')
+            
+            if reactions.exists():
+                reactions_by_type[reaction_type] = {
+                    'emoji': reaction_type_info[1],
+                    'count': reactions.count(),
+                    'users': [
+                        {
+                            'id': r.user.id,
+                            'name': f"{r.user.first_name} {r.user.last_name}".strip() or r.user.username
+                        }
+                        for r in reactions
+                    ]
+                }
+        
+        return {
+            'total_reactions': MessageReaction.objects.filter(message=obj).count(),
+            'reaction_counts': list(reaction_counts),
+            'reactions_by_type': reactions_by_type
+        }
 
     def get_reply_to(self, obj):
         if obj.reply_to:

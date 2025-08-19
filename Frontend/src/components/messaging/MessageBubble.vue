@@ -316,10 +316,24 @@
 
         <!-- Action Buttons Container -->
         <div :class="[
-          'flex-shrink-0 flex items-center gap-1 transition-all duration-200',
+          'flex-shrink-0 flex items-center gap-1 transition-all duration-200 relative',
           'opacity-0 group-hover:opacity-100',
           isOwnMessage ? 'order-first mr-2 flex-row-reverse' : 'order-last ml-2'
         ]">
+          <!-- Reaction Button -->
+          <button
+            @click="handleReactionButtonClick"
+            class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-yellow-100 transition-all duration-200"
+            title="Add reaction"
+          >
+            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+              <line x1="9" y1="9" x2="9.01" y2="9"/>
+              <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </button>
+
           <!-- Reply Button -->
           <button
             @click="handleReply"
@@ -359,7 +373,33 @@
           {{ message.isRead ? '✓✓' : '✓' }}
         </span>
       </div>
+
+      <!-- Message Reactions - Display right below the message like Messenger -->
+      <MessageReactions
+        v-if="message.reaction_stats && message.reaction_stats.total_reactions > 0"
+        :reactionStats="message.reaction_stats"
+        :currentUserId="currentUser.id"
+        :messageId="message.id"
+        @toggle-reaction="handleToggleReaction"
+        class="mt-1 -mb-1"
+      />
+      
+      <!-- Reaction Picker Popup (positioned absolutely) -->
+      <MessageReactionPicker
+        :showPicker="showReactionPicker"
+        :messageId="message.id"
+        @reaction-selected="handleReactionSelected"
+        @close="showReactionPicker = false"
+        class="reaction-picker-positioned"
+      />
     </div>
+
+    <!-- Invisible overlay to close reaction picker when clicking outside -->
+    <div 
+      v-if="showReactionPicker" 
+      class="fixed inset-0 z-10" 
+      @click="showReactionPicker = false"
+    ></div>
 
     <!-- Context Menu -->
     <MessageContextMenu
@@ -376,6 +416,9 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import MessageContextMenu from './MessageContextMenu.vue'
+import MessageReactions from '../MessageReactions.vue'
+import MessageReactionPicker from '../MessageReactionPicker.vue'
+import api from '../../services/api'
 
 const props = defineProps({
   message: Object,
@@ -392,6 +435,9 @@ const contextMenuPosition = ref({ x: 0, y: 0 })
 // State for editing
 const isEditing = ref(false)
 const editContent = ref('')
+
+// State for reactions
+const showReactionPicker = ref(false)
 
 const isOwnMessage = computed(() => {
   const result = props.message.sender?.id === props.currentUser?.id
@@ -797,7 +843,7 @@ const cancelEdit = () => {
   console.log('MessageBubble: Cancelled editing message', props.message.id)
 }
 
-// Copy functionality
+// Handle reaction selection from picker
 const copyMessage = () => {
   if (props.message.content) {
     navigator.clipboard.writeText(props.message.content).then(() => {
@@ -832,6 +878,98 @@ const scrollToOriginalMessage = () => {
 }
 
 // Link functionality
+// Handle reaction selection from picker
+const handleReactionSelected = async (data) => {
+  try {
+    const response = await api.post('/message/reactions/', {
+      message_id: data.messageId,
+      reaction_type: data.reactionType
+    })
+    
+    console.log('Reaction added successfully:', response.data)
+    
+    // Close the picker
+    showReactionPicker.value = false
+    
+    // Emit message action to update the parent component
+    emit('message-action', {
+      action: 'reaction_added',
+      messageId: data.messageId,
+      reactionData: response.data
+    })
+    
+  } catch (error) {
+    console.error('Failed to add reaction:', error)
+  }
+}
+
+// Handle reaction button click with smart positioning
+const handleReactionButtonClick = (event) => {
+  event.stopPropagation()
+  
+  // Toggle the picker
+  showReactionPicker.value = !showReactionPicker.value
+  
+  // If we're opening the picker, adjust positioning if needed
+  if (showReactionPicker.value) {
+    // Small delay to let the picker render, then check positioning
+    setTimeout(() => {
+      adjustReactionPickerPosition(event.target)
+    }, 10)
+  }
+}
+
+// Smart positioning to prevent picker from going off-screen
+const adjustReactionPickerPosition = (buttonElement) => {
+  const picker = buttonElement.closest('.relative').querySelector('.reaction-picker-positioned')
+  if (!picker) return
+  
+  const pickerRect = picker.getBoundingClientRect()
+  const viewportWidth = window.innerWidth
+  
+  // If picker goes off the left edge, adjust positioning
+  if (pickerRect.left < 10) {
+    picker.style.right = 'auto'
+    picker.style.left = '0px'
+  }
+  // If picker goes off the right edge, adjust positioning  
+  else if (pickerRect.right > viewportWidth - 10) {
+    picker.style.left = 'auto'
+    picker.style.right = '0px'
+  }
+}
+
+// Handle reaction toggle from existing reactions
+const handleToggleReaction = async (data) => {
+  try {
+    if (data.isRemoving) {
+      // Remove reaction
+      await api.delete('/message/reactions/', {
+        data: { message_id: data.messageId }
+      })
+      
+      console.log('Reaction removed successfully')
+    } else {
+      // Add reaction
+      const response = await api.post('/message/reactions/', {
+        message_id: data.messageId,
+        reaction_type: data.reactionType
+      })
+      
+      console.log('Reaction updated successfully:', response.data)
+    }
+    
+    // Emit message action to update the parent component
+    emit('message-action', {
+      action: data.isRemoving ? 'reaction_removed' : 'reaction_updated',
+      messageId: data.messageId
+    })
+    
+  } catch (error) {
+    console.error('Failed to toggle reaction:', error)
+  }
+}
+
 const openLink = (url) => {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -863,7 +1001,18 @@ const handleImageError = (event) => {
 .system-message-tiny {
   font-size: 10px !important;
   line-height: 1.2 !important;
-  opacity: 0.8;
+}
+
+/* Reaction add button styling */
+.reaction-add-btn {
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.reaction-add-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Even more specific selector for super tiny system messages */
@@ -873,6 +1022,67 @@ const handleImageError = (event) => {
   line-height: 1.2 !important;
   color: #000000 !important;
   font-weight: normal !important;
+}
+
+/* Reaction picker positioning */
+.reaction-picker-positioned {
+  position: absolute;
+  z-index: 20;
+  bottom: 100%;
+  right: -20px; /* Less aggressive positioning to prevent off-screen issues */
+}
+
+/* Override the default centering from MessageReactionPicker */
+.reaction-picker-positioned .reaction-picker {
+  position: static;
+  transform: none;
+  left: auto;
+  bottom: auto;
+  margin-bottom: 5px;
+}
+
+/* For own messages (right side), position picker to the left */
+.flex-row-reverse .reaction-picker-positioned {
+  right: auto;
+  left: -20px; /* Less aggressive positioning for own messages */
+}
+
+/* Ensure picker doesn't get cut off on small screens */
+@media (max-width: 640px) {
+  .reaction-picker-positioned {
+    right: 0px; /* Align with message edge on mobile */
+  }
+  
+  .flex-row-reverse .reaction-picker-positioned {
+    left: 0px; /* Align with message edge for own messages */
+    right: auto;
+  }
+}
+
+/* Additional responsive handling for very small screens */
+@media (max-width: 480px) {
+  .reaction-picker-positioned {
+    right: 10px; /* Move further right on very small screens */
+  }
+  
+  .flex-row-reverse .reaction-picker-positioned {
+    left: 10px; /* Move further left for own messages */
+    right: auto;
+  }
+  
+  .reaction-picker-positioned .reaction-picker {
+    min-width: 320px; /* Smaller min-width on very small screens */
+  }
+  
+  .reaction-picker-positioned .reaction-buttons {
+    gap: 4px; /* Even smaller gap on tiny screens */
+  }
+  
+  .reaction-picker-positioned .reaction-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
 }
 
 .super-tiny-system-msg {

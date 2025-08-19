@@ -5,7 +5,7 @@ from .views import (
     ConversationUsersView, MessageRequestView, BlockUserView,
     PinMessageView, BumpMessageView, UploadView,
     GroupMemberRequestView, GroupMemberRequestManageView, ForwardMessageView,
-    MessageSearchView
+    MessageSearchView, MessageReactionView, MessageReactionsListView
 )
 
 urlpatterns = [
@@ -36,4 +36,8 @@ urlpatterns = [
     path('bump/<uuid:message_id>/', BumpMessageView.as_view(), name='bump_message'),
     path('forward/', ForwardMessageView.as_view(), name='forward_message'),
     path('upload/', UploadView.as_view(), name='upload_attachment'),
+    
+    # === MESSAGE REACTIONS ===
+    path('reactions/', MessageReactionView.as_view(), name='message_reactions'),
+    path('reactions/<uuid:message_id>/', MessageReactionsListView.as_view(), name='message_reactions_list'),
 ]
