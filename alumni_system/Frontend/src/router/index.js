@@ -114,12 +114,58 @@ const routes = [
     ],
   },
 
-  // 🛡 Alumni Route
+  // 🛡 Alumni Routes
   {
     path: '/alumni',
-    name: 'AlumniDashboard',
-    component: () => import('../views/Alumni/AlumniDashboard.vue'),
+    component: () => import('../components/layouts/AlumniLayout.vue'),
     meta: { requiresAuth: true, role: 3 },
+    children: [
+      {
+        path: '',
+        name: 'AlumniDashboard',
+        component: () => import('../views/Alumni/AlumniDashboard.vue'),
+      },
+      {
+        path: 'dashboard',
+        name: 'AlumniDashboardAlt',
+        component: () => import('../views/Alumni/AlumniDashboard.vue'),
+      },
+      {
+        path: 'messages',
+        name: 'AlumniMessages',
+        component: () => import('../views/Alumni/AlumniMessages.vue'),
+      },
+      {
+        path: 'posts',
+        name: 'AlumniPosts',
+        component: () => import('../views/Alumni/AlumniPosts.vue'),
+      },
+      {
+        path: 'profile',
+        name: 'AlumniProfile',
+        component: () => import('../views/Alumni/AlumniDashboard.vue'), // Will create separate profile later
+      },
+      {
+        path: 'directory',
+        name: 'AlumniDirectory',
+        component: () => import('../views/Alumni/AlumniDashboard.vue'), // Will create directory later
+      },
+      {
+        path: 'events',
+        name: 'AlumniEvents',
+        component: () => import('../views/Alumni/AlumniDashboard.vue'), // Will create events later
+      },
+      {
+        path: 'jobs',
+        name: 'AlumniJobs',
+        component: () => import('../views/Alumni/AlumniDashboard.vue'), // Will create jobs later
+      },
+      {
+        path: 'settings',
+        name: 'AlumniSettings',
+        component: () => import('../views/Alumni/AlumniDashboard.vue'), // Will create settings later
+      },
+    ],
   },
 
   // 🔁 Default Redirect
@@ -156,7 +202,7 @@ router.beforeEach(async (to, from, next) => {
     switch (userRole) {
       case 1: return next({ name: 'SuperAdminDashboard' });
       case 2: return next({ name: 'AdminDashboard' });
-      case 3: return next({ name: 'AlumniDashboard' });
+      case 3: return next({ path: '/alumni/dashboard' });
       default: return next('/login');
     }
   }
