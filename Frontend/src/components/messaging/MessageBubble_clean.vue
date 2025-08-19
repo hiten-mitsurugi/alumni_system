@@ -514,7 +514,7 @@ const DownloadIcon = {
   `
 }
 
-// Reply Preview Component
+// Reply Preview Component (Simplified style like bump)
 const ReplyPreview = {
   props: ['replyMessage', 'isOwnMessage'],
   emits: ['click'],
@@ -529,19 +529,19 @@ const ReplyPreview = {
         ]" 
         @click="$emit('click')"
       >
+        <!-- Simple reply indicator without avatar -->
         <div class="flex items-center gap-2 mb-1">
-          <img 
-            :src="getProfilePictureUrl(replyMessage.sender)" 
-            :alt="replyMessage.sender.first_name"
-            class="w-4 h-4 rounded-full object-cover flex-shrink-0"
-          />
+          <svg class="w-3 h-3" :class="isOwnMessage ? 'text-white' : 'text-blue-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
           <span :class="[
             'font-medium text-xs',
             isOwnMessage ? 'text-white text-opacity-90' : 'text-blue-600'
           ]">
-            {{ replyMessage.sender.first_name }} {{ replyMessage.sender.last_name }}
+            Reply to {{ replyMessage.sender.first_name }}
           </span>
         </div>
+        <!-- Just the message content, no avatar -->
         <p :class="[
           'text-xs line-clamp-2 leading-tight',
           isOwnMessage ? 'text-white text-opacity-80' : 'text-gray-700'

@@ -14,19 +14,19 @@
         </button>
       </div>
 
-      <!-- Message Preview -->
+      <!-- Message Preview (Simplified style like bump) -->
       <div class="p-4 border-b border-gray-200 bg-gray-50">
-        <div class="text-sm text-gray-600 mb-2">Forwarding message from:</div>
-        <div class="bg-white p-3 rounded-lg border">
+        <div class="text-sm text-gray-600 mb-2">Forwarding message:</div>
+        <div class="bg-white p-3 rounded-lg border border-l-4 border-l-orange-500">
+          <!-- Simple forward indicator -->
           <div class="flex items-center gap-2 mb-2">
-            <img 
-              :src="message.sender.profile_picture || '/default-avatar.png'" 
-              alt="Sender" 
-              class="w-6 h-6 rounded-full object-cover"
-            />
-            <span class="text-sm font-medium">{{ message.sender.first_name }} {{ message.sender.last_name }}</span>
+            <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            <span class="text-sm font-medium text-orange-600">Message to forward</span>
           </div>
-          <div class="text-sm text-gray-800 truncate">{{ message.content }}</div>
+          <!-- Just the message content, no avatar -->
+          <div class="text-sm text-gray-800 line-clamp-3">{{ message.content }}</div>
           <div v-if="message.attachments && message.attachments.length > 0" class="text-xs text-gray-500 mt-1">
             📎 {{ message.attachments.length }} attachment(s)
           </div>

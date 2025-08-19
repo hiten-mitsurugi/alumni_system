@@ -18,17 +18,21 @@
         <span>Pinned</span>
       </div>
 
-      <!-- Forward indicator -->
-      <div v-if="message.is_forwarded" class="flex items-center gap-1 mb-1 text-xs text-green-600">
+      <!-- Reply indicator - OUTSIDE the bubble -->
+      <div v-if="replyMessage && !isBumpMessage && !isForwardedMessage" class="flex items-center gap-1 mb-1 text-xs text-gray-500">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
         </svg>
-        <span>Forwarded</span>
+        <span>You replied to {{ replyMessage.sender.first_name }} {{ replyMessage.sender.last_name }}</span>
       </div>
 
-      <!-- Reply indicator with enhanced threading - REMOVED standalone version -->
-      <!-- This will now be integrated inside the main message bubble -->
+      <!-- Forward indicator - OUTSIDE the bubble -->
+      <div v-if="isForwardedMessage" class="flex items-center gap-1 mb-1 text-xs text-gray-500">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+        <span>{{ isOwnMessage ? 'You forwarded a message' : `${message.sender.first_name} forwarded a message` }}</span>
+      </div>
 
       <!-- Message Container with Menu Button -->
       <div class="relative flex items-start gap-2">
@@ -184,70 +188,32 @@
               <p v-else-if="replyMessage" class="text-sm" v-html="formatMessageContent(replyMessage.content)"></p>
             </div>
             
-            <!-- Regular message content (non-bump) -->
+            <!-- Special styling for forwarded messages - show original content cleanly -->
+            <div v-if="isForwardedMessage && message.forwarded_from">
+              <!-- Display original message content directly (clean style) -->
+              <div v-if="message.forwarded_from && /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]*$/u.test(message.forwarded_from.content)" class="text-4xl p-2">
+                {{ message.forwarded_from.content }}
+              </div>
+              <p v-else-if="message.forwarded_from" class="text-sm" v-html="formatMessageContent(message.forwarded_from.content)"></p>
+            </div>
+            
+            <!-- Regular message content (non-bump, non-forward) -->
             <div v-else>
-              <!-- Reply preview inside the message bubble (WhatsApp/Telegram style) -->
-              <div v-if="replyMessage" class="mb-3">
+              <!-- Facebook Messenger style reply preview inside the bubble -->
+              <div v-if="replyMessage" class="mb-2">
+                <!-- Inline preview box inside the bubble with better visibility -->
                 <div :class="[
-                  'border-l-4 pl-3 py-2 rounded-r-md cursor-pointer transition-all duration-200 hover:bg-opacity-80',
+                  'p-2 rounded-lg border-l-2 cursor-pointer transition-all',
                   isOwnMessage 
-                    ? 'border-white bg-white bg-opacity-20' 
-                    : 'border-blue-500 bg-blue-50'
+                    ? 'bg-blue-400 bg-opacity-30 border-l-white border-opacity-80 hover:bg-opacity-40' 
+                    : 'bg-gray-50 border-l-gray-400 hover:bg-gray-100'
                 ]" @click="scrollToOriginalMessage">
-                  <div class="flex items-center gap-2 mb-1">
-                    <img 
-                      :src="getProfilePictureUrl(replyMessage.sender)" 
-                      :alt="replyMessage.sender.first_name"
-                      class="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                    />
-                    <span :class="[
-                      'font-medium text-xs',
-                      isOwnMessage ? 'text-white text-opacity-90' : 'text-blue-600'
-                    ]">{{ replyMessage.sender.first_name }} {{ replyMessage.sender.last_name }}</span>
-                  </div>
-                  <!-- ✅ FIX: Always show the message content, not just for non-senders -->
-                  <p :class="[
-                    'text-xs line-clamp-2 leading-tight',
-                    isOwnMessage ? 'text-white text-opacity-80' : 'text-gray-700'
+                  <div :class="[
+                    'text-xs line-clamp-2 font-medium',
+                    isOwnMessage ? 'text-white' : 'text-gray-700'
                   ]">
                     {{ replyMessage.content || 'Attachment' }}
-                  </p>
-                </div>
-              </div>
-
-              <!-- Forwarded from preview (similar to reply) -->
-              <div v-if="message.forwarded_from" class="mb-3">
-                <div :class="[
-                  'border-l-4 pl-3 py-2 rounded-r-md transition-all duration-200',
-                  isOwnMessage 
-                    ? 'border-green-300 bg-green-100 bg-opacity-30' 
-                    : 'border-green-500 bg-green-50'
-                ]">
-                  <div class="flex items-center gap-2 mb-1">
-                    <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                    </svg>
-                    <span :class="[
-                      'font-medium text-xs',
-                      isOwnMessage ? 'text-white text-opacity-90' : 'text-green-600'
-                    ]">
-                      Forwarded from {{ message.forwarded_from.sender.first_name }} {{ message.forwarded_from.sender.last_name }}
-                    </span>
                   </div>
-                  <p :class="[
-                    'text-xs line-clamp-2 leading-tight',
-                    isOwnMessage ? 'text-white text-opacity-80' : 'text-gray-700'
-                  ]">
-                    {{ message.forwarded_from.content || 'Attachment' }}
-                  </p>
-                  <span :class="[
-                    'text-xs opacity-75',
-                    isOwnMessage ? 'text-white text-opacity-60' : 'text-gray-500'
-                  ]">
-                    {{ formatTimestamp(message.forwarded_from.timestamp) }}
-                    {{ message.forwarded_from.was_group_message ? `• ${message.forwarded_from.original_group_name}` : '' }}
-                  </span>
                 </div>
               </div>
 
@@ -478,6 +444,11 @@ const isBumpMessage = computed(() => {
   return props.message.content === "🔔 Bumped message" && props.message.reply_to
 })
 
+// Check if this is a forwarded message
+const isForwardedMessage = computed(() => {
+  return props.message.is_forwarded && props.message.forwarded_from
+})
+
 // Get the original message being replied to
 const replyMessage = computed(() => {
   const message = props.message;
@@ -635,9 +606,17 @@ const hasFileAttachment = computed(() => fileAttachments.value.length > 0)
 // Check if message contains only emojis (for special large rendering)
 const isEmojiOnlyMessage = computed(() => {
   // For bump messages, check the original message content
-  const contentToCheck = isBumpMessage.value && replyMessage.value 
-    ? replyMessage.value.content 
-    : props.message.content
+  // For forwarded messages, check the forwarded_from content
+  // For regular messages, check the message content
+  let contentToCheck
+  
+  if (isBumpMessage.value && replyMessage.value) {
+    contentToCheck = replyMessage.value.content
+  } else if (isForwardedMessage.value && props.message.forwarded_from) {
+    contentToCheck = props.message.forwarded_from.content
+  } else {
+    contentToCheck = props.message.content
+  }
     
   if (!contentToCheck) return false
   
