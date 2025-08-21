@@ -68,8 +68,10 @@
             :message="message"
             :messages="messages"
             :currentUser="currentUser"
+            :conversation="conversation"
             @message-action="handleMessageAction"
             @scroll-to-message="scrollToMessage"
+            @mentionClick="handleMentionClick"
           />
         </div>
 
@@ -131,6 +133,7 @@
       <MessageInput 
         v-else
         :replyingTo="replyingTo"
+        :conversation="conversation"
         @send-message="sendMessage" 
         @cancel-reply="cancelReply"
       />
@@ -440,6 +443,20 @@ function handleMessageAction(actionData) {
     default:
       console.warn('ChatArea: Unknown message action:', action)
   }
+}
+
+// 🔔 MENTIONS: Handle mention clicks from MessageBubble
+function handleMentionClick({ userId, username }) {
+  console.log('ChatArea: Mention clicked:', { userId, username })
+  // You can implement various actions here:
+  // - Show user profile modal
+  // - Highlight the mentioned user in the members list
+  // - Scroll to the user in members sidebar
+  // - Start a private chat with the mentioned user
+  
+  // For now, we'll just log it - you can extend this based on your needs
+  // Example: emit an event to show user profile
+  // emit('show-user-profile', { userId, username })
 }
 
 // Reply functionality

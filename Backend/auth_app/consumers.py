@@ -144,3 +144,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'type': 'group_message_preview',
             'message': event.get('message', {})
         }))
+
+    # 🔔 MENTIONS: Handler for mention notifications
+    async def mention_notification(self, event):
+        logger.info(f"NotificationConsumer: Sending mention notification to user {self.scope['user']}")
+        await self.send(text_data=json.dumps({
+            'type': 'mention_notification',
+            'data': event['data']
+        }))

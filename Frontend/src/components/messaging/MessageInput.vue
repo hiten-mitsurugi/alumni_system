@@ -46,16 +46,27 @@
           />
         </div>
 
-        <!-- Textarea -->
-        <textarea
-          ref="textareaRef"
-          v-model="content"
-          placeholder="Type a message..."
-          rows="1"
-          class="flex-1 p-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
-          @keydown="handleKeyDown"
-          @input="adjustTextareaHeight"
-        ></textarea>
+        <!-- Textarea with Mention Support -->
+        <div class="flex-1 relative">
+          <!-- 🔔 MENTIONS: Mention Dropdown -->
+          <MentionDropdown
+            :is-visible="showMentionDropdown"
+            :members="groupMembers"
+            :query="mentionQuery"
+            @select-member="handleMentionSelect"
+            @close="closeMentionDropdown"
+          />
+          
+          <textarea
+            ref="textareaRef"
+            v-model="content"
+            placeholder="Type a message..."
+            rows="1"
+            class="w-full p-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+            @keydown="handleKeyDown"
+            @input="handleInput"
+          ></textarea>
+        </div>
 
         <!-- Send Button -->
         <button
@@ -135,12 +146,19 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, computed, watch } from 'vue'
 import EmojiPicker from './EmojiPicker.vue'
 import ReplyPreview from './ReplyPreview.vue'
+import MentionDropdown from './MentionDropdown.vue'
+import { detectMentionTyping, insertMentionInTextarea } from '@/utils/mentions'
+import api from '@/services/api'
 
 const props = defineProps({
   replyingTo: {
+    type: Object,
+    default: null
+  },
+  conversation: {
     type: Object,
     default: null
   }
@@ -153,17 +171,44 @@ const fileInput = ref(null)
 const textareaRef = ref(null)
 const showEmojiPicker = ref(false)
 
+// 🔔 MENTIONS: State for mention functionality
+const showMentionDropdown = ref(false)
+const mentionQuery = ref('')
+const mentionPosition = ref(null)
+const groupMembers = ref([])
+
 // Debug replyingTo prop changes
 console.log('MessageInput: Initial replyingTo prop:', props.replyingTo)
 
 // Watch for changes to replyingTo prop
-import { watch } from 'vue'
 watch(() => props.replyingTo, (newValue, oldValue) => {
   console.log('MessageInput: replyingTo prop changed:')
   console.log('  Old value:', oldValue)
   console.log('  New value:', newValue)
   console.log('  Should show ReplyPreview:', !!newValue)
 }, { immediate: true, deep: true })
+
+// 🔔 MENTIONS: Fetch group members for mention dropdown
+const fetchGroupMembers = async (groupId) => {
+  try {
+    console.log('MessageInput: Fetching group members for group:', groupId)
+    const response = await api.get(`/message/group/${groupId}/members/`)
+    groupMembers.value = response.data.members || []
+    console.log('MessageInput: Fetched group members:', groupMembers.value.length)
+  } catch (error) {
+    console.error('MessageInput: Error fetching group members:', error)
+    groupMembers.value = []
+  }
+}
+
+// 🔔 MENTIONS: Watch for conversation changes to fetch group members
+watch(() => props.conversation, async (newConversation) => {
+  if (newConversation?.type === 'group' && newConversation.group?.id) {
+    await fetchGroupMembers(newConversation.group.id)
+  } else {
+    groupMembers.value = []
+  }
+}, { immediate: true })
 
 // Computed property for send button state
 const canSend = computed(() => {
@@ -256,9 +301,77 @@ function adjustTextareaHeight() {
   }
 }
 
+// 🔔 MENTIONS: Handle input changes for mention detection
+function handleInput() {
+  adjustTextareaHeight()
+  
+  // Only check for mentions in group conversations
+  if (props.conversation?.type !== 'group') return
+  
+  const textarea = textareaRef.value
+  if (!textarea) return
+  
+  const mentionData = detectMentionTyping(content.value, textarea.selectionStart)
+  
+  if (mentionData) {
+    console.log('MessageInput: Detected mention typing:', mentionData)
+    showMentionDropdown.value = true
+    mentionQuery.value = mentionData.query
+    mentionPosition.value = mentionData
+  } else {
+    showMentionDropdown.value = false
+    mentionQuery.value = ''
+    mentionPosition.value = null
+  }
+}
+
+// 🔔 MENTIONS: Handle mention selection
+function handleMentionSelect(member) {
+  console.log('MessageInput: Selected mention:', member)
+  
+  if (!mentionPosition.value || !textareaRef.value) return
+  
+  // Insert the mention
+  const newContent = insertMentionInTextarea(
+    textareaRef.value, 
+    member, 
+    mentionPosition.value.fullQuery
+  )
+  
+  // Update reactive content
+  content.value = newContent
+  
+  // Close mention dropdown
+  showMentionDropdown.value = false
+  mentionQuery.value = ''
+  mentionPosition.value = null
+  
+  // Focus back on textarea
+  nextTick(() => {
+    textareaRef.value?.focus()
+    adjustTextareaHeight()
+  })
+}
+
+// 🔔 MENTIONS: Close mention dropdown
+function closeMentionDropdown() {
+  showMentionDropdown.value = false
+  mentionQuery.value = ''
+  mentionPosition.value = null
+}
+
 // Handle keyboard shortcuts
 function handleKeyDown(event) {
   console.log('MessageInput: Key pressed:', event.key, 'shiftKey:', event.shiftKey)
+  
+  // 🔔 MENTIONS: Handle mention dropdown navigation
+  if (showMentionDropdown.value) {
+    // Let MentionDropdown handle these keys
+    if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(event.key)) {
+      // The MentionDropdown component will handle these events
+      return
+    }
+  }
   
   // Send on Enter (without Shift)
   if (event.key === 'Enter' && !event.shiftKey) {
@@ -277,6 +390,12 @@ function handleKeyDown(event) {
   if (event.key === 'Escape' && showEmojiPicker.value) {
     event.preventDefault()
     showEmojiPicker.value = false
+  }
+  
+  // 🔔 MENTIONS: Close mention dropdown on Escape
+  if (event.key === 'Escape' && showMentionDropdown.value) {
+    event.preventDefault()
+    closeMentionDropdown()
   }
 }
 

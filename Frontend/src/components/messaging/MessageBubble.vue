@@ -182,7 +182,7 @@
               <div v-if="replyMessage && /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]*$/u.test(replyMessage.content)" class="text-4xl p-2">
                 {{ replyMessage.content }}
               </div>
-              <p v-else-if="replyMessage" class="text-sm" v-html="formatMessageContent(replyMessage.content)"></p>
+              <p v-else-if="replyMessage" class="text-sm" v-html="formatMessageContent(replyMessage.content)" @click="handleMentionClick"></p>
             </div>
             
             <!-- Special styling for forwarded messages - show original content cleanly -->
@@ -191,7 +191,7 @@
               <div v-if="message.forwarded_from && /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]*$/u.test(message.forwarded_from.content)" class="text-4xl p-2">
                 {{ message.forwarded_from.content }}
               </div>
-              <p v-else-if="message.forwarded_from" class="text-sm" v-html="formatMessageContent(message.forwarded_from.content)"></p>
+              <p v-else-if="message.forwarded_from" class="text-sm" v-html="formatMessageContent(message.forwarded_from.content)" @click="handleMentionClick"></p>
             </div>
             
             <!-- Regular message content (non-bump, non-forward) -->
@@ -218,7 +218,7 @@
               <div v-if="isEmojiOnlyMessage" class="text-4xl p-2">
                 {{ message.content }}
               </div>
-              <p v-else class="text-sm" v-html="formatMessageContent(message.content)"></p>
+              <p v-else class="text-sm" v-html="formatMessageContent(message.content)" @click="handleMentionClick"></p>
               <!-- Edit indicator -->
               <span v-if="message.edited_at" class="text-xs opacity-75 ml-1">(edited)</span>
               
@@ -391,14 +391,16 @@ import MessageReactions from '../MessageReactions.vue'
 import MessageReactionPicker from '../MessageReactionPicker.vue'
 import SeenIndicators from './SeenIndicators.vue'
 import api from '../../services/api'
+import { highlightMentions } from '@/utils/mentions'
 
 const props = defineProps({
   message: Object,
   currentUser: Object, // Changed from currentUserId to full user object
-  messages: Array // Add this to access all messages for reply lookups
+  messages: Array, // Add this to access all messages for reply lookups
+  conversation: Object // Add conversation prop for mention support
 })
 
-const emit = defineEmits(['message-action', 'scroll-to-message'])
+const emit = defineEmits(['message-action', 'scroll-to-message', 'mentionClick'])
 
 // State for context menu
 const showContextMenu = ref(false)
@@ -633,15 +635,34 @@ const isEmojiOnlyMessage = computed(() => {
   return textWithoutEmojis.length === 0 && contentToCheck.trim().length > 0
 })
 
-// Format message content with enhanced emoji rendering and link detection
+// 🔔 MENTIONS: Handle mention clicks
+const handleMentionClick = (event) => {
+  // Check if the clicked element is a mention (supporting both old and new classes)
+  if (event.target.classList.contains('mention') || event.target.classList.contains('mention-highlight')) {
+    const userId = event.target.dataset.userId
+    if (userId) {
+      // Emit event to parent component for handling mention click
+      // Could be used to show user profile, highlight user, etc.
+      emit('mentionClick', { userId, username: event.target.textContent.slice(1) })
+    }
+  }
+}
+
+// Format message content with enhanced emoji rendering, link detection, and mention highlighting
 const formatMessageContent = (content) => {
   if (!content) return ''
+  
+  // 🔔 MENTIONS: Highlight mentions for group messages
+  let formattedContent = content
+  if (props.conversation?.type === 'group' && props.conversation.group?.members) {
+    formattedContent = highlightMentions(content, props.conversation.group.members)
+  }
   
   // Enhanced URL regex pattern to match various URL formats
   const urlRegex = /(https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?)/gi
   
   // Replace URLs with clickable links - different colors for sender vs receiver
-  let formattedContent = content.replace(urlRegex, (url) => {
+  formattedContent = formattedContent.replace(urlRegex, (url) => {
     const linkClasses = isOwnMessage.value 
       ? "text-white hover:text-gray-200 underline break-all" // White for sender (blue bubble)
       : "text-blue-600 hover:text-blue-800 underline break-all" // Blue for receiver (gray bubble)
@@ -1072,6 +1093,34 @@ const handleImageError = (event) => {
 
 .super-tiny-system-msg {
   opacity: 0.9 !important;
+}
+
+/* 🔔 MENTIONS: Styling for mention highlights */
+:deep(.mention-highlight) {
+  background-color: #dbeafe; /* Light blue background */
+  color: #1d4ed8; /* Blue text */
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+:deep(.mention-highlight:hover) {
+  background-color: #bfdbfe; /* Darker blue on hover */
+  color: #1e40af;
+}
+
+/* For own messages (blue background), use white mention styling */
+.bg-green-600 :deep(.mention-highlight),
+.bg-blue-600 :deep(.mention-highlight) {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+}
+
+.bg-green-600 :deep(.mention-highlight:hover),
+.bg-blue-600 :deep(.mention-highlight:hover) {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 </style>
 
