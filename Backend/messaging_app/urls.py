@@ -5,7 +5,8 @@ from .views import (
     ConversationUsersView, MessageRequestView, BlockUserView,
     PinMessageView, BumpMessageView, UploadView,
     GroupMemberRequestView, GroupMemberRequestManageView, ForwardMessageView,
-    MessageSearchView, MessageReactionView, MessageReactionsListView, MarkMessageAsReadView
+    MessageSearchView, MessageReactionView, MessageReactionsListView, MarkMessageAsReadView,
+    UnreadCountsView
 )
 
 urlpatterns = [
@@ -43,4 +44,7 @@ urlpatterns = [
     
     # === MESSAGE READ STATUS ===
     path('mark-read/<uuid:message_id>/', MarkMessageAsReadView.as_view(), name='mark_message_read'),
+    
+    # === NOTIFICATION COUNTS ===
+    path('unread-counts/', UnreadCountsView.as_view(), name='unread_counts'),
 ]

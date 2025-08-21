@@ -379,6 +379,19 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
                 'chat_message', 
                 {'message': serialized}
             )
+            
+            # 🔔 NOTIFICATION: Broadcast notification update to receiver
+            await self.channel_layer.group_send(
+                f'user_{receiver.id}',
+                {
+                    'type': 'notification_update',
+                    'data': {
+                        'action': 'increment',
+                        'type': 'message'
+                    }
+                }
+            )
+            
             await self.send_json({'status': 'success', 'message': serialized})
             
         except User.DoesNotExist:
@@ -443,6 +456,18 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
                     'sender': {'id': self.user.id, 'first_name': self.user.first_name},
                     'content': content,
                     'timestamp': request.timestamp.isoformat()
+                }
+            }
+        )
+        
+        # 🔔 NOTIFICATION: Broadcast notification update for message request
+        await self.channel_layer.group_send(
+            f'user_{receiver.id}',
+            {
+                'type': 'notification_update',
+                'data': {
+                    'action': 'increment',
+                    'type': 'request'
                 }
             }
         )
@@ -1044,6 +1069,8 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         await self.send_json({'type': 'user_stop_typing', **event})
     async def status_update(self, event): 
         await self.send_json({'type': 'status_update', **event})
+    async def notification_update(self, event):
+        await self.send_json({'type': 'notification_update', **event})
     async def member_request_notification(self, event): 
         await self.send_json({'type': 'member_request_notification', **event})
     async def group_added_notification(self, event): 
@@ -1226,6 +1253,17 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                         {
                             'type': 'group_message_preview',
                             'message': preview
+                        }
+                    )
+                    # Send notification update for navbar badge
+                    async_to_sync(channel_layer.group_send)(
+                        f'user_{member_id}',
+                        {
+                            'type': 'notification_update',
+                            'data': {
+                                'action': 'increment',
+                                'type': 'message'
+                            }
                         }
                     )
             except Exception as notify_err:

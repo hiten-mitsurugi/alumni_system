@@ -1981,17 +1981,50 @@ class MarkMessageAsReadView(APIView):
                 if user == message.receiver and not message.is_read:
                     message.is_read = True
                     message.save()
+                    
+                    # Send notification update to decrement unread count
+                    from channels.layers import get_channel_layer
+                    from asgiref.sync import async_to_sync
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        f'user_{user.id}',
+                        {
+                            'type': 'notification_update',
+                            'data': {
+                                'action': 'decrement',
+                                'type': 'message',
+                                'count': 1
+                            }
+                        }
+                    )
             
             # For group messages
             elif message.group and message.group.members.filter(id=user.id).exists():
                 has_access = True
                 # For group messages, create MessageRead record if user is not the sender
                 if user != message.sender:
-                    MessageRead.objects.get_or_create(
+                    msg_read_obj, created = MessageRead.objects.get_or_create(
                         message=message,
                         user=user,
                         defaults={'read_at': timezone.now()}
                     )
+                    
+                    # Send notification update to decrement unread count only if newly created
+                    if created:
+                        from channels.layers import get_channel_layer
+                        from asgiref.sync import async_to_sync
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.group_send)(
+                            f'user_{user.id}',
+                            {
+                                'type': 'notification_update',
+                                'data': {
+                                    'action': 'decrement',
+                                    'type': 'message',
+                                    'count': 1
+                                }
+                            }
+                        )
             
             if not has_access:
                 return Response(
@@ -2047,5 +2080,67 @@ class MarkMessageAsReadView(APIView):
             logger.error(f"Error marking message as read {message_id}: {e}")
             return Response(
                 {'error': 'Failed to mark message as read'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class UnreadCountsView(APIView):
+    """Get unread message and message request counts for the current user"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Return unread counts for messages and message requests"""
+        try:
+            user = request.user
+            
+            # Count unread private messages
+            # Messages where user is receiver and message is not read
+            unread_private_messages = Message.objects.filter(
+                receiver=user,
+                is_read=False
+            ).count()
+            
+            # Count unread group messages
+            # Messages in groups where user is member but hasn't read the message
+            user_groups = GroupChat.objects.filter(members=user)
+            unread_group_messages = 0
+            
+            for group in user_groups:
+                # Get messages in this group from other users that this user hasn't read
+                group_messages = Message.objects.filter(
+                    group=group
+                ).exclude(sender=user)
+                
+                # Check which messages this user hasn't read
+                read_message_ids = MessageRead.objects.filter(
+                    user=user,
+                    message__group=group
+                ).values_list('message_id', flat=True)
+                
+                unread_in_group = group_messages.exclude(id__in=read_message_ids).count()
+                unread_group_messages += unread_in_group
+            
+            total_unread_messages = unread_private_messages + unread_group_messages
+            
+            # Count unread message requests
+            unread_message_requests = MessageRequest.objects.filter(
+                receiver=user,
+                accepted=False
+            ).count()
+            
+            logger.info(f"Unread counts for user {user.id}: {total_unread_messages} messages, {unread_message_requests} requests")
+            
+            return Response({
+                'unread_messages': total_unread_messages,
+                'unread_private_messages': unread_private_messages,
+                'unread_group_messages': unread_group_messages,
+                'unread_message_requests': unread_message_requests,
+                'total_unread': total_unread_messages + unread_message_requests
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error getting unread counts for user {request.user.id}: {e}")
+            return Response(
+                {'error': 'Failed to get unread counts'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

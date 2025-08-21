@@ -203,6 +203,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, triggerRef } from 'vue';
 import debounce from 'lodash/debounce';
 import { useAuthStore } from '@/stores/auth';
+import { useMessagingNotificationStore } from '@/stores/messagingNotifications';
 import api from '../../services/api';
 import messagingService from '../../services/messaging';
 import ChatArea from '../../components/messaging/ChatArea.vue';
@@ -213,8 +214,11 @@ import ChatInfoPanel from '../../components/messaging/ChatInfoPanel.vue';
 import BlockedUsersModal from '../../components/messaging/BlockedUsersModal.vue';
 import ForwardModal from '../../components/messaging/ForwardModal.vue';
 
-// === STATE ===
+// === STORES ===
 const authStore = useAuthStore();
+const messagingNotificationStore = useMessagingNotificationStore();
+
+// === STATE ===
 const isAuthenticated = ref(false);
 const currentUser = ref(null);
 const conversations = ref([]);
@@ -636,6 +640,18 @@ async function selectConversation(conv) {
         conversations.value = [...conversations.value];
       }, 50);
     }
+
+    // 🔔 NOTIFICATION: Refresh notification counts when conversation is opened
+    // This ensures the sidebar badge is updated after messages are read
+    setTimeout(async () => {
+      try {
+        await messagingNotificationStore.forceRefresh();
+        console.log('🔔 Messaging.vue: Notification counts refreshed after opening conversation');
+      } catch (error) {
+        console.error('🔔 Messaging.vue: Failed to refresh notification counts:', error);
+      }
+    }, 1000); // Delay to allow mark-as-read to complete
+    
   } catch (error) {
     console.error('Error selecting conversation:', error);
     // Don't break the UI if conversation selection fails
@@ -2435,6 +2451,15 @@ onMounted(async () => {
     
     setupWebSockets();
     selectLastConversation();
+    
+    // 🔔 NOTIFICATION: Initialize messaging notification store
+    // This ensures notification counts are ready when the messaging view is loaded
+    try {
+      await messagingNotificationStore.initialize();
+      console.log('🔔 Messaging.vue: Notification store initialized successfully');
+    } catch (error) {
+      console.error('🔔 Messaging.vue: Failed to initialize notification store:', error);
+    }
     
     // Listen for global status updates
     window.addEventListener('statusUpdate', handleGlobalStatusUpdate);

@@ -129,6 +129,14 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'removed_by': event.get('removed_by', {})
         }))
  
+    # Handler for notification updates (for messaging badge counts)
+    async def notification_update(self, event):
+        logger.info(f"NotificationConsumer: Sending notification_update to user {self.scope['user']}")
+        await self.send(text_data=json.dumps({
+            'type': 'notification_update',
+            'data': event.get('data', {})
+        }))
+
     # Handler for group message preview (unread counters/highlight)
     async def group_message_preview(self, event):
         logger.info(f"NotificationConsumer: Sending group_message_preview to user {self.scope['user']}")
