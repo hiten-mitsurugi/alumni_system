@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="w-96 bg-white border-l border-gray-200 flex flex-col">
+    <div class="w-full h-full md:w-96 md:h-auto bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-slate-600 flex flex-col transition-colors duration-200">
     <!-- Header -->
-    <div class="p-4 border-b border-gray-200">
+    <div class="p-4 border-b border-gray-200 dark:border-slate-600">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-800">Chat Info</h3>
-        <button @click="$emit('close')" class="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-slate-100">Chat Info</h3>
+        <button @click="$emit('close')" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+          <svg class="w-5 h-5 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -14,9 +14,9 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-scroll chat-info-scroll" ref="scrollContainer">
+    <div class="flex-1 overflow-y-scroll chat-info-scroll bg-white dark:bg-slate-800 transition-colors duration-200" ref="scrollContainer">
       <!-- User/Group Profile Section -->
-      <div class="p-4 border-b border-gray-200">
+      <div class="p-4 border-b border-gray-200 dark:border-slate-600">
         <div class="text-center">
           <div class="relative inline-block">
             <img 

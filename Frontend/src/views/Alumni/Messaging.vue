@@ -1,47 +1,62 @@
 <template>
-  <!-- Template remains unchanged -->
-  <div class="h-[calc(100vh-120px)] flex bg-white rounded-lg shadow-sm overflow-hidden">
-    <!-- Conversations Panel -->
-    <div class="w-96 border-r border-gray-200 flex flex-col bg-gray-50">
-      <div class="p-4 bg-white border-b border-gray-200">
+  <!-- 📱 RESPONSIVE: Mobile-first responsive design -->
+  <div class="h-[calc(100vh-120px)] flex bg-slate-50 dark:bg-slate-900 rounded-lg shadow-sm overflow-hidden relative border border-slate-200 dark:border-slate-700 transition-colors duration-200">
+    
+    <!-- 📱 MOBILE: Back Button Overlay (only visible on mobile when in chat view) -->
+    <div v-if="isMobile && currentMobileView === 'chat'" 
+         class="absolute top-4 left-4 z-50 md:hidden">
+      <button @click="goBackMobile" 
+              class="p-2 bg-white dark:bg-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-slate-600">
+        <svg class="w-5 h-5 text-gray-700 dark:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- 💻 DESKTOP / 📱 MOBILE: Conversations Panel -->
+    <div :class="[
+      'border-r border-slate-300 dark:border-slate-600 flex flex-col bg-white dark:bg-slate-800 transition-all duration-150 ease-in-out',
+      // Desktop: Always show with fixed width
+      'md:w-80 md:block',  // Reduced from w-96 to w-80 for better mobile fit
+      // Mobile: Full width when showing list, hidden when showing chat/info
+      isMobile ? (currentMobileView === 'list' ? 'w-full' : 'w-0 overflow-hidden') : 'w-80'
+    ]">
+      <div class="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-600 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-gray-800">Messages</h2>
+          <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Messages</h2>
           <div class="flex gap-2">
             <button @click="showPendingMessages = true"
               :class="[
                 'relative p-2 rounded-lg transition-all duration-200',
                 pendingMessages.length > 0 
-                  ? 'text-orange-600 bg-orange-50 hover:text-orange-700 hover:bg-orange-100' 
-                  : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
+                  ? 'text-amber-600 bg-amber-50 hover:text-amber-700 hover:bg-amber-100' 
+                  : 'text-slate-500 hover:text-amber-600 hover:bg-amber-50'
               ]"
               title="Pending Message Requests">
               <!-- Message bubble icon with pending indicator -->
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 :class="pendingMessages.length > 0 ? 'animate-pulse' : ''">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                <!-- Clock indicator for pending status -->
-                <circle cx="18" cy="6" r="3" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
-                <path d="M18 5v1.5l1 1" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
               </svg>
               <!-- Notification badge -->
               <span v-if="pendingMessages.length > 0"
-                class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-medium shadow-lg animate-bounce">
+                class="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full min-w-[18px] h-4 flex items-center justify-center font-medium shadow-sm">
                 {{ pendingMessages.length > 99 ? '99+' : pendingMessages.length }}
               </span>
             </button>
             <button @click="showBlockedUsers = true"
-              class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+              class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
               title="Blocked Users">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6"></path>
               </svg>
             </button>
             <button @click="showCreateGroup = true"
-              class="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+              class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
               title="Create Group">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-5.523-3.582-10-8-10s-8 4.477-8 10v2m8-10a3 3 0 110-6 3 3 0 010 6zm0 10a3 3 0 110-6 3 3 0 010 6z" />
               </svg>
@@ -50,24 +65,24 @@
         </div>
         <div class="relative">
           <svg @click="focusSearch"
-            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer" fill="none"
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 cursor-pointer" fill="none"
             stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input ref="searchInput" v-model="searchQuery" @input="debouncedSearch" type="text"
             placeholder="Search mates or groups..."
-            class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all duration-200" />
+            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200" />
           <div v-if="searchQuery && searchResults.length"
-            class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
+            class="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
             <div v-for="result in searchResults" :key="result.id" @click="selectSearchResult(result)"
-              class="flex items-center p-3 hover:bg-gray-50 cursor-pointer">
+              class="flex items-center p-3 hover:bg-slate-50 cursor-pointer">
               <img :src="getProfilePictureUrl(result)" class="w-10 h-10 rounded-full object-cover" />
 
               <div>
-                <p class="font-semibold text-gray-800">{{ result.type === 'user' ? `${result.first_name}
+                <p class="font-semibold text-slate-800">{{ result.type === 'user' ? `${result.first_name}
                   ${result.last_name}` : result.name }}</p>
-                <p class="text-sm text-gray-500">{{ result.type === 'user' ? result.username : 'Group' }}</p>
+                <p class="text-sm text-slate-500">{{ result.type === 'user' ? result.username : 'Group' }}</p>
               </div>
             </div>
             <div v-if="searchQuery && searchResults.length === 0" class="p-3 text-gray-500">No results found</div>
@@ -77,7 +92,10 @@
       <div class="flex-1 overflow-y-auto">
         <div v-for="conversation in filteredConversations" :key="conversation.id"
           @click="selectConversation(conversation)"
-          :class="['flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-white', selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : (conversation.unreadCount > 0 ? 'bg-green-50' : 'hover:shadow-sm')]">
+          :class="[
+            'flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-white conversation-item panel-transition',
+            selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : (conversation.unreadCount > 0 ? 'bg-green-50' : 'hover:shadow-sm')
+          ]">
           <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-4">
             <img :src="getProfilePictureUrl(conversation.mate)" class="w-12 h-12 rounded-full object-cover" />
             <!-- Blocked indicator -->
@@ -157,30 +175,59 @@
         </div>
       </div>
     </div>
-    <div class="flex-1 flex flex-col">
-      <ChatArea v-if="selectedConversation" :conversation="selectedConversation" :messages="messages"
-        :current-user="currentUser" @send-message="sendMessage" @message-action="handleMessageAction" @message-read="handleMessageRead" 
-        @toggle-chat-info="showChatInfo = !showChatInfo" />
-      <EmptyState v-else />
+    
+    <!-- 💻 DESKTOP / 📱 MOBILE: Main Content Area (Chat + Chat Info) -->
+    <div :class="[
+      'flex transition-all duration-150 ease-in-out',
+      // Desktop: Always show with flex-1
+      'md:flex-1',
+      // Mobile: Full width when showing chat/info, hidden when showing list
+      isMobile ? (currentMobileView !== 'list' ? 'flex-1' : 'w-0 overflow-hidden') : 'flex-1'
+    ]">
+      
+      <!-- 📱 MOBILE / 💻 DESKTOP: Chat Area -->
+      <div :class="[
+        'flex flex-col transition-all duration-150 ease-in-out',
+        // Desktop: Always flex-1, hide when chat info is shown
+        'md:flex-1',
+        // Mobile: Full width when showing chat, hidden when showing chat-info
+        isMobile ? (currentMobileView === 'chat' ? 'flex-1' : (currentMobileView === 'chat-info' ? 'w-0 overflow-hidden' : 'flex-1')) : (showChatInfo ? 'flex-1' : 'flex-1')
+      ]">
+        <ChatArea v-if="selectedConversation" :conversation="selectedConversation" :messages="messages"
+          :current-user="currentUser" @send-message="sendMessage" @message-action="handleMessageAction" @message-read="handleMessageRead" 
+          @toggle-chat-info="toggleChatInfo" />
+        <EmptyState v-else />
+      </div>
+      
+      <!-- 💻 DESKTOP / 📱 MOBILE: Chat Info Panel -->
+      <div :class="[
+        'transition-all duration-150 ease-in-out border-l border-gray-200',
+        // Desktop: Show/hide with fixed width - reduced from w-80 to w-72 for mobile
+        'md:w-72',
+        showChatInfo ? 'md:block' : 'md:hidden',
+        // Mobile: Full width when showing chat-info, hidden otherwise
+        isMobile ? (currentMobileView === 'chat-info' ? 'flex-1' : 'w-0 overflow-hidden') : ''
+      ]">
+        <ChatInfoPanel 
+          v-if="selectedConversation && showChatInfo" 
+          :conversation="selectedConversation" 
+          :messages="messages"
+          :current-user="currentUser"
+          :member-request-notification-trigger="memberRequestNotificationTrigger"
+          :group-member-update-trigger="groupMemberUpdateTrigger"
+          @close="closeChatInfo"
+          @mute="handleMute"
+          @unmute="handleUnmute"
+          @block="handleBlock"
+          @unblock="handleUnblock"
+          @scroll-to-message="scrollToMessage"
+          @group-photo-updated="handleGroupPhotoUpdated"
+          @leave-group="handleLeaveGroup"
+        />
+      </div>
     </div>
     
-    <!-- Chat Info Panel -->
-    <ChatInfoPanel 
-      v-if="selectedConversation && showChatInfo" 
-      :conversation="selectedConversation" 
-      :messages="messages"
-      :current-user="currentUser"
-      :member-request-notification-trigger="memberRequestNotificationTrigger"
-      :group-member-update-trigger="groupMemberUpdateTrigger"
-      @close="showChatInfo = false"
-      @mute="handleMute"
-      @unmute="handleUnmute"
-      @block="handleBlock"
-      @unblock="handleUnblock"
-      @scroll-to-message="scrollToMessage"
-      @group-photo-updated="handleGroupPhotoUpdated"
-      @leave-group="handleLeaveGroup"
-    />
+    <!-- 📱 MOBILE / 💻 DESKTOP: Modals (unchanged) -->
     <PendingMessagesModal v-if="showPendingMessages" :pending-messages="pendingMessages"
       @close="showPendingMessages = false" @accept="acceptPendingMessage" @reject="rejectPendingMessage" />
     <CreateGroupModal v-if="showCreateGroup" :available-mates="availableMates" @close="showCreateGroup = false"
@@ -245,7 +292,11 @@ const privateWs = ref(null);
 const groupWs = ref(null);
 const notificationWs = ref(null);
 
-// 🔧 FIX: Enhanced heartbeat system to track multiple WebSocket connections
+// � MOBILE RESPONSIVENESS STATE
+const isMobile = ref(false);
+const currentMobileView = ref('list'); // 'list', 'chat', 'chat-info'
+
+// �🔧 FIX: Enhanced heartbeat system to track multiple WebSocket connections
 // Heartbeat system to keep WebSocket connections alive
 let heartbeatInterval = null;
 let heartbeatIntervals = new Set(); // Track multiple WebSocket heartbeats
@@ -588,6 +639,43 @@ function updateConversation(msg) {
   }
 }
 
+// 📱 MOBILE RESPONSIVENESS METHODS
+function checkScreenSize() {
+  isMobile.value = window.innerWidth < 768; // md breakpoint
+}
+
+function goBackMobile() {
+  if (currentMobileView.value === 'chat-info') {
+    currentMobileView.value = 'chat';
+  } else if (currentMobileView.value === 'chat') {
+    currentMobileView.value = 'list';
+    // Close chat info when going back to list
+    showChatInfo.value = false;
+  }
+}
+
+function toggleChatInfo() {
+  if (isMobile.value) {
+    // Mobile: Switch to chat info view
+    showChatInfo.value = !showChatInfo.value;
+    if (showChatInfo.value) {
+      currentMobileView.value = 'chat-info';
+    } else {
+      currentMobileView.value = 'chat';
+    }
+  } else {
+    // Desktop: Toggle panel visibility
+    showChatInfo.value = !showChatInfo.value;
+  }
+}
+
+function closeChatInfo() {
+  showChatInfo.value = false;
+  if (isMobile.value) {
+    currentMobileView.value = 'chat';
+  }
+}
+
 async function selectConversation(conv) {
   // 🔧 FIX: Prevent multiple simultaneous conversation selections
   if (conv.id === selectedConversation.value?.id) {
@@ -638,7 +726,7 @@ async function selectConversation(conv) {
       clearTimeout(window.unreadUpdateTimeout);
       window.unreadUpdateTimeout = setTimeout(() => {
         conversations.value = [...conversations.value];
-      }, 50);
+      }, 10); // Reduced from 50ms to 10ms for faster response
     }
 
     // 🔔 NOTIFICATION: Refresh notification counts when conversation is opened
@@ -650,11 +738,18 @@ async function selectConversation(conv) {
       } catch (error) {
         console.error('🔔 Messaging.vue: Failed to refresh notification counts:', error);
       }
-    }, 1000); // Delay to allow mark-as-read to complete
+    }, 100); // Reduced delay from 1000ms to 100ms for faster response
     
   } catch (error) {
     console.error('Error selecting conversation:', error);
     // Don't break the UI if conversation selection fails
+  }
+  
+  // 📱 MOBILE: Switch to chat view when a conversation is selected
+  if (isMobile.value) {
+    currentMobileView.value = 'chat';
+    // Close chat info when selecting a new conversation on mobile
+    showChatInfo.value = false;
   }
 }
 
@@ -2463,6 +2558,10 @@ onMounted(async () => {
     
     // Listen for global status updates
     window.addEventListener('statusUpdate', handleGlobalStatusUpdate);
+    
+    // 📱 MOBILE: Initialize screen size detection
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
   } else {
     console.log('Messaging.vue: Token validation failed');
   }
@@ -2504,6 +2603,9 @@ onUnmounted(() => {
   window.removeEventListener('statusUpdate', handleGlobalStatusUpdate);
   window.removeEventListener('user-status-update', handleGlobalStatusUpdate);
   
+  // 📱 MOBILE: Remove screen size detection listener
+  window.removeEventListener('resize', checkScreenSize);
+  
   // Clear reactive data to free memory
   conversations.value = [];
   messages.value = [];
@@ -2528,5 +2630,67 @@ onUnmounted(() => {
 /* Smooth transition for all message bubbles */
 :deep(.message-bubble) {
   transition: all 0.3s ease-in-out;
+}
+
+/* 📱 MOBILE RESPONSIVENESS: Smooth transitions and mobile-optimized layout */
+@media (max-width: 767px) {
+  /* Ensure mobile panels don't create horizontal scroll */
+  .mobile-panel {
+    min-width: 0;
+  }
+  
+  /* Mobile-specific back button styling */
+  .mobile-back-button {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  
+  /* Mobile optimization for conversation list */
+  .conversation-item:active {
+    background-color: #f3f4f6;
+    transform: scale(0.98);
+  }
+  
+  /* Mobile touch targets */
+  .conversation-item {
+    min-height: 72px;
+    padding: 16px;
+  }
+  
+  /* Mobile header adjustments */
+  .mobile-header {
+    padding-left: 60px; /* Space for back button */
+  }
+}
+
+/* Smooth panel transitions - faster for better mobile experience */
+.panel-transition {
+  transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.15s ease-in-out,
+              transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced mobile experience */
+@media (max-width: 767px) {
+  /* Touch-friendly scrollbars on mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 2px;
+  }
+  
+  /* Improve text selection on mobile */
+  .conversation-item {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 </style>

@@ -1,19 +1,27 @@
 <template>
-  <div :class="['bg-green-700 text-white h-full transition-all duration-300', isExpanded ? 'w-64' : 'w-20']">
-    <div class="p-4 flex justify-between items-center">
-      <span v-if="isExpanded" class="text-xl font-bold">Alumni</span>
-      <button @click="$emit('toggle')">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div :class="[
+    'bg-slate-900 text-slate-100 h-full transition-all duration-200 shadow-xl border-r border-slate-700',
+    'lg:static',
+    // Mobile: Always show collapsed (w-20), expand to w-64 when toggled
+    isExpanded ? 'w-64' : 'w-20'
+  ]">
+    <div class="p-4 flex justify-between items-center border-b border-slate-700">
+      <span v-if="isExpanded" class="text-xl font-semibold text-slate-100">Alumni System</span>
+      <button 
+        @click="$emit('toggle')"
+        class="p-2 rounded-lg hover:bg-slate-800 transition-colors duration-200"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
     </div>
-    <nav class="mt-4">
+    <nav class="mt-6 px-3">
       <SidebarItem :icon="Home" label="Home" to="/alumni/home" :expanded="isExpanded" />
       <SidebarItem :icon="User" label="My Profile" to="/alumni/my-profile" :expanded="isExpanded" />
       <SidebarItem :icon="Users" label="My Mates" to="/alumni/my-mates" :expanded="isExpanded" />
-      <SidebarItem :icon="MessageSquare" label="Messaging" to="/alumni/messaging" :expanded="isExpanded" :badge="messagingBadgeCount" />
-      <SidebarItem :icon="ClipboardList" label="Survey" to="/alumni/survey" :expanded="isExpanded" badge="2" />
+      <SidebarItem :icon="MessageCircle" label="Messaging" to="/alumni/messaging" :expanded="isExpanded" :badge="messagingBadgeCount" />
+      <SidebarItem :icon="FileText" label="Survey" to="/alumni/survey" :expanded="isExpanded" badge="2" />
       <SidebarItem :icon="Heart" label="Donate" to="/alumni/donate" :expanded="isExpanded" />
       <SidebarItem :icon="Settings" label="Settings" to="/alumni/settings" :expanded="isExpanded" />
     </nav>
@@ -31,8 +39,8 @@ import {
   Home,
   User,
   Users,
-  MessageSquare,
-  ClipboardList,
+  MessageCircle,
+  FileText,
   Heart,
   Settings
 } from 'lucide-vue-next'

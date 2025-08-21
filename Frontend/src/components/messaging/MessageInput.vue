@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border-t border-gray-200">
+  <div class="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-600 transition-colors duration-200">
     <!-- Reply Preview -->
     <ReplyPreview
       v-if="replyingTo"
@@ -22,7 +22,7 @@
         <!-- Attach Button -->
         <button
           @click="triggerFilePicker"
-          class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+          class="p-2 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200"
           title="Attach files"
         >
           📎
@@ -32,7 +32,7 @@
         <div class="relative">
           <button
             @click="toggleEmojiPicker"
-            class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            class="p-2 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200"
             title="Add emoji"
           >
             😀
@@ -62,7 +62,7 @@
             v-model="content"
             placeholder="Type a message..."
             rows="1"
-            class="w-full p-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+            class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-400 transition-colors duration-200"
             @keydown="handleKeyDown"
             @input="handleInput"
           ></textarea>
@@ -75,8 +75,8 @@
           :class="[
             'p-2 rounded-lg transition-all duration-200',
             canSend
-              ? 'text-green-600 hover:bg-green-50'
-              : 'text-gray-400 cursor-not-allowed'
+              ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+              : 'text-gray-400 dark:text-slate-600 cursor-not-allowed'
           ]"
           @mousedown="() => console.log('MessageInput: Send button mousedown')"
           @mouseup="() => console.log('MessageInput: Send button mouseup')"
