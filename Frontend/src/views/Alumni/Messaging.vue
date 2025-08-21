@@ -159,7 +159,7 @@
     </div>
     <div class="flex-1 flex flex-col">
       <ChatArea v-if="selectedConversation" :conversation="selectedConversation" :messages="messages"
-        :current-user="currentUser" @send-message="sendMessage" @message-action="handleMessageAction" 
+        :current-user="currentUser" @send-message="sendMessage" @message-action="handleMessageAction" @message-read="handleMessageRead" 
         @toggle-chat-info="showChatInfo = !showChatInfo" />
       <EmptyState v-else />
     </div>
@@ -949,6 +949,34 @@ async function handleMessageAction(actionData) {
   }
 }
 
+// Handle immediate message read feedback from ChatArea
+function handleMessageRead(data) {
+  console.log('📖 Handling immediate message read feedback:', data);
+  
+  const { messageId, readBy } = data;
+  
+  // Find the message and immediately update its read_by
+  const messageIndex = messages.value.findIndex(m => m.id === messageId);
+  if (messageIndex !== -1) {
+    const message = messages.value[messageIndex];
+    
+    // Create a new message object with updated read_by to force reactivity
+    const updatedMessage = {
+      ...message,
+      read_by: readBy || message.read_by
+    };
+    
+    // Replace the message in the array
+    messages.value[messageIndex] = updatedMessage;
+    
+    // Force Vue reactivity
+    nextTick(() => {
+      messages.value = [...messages.value];
+      console.log('✅ Immediate read feedback: Updated message read status in UI');
+    });
+  }
+}
+
 // Send reaction via WebSocket for real-time delivery
 function sendReaction(messageId, reactionType, isRemoving = false) {
   try {
@@ -1246,6 +1274,24 @@ function setupWebSockets() {
       const data = JSON.parse(e.data);
       console.log('🔵 WebSocket RECEIVED:', data);
       
+      // 👁️ WebSocket DEBUG: Special logging for message_read_update events
+      if (data.type === 'message_read_update') {
+        console.log('👁️ WebSocket DEBUG: Received message_read_update event!');
+        console.log('👁️ WebSocket DEBUG: Message ID:', data.message_id);
+        console.log('👁️ WebSocket DEBUG: User ID:', data.user_id);
+        console.log('👁️ WebSocket DEBUG: Read By Data:', data.read_by);
+        console.log('👁️ WebSocket DEBUG: Full Event:', data);
+      }
+      
+      // Special debugging for message_read_update events
+      if (data.type === 'message_read_update') {
+        console.log('👁️ WEBSOCKET: Received message_read_update event!');
+        console.log('👁️ WEBSOCKET: Message ID:', data.message_id);
+        console.log('👁️ WEBSOCKET: User ID:', data.user_id);
+        console.log('👁️ WEBSOCKET: Read by data:', data.read_by);
+        console.log('👁️ WEBSOCKET: Full event data:', data);
+      }
+      
       // Handle pong responses
       if (data.action === 'pong') {
         console.log('Messaging.vue: Received pong from server');
@@ -1385,6 +1431,15 @@ function setupGroupWebSocket(conv) {
         const data = JSON.parse(e.data);
         console.log('🟢 Group WebSocket RECEIVED:', data);
         
+        // Special debugging for message_read_update events
+        if (data.type === 'message_read_update') {
+          console.log('👁️ GROUP WEBSOCKET: Received message_read_update event!');
+          console.log('👁️ GROUP WEBSOCKET: Message ID:', data.message_id);
+          console.log('👁️ GROUP WEBSOCKET: User ID:', data.user_id);
+          console.log('👁️ GROUP WEBSOCKET: Read by data:', data.read_by);
+          console.log('👁️ GROUP WEBSOCKET: Full event data:', data);
+        }
+        
         // Handle pong responses
         if (data.action === 'pong') {
           console.log('Messaging.vue: Received pong from group server');
@@ -1433,6 +1488,12 @@ function setupGroupWebSocket(conv) {
 
 function handleWsMessage(data, scope) {
   console.log('Messaging.vue: Handling WebSocket message:', data, 'scope:', scope);
+  
+  // Special debugging for message_read_update events
+  if (data.type === 'message_read_update') {
+    console.log('🎯 HANDLER: Processing message_read_update event in handleWsMessage');
+    console.log('🎯 HANDLER: Event data:', data);
+  }
   
   // Handle error messages from backend
   if (data.error) {
@@ -1992,6 +2053,93 @@ function handleWsMessage(data, scope) {
         });
       } else {
         console.warn('👍 Real-time: Message not found for reaction update:', data.message_id);
+      }
+    },
+    message_read_update: (data) => {
+      console.log('👁️ Real-time: Received message_read_update:', data);
+      console.log('👁️ Real-time: Current messages count:', messages.value.length);
+      console.log('👁️ Real-time: Looking for message_id:', data.message_id);
+      
+      // Find the message and update its read_by array
+      const messageIndex = messages.value.findIndex(m => m.id === data.message_id);
+      console.log('👁️ Real-time: Found message at index:', messageIndex);
+      
+      if (messageIndex !== -1) {
+        const message = messages.value[messageIndex];
+        console.log('👁️ Real-time: Current message read_by:', message.read_by);
+        
+        // Use the complete read_by array from the backend
+        if (data.read_by) {
+          // Create a completely new read_by array to ensure reactivity
+          const newReadBy = [...data.read_by];
+          console.log('👁️ Real-time: Updated complete read_by array for message:', data.message_id, 'with users:', newReadBy.map(r => r.first_name));
+          
+          // Create a completely new message object to force Vue reactivity
+          const updatedMessage = {
+            ...message,
+            read_by: newReadBy
+          };
+          
+          // Replace the message in the array
+          messages.value[messageIndex] = updatedMessage;
+          
+          // Force Vue reactivity with multiple approaches
+          nextTick(() => {
+            // Force re-render by creating new array reference
+            messages.value = [...messages.value];
+            console.log('✅ Real-time: Message read status FORCEFULLY updated in UI');
+            console.log('✅ Real-time: New read_by count:', updatedMessage.read_by.length);
+          });
+          
+        } else {
+          // Fallback to old format for backwards compatibility
+          const currentReadBy = message.read_by ? [...message.read_by] : [];
+          
+          const reader = data.reader || {
+            id: data.user_id,
+            first_name: data.user_name?.split(' ')[0] || 'Unknown',
+            last_name: data.user_name?.split(' ')[1] || '',
+            profile_picture: data.user_profile_picture
+          };
+          
+          // Check if this user has already read this message
+          const existingReadIndex = currentReadBy.findIndex(r => r.id === reader.id);
+          
+          if (existingReadIndex === -1) {
+            // Add new read record
+            currentReadBy.push({
+              id: reader.id,
+              first_name: reader.first_name,
+              last_name: reader.last_name,
+              profile_picture: reader.profile_picture,
+              read_at: data.read_at
+            });
+            
+            console.log('👁️ Real-time: Added read status for user:', reader.first_name, 'to message:', data.message_id);
+          } else {
+            // Update existing read record
+            currentReadBy[existingReadIndex].read_at = data.read_at;
+            console.log('👁️ Real-time: Updated read status for user:', reader.first_name, 'on message:', data.message_id);
+          }
+          
+          // Create a completely new message object to force Vue reactivity
+          const updatedMessage = {
+            ...message,
+            read_by: currentReadBy
+          };
+          
+          // Replace the message in the array
+          messages.value[messageIndex] = updatedMessage;
+          
+          // Force Vue reactivity
+          nextTick(() => {
+            messages.value = [...messages.value];
+            console.log('✅ Real-time: Message read status updated in UI');
+          });
+        }
+      } else {
+        console.warn('👁️ Real-time: Message not found for read update:', data.message_id);
+        console.warn('👁️ Real-time: Available message IDs:', messages.value.map(m => m.id));
       }
     }
   };

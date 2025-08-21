@@ -58,6 +58,7 @@
         <div
           v-for="(message, index) in messages"
           :key="message.id"
+          :data-message-id="message.id"
           :class="[
             // Reduce spacing for reply threads
             isReplyMessage(message, index) ? 'mb-2' : 'mb-4'
@@ -74,7 +75,7 @@
 
         <!-- Individual Pinned Message Indicators (inside messages container) -->
         <div 
-          v-if="pinnedMessages.length > 0" 
+          v-if="pinnedMessages && pinnedMessages.length > 0" 
           class="pinned-indicators-container"
         >
           <div 
@@ -138,37 +139,30 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, watch, ref, nextTick, computed } from 'vue'
+import { defineProps, defineEmits, watch, ref, nextTick, computed, onMounted, onUnmounted } from 'vue'
 import MessageBubble from './MessageBubble.vue'
 import MessageInput from './MessageInput.vue'
+import api from '../../services/api'
 
 const props = defineProps({
   conversation: Object,
   messages: Array,
-  currentUser: Object
+  currentUser: Object,
+  privateWs: Object, // WebSocket for private chats
+  groupWs: Object,   // WebSocket for group chats
 })
 
-const emit = defineEmits(['send-message', 'message-action', 'toggle-chat-info'])
+const emit = defineEmits(['send-message', 'message-action', 'toggle-chat-info', 'message-read'])
 const messagesContainer = ref(null)
 
 // Reply state
 const replyingTo = ref(null)
 
-// Computed property for pinned messages
-const pinnedMessages = computed(() => {
-  return props.messages?.filter(message => message.is_pinned) || []
-})
+// Intersection observer for marking messages as read
+let intersectionObserver = null
+const readMessageIds = new Set()
 
-// Computed property for avatar URL (ensures reactivity)
-const avatarUrl = computed(() => {
-  if (props.conversation?.type === 'private') {
-    return getProfilePictureUrl(props.conversation.mate)
-  } else {
-    return getProfilePictureUrl(props.conversation?.group) || '/default-group.png'
-  }
-})
-
-// Safe profile picture helper (same logic as AlumniNavbar)
+// Safe profile picture helper
 const getProfilePictureUrl = (entity) => {
   const BASE_URL = 'http://127.0.0.1:8000'
   const pic = entity?.profile_picture || entity?.group_picture
@@ -177,32 +171,44 @@ const getProfilePictureUrl = (entity) => {
     : '/default-avatar.png'
 }
 
+// Computed property for avatar URL
+const avatarUrl = computed(() => {
+  return props.conversation.type === 'private'
+    ? getProfilePictureUrl(props.conversation.mate)
+    : getProfilePictureUrl(props.conversation.group)
+})
+
+// Computed property for pinned messages
+const pinnedMessages = computed(() => {
+  return props.messages?.filter(message => message.is_pinned) || []
+})
+
 // Online/Offline status helpers
 const getStatusColor = (user) => {
-  if (!user?.profile?.last_seen) return 'bg-gray-400'; // Default offline color
-  return isRecentlyActive(user) ? 'bg-green-500' : 'bg-gray-400';
+  if (!user?.profile?.last_seen) return 'bg-gray-400' // Default offline color
+  return isRecentlyActive(user) ? 'bg-green-500' : 'bg-gray-400'
 }
 
 const getStatusTextColor = (user) => {
-  return isRecentlyActive(user) ? 'text-green-600' : 'text-gray-500';
+  return isRecentlyActive(user) ? 'text-green-600' : 'text-gray-500'
 }
 
 const getStatusText = (user) => {
-  if (!user?.profile?.last_seen) return 'Offline';
-  return isRecentlyActive(user) ? 'Online' : 'Offline';
+  if (!user?.profile?.last_seen) return 'Offline'
+  return isRecentlyActive(user) ? 'Online' : 'Offline'
 }
 
 const isRecentlyActive = (user) => {
-  if (!user?.profile?.last_seen) return false;
-  const lastSeen = new Date(user.profile.last_seen);
-  const now = new Date();
-  const diffMinutes = (now - lastSeen) / (1000 * 60);
+  if (!user?.profile?.last_seen) return false
+  const lastSeen = new Date(user.profile.last_seen)
+  const now = new Date()
+  const diffMinutes = (now - lastSeen) / (1000 * 60)
   // Consider active if seen within last 2 minutes AND status is online
-  const isRecent = diffMinutes <= 2;
-  const isOnlineStatus = user.profile.status === 'online';
-  console.log(`ChatArea isRecentlyActive for user ${user.id}: lastSeen=${lastSeen.toISOString()}, diffMinutes=${diffMinutes.toFixed(2)}, status=${user.profile.status}, isRecent=${isRecent}, isOnlineStatus=${isOnlineStatus}`);
-  return isRecent && isOnlineStatus;
-};
+  const isRecent = diffMinutes <= 2
+  const isOnlineStatus = user.profile.status === 'online'
+  console.log(`ChatArea isRecentlyActive for user ${user.id}: lastSeen=${lastSeen.toISOString()}, diffMinutes=${diffMinutes.toFixed(2)}, status=${user.profile.status}, isRecent=${isRecent}, isOnlineStatus=${isOnlineStatus}`)
+  return isRecent && isOnlineStatus
+}
 
 const formatLastSeen = (lastSeen) => {
   if (!lastSeen) return ''
@@ -238,6 +244,160 @@ function scrollToBottom() {
     })
   }
 }
+
+// Mark message as read function
+const markMessageAsRead = async (messageId) => {
+  // Avoid duplicate API calls
+  if (readMessageIds.has(messageId)) return
+  
+  try {
+    readMessageIds.add(messageId)
+    console.log('📖 Marking message as read:', messageId)
+    
+    // Make the API call - Fixed URL path
+    const response = await api.post(`/message/mark-read/${messageId}/`)
+    console.log('✅ Marked message as read:', messageId, 'Response:', response.data)
+    
+    // Emit an event to parent to trigger immediate UI update
+    emit('message-read', { messageId, readBy: response.data.read_by })
+    
+  } catch (error) {
+    console.error('❌ Failed to mark message as read:', error)
+    readMessageIds.delete(messageId) // Remove from set if API call failed
+  }
+}
+
+// Setup intersection observer to detect when messages are visible
+const setupIntersectionObserver = () => {
+  if (intersectionObserver) {
+    intersectionObserver.disconnect()
+  }
+  
+  intersectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const messageElement = entry.target
+          const messageId = messageElement.dataset.messageId
+          const messageData = props.messages?.find(m => m.id === messageId)
+          
+          // Only mark as read if:
+          // 1. Message exists
+          // 2. Current user is not the sender
+          // 3. Message hasn't been read yet (for private messages) or user hasn't read it (for group messages)
+          if (messageData && messageData.sender?.id !== props.currentUser?.id) {
+            // For private messages, check is_read field
+            if (props.conversation?.type === 'private' && !messageData.is_read) {
+              markMessageAsRead(messageId)
+            }
+            // For group messages, check if current user is in read_by array
+            else if (props.conversation?.type === 'group') {
+              const hasRead = messageData.read_by?.some(user => user.id === props.currentUser?.id)
+              if (!hasRead) {
+                markMessageAsRead(messageId)
+              }
+            }
+          }
+        }
+      })
+    },
+    {
+      root: messagesContainer.value,
+      rootMargin: '0px',
+      threshold: 0.5 // Message needs to be 50% visible
+    }
+  )
+  
+  // Observe all message elements
+  if (messagesContainer.value) {
+    const messageElements = messagesContainer.value.querySelectorAll('[data-message-id]')
+    messageElements.forEach(element => {
+      intersectionObserver.observe(element)
+    })
+  }
+}
+
+// Cleanup intersection observer
+onUnmounted(() => {
+  if (intersectionObserver) {
+    intersectionObserver.disconnect()
+  }
+})
+
+// Setup observer when component mounts and when messages change
+onMounted(() => {
+  nextTick(() => {
+    setupIntersectionObserver()
+  })
+})
+
+// Re-setup observer when messages change
+watch(() => props.messages, () => {
+  nextTick(() => {
+    setupIntersectionObserver()
+  })
+}, { deep: true })
+
+// WebSocket listener for real-time read status updates
+function handleWebSocketMessage(event) {
+  try {
+    const data = JSON.parse(event.data)
+    
+    if (data.type === 'message_read_update') {
+      console.log('🔥 Received message_read_update:', data)
+      
+      // Find the message and update its read_by status
+      const messageIndex = props.messages?.findIndex(m => m.id === data.message_id)
+      if (messageIndex !== -1 && props.messages[messageIndex]) {
+        // Force reactivity by updating the message object
+        const updatedMessage = { ...props.messages[messageIndex] }
+        updatedMessage.read_by = data.read_by || []
+        
+        // Update the message in the array to trigger reactivity
+        props.messages.splice(messageIndex, 1, updatedMessage)
+        
+        console.log('✅ Updated message read status:', {
+          messageId: data.message_id,
+          readBy: updatedMessage.read_by
+        })
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error handling WebSocket message:', error)
+  }
+}
+
+// Set up WebSocket listeners for real-time updates
+watch(() => props.privateWs, (newWs, oldWs) => {
+  if (oldWs) {
+    oldWs.removeEventListener('message', handleWebSocketMessage)
+  }
+  if (newWs) {
+    newWs.addEventListener('message', handleWebSocketMessage)
+  }
+}, { immediate: true })
+
+watch(() => props.groupWs, (newWs, oldWs) => {
+  if (oldWs) {
+    oldWs.removeEventListener('message', handleWebSocketMessage)
+  }
+  if (newWs) {
+    newWs.addEventListener('message', handleWebSocketMessage)
+  }
+}, { immediate: true })
+
+// Cleanup WebSocket listeners on unmount
+onUnmounted(() => {
+  if (intersectionObserver) {
+    intersectionObserver.disconnect()
+  }
+  if (props.privateWs) {
+    props.privateWs.removeEventListener('message', handleWebSocketMessage)
+  }
+  if (props.groupWs) {
+    props.groupWs.removeEventListener('message', handleWebSocketMessage)
+  }
+})
 
 // Handle message actions from MessageBubble
 function handleMessageAction(actionData) {
@@ -362,13 +522,13 @@ watch(() => props.messages, (newMessages, oldMessages) => {
     const newMessagesWithReplies = newMessages.filter(m => 
       m.reply_to || m.reply_to_id && 
       !oldMessages.find(old => old.id === m.id)
-    );
+    )
     
     if (newMessagesWithReplies.length > 0) {
       console.log('✅ ChatArea: New messages with reply data detected:', newMessagesWithReplies.length)
       newMessagesWithReplies.forEach(msg => {
         console.log(`✅ ChatArea: Message ${msg.id} has reply_to:`, msg.reply_to ? 'YES' : 'NO')
-      });
+      })
     }
   }
   
@@ -377,11 +537,6 @@ watch(() => props.messages, (newMessages, oldMessages) => {
     scrollToBottom()
   })
 }, { immediate: true, deep: true })
-
-// Scroll to bottom when conversation changes
-watch(() => props.conversation, () => {
-  setTimeout(scrollToBottom, 100)
-}, { immediate: true })
 </script>
 
 <style scoped>

@@ -8,7 +8,8 @@ from .models import (
     Attachment,
     MessageReaction,  # Updated to use MessageReaction instead of Reaction
     LinkPreview,
-    GroupMemberRequest
+    GroupMemberRequest,
+    MessageRead  # Add MessageRead import
 )
 from auth_app.models import Profile  # Import Profile from auth_app
 
@@ -114,6 +115,14 @@ class LinkPreviewSerializer(serializers.ModelSerializer):
         model = LinkPreview
         fields = ['id', 'url', 'title', 'description', 'image_url', 'domain', 'created_at']
 
+# ✅ Message Read Serializer
+class MessageReadSerializer(serializers.ModelSerializer):
+    user = UserSearchSerializer(read_only=True)
+    
+    class Meta:
+        model = MessageRead
+        fields = ['id', 'user', 'read_at']
+
 # ✅ Message Serializer
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSearchSerializer(read_only=True)
@@ -124,6 +133,7 @@ class MessageSerializer(serializers.ModelSerializer):
     reactions = MessageReactionSerializer(many=True, read_only=True)
     reaction_stats = serializers.SerializerMethodField()  # Add reaction statistics
     link_previews = LinkPreviewSerializer(many=True, read_only=True)
+    read_by = serializers.SerializerMethodField()  # Add seen indicator data
 
     class Meta:
         model = Message
@@ -143,7 +153,8 @@ class MessageSerializer(serializers.ModelSerializer):
             'is_pinned',
             'reactions',
             'reaction_stats',  # Add reaction statistics
-            'link_previews'
+            'link_previews',
+            'read_by'  # Add seen indicator data
         ]
 
     def get_reaction_stats(self, obj):
@@ -184,6 +195,33 @@ class MessageSerializer(serializers.ModelSerializer):
             'reaction_counts': list(reaction_counts),
             'reactions_by_type': reactions_by_type
         }
+
+    def get_read_by(self, obj):
+        """Get users who have read this message (for seen indicators)"""
+        # For private messages, we use the simple is_read field
+        if obj.receiver:
+            if obj.is_read:
+                return [{
+                    'id': obj.receiver.id,
+                    'first_name': obj.receiver.first_name,
+                    'last_name': obj.receiver.last_name,
+                    'profile_picture': self.get_profile_picture_url(obj.receiver),
+                    'read_at': obj.timestamp.isoformat()  # Use message timestamp as fallback
+                }]
+            return []
+        
+        # For group messages, use MessageRead records
+        elif obj.group:
+            read_records = MessageRead.objects.filter(message=obj).select_related('user')
+            return [{
+                'id': record.user.id,
+                'first_name': record.user.first_name,
+                'last_name': record.user.last_name,
+                'profile_picture': self.get_profile_picture_url(record.user),
+                'read_at': record.read_at.isoformat()
+            } for record in read_records]
+        
+        return []
 
     def get_reply_to(self, obj):
         if obj.reply_to:

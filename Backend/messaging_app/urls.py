@@ -5,7 +5,7 @@ from .views import (
     ConversationUsersView, MessageRequestView, BlockUserView,
     PinMessageView, BumpMessageView, UploadView,
     GroupMemberRequestView, GroupMemberRequestManageView, ForwardMessageView,
-    MessageSearchView, MessageReactionView, MessageReactionsListView
+    MessageSearchView, MessageReactionView, MessageReactionsListView, MarkMessageAsReadView
 )
 
 urlpatterns = [
@@ -40,4 +40,7 @@ urlpatterns = [
     # === MESSAGE REACTIONS ===
     path('reactions/', MessageReactionView.as_view(), name='message_reactions'),
     path('reactions/<uuid:message_id>/', MessageReactionsListView.as_view(), name='message_reactions_list'),
+    
+    # === MESSAGE READ STATUS ===
+    path('mark-read/<uuid:message_id>/', MarkMessageAsReadView.as_view(), name='mark_message_read'),
 ]

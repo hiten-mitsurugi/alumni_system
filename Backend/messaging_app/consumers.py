@@ -1023,6 +1023,8 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
         await self.send_json({'type': 'chat_message', **event})
     async def message_request(self, event): 
         await self.send_json({'type': 'message_request', **event})
+    async def message_read_update(self, event): 
+        await self.send_json({'type': 'message_read_update', **event})
     async def reaction_added(self, event): 
         await self.send_json({'type': 'reaction_added', **event})
     async def message_reaction(self, event): 
@@ -1694,6 +1696,8 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         await self.send_json({'type': 'message_pinned', **event})
     async def user_typing(self, event): 
         await self.send_json({'type': 'user_typing', **event})
+    async def message_read_update(self, event): 
+        await self.send_json({'type': 'message_read_update', **event})
     async def user_stop_typing(self, event): 
         await self.send_json({'type': 'user_stop_typing', **event})
     async def member_request_notification(self, event): 

@@ -347,6 +347,14 @@
         class="mt-1 -mb-1"
       />
       
+      <!-- Seen Indicators - Show who has read the message -->
+      <SeenIndicators
+        v-if="message.read_by && message.read_by.length > 0"
+        :readBy="message.read_by"
+        :currentUserId="currentUser.id"
+        class="mt-1"
+      />
+      
       <!-- Reaction Picker Popup (positioned absolutely) -->
       <MessageReactionPicker
         :showPicker="showReactionPicker"
@@ -381,6 +389,7 @@ import { computed, ref, watch } from 'vue'
 import MessageContextMenu from './MessageContextMenu.vue'
 import MessageReactions from '../MessageReactions.vue'
 import MessageReactionPicker from '../MessageReactionPicker.vue'
+import SeenIndicators from './SeenIndicators.vue'
 import api from '../../services/api'
 
 const props = defineProps({
