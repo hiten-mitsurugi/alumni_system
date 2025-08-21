@@ -76,13 +76,22 @@ class ConversationListView(APIView):
         from django.db.models import F, Max, Q
         
         current_user = request.user
+        
+        # 🚀 SPEED: Try to get cached conversations first
+        cache_key = f"user_conversations_{current_user.id}"
+        cached_conversations = cache.get(cache_key)
+        
+        if cached_conversations:
+            logger.info(f"🚀 Cache HIT: Returning cached conversations for user {current_user.id}")
+            return Response(cached_conversations, status=status.HTTP_200_OK)
 
         # Get all users blocked by current user (for marking blocked status)
-        blocked_user_ids = BlockedUser.objects.filter(user=current_user).values_list('blocked_user_id', flat=True)
+        blocked_user_ids = set(BlockedUser.objects.filter(user=current_user).values_list('blocked_user_id', flat=True))
         
         # Get all users who blocked current user (for marking blocked status)
-        blocked_by_user_ids = BlockedUser.objects.filter(blocked_user=current_user).values_list('user_id', flat=True)
+        blocked_by_user_ids = set(BlockedUser.objects.filter(blocked_user=current_user).values_list('user_id', flat=True))
 
+        # 🚀 SPEED: Optimized query with select_related and prefetch_related
         # Get conversations from both sent and received messages (DO NOT filter out blocked users)
         sent_conversations = Message.objects.filter(
             sender=current_user,
@@ -110,59 +119,86 @@ class ConversationListView(APIView):
             if user_id not in conversation_dict or conv['last_message_time'] > conversation_dict[user_id]['last_message_time']:
                 conversation_dict[user_id] = conv
 
+        # 🚀 SPEED: Batch fetch all users at once to reduce DB queries
+        user_ids = list(conversation_dict.keys())
+        users_data = User.objects.filter(id__in=user_ids).select_related('profile').values(
+            'id', 'username', 'first_name', 'last_name', 'profile_picture',
+            'profile__status', 'profile__last_seen'
+        )
+        users_dict = {user['id']: user for user in users_data}
+
+        # 🚀 SPEED: Batch fetch latest messages for all conversations
+        latest_messages_qs = Message.objects.filter(
+            Q(sender=current_user, receiver_id__in=user_ids) |
+            Q(sender_id__in=user_ids, receiver=current_user)
+        ).select_related('sender', 'receiver').order_by('receiver_id', 'sender_id', '-timestamp')
+        
+        # Group latest messages by conversation
+        latest_messages_dict = {}
+        for msg in latest_messages_qs:
+            # Determine the other user
+            other_user_id = msg.receiver_id if msg.sender_id == current_user.id else msg.sender_id
+            
+            # Only keep the latest message for each conversation
+            if other_user_id not in latest_messages_dict:
+                latest_messages_dict[other_user_id] = msg
+
+        # 🚀 SPEED: Batch count unread messages for all conversations
+        unread_counts = Message.objects.filter(
+            sender_id__in=user_ids,
+            receiver=current_user,
+            is_read=False
+        ).values('sender_id').annotate(unread_count=F('id')).values_list('sender_id', 'unread_count')
+        unread_dict = {sender_id: count for sender_id, count in unread_counts}
+
         # Get conversation details for each user
         conversations = []
         for user_id, conv_data in conversation_dict.items():
-            try:
-                other_user = User.objects.get(id=user_id)
-                
-                # Get the latest message between these users
-                latest_message = Message.objects.filter(
-                    Q(sender=current_user, receiver=other_user) |
-                    Q(sender=other_user, receiver=current_user)
-                ).order_by('-timestamp').first()
-
-                if latest_message:
-                    # Build absolute URL for profile picture
-                    profile_picture_url = None
-                    if other_user.profile_picture:
-                        profile_picture_url = request.build_absolute_uri(other_user.profile_picture.url)
-                    
-                    # Check blocking status
-                    is_blocked_by_me = other_user.id in blocked_user_ids
-                    is_blocked_by_them = other_user.id in blocked_by_user_ids
-                    
-                    # Create conversation object
-                    conversation = {
-                        'type': 'private',
-                        'mate': {
-                            'id': other_user.id,
-                            'username': other_user.username,
-                            'first_name': other_user.first_name,
-                            'last_name': other_user.last_name,
-                            'profile_picture': profile_picture_url,
-                            'profile': {
-                                'status': getattr(other_user.profile, 'status', 'offline') if hasattr(other_user, 'profile') else 'offline',
-                                'last_seen': getattr(other_user.profile, 'last_seen', None) if hasattr(other_user, 'profile') else None,
-                            }
-                        },
-                        'lastMessage': latest_message.content[:50] + ('...' if len(latest_message.content) > 50 else ''),
-                        'timestamp': latest_message.timestamp.isoformat(),
-                        'unreadCount': Message.objects.filter(
-                            sender=other_user,
-                            receiver=current_user,
-                            is_read=False
-                        ).count(),
-                        'isBlockedByMe': is_blocked_by_me,
-                        'isBlockedByThem': is_blocked_by_them,
-                        'canSendMessage': not (is_blocked_by_me or is_blocked_by_them)
-                    }
-                    conversations.append(conversation)
-            except User.DoesNotExist:
+            if user_id not in users_dict:
                 continue
+                
+            other_user_data = users_dict[user_id]
+            latest_message = latest_messages_dict.get(user_id)
+
+            if latest_message:
+                # Build absolute URL for profile picture
+                profile_picture_url = None
+                if other_user_data['profile_picture']:
+                    profile_picture_url = request.build_absolute_uri(other_user_data['profile_picture'])
+                
+                # Check blocking status
+                is_blocked_by_me = user_id in blocked_user_ids
+                is_blocked_by_them = user_id in blocked_by_user_ids
+                
+                # Create conversation object
+                conversation = {
+                    'type': 'private',
+                    'mate': {
+                        'id': user_id,
+                        'username': other_user_data['username'],
+                        'first_name': other_user_data['first_name'],
+                        'last_name': other_user_data['last_name'],
+                        'profile_picture': profile_picture_url,
+                        'profile': {
+                            'status': other_user_data.get('profile__status', 'offline'),
+                            'last_seen': other_user_data.get('profile__last_seen'),
+                        }
+                    },
+                    'lastMessage': latest_message.content[:50] + ('...' if len(latest_message.content) > 50 else ''),
+                    'timestamp': latest_message.timestamp.isoformat(),
+                    'unreadCount': unread_dict.get(user_id, 0),
+                    'isBlockedByMe': is_blocked_by_me,
+                    'isBlockedByThem': is_blocked_by_them,
+                    'canSendMessage': not (is_blocked_by_me or is_blocked_by_them)
+                }
+                conversations.append(conversation)
 
         # Sort by timestamp (newest first)
         conversations.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        # 🚀 SPEED: Cache for 10 seconds (conversations change frequently)
+        cache.set(cache_key, conversations, 10)
+        logger.info(f"🚀 Cache MISS: Cached conversations for user {current_user.id}")
 
         return Response(conversations, status=status.HTTP_200_OK)
 
@@ -257,6 +293,17 @@ class SendMessageView(APIView):
             except Exception as e:
                 logger.error(f"Failed to create link previews for message {message.id}: {str(e)}")
             
+            # 🚀 SPEED: Invalidate caches after sending message
+            # Clear conversation caches for both sender and receiver
+            cache.delete(f"user_conversations_{request.user.id}")
+            cache.delete(f"user_conversations_{receiver.id}")
+            
+            # Clear message cache for this conversation
+            user_ids = sorted([request.user.id, receiver.id])
+            cache.delete(f"private_messages_{user_ids[0]}_{user_ids[1]}")
+            
+            logger.info(f"🚀 Cache invalidated after message sent from {request.user.id} to {receiver.id}")
+            
             serializer = MessageSerializer(message)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -265,41 +312,81 @@ class MessageListView(APIView):
     
     def get(self, request, receiver_id=None, group_id=None):
         if group_id:
-            # Handle group messages
+            # Handle group messages with Redis caching
             try:
                 group = GroupChat.objects.get(id=group_id)
                 # Check if user is a member of the group
                 if request.user not in group.members.all():
                     return Response({"error": "You are not a member of this group"}, status=status.HTTP_403_FORBIDDEN)
                 
-                # Fetch group messages
-                messages = Message.objects.filter(group=group).order_by("timestamp")
+                # 🚀 SPEED: Try to get cached group messages first
+                cache_key = f"group_messages_{group_id}_{request.user.id}"
+                cached_messages = cache.get(cache_key)
+                
+                if cached_messages:
+                    logger.info(f"🚀 Cache HIT: Returning cached group messages for group {group_id}")
+                    return Response(cached_messages)
+                
+                # Fetch group messages with optimized query
+                messages = Message.objects.filter(group=group).select_related(
+                    'sender', 'sender__profile', 'reply_to', 'reply_to__sender'
+                ).prefetch_related(
+                    'attachments', 'reactions', 'reactions__user'
+                ).order_by("timestamp")
+                
                 serializer = MessageSerializer(messages, many=True, context={'request': request})
-                return Response(serializer.data)
+                serialized_data = serializer.data
+                
+                # 🚀 SPEED: Cache for 30 seconds (messages change frequently)
+                cache.set(cache_key, serialized_data, 30)
+                logger.info(f"🚀 Cache MISS: Cached group messages for group {group_id}")
+                
+                return Response(serialized_data)
                 
             except GroupChat.DoesNotExist:
                 return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
         
         elif receiver_id:
-            # Handle private messages
+            # Handle private messages with Redis caching
             try:
                 receiver = User.objects.get(id=receiver_id)
             except (User.DoesNotExist, ValueError):
                 return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+            # 🚀 SPEED: Try to get cached private messages first
+            # Use sorted IDs to ensure same cache key regardless of sender/receiver order
+            user_ids = sorted([request.user.id, receiver_id])
+            cache_key = f"private_messages_{user_ids[0]}_{user_ids[1]}"
+            cached_messages = cache.get(cache_key)
+            
+            if cached_messages:
+                logger.info(f"🚀 Cache HIT: Returning cached private messages for users {user_ids}")
+                return Response(cached_messages)
+
             # Don't block message viewing - let users see their conversation history
             # Only block sending new messages (handled in SendMessageView)
             
-            # Fetch messages
+            # Fetch messages with optimized query
             messages = Message.objects.filter(
                 sender=request.user, receiver=receiver
             ) | Message.objects.filter(
                 sender=receiver, receiver=request.user
             )
-            messages = messages.order_by("timestamp")
+            messages = messages.select_related(
+                'sender', 'sender__profile', 'receiver', 'receiver__profile', 
+                'reply_to', 'reply_to__sender'
+            ).prefetch_related(
+                'attachments', 'reactions', 'reactions__user'
+            ).order_by("timestamp")
 
             serializer = MessageSerializer(messages, many=True, context={'request': request})
-            return Response(serializer.data)
+            serialized_data = serializer.data
+            
+            # 🚀 SPEED: Cache for 30 seconds (messages change frequently)
+            cache.set(cache_key, serialized_data, 30)
+            logger.info(f"🚀 Cache MISS: Cached private messages for users {user_ids}")
+            
+            return Response(serialized_data)
         
         else:
             return Response({"error": "Either receiver_id or group_id must be provided"}, status=status.HTTP_400_BAD_REQUEST)
@@ -760,15 +847,27 @@ class GroupChatListView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         current_user = request.user
-        groups = GroupChat.objects.filter(members=current_user)
+        
+        # 🚀 SPEED: Try to get cached group conversations first
+        cache_key = f"user_group_conversations_{current_user.id}"
+        cached_groups = cache.get(cache_key)
+        
+        if cached_groups:
+            logger.info(f"🚀 Cache HIT: Returning cached group conversations for user {current_user.id}")
+            return Response(cached_groups)
+        
+        # 🚀 SPEED: Optimized query with prefetch_related
+        groups = GroupChat.objects.filter(members=current_user).prefetch_related(
+            'members', 'admins'
+        ).select_related()
         
         # Transform groups to include unread count and last message info
         group_conversations = []
         for group in groups:
-            # Get the latest message in this group
-            latest_message = Message.objects.filter(group=group).order_by('-timestamp').first()
+            # 🚀 SPEED: Get the latest message in this group
+            latest_message = Message.objects.filter(group=group).select_related('sender').order_by('-timestamp').first()
             
-            # Calculate unread count for this user in this group
+            # 🚀 SPEED: Calculate unread count for this user in this group
             # Similar to private messages: count messages from others that this user hasn't "read"
             # A message is considered "read" if there's a MessageRead record for this user
             unread_messages = Message.objects.filter(
@@ -812,6 +911,10 @@ class GroupChatListView(APIView):
         
         # Sort by timestamp (newest first)
         group_conversations.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        # 🚀 SPEED: Cache for 10 seconds (group conversations change frequently)
+        cache.set(cache_key, group_conversations, 10)
+        logger.info(f"🚀 Cache MISS: Cached group conversations for user {current_user.id}")
         
         return Response(group_conversations)
 

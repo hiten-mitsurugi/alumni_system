@@ -4,7 +4,7 @@
  
  <!-- 📱 MOBILE: Back Button Overlay (only visible on mobile when in chat view) -->
  <div v-if="isMobile && currentMobileView === 'chat'" 
- class="absolute top-4 left-4 z-50 md:hidden">
+ class="absolute top-20 left-4 z-50 md:hidden">
  <button @click="goBackMobile" 
  class="p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200">
  <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,10 +92,13 @@
  <div class="flex-1 overflow-y-auto">
  <div v-for="conversation in filteredConversations" :key="conversation.id"
  @click="selectConversation(conversation)"
+ @mouseenter="prefetchMessages(conversation)"
  :class="[
- 'flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-white conversation-item panel-transition',
+ 'relative flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-150 hover:bg-white conversation-item panel-transition touch-manipulation',
  selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : (conversation.unreadCount > 0 ? 'bg-green-50' : 'hover:shadow-sm')
- ]">
+ ]"
+ style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
+ 
  <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-4">
  <img :src="getProfilePictureUrl(conversation.mate)" class="w-12 h-12 rounded-full object-cover" />
  <!-- Blocked indicator -->
@@ -474,21 +477,83 @@ const fetchConversations = async () => {
  }
 };
 
-const fetchMessages = async conv => {
- try {
- const data = conv.type === 'private'
- ? await messagingService.getMessages(conv.mate.id)
- : await messagingService.getGroupMessages(conv.group?.id);
- messages.value = data;
- } catch (e) { 
- console.error('Messages fetch error', e);
- // Handle blocking-related errors
- if (e.response?.status === 403) {
- console.log('Cannot access messages due to blocking');
- messages.value = [];
- // Don't show alert - just silently handle the blocking
- // The chat area will show the blocking message instead
+// 🚀 SPEED: Message cache and prefetch functionality
+const messageCache = new Map();
+const prefetchedConversations = new Set();
+
+// 🚀 SPEED: Prefetch messages on hover for instant loading (desktop only)
+const prefetchMessages = async (conv) => {
+ // Skip prefetch on mobile to save bandwidth and battery
+ if (isMobile.value) return;
+ 
+ const cacheKey = conv.type === 'private' ? `private_${conv.mate.id}` : `group_${conv.group?.id}`;
+ 
+ // Skip if already prefetched or currently selected
+ if (prefetchedConversations.has(cacheKey) || selectedConversation.value?.id === conv.id) {
+   return;
  }
+ 
+ try {
+   const data = conv.type === 'private'
+     ? await messagingService.getMessages(conv.mate.id)
+     : await messagingService.getGroupMessages(conv.group?.id);
+   
+   messageCache.set(cacheKey, data);
+   prefetchedConversations.add(cacheKey);
+   console.log(`🚀 Prefetched messages for ${cacheKey}`);
+ } catch (e) {
+   console.log('Prefetch failed (silent):', e);
+ }
+};
+
+// 🚀 SPEED: Enhanced fetchMessages with cache support
+const fetchMessages = async conv => {
+ const cacheKey = conv.type === 'private' ? `private_${conv.mate.id}` : `group_${conv.group?.id}`;
+ 
+ // Check cache first for instant loading
+ if (messageCache.has(cacheKey)) {
+   console.log(`🚀 Cache HIT: Loading messages from cache for ${cacheKey}`);
+   messages.value = messageCache.get(cacheKey);
+   
+   // Refresh in background and update cache
+   setTimeout(async () => {
+     try {
+       const freshData = conv.type === 'private'
+         ? await messagingService.getMessages(conv.mate.id)
+         : await messagingService.getGroupMessages(conv.group?.id);
+       
+       messageCache.set(cacheKey, freshData);
+       // Only update UI if this conversation is still selected
+       if (selectedConversation.value?.id === conv.id) {
+         messages.value = freshData;
+       }
+     } catch (e) {
+       console.log('Background refresh failed:', e);
+     }
+   }, 100);
+   
+   return;
+ }
+ 
+ // Cache miss - fetch normally
+ try {
+   console.log(`🚀 Cache MISS: Fetching messages for ${cacheKey}`);
+   const data = conv.type === 'private'
+     ? await messagingService.getMessages(conv.mate.id)
+     : await messagingService.getGroupMessages(conv.group?.id);
+   
+   messages.value = data;
+   messageCache.set(cacheKey, data);
+   prefetchedConversations.add(cacheKey);
+ } catch (e) { 
+   console.error('Messages fetch error', e);
+   // Handle blocking-related errors
+   if (e.response?.status === 403) {
+     console.log('Cannot access messages due to blocking');
+     messages.value = [];
+     // Don't show alert - just silently handle the blocking
+     // The chat area will show the blocking message instead
+   }
  }
 };
 
@@ -685,17 +750,23 @@ async function selectConversation(conv) {
  
  console.log('Messaging.vue: Selecting conversation:', conv.id);
  
- // 🔧 FIX: Optimize conversation switching to reduce lag
+ // � IMMEDIATE FEEDBACK: Set loading state and show selected conversation immediately
+
  selectedConversation.value = conv;
+ 
+ // 📱 MOBILE: Switch to chat view immediately for faster perceived performance
+ if (isMobile.value) {
+ currentMobileView.value = 'chat';
+ }
  
  // Clear messages immediately to prevent showing wrong messages during load
  messages.value = [];
  
  try {
- // 🔧 FIX: Fetch messages with timeout to prevent hanging
+ // � INSTANT: Fetch messages with aggressive timeout
  const fetchPromise = fetchMessages(conv);
  const timeoutPromise = new Promise((_, reject) => 
- setTimeout(() => reject(new Error('Message fetch timeout')), 10000)
+ setTimeout(() => reject(new Error('Message fetch timeout')), 2000)
  );
  
  await Promise.race([fetchPromise, timeoutPromise]);
@@ -738,11 +809,12 @@ async function selectConversation(conv) {
  } catch (error) {
  console.error('🔔 Messaging.vue: Failed to refresh notification counts:', error);
  }
- }, 100); // Reduced delay from 1000ms to 100ms for faster response
+ }, 1); // Instant notification refresh
  
  } catch (error) {
  console.error('Error selecting conversation:', error);
  // Don't break the UI if conversation selection fails
+ } finally {
  }
  
  // 📱 MOBILE: Switch to chat view when a conversation is selected
@@ -1716,6 +1788,14 @@ function handleWsMessage(data, scope) {
  // Add the new message
  messages.value.push(newMessage);
  
+ // 🚀 SPEED: Invalidate cache when new message arrives
+ const cacheKey = `private_${data.message.sender.id === userId.value ? data.message.receiver.id : data.message.sender.id}`;
+ if (messageCache.has(cacheKey)) {
+   messageCache.delete(cacheKey);
+   prefetchedConversations.delete(cacheKey);
+   console.log(`🚀 Cache invalidated for ${cacheKey} due to new message`);
+ }
+ 
  // 🔧 FIX: Optimized reactivity update to reduce lag
  nextTick(() => {
  // Only trigger reactivity if needed - reduced frequency to prevent lag
@@ -1760,6 +1840,14 @@ function handleWsMessage(data, scope) {
  }
  
  messages.value.push(data.message);
+ 
+ // 🚀 SPEED: Invalidate group cache when new message arrives
+ const groupCacheKey = `group_${data.message.group}`;
+ if (messageCache.has(groupCacheKey)) {
+   messageCache.delete(groupCacheKey);
+   prefetchedConversations.delete(groupCacheKey);
+   console.log(`🚀 Cache invalidated for ${groupCacheKey} due to new group message`);
+ }
  
  // 🔧 FIX: Optimized reactivity for group messages
  nextTick(() => {
@@ -2655,6 +2743,17 @@ onUnmounted(() => {
  .conversation-item {
  min-height: 72px;
  padding: 16px;
+ position: relative;
+ touch-action: manipulation;
+ -webkit-tap-highlight-color: transparent;
+ user-select: none;
+ -webkit-user-select: none;
+ }
+ 
+ /* Fast mobile response - enhanced active state */
+ .conversation-item:active {
+ background-color: #e2e8f0;
+ transform: scale(0.98);
  }
  
  /* Mobile header adjustments */
