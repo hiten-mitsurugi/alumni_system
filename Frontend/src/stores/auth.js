@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('auth', {
     token: localStorage.getItem('access_token') || null,  // ✅ updated
     refreshToken: localStorage.getItem('refresh_token') || null,
     user: JSON.parse(localStorage.getItem('user')) || null,
+    isRefreshing: false, // Add flag to prevent multiple refresh attempts
   }),
 
   actions: {
@@ -25,6 +26,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null;
       this.refreshToken = null;
       this.user = null;
+      this.isRefreshing = false; // Reset refresh flag
       localStorage.removeItem('access_token');            // ✅ updated
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
@@ -91,19 +93,41 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async tryRefreshToken() {
-      if (!this.refreshToken) return false;
+      if (!this.refreshToken) {
+        console.log('No refresh token available');
+        return false;
+      }
+
+      // Prevent multiple simultaneous refresh attempts
+      if (this.isRefreshing) {
+        console.log('Token refresh already in progress');
+        return false;
+      }
 
       try {
+        this.isRefreshing = true;
+        console.log('Attempting to refresh token...');
+        
         const response = await api.post('/token/refresh/', {
           refresh: this.refreshToken,
         });
 
         const newAccess = response.data.access;
         this.setToken(newAccess, this.refreshToken);
+        console.log('Token refreshed successfully');
         return true;
       } catch (error) {
         console.error('Token refresh failed:', error);
+        
+        // If refresh fails, clear all tokens to prevent infinite loops
+        if (error.response?.status === 401) {
+          console.log('Refresh token is invalid, clearing all tokens');
+          this.logout();
+        }
+        
         return false;
+      } finally {
+        this.isRefreshing = false;
       }
     },
   },

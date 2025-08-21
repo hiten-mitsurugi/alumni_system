@@ -27,9 +27,10 @@ api.interceptors.response.use(
       // Handle 401 errors (authentication failures)
       error.config._retry = true;
       const authStore = useAuthStore();
-      const newToken = await authStore.tryRefreshToken();
-      if (newToken) {
-        error.config.headers.Authorization = `Bearer ${newToken}`;
+      const refreshSuccess = await authStore.tryRefreshToken();
+      if (refreshSuccess) {
+        // Use the updated token from the store
+        error.config.headers.Authorization = `Bearer ${authStore.token}`;
         return api(error.config); // Retry with new token
       } else {
         authStore.logout();
@@ -48,9 +49,10 @@ api.interceptors.response.use(
         // Only try refresh for actual auth-related 403 errors
         error.config._retry = true;
         const authStore = useAuthStore();
-        const newToken = await authStore.tryRefreshToken();
-        if (newToken) {
-          error.config.headers.Authorization = `Bearer ${newToken}`;
+        const refreshSuccess = await authStore.tryRefreshToken();
+        if (refreshSuccess) {
+          // Use the updated token from the store
+          error.config.headers.Authorization = `Bearer ${authStore.token}`;
           return api(error.config); // Retry with new token
         } else {
           authStore.logout();

@@ -1,7 +1,7 @@
 <template>
   <div class="flex-1 flex flex-col">
     <!-- Header with user/group info -->
-    <div class="p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-600 flex items-center justify-between transition-colors duration-200">
+    <div class="p-4 bg-white  border-b border-gray-200  flex items-center justify-between transition-colors duration-200">
       <div class="flex items-center gap-3">
         <!-- Safe avatar with status indicator -->
         <div class="relative">
@@ -18,7 +18,7 @@
         </div>
         <div>
           <!-- Safe name -->
-                    <h3 class="font-semibold text-gray-900 dark:text-slate-100">
+                    <h3 class="font-semibold text-gray-900 ">
             {{
               conversation.type === 'private'
                 ? `${conversation.mate.first_name} ${conversation.mate.last_name}`
@@ -50,7 +50,7 @@
     <!-- Messages -->
     <div 
       ref="messagesContainer"
-      class="flex-1 overflow-y-auto p-4 chat-messages-container bg-gray-50 dark:bg-slate-900 transition-colors duration-200"
+      class="flex-1 overflow-y-auto p-4 chat-messages-container bg-gray-50  transition-colors duration-200"
       style="min-height: 0; max-height: calc(100vh - 300px);"
     >
       <!-- Messages Display -->
@@ -100,7 +100,7 @@
     </div>
 
     <!-- Message input or blocked indicator -->
-    <div class="flex-shrink-0 border-t border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 transition-colors duration-200">
+    <div class="flex-shrink-0 border-t border-gray-200  bg-white  p-2 transition-colors duration-200">
       <!-- Show blocked message if conversation is blocked -->
       <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem" 
            class="p-4 text-center">
