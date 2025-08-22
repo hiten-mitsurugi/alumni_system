@@ -121,11 +121,8 @@ class ConversationListView(APIView):
 
         # 🚀 SPEED: Batch fetch all users at once to reduce DB queries
         user_ids = list(conversation_dict.keys())
-        users_data = User.objects.filter(id__in=user_ids).select_related('profile').values(
-            'id', 'username', 'first_name', 'last_name', 'profile_picture',
-            'profile__status', 'profile__last_seen'
-        )
-        users_dict = {user['id']: user for user in users_data}
+        users_queryset = User.objects.filter(id__in=user_ids).select_related('profile')
+        users_dict = {user.id: user for user in users_queryset}
 
         # 🚀 SPEED: Batch fetch latest messages for all conversations
         latest_messages_qs = Message.objects.filter(
@@ -144,11 +141,12 @@ class ConversationListView(APIView):
                 latest_messages_dict[other_user_id] = msg
 
         # 🚀 SPEED: Batch count unread messages for all conversations
+        from django.db.models import Count
         unread_counts = Message.objects.filter(
             sender_id__in=user_ids,
             receiver=current_user,
             is_read=False
-        ).values('sender_id').annotate(unread_count=F('id')).values_list('sender_id', 'unread_count')
+        ).values('sender_id').annotate(unread_count=Count('id')).values_list('sender_id', 'unread_count')
         unread_dict = {sender_id: count for sender_id, count in unread_counts}
 
         # Get conversation details for each user
@@ -157,14 +155,14 @@ class ConversationListView(APIView):
             if user_id not in users_dict:
                 continue
                 
-            other_user_data = users_dict[user_id]
+            other_user = users_dict[user_id]
             latest_message = latest_messages_dict.get(user_id)
 
             if latest_message:
                 # Build absolute URL for profile picture
                 profile_picture_url = None
-                if other_user_data['profile_picture']:
-                    profile_picture_url = request.build_absolute_uri(other_user_data['profile_picture'])
+                if other_user.profile_picture:
+                    profile_picture_url = request.build_absolute_uri(other_user.profile_picture.url)
                 
                 # Check blocking status
                 is_blocked_by_me = user_id in blocked_user_ids
@@ -175,13 +173,13 @@ class ConversationListView(APIView):
                     'type': 'private',
                     'mate': {
                         'id': user_id,
-                        'username': other_user_data['username'],
-                        'first_name': other_user_data['first_name'],
-                        'last_name': other_user_data['last_name'],
+                        'username': other_user.username,
+                        'first_name': other_user.first_name,
+                        'last_name': other_user.last_name,
                         'profile_picture': profile_picture_url,
                         'profile': {
-                            'status': other_user_data.get('profile__status', 'offline'),
-                            'last_seen': other_user_data.get('profile__last_seen'),
+                            'status': getattr(other_user.profile, 'status', 'offline') if hasattr(other_user, 'profile') and other_user.profile else 'offline',
+                            'last_seen': getattr(other_user.profile, 'last_seen', None) if hasattr(other_user, 'profile') and other_user.profile else None,
                         }
                     },
                     'lastMessage': latest_message.content[:50] + ('...' if len(latest_message.content) > 50 else ''),

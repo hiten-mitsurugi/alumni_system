@@ -1304,6 +1304,21 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                 logger.info(f"Created mentions for {len(mentioned_users)} users in group message {message.id}")
                 await send_mention_notifications(self.channel_layer, mentioned_users, message, self.group)
             
+            # 🚀 SPEED: Invalidate Redis caches after sending group message
+            @database_sync_to_async
+            def _invalidate_caches():
+                from django.core.cache import cache
+                
+                # Clear group conversation caches for all members
+                for member in self.group.members.all():
+                    cache.delete(f"user_conversations_{member.id}")
+                    # Clear group message cache for each member
+                    cache.delete(f"group_messages_{self.group.id}_{member.id}")
+                
+                logger.info(f"🚀 Cache invalidated after group message sent to group {self.group.id}")
+            
+            await _invalidate_caches()
+            
             # Serialize and broadcast to group
             serialized = await self.serialize_message(message)
             await self.channel_layer.group_send(

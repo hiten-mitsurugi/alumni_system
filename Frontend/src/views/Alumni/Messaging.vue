@@ -100,7 +100,10 @@
  style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
  
  <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-4">
- <img :src="getProfilePictureUrl(conversation.mate)" class="w-12 h-12 rounded-full object-cover" />
+ <img :src="getProfilePictureUrl(conversation.mate)" 
+      @error="$event.target.src = '/default-avatar.png'"
+      class="w-12 h-12 rounded-full object-cover" 
+      :alt="`${conversation.mate.first_name} ${conversation.mate.last_name}`" />
  <!-- Blocked indicator -->
  <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem" 
  class="absolute -bottom-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
@@ -114,8 +117,10 @@
  </div>
 
  <div v-else class="relative flex-shrink-0 mr-4">
- <img :src="getProfilePictureUrl(conversation.group) || '/default-group.png'" alt="Group Avatar"
- class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
+ <img :src="getProfilePictureUrl(conversation.group) || '/default-avatar.png'" 
+      @error="$event.target.src = '/default-avatar.png'"
+      alt="Group Avatar"
+      class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
  </div>
  <div class="flex-1 min-w-0">
  <div class="flex items-center justify-between mb-1">
@@ -360,10 +365,28 @@ const debugError = console.error; // Always log errors
 // === Helper to always return correct avatar URL for user/group (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
  const BASE_URL = 'http://127.0.0.1:8000'
- const pic = entity?.profile_picture || entity?.group_picture
+ 
+ // Handle different entity types
+ let pic = null;
+ 
+ if (entity?.profile_picture) {
+   // For users (private conversations)
+   pic = entity.profile_picture;
+ } else if (entity?.group_picture) {
+   // For groups (group conversations)
+   pic = entity.group_picture;
+ }
+ 
+ // Debug logging
+ console.log('🖼️ Avatar Debug:', {
+   entity,
+   pic,
+   finalUrl: pic ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`) : '/default-avatar.png'
+ });
+ 
  return pic
- ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
- : '/default-avatar.png'
+   ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
+   : '/default-avatar.png'
 };
 
 // === COMPUTED ===
