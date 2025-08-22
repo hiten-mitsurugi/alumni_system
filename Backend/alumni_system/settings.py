@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'auth_app',
     'posts_app',
     'messaging_app',
+    'survey_app',  # NEW - Dynamic Survey System
 ]
 
 # === Middleware ===
@@ -209,4 +210,15 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+# === Survey System Configuration ===
+SURVEY_CONFIG = {
+    'MODE': 'hybrid',  # Options: 'static', 'dynamic', 'hybrid'
+    'ENABLE_DYNAMIC_ADMIN': True,  # Enable admin interface for survey management
+    'PRESERVE_STATIC_DATA': True,  # Keep existing static survey data
+    'AUTO_MIGRATE_RESPONSES': False,  # Automatic migration from static to dynamic
+    'CACHE_TIMEOUT': 1800,  # Cache timeout for survey data (30 minutes)
+    'MAX_QUESTIONS_PER_CATEGORY': 50,  # Limit questions per category
+    'ENABLE_ANALYTICS': True,  # Enable survey analytics
 }

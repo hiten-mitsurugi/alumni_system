@@ -2,9 +2,9 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import PostCard from '@/components/PostCard.vue';
+import PostCard from '@/components/admin/PostCard.vue';
 import axios from 'axios';
-import CreatePostModal from '@/components/CreatePostModal.vue';
+import CreatePostModal from '@/components/admin/CreatePostModal.vue';
 import { websocketService } from '@/services/websocket';
 
 const router = useRouter();

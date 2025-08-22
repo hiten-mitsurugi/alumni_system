@@ -387,10 +387,10 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import MessageContextMenu from './MessageContextMenu.vue'
-import MessageReactions from '../MessageReactions.vue'
-import MessageReactionPicker from '../MessageReactionPicker.vue'
+import MessageReactions from './MessageReactions.vue'
+import MessageReactionPicker from './MessageReactionPicker.vue'
 import SeenIndicators from './SeenIndicators.vue'
-import api from '../../services/api'
+import api from '@/services/api'
 import { highlightMentions } from '@/utils/mentions'
 
 const props = defineProps({

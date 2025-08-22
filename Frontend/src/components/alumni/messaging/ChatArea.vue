@@ -145,7 +145,7 @@
 import { defineProps, defineEmits, watch, ref, nextTick, computed, onMounted, onUnmounted } from 'vue'
 import MessageBubble from './MessageBubble.vue'
 import MessageInput from './MessageInput.vue'
-import api from '../../services/api'
+import api from '@/services/api'
 
 const props = defineProps({
   conversation: Object,

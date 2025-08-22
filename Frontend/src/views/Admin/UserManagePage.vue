@@ -1,11 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import api from '@/services/api';
-import UserFilters from '@/components/UserFilters.vue';
-import ApprovedUsersTable from '@/components/ApprovedUsersTable.vue';
+import UserFilters from '@/components/admin/UserFilters.vue';
+import ApprovedUsersTable from '@/components/admin/ApprovedUsersTable.vue';
 import { websocketService } from '@/services/websocket';
-import CreateUserModal from '@/components/CreateUserModal.vue';
-import ViewUserModal from '@/components/ViewUserModal.vue';
+import CreateUserModal from '@/components/admin/CreateUserModal.vue';
+import ViewUserModal from '@/components/admin/ViewUserModal.vue';
 
 // Modal control
 const showViewModal = ref(false);

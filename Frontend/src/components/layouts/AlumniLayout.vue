@@ -26,8 +26,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import AlumniSidebar from '../AlumniSidebar.vue'
-import AlumniNavbar from '../AlumniNavbar.vue'
+import AlumniSidebar from '@/components/alumni/AlumniSidebar.vue'
+import AlumniNavbar from '@/components/alumni/AlumniNavbar.vue'
 
 const sidebarExpanded = ref(false)
 </script>

@@ -642,8 +642,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import api from '../../services/api'
-import messagingService from '../../services/messaging'
+import api from '@/services/api'
+import messagingService from '@/services/messaging'
 
 // Props
 const props = defineProps({

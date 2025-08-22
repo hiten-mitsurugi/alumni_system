@@ -261,13 +261,13 @@ import { useAuthStore } from '@/stores/auth';
 import { useMessagingNotificationStore } from '@/stores/messagingNotifications';
 import api from '../../services/api';
 import messagingService from '../../services/messaging';
-import ChatArea from '../../components/messaging/ChatArea.vue';
-import EmptyState from '../../components/messaging/EmptyState.vue';
-import PendingMessagesModal from '../../components/messaging/PendingMessagesModal.vue';
-import CreateGroupModal from '../../components/messaging/CreateGroupModal.vue';
-import ChatInfoPanel from '../../components/messaging/ChatInfoPanel.vue';
-import BlockedUsersModal from '../../components/messaging/BlockedUsersModal.vue';
-import ForwardModal from '../../components/messaging/ForwardModal.vue';
+import ChatArea from '../../components/alumni/messaging/ChatArea.vue';
+import EmptyState from '../../components/alumni/messaging/EmptyState.vue';
+import PendingMessagesModal from '../../components/alumni/messaging/PendingMessagesModal.vue';
+import CreateGroupModal from '../../components/alumni/messaging/CreateGroupModal.vue';
+import ChatInfoPanel from '../../components/alumni/messaging/ChatInfoPanel.vue';
+import BlockedUsersModal from '../../components/alumni/messaging/BlockedUsersModal.vue';
+import ForwardModal from '../../components/alumni/messaging/ForwardModal.vue';
 
 // === STORES ===
 const authStore = useAuthStore();

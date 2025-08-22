@@ -74,7 +74,7 @@ insert this for the Alumni Directory:
 INSERT INTO auth_app_alumnidirectory 
 (first_name, middle_name, last_name, birth_date, school_id, program, year_graduated, gender)
 VALUES 
-('Roman', 'Rico', 'Ososrio', '1989-04-08', '221-01926', 'BS in Information Technology', 2026, 'male');
+('Roman', 'Rico', 'Osorio', '1989-04-08', '221-01926', 'BS in Information Technology', 2026, 'male');
 
 
 ```

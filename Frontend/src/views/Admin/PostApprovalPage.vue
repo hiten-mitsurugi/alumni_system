@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import PostCard from '@/components/PostCard.vue';
+import PostCard from '@/components/admin/PostCard.vue';
 import axios from 'axios';
 
 const router = useRouter();

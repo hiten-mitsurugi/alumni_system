@@ -41,6 +41,8 @@ class AlumniDirectoryCheckSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
+        from .models import AlumniDirectory  # Move import to top
+        
         try:
             query = {
                 'school_id': data['school_id'],
@@ -49,12 +51,30 @@ class AlumniDirectoryCheckSerializer(serializers.Serializer):
                 'birth_date': data['birth_date'],
                 'program__iexact': data['program'],
                 'year_graduated': data['year_graduated'],
-                'gender': data['gender']
+                'gender__iexact': data['gender']  # Changed to case insensitive
             }
-            if data.get('middle_name'):
-                query['middle_name__iexact'] = data['middle_name']
+            
+            if data.get('middle_name') and data['middle_name'].strip():
+                query['middle_name__iexact'] = data['middle_name'].strip()
             else:
-                query['middle_name__isnull'] = True
+                # Check for both null and empty string
+                query_null = query.copy()
+                query_null['middle_name__isnull'] = True
+                query_empty = query.copy()
+                query_empty['middle_name__exact'] = ''
+                
+                # Try both queries
+                try:
+                    alumni = AlumniDirectory.objects.get(**query_null)
+                    return {'exists': True, 'alumni': alumni}
+                except AlumniDirectory.DoesNotExist:
+                    try:
+                        alumni = AlumniDirectory.objects.get(**query_empty)
+                        return {'exists': True, 'alumni': alumni}
+                    except AlumniDirectory.DoesNotExist:
+                        pass
+                raise AlumniDirectory.DoesNotExist("No match found for empty/null middle name")
+            
             alumni = AlumniDirectory.objects.get(**query)
             return {'exists': True, 'alumni': alumni}
         except AlumniDirectory.DoesNotExist:

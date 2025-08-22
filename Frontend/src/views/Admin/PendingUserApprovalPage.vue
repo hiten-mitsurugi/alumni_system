@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import api from '@/services/api';
-import PendingUserTable from '@/components/PendingUserTable.vue';
-import PendingUserView from '@/components/PendingUserView.vue';
-import NotificationToast from '@/components/NotificationToast.vue';
+import PendingUserTable from '@/components/admin/PendingUserTable.vue';
+import PendingUserView from '@/components/admin/PendingUserView.vue';
+import NotificationToast from '@/components/admin/NotificationToast.vue';
 import { websocketService } from '@/services/websocket';
 
 const pendingUsers = ref([]);
