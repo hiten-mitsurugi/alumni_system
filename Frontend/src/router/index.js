@@ -12,14 +12,14 @@ const routes = [
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../views/Register.vue'),
+    component: () => import('../views/RegisterDynamic.vue'),
     meta: { requiresGuest: true },
   },
 
   // 🛡 Super Admin Routes
   {
     path: '/super-admin',
-    component: () => import('../components/layouts/SuperAdminLayout.vue'),
+    component: () => import('@/components/layouts/SuperAdminLayout.vue'),
     meta: { requiresAuth: true, role: 1 },
     children: [
       {
@@ -30,7 +30,7 @@ const routes = [
       {
         path: 'user-management',
         name: 'SuperAdminUserManagement',
-        component: () => import('../views/SuperAdmin/UserManagement.vue'),
+        component: () => import('@/views/Admin/UserManagePage.vue'),
       },
       {
         path: 'survey-management',
@@ -55,7 +55,7 @@ const routes = [
       {
         path: 'pending-user-approval',
         name: 'SuperAdminPendingUserApproval',
-        component: () => import('../views/SuperAdmin/PendingUserApproval.vue'),
+        component: () => import('@/views/Admin/PendingUserApprovalPage.vue'),
       },
       {
         path: 'settings',
@@ -80,6 +80,11 @@ const routes = [
         path: 'user-management',
         name: 'AdminUserManagement',
         component: () => import('../views/Admin/UserManagePage.vue'),
+      },
+      {
+        path: 'messaging',
+        name: 'AdminMessaging',
+        component: () => import('../views/Alumni/Messaging.vue'),
       },
       {
         path: 'survey-management',
@@ -117,7 +122,7 @@ const routes = [
   // 🛡 Alumni Route
   {
     path: '/alumni',
-    component: () => import('../components/layouts/AlumniLayout.vue'),
+    component: () => import('@/components/layouts/AlumniLayout.vue'),
     meta: { requiresAuth: true, role: 3 },
     children: [
       {

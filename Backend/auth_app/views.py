@@ -122,7 +122,6 @@ class ApprovedAlumniListView(ListAPIView):
         user_ids = list(queryset.values_list('id', flat=True))
         cache.set(cache_key, user_ids, timeout=3600)
         return queryset
-
 class ConfirmTokenView(APIView):
     permission_classes = [AllowAny]
 
@@ -197,17 +196,33 @@ class LoginView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
+            # Check if user is blocked
+            if not user.is_active:
+                return Response(
+                    {'detail': 'Your account has been blocked. Please contact the administrator.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
             # Update user status to online when logging in
             from .models import Profile
             from django.utils import timezone
             from asgiref.sync import async_to_sync
             from channels.layers import get_channel_layer
+            from .status_cache import set_user_online
+            
+            # Update user's last_login field
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+            
+            # Set user online in both Redis cache and database
+            set_user_online(user.id)
             
             profile, created = Profile.objects.get_or_create(user=user)
             profile.status = 'online'
             profile.last_seen = timezone.now()
             profile.save()
-            logger.info(f"User {user.id} status set to online on login")
+            
+            logger.info(f"User {user.id} status set to online on login with last_login updated")
             
             # Broadcast status change to all connected users
             try:
@@ -216,11 +231,20 @@ class LoginView(APIView):
                     'type': 'status_update',
                     'user_id': user.id,
                     'status': 'online',
-                    'last_seen': profile.last_seen.isoformat()
+                    'last_seen': profile.last_seen.isoformat(),
+                    'last_login': user.last_login.isoformat()
                 }
                 logger.info(f"Broadcasting login status update: {status_payload}")
                 
                 # Broadcast to all users who might have this user in their conversation list
+                async_to_sync(channel_layer.group_send)(
+                    'user_management',  # User management group
+                    {
+                        'type': 'broadcast_message',
+                        'message': status_payload
+                    }
+                )
+                # Also broadcast to status updates group for backward compatibility
                 async_to_sync(channel_layer.group_send)(
                     'status_updates',  # Global status updates group
                     status_payload
@@ -293,6 +317,7 @@ class UnblockUserView(APIView):
             return Response({'message': 'User unblocked successfully'}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class SkillListCreateView(ListCreateAPIView):
     serializer_class = SkillSerializer
@@ -383,12 +408,18 @@ class LogoutView(APIView):
             from django.utils import timezone
             from asgiref.sync import async_to_sync
             from channels.layers import get_channel_layer
+            from .status_cache import set_user_offline
             
             user = request.user
+            
+            # Set user offline in both Redis cache and database
+            set_user_offline(user.id)
+            
             profile, created = Profile.objects.get_or_create(user=user)
             profile.status = 'offline'
             profile.last_seen = timezone.now()
             profile.save()
+            
             logger.info(f"User {user.id} status set to offline on logout")
             
             # Clear all active connections for this user
@@ -408,6 +439,14 @@ class LogoutView(APIView):
                 }
                 logger.info(f"Broadcasting logout status update: {status_payload}")
                 
+                async_to_sync(channel_layer.group_send)(
+                    'user_management',  # User management group
+                    {
+                        'type': 'broadcast_message',
+                        'message': status_payload
+                    }
+                )
+                # Also broadcast to status updates group for backward compatibility
                 async_to_sync(channel_layer.group_send)(
                     'status_updates',  # Global status updates group
                     status_payload
@@ -433,7 +472,6 @@ class PendingAlumniListView(ListAPIView):
 
     def get_queryset(self):
         return CustomUser.objects.filter(user_type=3, is_approved=False)
-    
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -486,6 +524,24 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(username__icontains=search_query)
             ).exclude(id=self.request.user.id)
         return queryset
+
+class UserUpdateView(APIView):
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def put(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            serializer = UserDetailSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                cache.delete(f'user_detail_{user.id}')
+                cache.delete('approved_alumni_list')
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TestStatusBroadcastView(APIView):
     """Test endpoint to manually broadcast status updates"""

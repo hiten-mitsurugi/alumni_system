@@ -64,39 +64,102 @@ export class WebSocketService {
     };
 
     socket.onclose = (event) => {
-      console.log(`WebSocket disconnected from ${endpoint} (code: ${event.code}), attempting to reconnect...`);
+      console.log(`WebSocket disconnected from ${endpoint} (code: ${event.code})`);
       this.sockets.delete(endpoint);
-      this.reconnect(endpoint);
+      
+      // Handle authentication failures - stop reconnecting immediately
+      if (event.code === 403 || event.code === 4001 || event.code === 1002) {
+        console.warn(`WebSocket authentication failed on ${endpoint} (code: ${event.code})`);
+        console.warn('Authentication error detected - stopping all reconnection attempts');
+        
+        // Clear all reconnection attempts for this endpoint
+        this.reconnectAttempts.delete(endpoint);
+        
+        // Don't force logout immediately - just stop reconnecting
+        console.log('Stopping WebSocket reconnection due to authentication failure');
+        return;
+      }
+      
+      // Only reconnect on unexpected disconnections (not authentication errors)
+      if (event.code === 1006) { // Network disconnection
+        console.log(`Network disconnection detected on ${endpoint}, attempting to reconnect...`);
+        this.reconnect(endpoint);
+      } else {
+        console.log(`WebSocket closed with code ${event.code}, not reconnecting`);
+        this.reconnectAttempts.delete(endpoint);
+      }
     };
 
     socket.onerror = (error) => {
       console.error(`WebSocket error on ${endpoint}:`, error);
+      
+      // For authentication errors, stop reconnecting immediately
+      console.log(`WebSocket error detected on ${endpoint}, will handle in onclose`);
     };
   }
 
   async reconnect(endpoint, attempt = 0) {
-    if (attempt >= this.maxReconnectAttempts) {
-      console.error(`Max reconnect attempts reached for ${endpoint}`);
+    // Don't reconnect if we're not authenticated
+    const authStore = this.getAuthStore();
+    if (!authStore.token) {
+      console.log(`No auth token available, skipping reconnect for ${endpoint}`);
       return;
     }
-    const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-    console.log(`Reconnecting to ${endpoint} in ${delay}ms (attempt ${attempt + 1})`);
+
+    const currentAttempt = this.reconnectAttempts.get(endpoint) || 0;
+    if (currentAttempt >= this.maxReconnectAttempts) {
+      console.error(`Max reconnect attempts reached for ${endpoint}`);
+      console.warn('Consider checking if the user exists in the database or if the JWT token is valid');
+      this.reconnectAttempts.delete(endpoint);
+      return;
+    }
+    
+    const delay = Math.min(1000 * Math.pow(2, currentAttempt), 10000);
+    console.log(`Reconnecting to ${endpoint} in ${delay}ms (attempt ${currentAttempt + 1})`);
+    
     setTimeout(async () => {
+      this.reconnectAttempts.set(endpoint, currentAttempt + 1);
       await this.connect(endpoint);
-      this.reconnectAttempts.set(endpoint, attempt + 1);
     }, delay);
   }
 
-  addListener(endpoint, listener) {
-    if (!this.listeners.has(endpoint)) {
-      this.listeners.set(endpoint, []);
+  addListener(endpointOrListener, listener = null) {
+    // Backward compatibility: if only one argument, assume it's a listener for 'notifications'
+    if (typeof endpointOrListener === 'function' && listener === null) {
+      const endpoint = 'notifications';
+      listener = endpointOrListener;
+      if (!this.listeners.has(endpoint)) {
+        this.listeners.set(endpoint, []);
+      }
+      this.listeners.get(endpoint).push(listener);
+      console.log(`Added listener to ${endpoint} (backward compatibility mode)`);
+    } else {
+      // New format: addListener(endpoint, listener)
+      const endpoint = endpointOrListener;
+      if (!this.listeners.has(endpoint)) {
+        this.listeners.set(endpoint, []);
+      }
+      this.listeners.get(endpoint).push(listener);
+      console.log(`Added listener to ${endpoint}`);
     }
-    this.listeners.get(endpoint).push(listener);
   }
 
-  removeListener(endpoint, listener) {
-    if (this.listeners.has(endpoint)) {
-      this.listeners.set(endpoint, this.listeners.get(endpoint).filter((l) => l !== listener));
+  removeListener(endpointOrListener, listener = null) {
+    // Backward compatibility: if only one argument, assume it's a listener for 'notifications'
+    if (typeof endpointOrListener === 'function' && listener === null) {
+      const endpoint = 'notifications';
+      listener = endpointOrListener;
+      if (this.listeners.has(endpoint)) {
+        this.listeners.set(endpoint, this.listeners.get(endpoint).filter((l) => l !== listener));
+        console.log(`Removed listener from ${endpoint} (backward compatibility mode)`);
+      }
+    } else {
+      // New format: removeListener(endpoint, listener)
+      const endpoint = endpointOrListener;
+      if (this.listeners.has(endpoint)) {
+        this.listeners.set(endpoint, this.listeners.get(endpoint).filter((l) => l !== listener));
+        console.log(`Removed listener from ${endpoint}`);
+      }
     }
   }
 
@@ -108,6 +171,16 @@ export class WebSocketService {
       this.listeners.delete(endpoint);
       this.reconnectAttempts.delete(endpoint);
     }
+  }
+
+  disconnectAll() {
+    console.log('Disconnecting all WebSocket connections');
+    for (const [endpoint, socket] of this.sockets.entries()) {
+      socket.close();
+    }
+    this.sockets.clear();
+    this.listeners.clear();
+    this.reconnectAttempts.clear();
   }
 
   getSocket(endpoint) {

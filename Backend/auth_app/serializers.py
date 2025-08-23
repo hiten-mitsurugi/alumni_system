@@ -122,11 +122,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     gender = serializers.ChoiceField(choices=CustomUser.GENDER_CHOICES, required=True)
     civil_status = serializers.ChoiceField(choices=CustomUser.CIVIL_STATUS_CHOICES, required=True)
     employment_status = serializers.ChoiceField(choices=CustomUser.EMPLOYMENT_STATUS_CHOICES, required=True)
-    work_histories = JSONField(required=True)
-    skills_relevance = JSONField(required=True)
-    curriculum_relevance = JSONField(required=True)
-    perception_further_studies = JSONField(required=True)
-    feedback_recommendations = JSONField(required=True)
+    work_histories = JSONField(required=False)  # Made optional for dynamic surveys
+    skills_relevance = JSONField(required=False)  # Made optional for dynamic surveys
+    curriculum_relevance = JSONField(required=False)  # Made optional for dynamic surveys
+    perception_further_studies = JSONField(required=False)  # Made optional for dynamic surveys
+    feedback_recommendations = JSONField(required=False)  # Made optional for dynamic surveys
+    survey_responses = JSONField(required=False)  # New field for dynamic survey responses
     alumni_exists = serializers.BooleanField(write_only=True)
 
     class Meta:
@@ -137,7 +138,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             'profile_picture', 'contact_number', 'gender', 'birth_date', 'year_graduated',
             'employment_status', 'civil_status', 'alumni_exists', 'mothers_name', 'mothers_occupation',
             'fathers_name', 'fathers_occupation', 'work_histories', 'skills_relevance',
-            'curriculum_relevance', 'perception_further_studies', 'feedback_recommendations'
+            'curriculum_relevance', 'perception_further_studies', 'feedback_recommendations',
+            'survey_responses'
         ]
 
     def validate_email(self, value):
@@ -164,6 +166,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         curriculum_data = validated_data.pop('curriculum_relevance', {})
         perception_data = validated_data.pop('perception_further_studies', {})
         feedback_data = validated_data.pop('feedback_recommendations', {})
+        survey_responses_data = validated_data.pop('survey_responses', [])  # New field
         validated_data.pop('confirm_password')
         validated_data.pop('alumni_exists', None)
 
@@ -197,6 +200,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             is_approved=False
         )
 
+        # Handle work histories if provided (backward compatibility)
         for wh_data in work_histories_data:
             skills_data_list = wh_data.pop('skills', [])
             work_history = WorkHistory.objects.create(user=user, **wh_data)
@@ -204,10 +208,31 @@ class RegisterSerializer(serializers.ModelSerializer):
                 skill_obj, _ = Skill.objects.get_or_create(name=skill_data['name'])
                 work_history.skills.add(skill_obj)
 
-        SkillsRelevance.objects.create(user=user, **skills_data)
-        CurriculumRelevance.objects.create(user=user, **curriculum_data)
-        PerceptionFurtherStudies.objects.create(user=user, **perception_data)
-        FeedbackRecommendations.objects.create(user=user, **feedback_data)
+        # Handle legacy questionnaire data if provided (backward compatibility)
+        if skills_data:
+            SkillsRelevance.objects.create(user=user, **skills_data)
+        if curriculum_data:
+            CurriculumRelevance.objects.create(user=user, **curriculum_data)
+        if perception_data:
+            PerceptionFurtherStudies.objects.create(user=user, **perception_data)
+        if feedback_data:
+            FeedbackRecommendations.objects.create(user=user, **feedback_data)
+
+        # Handle dynamic survey responses
+        if survey_responses_data:
+            from survey_app.models import SurveyResponse, SurveyQuestion
+            for response_data in survey_responses_data:
+                try:
+                    question = SurveyQuestion.objects.get(id=response_data['question'])
+                    SurveyResponse.objects.create(
+                        user=user,
+                        question=question,
+                        response_data=response_data['response_data']
+                    )
+                except SurveyQuestion.DoesNotExist:
+                    # Log error but don't fail registration
+                    print(f"Warning: Survey question {response_data['question']} not found")
+
         Profile.objects.create(user=user)
         return user
 
@@ -318,9 +343,40 @@ class ProfileSerializer(serializers.ModelSerializer):
         return instance
 
 class UserDetailSerializer(serializers.ModelSerializer):
+    profile = ProfileModelSerializer(read_only=True)
+    real_time_status = serializers.SerializerMethodField()
+    
     class Meta:
         model = CustomUser
-        fields = [field.name for field in CustomUser._meta.fields if field.name != 'password']
+        fields = [field.name for field in CustomUser._meta.fields if field.name != 'password'] + ['profile', 'real_time_status']
+    
+    def get_real_time_status(self, obj):
+        """Get real-time status from profile"""
+        try:
+            # For now, just use database profile status
+            if hasattr(obj, 'profile') and obj.profile:
+                return {
+                    'status': obj.profile.status,
+                    'last_seen': obj.profile.last_seen.isoformat() if obj.profile.last_seen else None,
+                    'is_online': obj.profile.status == 'online'
+                }
+            else:
+                return {
+                    'status': 'offline',
+                    'last_seen': None,
+                    'is_online': False
+                }
+        except Exception as e:
+            return {
+                'status': 'offline',
+                'last_seen': None,
+                'is_online': False
+            }
+            return {
+                'status': 'offline',
+                'last_seen': None,
+                'is_online': False
+            }
         
 class UserSearchSerializer(serializers.ModelSerializer):
     profile = ProfileModelSerializer(read_only=True)

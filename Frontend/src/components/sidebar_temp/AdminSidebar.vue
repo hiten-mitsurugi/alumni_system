@@ -12,7 +12,8 @@ import {
   FileText as FileTextIcon,
   ShieldCheck as ShieldCheckIcon,
   UserCheck as UserCheckIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  MessageCircle as MessageCircleIcon
 } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -88,6 +89,15 @@ const isActive = (path) => route.path.startsWith(path);
             :class="isActive('/admin/user-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
           >
             <UsersIcon class="w-5 h-5" /> User Management
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            to="/admin/messaging"
+            class="flex items-center gap-2 p-2 rounded"
+            :class="isActive('/admin/messaging') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+          >
+            <MessageCircleIcon class="w-5 h-5" /> Messaging
           </router-link>
         </li>
         <li>

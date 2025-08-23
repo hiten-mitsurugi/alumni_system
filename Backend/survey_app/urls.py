@@ -30,6 +30,7 @@ urlpatterns = [
     
     # Survey Questions & Responses
     path('active-questions/', views.ActiveSurveyQuestionsView.as_view(), name='active-questions'),
+    path('registration-questions/', views.RegistrationSurveyQuestionsView.as_view(), name='registration-questions'),
     path('responses/', views.SurveyResponseSubmitView.as_view(), name='submit-responses'),
     path('my-responses/', views.UserSurveyResponsesView.as_view(), name='user-responses'),
     path('progress/', views.SurveyProgressView.as_view(), name='user-progress'),

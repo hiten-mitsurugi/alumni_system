@@ -1,0 +1,392 @@
+<script setup>
+defineOptions({ name: 'AlumniRegister' });
+import { ref, computed, onMounted } from 'vue';
+import api from '../services/api';
+import Navbar from '@/components/Navbar.vue';
+import VerifyAlumniDirectory from '@/components/register/VerifyAlumniDirectory.vue';
+import PersonalInfo from '@/components/register/PersonalInfo.vue';
+import DynamicSurveyStep from '@/components/register/DynamicSurveyStep.vue';
+import { useRegistrationSurvey } from '@/composables/useRegistrationSurvey';
+import backgroundImage from '@/assets/Background.png';
+
+const currentStep = ref(1);
+const error = ref('');
+const success = ref('');
+
+// Use registration survey composable
+const {
+  loading: surveyLoading,
+  error: surveyError,
+  surveyCategories,
+  surveyResponses,
+  surveyErrors,
+  loadRegistrationSurvey,
+  updateCategoryResponses,
+  validateCategory,
+  getSurveyResponsesForSubmission,
+  clearSurveyData
+} = useRegistrationSurvey();
+
+// Calculate total steps dynamically based on conditional logic
+const totalSteps = computed(() => {
+  let stepCount = 2; // 2 static steps
+  
+  // Add survey categories that should be visible
+  for (const categoryData of surveyCategories.value) {
+    if (shouldShowCategory(categoryData)) {
+      stepCount++;
+    }
+  }
+  
+  return stepCount;
+});
+
+// Function to determine if a category should be shown
+const shouldShowCategory = (categoryData) => {
+  const category = categoryData.category;
+  
+  // If no conditional logic, show the category
+  if (!category.depends_on_category) {
+    return true;
+  }
+  
+  // Check if the dependency condition is met
+  const dependsOnCategoryId = category.depends_on_category;
+  const dependsOnQuestionText = category.depends_on_question_text;
+  const dependsOnValue = JSON.parse(category.depends_on_value || '[]');
+  
+  // Find the response for the dependency question
+  const dependencyCategoryData = surveyCategories.value.find(
+    cat => cat.category.id === dependsOnCategoryId
+  );
+  
+  if (!dependencyCategoryData) return false;
+  
+  // Find the specific question in the dependency category
+  const dependencyQuestion = dependencyCategoryData.questions.find(
+    q => q.question_text === dependsOnQuestionText
+  );
+  
+  if (!dependencyQuestion) return false;
+  
+  // Check if user has answered the dependency question with the required value
+  const userResponse = surveyResponses.value[dependencyQuestion.id];
+  return dependsOnValue.includes(userResponse);
+};
+
+// Get visible categories in order
+const getVisibleCategories = computed(() => {
+  return surveyCategories.value.filter(categoryData => shouldShowCategory(categoryData));
+});
+
+// Get current survey category for dynamic steps (considering skipped categories)
+const currentSurveyCategory = computed(() => {
+  const surveyStepIndex = currentStep.value - 3; // Adjust for static steps
+  const visibleCategories = getVisibleCategories.value;
+  return visibleCategories[surveyStepIndex] || null;
+});
+
+// Static form for steps 1 and 2
+const form = ref({
+  // Step 1: Alumni Directory Verification
+  first_name: '',
+  middle_name: '',
+  last_name: '',
+  school_id: '',
+  program: '',
+  birth_date: '',
+  year_graduated: '',
+  gender: '',
+  alumni_exists: false,
+  
+  // Step 2: Personal Information
+  email: '',
+  contact_number: '',
+  password: '',
+  confirm_password: '',
+  present_address: '',
+  permanent_address: '',
+  civil_status: '',
+  employment_status: '',
+  government_id: null,
+  profile_picture: null,
+  mothers_name: '',
+  mothers_occupation: '',
+  fathers_name: '',
+  fathers_occupation: '',
+});
+
+// Get step title
+const getStepTitle = computed(() => {
+  if (currentStep.value === 1) return 'Step 1: Verify Alumni Directory';
+  if (currentStep.value === 2) return 'Step 2: Personal and Demographic Information';
+  
+  const category = currentSurveyCategory.value;
+  return category ? `Step ${currentStep.value}: ${category.category.name}` : '';
+});
+
+// Validation function for each step
+const validateStep = (step) => {
+  if (step === 1) {
+    // Step 1: Alumni Directory Verification
+    // No validation needed for verification step - it auto-proceeds
+    return true;
+  } else if (step === 2) {
+    // Step 2: Personal Information
+    const requiredFields = ['first_name', 'last_name', 'email', 'password', 'confirm_password'];
+    for (const field of requiredFields) {
+      if (!form.value[field] || form.value[field].trim() === '') {
+        error.value = `Please fill in the ${field.replace('_', ' ')} field.`;
+        return false;
+      }
+    }
+    
+    if (form.value.password !== form.value.confirm_password) {
+      error.value = 'Passwords do not match.';
+      return false;
+    }
+    
+    return true;
+  } else {
+    // Survey steps validation using the composable
+    const surveyStepIndex = step - 3;
+    const visibleCategories = getVisibleCategories.value;
+    
+    if (surveyStepIndex >= 0 && surveyStepIndex < visibleCategories.length) {
+      const categoryData = visibleCategories[surveyStepIndex];
+      return validateCategory(categoryData.category.id);
+    }
+    
+    return true;
+  }
+};
+
+// Enhanced navigation functions that handle category skipping
+const nextStep = () => {
+  if (!validateStep(currentStep.value)) return;
+  
+  error.value = '';
+  let nextStepNumber = currentStep.value + 1;
+  
+  // For survey steps, check if we need to skip categories
+  if (nextStepNumber > 2) {
+    const visibleCategories = getVisibleCategories.value;
+    const maxSurveySteps = visibleCategories.length;
+    const maxTotalSteps = 2 + maxSurveySteps;
+    
+    if (nextStepNumber <= maxTotalSteps) {
+      currentStep.value = nextStepNumber;
+    }
+  } else if (nextStepNumber <= totalSteps.value) {
+    currentStep.value = nextStepNumber;
+  }
+};
+
+const prevStep = () => {
+  if (currentStep.value > 1) {
+    let prevStepNumber = currentStep.value - 1;
+    
+    // For survey steps, navigate through visible categories only
+    if (currentStep.value > 2) {
+      currentStep.value = prevStepNumber;
+    } else {
+      currentStep.value = prevStepNumber;
+    }
+  }
+};
+
+const handleVerified = () => {
+  form.value.alumni_exists = true;
+  alert('✅ Alumni record found. Proceeding to the next step...');
+  setTimeout(() => {
+    nextStep();
+  });
+};
+
+const submitForm = async () => {
+  if (!validateStep(currentStep.value)) return;
+  error.value = '';
+  success.value = '';
+
+  const formData = new FormData();
+  
+  // Add static form data
+  formData.append('first_name', form.value.first_name || '');
+  formData.append('middle_name', form.value.middle_name || '');
+  formData.append('last_name', form.value.last_name || '');
+  formData.append('email', form.value.email || '');
+  formData.append('contact_number', form.value.contact_number || '');
+  formData.append('password', form.value.password || '');
+  formData.append('confirm_password', form.value.confirm_password || '');
+  formData.append('school_id', form.value.school_id || '');
+  if (form.value.government_id) formData.append('government_id', form.value.government_id);
+  formData.append('program', form.value.program || '');
+  formData.append('present_address', form.value.present_address || '');
+  formData.append('permanent_address', form.value.permanent_address || '');
+  formData.append('birth_date', form.value.birth_date || '');
+  formData.append('year_graduated', form.value.year_graduated || '');
+  formData.append('employment_status', form.value.employment_status || '');
+  if (form.value.profile_picture) formData.append('profile_picture', form.value.profile_picture);
+  formData.append('civil_status', form.value.civil_status || '');
+  formData.append('gender', form.value.gender || '');
+  formData.append('mothers_name', form.value.mothers_name || '');
+  formData.append('mothers_occupation', form.value.mothers_occupation || '');
+  formData.append('fathers_name', form.value.fathers_name || '');
+  formData.append('fathers_occupation', form.value.fathers_occupation || '');
+  formData.append('alumni_exists', form.value.alumni_exists);
+
+  // Add dynamic survey responses
+  const surveyResponsesData = getSurveyResponsesForSubmission();
+  formData.append('survey_responses', JSON.stringify(surveyResponsesData));
+
+  try {
+    await api.post('/register/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    success.value = '✅ Registration successful! Please wait for approval.';
+    alert(success.value);
+    clearSurveyData();
+    window.location.reload();
+  } catch (err) {
+    error.value = err.response?.data?.non_field_errors?.[0] || 'Registration failed.';
+    console.error('Submission error:', err.response?.data);
+  }
+};
+
+// Update functions for static steps
+const updateStep1Form = (newForm) => {
+  Object.assign(form.value, newForm);
+};
+
+const updateStep2Form = (newForm) => {
+  Object.assign(form.value, newForm);
+};
+
+// Handle dynamic survey step updates
+const handleSurveyResponses = (responses) => {
+  updateCategoryResponses(responses);
+};
+
+// Load survey data on mount
+onMounted(async () => {
+  await loadRegistrationSurvey();
+});
+</script>
+
+<template>
+  <div class="min-h-screen bg-cover bg-center flex flex-col" :style="{ backgroundImage: `url(${backgroundImage})` }">
+    <div class="fixed top-0 left-0 right-0 z-50">
+      <Navbar />
+    </div>
+    <div class="h-20"></div>
+    
+    <div class="flex items-center justify-center px-4 md:px-20 py-12">
+      <div class="bg-white bg-opacity-90 backdrop-blur-md shadow-xl rounded-xl p-10 w-full max-w-3xl">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Register (Alumni Only)</h2>
+        
+        <!-- Progress Indicator -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Progress</span>
+            <span class="text-sm text-gray-600">Step {{ currentStep }} of {{ totalSteps }}</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div
+              class="bg-green-700 h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${(currentStep / totalSteps) * 100}%` }"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Loading Survey Questions -->
+        <div v-if="surveyLoading" class="flex items-center justify-center py-12">
+          <div class="text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading survey questions...</p>
+          </div>
+        </div>
+
+        <!-- Survey Error -->
+        <div v-else-if="surveyError" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <div class="text-center">
+            <h3 class="text-lg font-medium text-red-800 mb-2">Error Loading Survey</h3>
+            <p class="text-red-700">{{ surveyError }}</p>
+            <button
+              @click="loadRegistrationSurvey"
+              class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+
+        <!-- Registration Steps -->
+        <template v-else>
+          <!-- Step 1: Alumni Directory Verification -->
+          <div v-if="currentStep === 1">
+            <h3 class="text-xl font-semibold text-center mb-6">{{ getStepTitle }}</h3>
+            <VerifyAlumniDirectory :form="form" @update:form="updateStep1Form" @verified="handleVerified" />
+          </div>
+
+          <!-- Step 2: Personal Information -->
+          <div v-if="currentStep === 2">
+            <h3 class="text-xl font-semibold text-center mb-6">{{ getStepTitle }}</h3>
+            <PersonalInfo :form="form" @update:form="updateStep2Form" />
+          </div>
+
+          <!-- Dynamic Survey Steps -->
+          <div v-if="currentStep > 2 && currentSurveyCategory">
+            <h3 class="text-xl font-semibold text-center mb-6">{{ getStepTitle }}</h3>
+            <DynamicSurveyStep
+              :category="currentSurveyCategory.category"
+              :questions="currentSurveyCategory.questions"
+              :responses="surveyResponses"
+              :errors="surveyErrors"
+              @update:responses="handleSurveyResponses"
+            />
+          </div>
+        </template>
+
+        <!-- Navigation Buttons -->
+        <div class="flex justify-between mt-6" v-if="!surveyLoading && !surveyError">
+          <button 
+            v-if="currentStep > 1" 
+            @click="prevStep"
+            class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition-colors"
+          >
+            Back
+          </button>
+          
+          <!-- Hide Proceed button for Step 1 (Verify Alumni Directory) since it auto-proceeds -->
+          <button 
+            v-if="currentStep < totalSteps && currentStep !== 1" 
+            @click="nextStep"
+            class="bg-green-700 text-white py-2 px-4 rounded hover:bg-green-800 ml-auto transition-colors"
+          >
+            Proceed
+          </button>
+          
+          <button 
+            v-if="currentStep === totalSteps" 
+            @click="submitForm"
+            class="bg-green-700 text-white py-2 px-4 rounded hover:bg-green-800 ml-auto transition-colors"
+          >
+            Submit Registration
+          </button>
+        </div>
+
+        <!-- Error Message -->
+        <p v-if="error" class="text-red-500 text-sm text-center mt-4">{{ error }}</p>
+        
+        <!-- Success Message -->
+        <p v-if="success" class="text-green-500 text-sm text-center mt-4">{{ success }}</p>
+        
+        <!-- Login Link -->
+        <p class="text-center text-sm mt-6">
+          Already have an account? 
+          <router-link to="/login" class="text-blue-600 hover:underline">Login</router-link>
+        </p>
+      </div>
+    </div>
+  </div>
+</template>

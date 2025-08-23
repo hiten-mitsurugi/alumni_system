@@ -10,6 +10,25 @@ class SurveyCategory(models.Model):
     description = models.TextField(blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Order for display (lower numbers first)")
     is_active = models.BooleanField(default=True)
+    
+    # Category-level conditional logic
+    depends_on_category = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Category this depends on for conditional display"
+    )
+    depends_on_question_text = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Specific question text within the dependency category"
+    )
+    depends_on_value = models.TextField(
+        blank=True,
+        help_text="Value that triggers display of this category (JSON for multiple values)"
+    )
+    
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE,
@@ -72,6 +91,19 @@ class SurveyQuestion(models.Model):
     # Display settings
     order = models.PositiveIntegerField(default=0, help_text="Order within category (lower numbers first)")
     is_active = models.BooleanField(default=True)
+    
+    # Conditional Logic Fields
+    depends_on_question = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Question this depends on for conditional display"
+    )
+    depends_on_value = models.TextField(
+        blank=True,
+        help_text="Value that triggers display of this question (JSON for multiple values)"
+    )
     
     # Audit fields
     created_by = models.ForeignKey(

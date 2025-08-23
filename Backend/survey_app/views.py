@@ -2,7 +2,7 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db.models import Count, Q
 from django.utils import timezone
 from django.core.cache import cache
@@ -391,3 +391,82 @@ def clear_survey_cache_view(request):
         'message': 'Survey cache cleared successfully',
         'cleared_at': timezone.now().isoformat()
     })
+
+
+class RegistrationSurveyQuestionsView(APIView):
+    """
+    Get survey questions specifically for registration process.
+    Public endpoint (no authentication required for registration).
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        cache_key = 'registration_survey_questions'
+        cached_data = cache.get(cache_key)
+        
+        if cached_data:
+            return Response(cached_data)
+        
+        # Get active categories with their questions
+        # Filter out categories that should not be in registration (e.g., Personal Info, Alumni Verification)
+        excluded_categories = ['Alumni Verification', 'Personal & Demographic Information']
+        
+        categories = SurveyCategory.objects.filter(
+            is_active=True
+        ).exclude(
+            name__in=excluded_categories
+        ).prefetch_related(
+            'questions'
+        ).order_by('order', 'name')
+        
+        survey_data = []
+        for category in categories:
+            active_questions = category.questions.filter(is_active=True).order_by('order', 'question_text')
+            
+            if active_questions.exists():
+                questions_data = []
+                for question in active_questions:
+                    question_data = {
+                        'id': question.id,
+                        'question_text': question.question_text,
+                        'question_type': question.question_type,
+                        'placeholder_text': question.placeholder_text,
+                        'help_text': question.help_text,
+                        'options': question.get_options_list(),
+                        'is_required': question.is_required,
+                        'min_value': question.min_value,
+                        'max_value': question.max_value,
+                        'max_length': question.max_length,
+                        'order': question.order
+                    }
+                    
+                    # Add question-level conditional logic if exists
+                    if question.depends_on_question:
+                        question_data['depends_on_question'] = question.depends_on_question.id
+                        question_data['depends_on_value'] = question.depends_on_value
+                    
+                    questions_data.append(question_data)
+                
+                category_data = {
+                    'category': {
+                        'id': category.id,
+                        'name': category.name,
+                        'description': category.description,
+                        'order': category.order
+                    },
+                    'questions': questions_data
+                }
+                
+                # Add category-level conditional logic if exists
+                if category.depends_on_category:
+                    category_data['category']['depends_on_category'] = category.depends_on_category.id
+                    category_data['category']['depends_on_category_name'] = category.depends_on_category.name
+                    category_data['category']['depends_on_question_text'] = category.depends_on_question_text
+                    category_data['category']['depends_on_value'] = category.depends_on_value
+                
+                survey_data.append(category_data)
+        
+        # Cache for 30 minutes
+        cache.set(cache_key, survey_data, 1800)
+        
+        return Response(survey_data)

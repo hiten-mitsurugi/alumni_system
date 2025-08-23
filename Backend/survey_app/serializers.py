@@ -9,11 +9,14 @@ class SurveyCategorySerializer(serializers.ModelSerializer):
     """Serializer for survey categories"""
     active_questions_count = serializers.ReadOnlyField()
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
+    depends_on_category_name = serializers.CharField(source='depends_on_category.name', read_only=True)
 
     class Meta:
         model = SurveyCategory
         fields = [
             'id', 'name', 'description', 'order', 'is_active',
+            'depends_on_category', 'depends_on_category_name', 
+            'depends_on_question_text', 'depends_on_value',
             'active_questions_count', 'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
@@ -29,6 +32,7 @@ class SurveyQuestionSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     response_count = serializers.ReadOnlyField()
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
+    depends_on_question_id = serializers.IntegerField(source='depends_on_question.id', read_only=True)
 
     class Meta:
         model = SurveyQuestion
@@ -36,6 +40,7 @@ class SurveyQuestionSerializer(serializers.ModelSerializer):
             'id', 'category', 'category_name', 'question_text', 'question_type',
             'placeholder_text', 'help_text', 'options', 'is_required',
             'min_value', 'max_value', 'max_length', 'order', 'is_active',
+            'depends_on_question', 'depends_on_question_id', 'depends_on_value',
             'response_count', 'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]

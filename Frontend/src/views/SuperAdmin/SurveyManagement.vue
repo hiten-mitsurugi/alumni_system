@@ -100,6 +100,15 @@ const questionsEllipsis = computed(() => {
   return questionsPageNumbers.value.filter(page => page === '...')
 })
 
+// Available questions for conditional logic (exclude current question being edited)
+const availableQuestions = computed(() => {
+  if (!questionForm.value.category) return []
+  return questions.value.filter(q => 
+    q.category === questionForm.value.category && 
+    q.id !== questionForm.value.id
+  )
+})
+
 // Pagination functions
 const goToCategoryPage = (page) => {
   if (page >= 1 && page <= totalCategoryPages.value) {
@@ -135,7 +144,9 @@ const questionForm = ref({
   help_text: '',
   min_value: null,
   max_value: null,
-  max_length: null
+  max_length: null,
+  depends_on_question: null,
+  depends_on_value: ''
 })
 
 const questionTypes = [
@@ -238,7 +249,9 @@ const openQuestionModal = (question = null) => {
       help_text: '',
       min_value: null,
       max_value: null,
-      max_length: null
+      max_length: null,
+      depends_on_question: null,
+      depends_on_value: ''
     }
   }
   showQuestionModal.value = true
@@ -563,6 +576,9 @@ const exportData = async () => {
                   Responses
                 </th>
                 <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  Conditional
+                </th>
+                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -619,6 +635,19 @@ const exportData = async () => {
                   <div class="flex items-center gap-2">
                     <BarChart3 class="w-4 h-4 text-slate-400" />
                     <span class="text-sm font-semibold text-slate-700">{{ question.response_count || 0 }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div v-if="question.depends_on_question" class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-xs text-blue-600 font-medium">
+                      Conditional
+                    </span>
+                  </div>
+                  <div v-else class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400">Always shown</span>
                   </div>
                 </td>
                 <td class="px-6 py-4">
@@ -1005,6 +1034,49 @@ const exportData = async () => {
                 placeholder="Additional guidance..."
                 class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+
+            <!-- Conditional Logic Section -->
+            <div class="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 class="text-sm font-semibold text-blue-800 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                </svg>
+                Conditional Logic (Optional)
+              </h4>
+              <p class="text-xs text-blue-600">
+                Make this question appear only when another question has a specific answer.
+              </p>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Depends on Question</label>
+                <select
+                  v-model="questionForm.depends_on_question"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">No dependency</option>
+                  <option 
+                    v-for="question in availableQuestions" 
+                    :key="question.id" 
+                    :value="question.id"
+                  >
+                    {{ question.question_text }}
+                  </option>
+                </select>
+              </div>
+
+              <div v-if="questionForm.depends_on_question">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Show when answer is</label>
+                <input
+                  v-model="questionForm.depends_on_value"
+                  type="text"
+                  placeholder="Enter the exact answer value..."
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p class="text-xs text-slate-500 mt-1">
+                  For Yes/No questions, use "Yes" or "No". For checkboxes, use the exact option text.
+                </p>
+              </div>
             </div>
           </div>
           

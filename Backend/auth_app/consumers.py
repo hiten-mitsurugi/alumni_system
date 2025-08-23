@@ -19,15 +19,26 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket connecting authenticated user: {user.username} (ID: {user.id})")
             
+            # Set user online in Redis cache
+            from .status_cache import set_user_online
+            from channels.db import database_sync_to_async
+            
+            @database_sync_to_async
+            def set_user_online_sync():
+                set_user_online(user.id)
+            
+            await set_user_online_sync()
+            
             # Join global groups
             await self.channel_layer.group_add('admin_notifications', self.channel_name)
             await self.channel_layer.group_add('status_updates', self.channel_name)
+            await self.channel_layer.group_add('user_management', self.channel_name)
             
             # Join user-specific group for personal notifications
             await self.channel_layer.group_add(f'user_{user.id}', self.channel_name)
             
             await self.accept()
-            logger.info(f"WebSocket connection accepted for user {user.username}. Joined groups: admin_notifications, status_updates, user_{user.id}")
+            logger.info(f"WebSocket connection accepted for user {user.username}. Set online status and joined groups")
             
         except Exception as e:
             logger.error(f"WebSocket connect error for user {self.scope['user']}: {str(e)}")
@@ -38,9 +49,22 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket disconnecting user {user.username} (ID: {user.id}) with code: {close_code}")
             
+            # Set user offline in Redis cache only if no other connections
+            from .status_cache import set_user_offline
+            from channels.db import database_sync_to_async
+            
+            @database_sync_to_async
+            def set_user_offline_sync():
+                # Check if user has other active WebSocket connections
+                # For now, set offline immediately - can be enhanced later
+                set_user_offline(user.id)
+            
+            await set_user_offline_sync()
+            
             # Leave all groups
             await self.channel_layer.group_discard('admin_notifications', self.channel_name)
             await self.channel_layer.group_discard('status_updates', self.channel_name)
+            await self.channel_layer.group_discard('user_management', self.channel_name)
             await self.channel_layer.group_discard(f'user_{user.id}', self.channel_name)
         else:
             logger.info(f"WebSocket disconnected anonymous user with code: {close_code}")
@@ -61,12 +85,28 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         user = self.scope['user']
         logger.info(f"NotificationConsumer: Sending status update to user {user.username}: {event}")
         
-        message_data = {
-            'type': 'status_update',
-            'user_id': event['user_id'],
-            'status': event['status'],
-            'last_seen': event.get('last_seen')
-        }
+        # Handle different event structures
+        if 'data' in event:
+            # New structure: {'type': 'status_update', 'data': {...}}
+            data = event['data']
+            message_data = {
+                'type': 'status_update',
+                'data': {
+                    'user_id': data['user_id'],
+                    'status': data['status'],
+                    'timestamp': data.get('timestamp')
+                }
+            }
+        else:
+            # Legacy structure: {'type': 'status_update', 'user_id': ..., 'status': ...}
+            message_data = {
+                'type': 'status_update',
+                'data': {
+                    'user_id': event['user_id'],
+                    'status': event['status'],
+                    'timestamp': event.get('timestamp', event.get('last_seen'))
+                }
+            }
         
         logger.info(f"NotificationConsumer: Broadcasting status update to user {user.username}: {message_data}")
         await self.send(text_data=json.dumps(message_data))
@@ -128,6 +168,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'group_name': event.get('group_name'),
             'removed_by': event.get('removed_by', {})
         }))
+
+    # Handler for broadcasting messages to user management group
+    async def broadcast_message(self, event):
+        logger.info(f"NotificationConsumer: Broadcasting message to user {self.scope['user']}")
+        await self.send(text_data=json.dumps(event.get('message', {})))
  
     # Handler for notification updates (for messaging badge counts)
     async def notification_update(self, event):

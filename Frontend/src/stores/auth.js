@@ -30,6 +30,14 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('access_token');            // ✅ updated
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
+      
+      // Disconnect WebSocket connections to prevent reconnection attempts
+      try {
+        const { websocketService } = require('../services/websocket');
+        websocketService.disconnectAll();
+      } catch (error) {
+        console.log('WebSocket service not available during logout');
+      }
     },
 
     async logoutWithAPI() {

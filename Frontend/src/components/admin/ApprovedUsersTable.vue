@@ -7,12 +7,12 @@
           <th class="p-4">First Name</th>
           <th class="p-4">Last Name</th>
           <th class="p-4">School ID</th>
-          <th class="p-4">User Type</th>
           <th class="p-4">Email</th>
           <th class="p-4">Gender</th>
           <th class="p-4">Program</th>
           <th class="p-4">Year</th>
           <th class="p-4">Employment</th>
+          <th class="p-4">Online Status</th>
           <th class="p-4">Status</th>
           <th class="p-4">Last Login</th>
           <th class="p-4">Actions</th>
@@ -26,18 +26,27 @@
           <td class="p-4">{{ user.first_name }}</td>
           <td class="p-4">{{ user.last_name }}</td>
           <td class="p-4">{{ user.school_id }}</td>
-          <td class="p-4">{{ userType(user.user_type) }}</td>
           <td class="p-4">{{ user.email }}</td>
           <td class="p-4">{{ user.gender || 'N/A' }}</td>
           <td class="p-4">{{ user.program }}</td>
           <td class="p-4">{{ user.year_graduated }}</td>
           <td class="p-4">{{ formatEmployment(user.employment_status) }}</td>
           <td class="p-4">
+            <div class="flex items-center space-x-2">
+              <div :class="['w-2 h-2 rounded-full', getOnlineStatusClass(userStatuses.get(user.id) || user.real_time_status)]"></div>
+              <span :class="getOnlineStatusTextClass(userStatuses.get(user.id) || user.real_time_status)">
+                {{ getOnlineStatusText(userStatuses.get(user.id) || user.real_time_status) }}
+              </span>
+            </div>
+          </td>
+          <td class="p-4">
             <span :class="user.is_active ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'">
               {{ user.is_active ? 'Active' : 'Blocked' }}
             </span>
           </td>
-          <td class="p-4">{{ user.last_login ? new Date(user.last_login).toLocaleString() : 'Never' }}</td>
+          <td class="p-4 text-sm text-gray-900">
+            {{ formatLastLogin(user.last_login, userStatuses.get(user.id) || user.real_time_status) }}
+          </td>
           <td class="p-4 flex items-center gap-2">
             <button @click="$emit('view-user', user)" title="View">
               <EyeIcon class="w-5 h-5 text-blue-600 hover:text-blue-800" />
@@ -61,12 +70,40 @@
 
 <script setup>
 import { EyeIcon, TrashIcon, BanIcon, UnlockIcon } from 'lucide-vue-next';
-defineProps({ users: Array, search: String });
-defineEmits(['view', 'block', 'unblock', 'delete']);
+import { onMounted, onUnmounted, ref } from 'vue';
+import { websocketService } from '@/services/websocket';
+import { 
+  formatLastLogin, 
+  getOnlineStatusClass, 
+  getOnlineStatusTextClass, 
+  getOnlineStatusText 
+} from '@/utils/timeFormat';
 
-function userType(type) {
-  return type === 1 ? 'Super Admin' : type === 2 ? 'Admin' : 'Alumni';
-}
+defineProps({ users: Array, search: String });
+defineEmits(['view-user', 'block-user', 'unblock-user', 'delete-user']);
+
+const userStatuses = ref(new Map());
+
+// WebSocket listener for real-time status updates
+const handleStatusUpdate = (data) => {
+  if (data.type === 'status_update' && data.data) {
+    const { user_id, status, timestamp } = data.data;
+    userStatuses.value.set(user_id, {
+      status,
+      last_seen: timestamp,
+      is_online: status === 'online'
+    });
+  }
+};
+
+onMounted(() => {
+  // Listen for status updates via WebSocket
+  websocketService.addListener(handleStatusUpdate);
+});
+
+onUnmounted(() => {
+  websocketService.removeListener(handleStatusUpdate);
+});
 
 function formatEmployment(status) {
   if (!status) return 'N/A';

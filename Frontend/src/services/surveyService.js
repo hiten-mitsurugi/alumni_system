@@ -73,6 +73,11 @@ class SurveyService {
     return api.get('/survey/active-questions/')
   }
 
+  // Get survey questions for registration process (public endpoint)
+  async getRegistrationSurveyQuestions() {
+    return api.get('/survey/registration-questions/')
+  }
+
   // Submit survey responses (alumni)
   async submitSurveyResponse(data) {
     return api.post('/survey/responses/', data)

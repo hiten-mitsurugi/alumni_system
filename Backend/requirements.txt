@@ -36,7 +36,7 @@ msgpack==1.1.0
 olefile==0.46
 packaging==25.0
 pandas==2.2.2
-pillow==11.2.0
+pillow==11.2.1
 prompt_toolkit==3.0.51
 psycopg2-binary==2.9.10
 pyasn1==0.6.1

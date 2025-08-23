@@ -6,11 +6,13 @@ import ApprovedUsersTable from '@/components/admin/ApprovedUsersTable.vue';
 import { websocketService } from '@/services/websocket';
 import CreateUserModal from '@/components/admin/CreateUserModal.vue';
 import ViewUserModal from '@/components/admin/ViewUserModal.vue';
+//import EditUserModal from '@/components/admin/EditUserModal.vue';
 
 // Modal control
 const showViewModal = ref(false);
 const showCreateModal = ref(false);
-const selectedUser = ref(null);
+const showEditModal = ref(false);
+const selectedUser = ref(null);   
 
 // User data
 const approvedUsers = ref([]);
@@ -74,6 +76,18 @@ const closeViewModal = () => {
   showViewModal.value = false;
 };
 
+// Edit user modal
+const openEditModal = (user) => {
+  selectedUser.value = user;
+  showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+  selectedUser.value = null;
+  showEditModal.value = false;
+  fetchApprovedUsers();
+};
+
 // Create user modal
 const openCreateModal = () => {
   showCreateModal.value = true;
@@ -86,52 +100,117 @@ const closeCreateModal = () => {
 
 // Actions
 const deleteUser = async (user) => {
-  try {
-    await api.post(`/reject-user/${user.id}/`);
-    approvedUsers.value = approvedUsers.value.filter(u => u.id !== user.id);
-  } catch (error) {
-    console.error('Failed to delete user:', error);
+  if (confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) {
+    try {
+      await api.post(`/reject-user/${user.id}/`);
+      approvedUsers.value = approvedUsers.value.filter(u => u.id !== user.id);
+      alert('User deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('Failed to delete user. Please try again.');
+    }
   }
 };
 
 const blockUser = async (user) => {
-  try {
-    await api.post(`/block-user/${user.id}/`);
-    fetchApprovedUsers();
-  } catch (error) {
-    console.error('Failed to block user:', error);
+  if (confirm(`Are you sure you want to block ${user.first_name} ${user.last_name}? They will not be able to login.`)) {
+    try {
+      await api.post(`/block-user/${user.id}/`);
+      fetchApprovedUsers();
+      alert('User blocked successfully');
+    } catch (error) {
+      console.error('Failed to block user:', error);
+      alert('Failed to block user. Please try again.');
+    }
   }
 };
 
 const unblockUser = async (user) => {
-  try {
-    await api.post(`/unblock-user/${user.id}/`);
-    fetchApprovedUsers();
-  } catch (error) {
-    console.error('Failed to unblock user:', error);
+  if (confirm(`Are you sure you want to unblock ${user.first_name} ${user.last_name}? They will be able to login again.`)) {
+    try {
+      await api.post(`/unblock-user/${user.id}/`);
+      fetchApprovedUsers();
+      alert('User unblocked successfully');
+    } catch (error) {
+      console.error('Failed to unblock user:', error);
+      alert('Failed to unblock user. Please try again.');
+    }
   }
 };
 
 // WebSocket listener
-const handleWebSocketMessage = (data) => {
-  if (
-    data.message.includes('blocked') ||
-    data.message.includes('unblocked') ||
-    data.message.includes('created')
-  ) {
-    fetchApprovedUsers();
+const handleWebSocketMessage = (message) => {
+  console.log('UserManagePage received WebSocket message:', message);
+  
+  // Handle legacy string messages
+  if (typeof message === 'string' || (message.message && typeof message.message === 'string')) {
+    const msg = message.message || message;
+    if (msg.includes('blocked') || msg.includes('unblocked') || msg.includes('created')) {
+      fetchApprovedUsers();
+    }
+    return;
+  }
+  
+  try {
+    // Handle real-time status updates
+    if (message.type === 'status_update') {
+      const { user_id, status, last_seen, last_login } = message.data || message;
+      console.log(`Updating status for user ${user_id} to ${status}`);
+      
+      // Find and update the user in the list
+      const userIndex = approvedUsers.value.findIndex(user => user.id === user_id);
+      if (userIndex !== -1) {
+        // Update the user's real-time status
+        if (!approvedUsers.value[userIndex].real_time_status) {
+          approvedUsers.value[userIndex].real_time_status = {};
+        }
+        
+        approvedUsers.value[userIndex].real_time_status.status = status;
+        approvedUsers.value[userIndex].real_time_status.is_online = status === 'online';
+        approvedUsers.value[userIndex].real_time_status.last_seen = last_seen;
+        
+        // Update last_login if provided
+        if (last_login) {
+          approvedUsers.value[userIndex].last_login = last_login;
+        }
+        
+        // Also update profile status for backward compatibility
+        if (!approvedUsers.value[userIndex].profile) {
+          approvedUsers.value[userIndex].profile = {};
+        }
+        approvedUsers.value[userIndex].profile.status = status;
+        approvedUsers.value[userIndex].profile.last_seen = last_seen;
+        
+        console.log(`Updated user ${user_id} status to ${status}`);
+      } else {
+        console.log(`User ${user_id} not found in current list`);
+      }
+    } else if (message.type === 'new_user') {
+      // Refresh the user list when a new user registers
+      fetchApprovedUsers();
+    }
+  } catch (error) {
+    console.error('Error handling WebSocket message:', error);
   }
 };
 
 // Lifecycle
 onMounted(() => {
   fetchApprovedUsers();
-  websocketService.connect();
-  websocketService.addListener(handleWebSocketMessage);
+  websocketService.connect('notifications');
+  websocketService.addListener('notifications', handleWebSocketMessage);
+  
+  // Refresh time formatting every minute
+  setInterval(() => {
+    // Trigger reactivity for time formatting without fetching data
+    if (approvedUsers.value.length > 0) {
+      approvedUsers.value = [...approvedUsers.value];
+    }
+  }, 60000); // Update every minute
 });
 
 onUnmounted(() => {
-  websocketService.removeListener(handleWebSocketMessage);
+  websocketService.removeListener('notifications', handleWebSocketMessage);
 });
 </script>
 
@@ -156,6 +235,7 @@ onUnmounted(() => {
       :users="paginatedUsers"
       :search="filters.search"
       @view-user="openViewModal"
+      @edit-user="openEditModal"
       @delete-user="deleteUser"
       @block-user="blockUser"
       @unblock-user="unblockUser"
@@ -184,6 +264,7 @@ onUnmounted(() => {
 
     <!-- Modals -->
     <ViewUserModal :show="showViewModal" :user="selectedUser" @close="closeViewModal" />
+    <EditUserModal :show="showEditModal" :user="selectedUser" @close="closeEditModal" @updated="fetchApprovedUsers" />
     <CreateUserModal v-if="showCreateModal" @close="closeCreateModal" />
   </div>
 </template>
