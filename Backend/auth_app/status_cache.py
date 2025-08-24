@@ -89,13 +89,17 @@ class UserStatusCache:
             return "offline"
             
         try:
-            # Check if user is in online set
+            # First check individual status (more accurate)
+            status = redis_client.get(f"{cls.USER_STATUS_PREFIX}{user_id}")
+            if status:
+                return status
+            
+            # If no individual status, check online set (fallback)
             if redis_client.sismember(cls.ONLINE_USERS_KEY, user_id):
                 return "online"
             
-            # Check individual status
-            status = redis_client.get(f"{cls.USER_STATUS_PREFIX}{user_id}")
-            return status if status else "offline"
+            # Default to offline
+            return "offline"
             
         except Exception as e:
             print(f"Error getting status for user {user_id}: {e}")

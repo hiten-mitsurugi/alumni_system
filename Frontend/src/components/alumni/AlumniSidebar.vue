@@ -71,5 +71,11 @@ onMounted(async () => {
   } else {
     console.log('🔧 AlumniSidebar: Store already initialized')
   }
+  
+  // 🔧 ENHANCEMENT: Force refresh counts to ensure real-time accuracy
+  if (authStore.user) {
+    console.log('🔄 AlumniSidebar: Force refreshing notification counts...')
+    await messagingNotificationStore.forceRefresh()
+  }
 })
 </script>

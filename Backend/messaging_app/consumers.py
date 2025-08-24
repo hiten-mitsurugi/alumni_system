@@ -1093,13 +1093,42 @@ class PrivateChatConsumer(MessagingBaseMixin, AsyncJsonWebsocketConsumer):
             
         @database_sync_to_async
         def _mark_read():
+            # Count how many messages will be marked as read
+            unread_count = Message.objects.filter(
+                sender_id=receiver_id, 
+                receiver=self.user, 
+                is_read=False
+            ).count()
+            
+            # Mark messages as read
             Message.objects.filter(
                 sender_id=receiver_id, 
                 receiver=self.user, 
                 is_read=False
             ).update(is_read=True)
             
-        await _mark_read()
+            return unread_count
+            
+        marked_count = await _mark_read()
+        
+        # 🔔 NOTIFICATION: Send notification update to decrement unread count
+        if marked_count > 0:
+            await self.channel_layer.group_send(
+                f'user_{self.user.id}',
+                {
+                    'type': 'notification_update',
+                    'data': {
+                        'action': 'decrement',
+                        'type': 'message',
+                        'count': marked_count
+                    }
+                }
+            )
+            
+            # Also invalidate cache for this user
+            from django.core.cache import cache
+            cache.delete(f"unread_counts_{self.user.id}")
+        
         await self.broadcast_to_users(
             [receiver_id], 
             'messages_read', 
@@ -1802,15 +1831,38 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
                 group_id=group_id
             ).exclude(sender=self.user)
             
+            marked_count = 0
             # Only mark messages as read that don't already have a MessageRead record
             for message in unread_messages:
-                MessageRead.objects.get_or_create(
+                msg_read_obj, created = MessageRead.objects.get_or_create(
                     message=message,
                     user=self.user,
                     defaults={'read_at': timezone.now()}
                 )
+                if created:
+                    marked_count += 1
             
-        await _mark_group_read()
+            return marked_count
+            
+        marked_count = await _mark_group_read()
+        
+        # 🔔 NOTIFICATION: Send notification update to decrement unread count
+        if marked_count > 0:
+            await self.channel_layer.group_send(
+                f'user_{self.user.id}',
+                {
+                    'type': 'notification_update',
+                    'data': {
+                        'action': 'decrement',
+                        'type': 'message',
+                        'count': marked_count
+                    }
+                }
+            )
+            
+            # Also invalidate cache for this user
+            from django.core.cache import cache
+            cache.delete(f"unread_counts_{self.user.id}")
         
         # Notify other group members that this user has read messages
         await self.channel_layer.group_send(

@@ -30,7 +30,7 @@ const routes = [
       {
         path: 'user-management',
         name: 'SuperAdminUserManagement',
-        component: () => import('@/views/Admin/UserManagePage.vue'),
+        component: () => import('@/views/SuperAdmin/UserManagePage.vue'),
       },
       {
         path: 'survey-management',

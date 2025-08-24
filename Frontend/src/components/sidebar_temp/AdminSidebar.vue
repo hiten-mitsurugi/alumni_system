@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth'; // ✅ Use alias
+import { useMessagingNotificationStore } from '@/stores/messagingNotifications';
 
 import {
   LogOut as LogOutIcon,
@@ -19,6 +20,7 @@ import {
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const messagingNotificationStore = useMessagingNotificationStore();
 
 const BASE_URL = 'http://127.0.0.1:8000';
 
@@ -32,9 +34,32 @@ onMounted(async () => {
       router.push('/login');
     }
   }
+
+  // Initialize messaging notification store for admin
+  console.log('🔧 AdminSidebar: Component mounted, checking initialization...');
+  console.log('🔧 AdminSidebar: Auth user:', authStore.user?.id);
+  console.log('🔧 AdminSidebar: Store initialized:', messagingNotificationStore.isInitialized);
+  
+  if (authStore.user && !messagingNotificationStore.isInitialized) {
+    console.log('🔧 AdminSidebar: Initializing messaging notification store...');
+    await messagingNotificationStore.initialize();
+    console.log('🔧 AdminSidebar: Store initialization complete');
+  } else if (!authStore.user) {
+    console.log('🔧 AdminSidebar: No user found, skipping store initialization');
+  } else {
+    console.log('🔧 AdminSidebar: Store already initialized');
+  }
+  
+  // 🔧 ENHANCEMENT: Force refresh counts to ensure real-time accuracy
+  if (authStore.user) {
+    console.log('🔄 AdminSidebar: Force refreshing notification counts...');
+    await messagingNotificationStore.forceRefresh();
+  }
 });
 
 const logout = async () => {
+  // Cleanup messaging notifications on logout
+  messagingNotificationStore.cleanup();
   await authStore.logoutWithAPI();
   router.push('/login');
 };
@@ -55,6 +80,12 @@ const userTypeLabel = computed(() => {
     case 3: return 'Alumni';
     default: return 'Unknown';
   }
+});
+
+// Computed property for messaging badge count
+const messagingBadgeCount = computed(() => {
+  const count = messagingNotificationStore.totalUnreadCount;
+  return count > 0 ? count.toString() : null;
 });
 
 const isActive = (path) => route.path.startsWith(path);
@@ -94,10 +125,18 @@ const isActive = (path) => route.path.startsWith(path);
         <li>
           <router-link
             to="/admin/messaging"
-            class="flex items-center gap-2 p-2 rounded"
+            class="flex items-center gap-2 p-2 rounded relative"
             :class="isActive('/admin/messaging') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
           >
-            <MessageCircleIcon class="w-5 h-5" /> Messaging
+            <MessageCircleIcon class="w-5 h-5" /> 
+            Messaging
+            <!-- Badge for unread messages -->
+            <div 
+              v-if="messagingBadgeCount" 
+              class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-sm min-w-[20px] text-center"
+            >
+              {{ messagingBadgeCount }}
+            </div>
           </router-link>
         </li>
         <li>

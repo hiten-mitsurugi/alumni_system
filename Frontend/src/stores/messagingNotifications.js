@@ -126,6 +126,12 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
         total: totalUnreadCount.value
       })
       
+      // 🔧 ENHANCEMENT: Trigger a delayed refresh to ensure consistency
+      setTimeout(async () => {
+        console.log('🔄 Delayed refresh after notification update...')
+        await fetchUnreadCounts()
+      }, 2000)
+      
     } else if (data.type === 'status_update') {
       // Ignore status updates - these are handled by App.vue and other components
       console.log('🔔 Messaging Notification: Ignoring status update event')
@@ -146,7 +152,7 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
         console.log('🌐 Messaging Notification: Main WebSocket not ready, connecting...')
         await websocketService.connect('notifications')
         // Wait a bit for connection to establish
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
       
       // Add our listener to the existing connection
@@ -154,6 +160,15 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
       
       wsConnected.value = true
       console.log('🌐 Messaging Notification: Added listener to WebSocket connection')
+      
+      // 🔧 ENHANCEMENT: Set up periodic refresh to ensure real-time accuracy
+      setInterval(async () => {
+        if (isInitialized.value) {
+          console.log('🔄 Auto-refreshing notification counts...')
+          await fetchUnreadCounts()
+        }
+      }, 30000) // Refresh every 30 seconds as backup
+      
     } catch (error) {
       console.error('❌ Failed to add messaging notification listener:', error)
     }

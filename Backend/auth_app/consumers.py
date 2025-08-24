@@ -19,15 +19,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket connecting authenticated user: {user.username} (ID: {user.id})")
             
-            # Set user online in Redis cache
-            from .status_cache import set_user_online
-            from channels.db import database_sync_to_async
-            
-            @database_sync_to_async
-            def set_user_online_sync():
-                set_user_online(user.id)
-            
-            await set_user_online_sync()
+            # NOTE: Do not automatically set user online here
+            # User status should only be managed through login/logout endpoints
+            # WebSocket connection != user login status
             
             # Join global groups
             await self.channel_layer.group_add('admin_notifications', self.channel_name)
@@ -38,7 +32,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_add(f'user_{user.id}', self.channel_name)
             
             await self.accept()
-            logger.info(f"WebSocket connection accepted for user {user.username}. Set online status and joined groups")
+            logger.info(f"WebSocket connection accepted for user {user.username}. Joined groups without affecting online status")
             
         except Exception as e:
             logger.error(f"WebSocket connect error for user {self.scope['user']}: {str(e)}")
@@ -49,17 +43,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket disconnecting user {user.username} (ID: {user.id}) with code: {close_code}")
             
-            # Set user offline in Redis cache only if no other connections
-            from .status_cache import set_user_offline
-            from channels.db import database_sync_to_async
-            
-            @database_sync_to_async
-            def set_user_offline_sync():
-                # Check if user has other active WebSocket connections
-                # For now, set offline immediately - can be enhanced later
-                set_user_offline(user.id)
-            
-            await set_user_offline_sync()
+            # NOTE: Do not automatically set user offline here
+            # User status should only be managed through login/logout endpoints
+            # WebSocket disconnection != user logout
             
             # Leave all groups
             await self.channel_layer.group_discard('admin_notifications', self.channel_name)

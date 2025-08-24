@@ -3,6 +3,18 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.cache import cache
+
+# 🚀 CACHE UTILITIES
+def invalidate_unread_counts_cache(user_id):
+    """Invalidate unread counts cache for a specific user"""
+    cache_key = f"unread_counts_{user_id}"
+    cache.delete(cache_key)
+    logger.info(f"🚀 Cache INVALIDATED: Unread counts cache for user {user_id}")
+
+def invalidate_unread_counts_for_users(user_ids):
+    """Invalidate unread counts cache for multiple users"""
+    for user_id in user_ids:
+        invalidate_unread_counts_cache(user_id)
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
@@ -256,6 +268,10 @@ class SendMessageView(APIView):
                 content=content,
                 timestamp=timezone.now()
             )
+            
+            # 🚀 NEW: Invalidate unread counts cache for receiver
+            invalidate_unread_counts_cache(receiver.id)
+            
             return Response({
                 'status': 'Message request sent',
                 'request_id': str(message_request.id)
@@ -299,6 +315,9 @@ class SendMessageView(APIView):
             # Clear message cache for this conversation
             user_ids = sorted([request.user.id, receiver.id])
             cache.delete(f"private_messages_{user_ids[0]}_{user_ids[1]}")
+            
+            # 🚀 NEW: Invalidate unread counts cache for receiver
+            invalidate_unread_counts_cache(receiver.id)
             
             logger.info(f"🚀 Cache invalidated after message sent from {request.user.id} to {receiver.id}")
             
@@ -946,6 +965,10 @@ class MessageRequestView(APIView):
                 content=msg_request.content  # Use the actual message content
             )
             
+            # Invalidate cache for both users (accepting request affects unread counts)
+            invalidate_unread_counts_cache(msg_request.sender.id)
+            invalidate_unread_counts_cache(request.user.id)
+            
             # Send real-time notification to sender that request was accepted
             from channels.layers import get_channel_layer
             from asgiref.sync import async_to_sync
@@ -966,6 +989,9 @@ class MessageRequestView(APIView):
             
             return Response({'status': 'Request accepted', 'message_id': str(message.id)})
         elif action == 'decline':
+            # Invalidate cache for receiver (declining request affects unread counts)
+            invalidate_unread_counts_cache(request.user.id)
+            
             msg_request.delete()
             return Response({'status': 'Request declined'})
         return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2172,6 +2198,9 @@ class MarkMessageAsReadView(APIView):
                     read_data
                 )
             
+            # 🚀 NEW: Invalidate unread counts cache when message is marked as read
+            invalidate_unread_counts_cache(user.id)
+            
             return Response({
                 'message': 'Message marked as read successfully',
                 'read_by': serializer.data['read_by']
@@ -2186,13 +2215,23 @@ class MarkMessageAsReadView(APIView):
 
 
 class UnreadCountsView(APIView):
-    """Get unread message and message request counts for the current user"""
+    """Get unread message and message request counts for the current user with Redis caching"""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
         """Return unread counts for messages and message requests"""
         try:
             user = request.user
+            
+            # 🚀 SPEED: Try to get cached unread counts first
+            cache_key = f"unread_counts_{user.id}"
+            cached_counts = cache.get(cache_key)
+            
+            if cached_counts:
+                logger.info(f"🚀 Cache HIT: Returning cached unread counts for user {user.id}")
+                return Response(cached_counts)
+            
+            logger.info(f"🚀 Cache MISS: Calculating unread counts for user {user.id}")
             
             # Count unread private messages
             # Messages where user is receiver and message is not read
@@ -2231,13 +2270,20 @@ class UnreadCountsView(APIView):
             
             logger.info(f"Unread counts for user {user.id}: {total_unread_messages} messages, {unread_message_requests} requests")
             
-            return Response({
+            # Prepare response data
+            response_data = {
                 'unread_messages': total_unread_messages,
                 'unread_private_messages': unread_private_messages,
                 'unread_group_messages': unread_group_messages,
                 'unread_message_requests': unread_message_requests,
                 'total_unread': total_unread_messages + unread_message_requests
-            }, status=status.HTTP_200_OK)
+            }
+            
+            # 🚀 SPEED: Cache for 30 seconds (counts change frequently)
+            cache.set(cache_key, response_data, 30)
+            logger.info(f"🚀 Cache SET: Cached unread counts for user {user.id}")
+            
+            return Response(response_data, status=status.HTTP_200_OK)
             
         except Exception as e:
             logger.error(f"Error getting unread counts for user {request.user.id}: {e}")
