@@ -113,14 +113,14 @@ class Comment(models.Model):
         return f"Comment by {self.user.first_name} on {self.post.id}"
 
 class Reaction(models.Model):
-    """Facebook-style reactions for posts and comments"""
+    """LinkedIn-style reactions for posts and comments"""
     REACTION_TYPES = (
         ('like', '👍'),
-        ('love', '❤️'),
-        ('laugh', '😄'),
-        ('wow', '😮'),
+        ('applaud', '👏'),
+        ('heart', '❤️'),
+        ('support', '🤝'),
+        ('laugh', '😂'),
         ('sad', '😢'),
-        ('angry', '😡'),
     )
     
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='reactions')

@@ -12,9 +12,11 @@ urlpatterns = [
     
     # Reactions (Facebook-style)
     path('posts/<int:post_id>/react/', PostReactionView.as_view(), name='post-react'),
+    path('posts/<int:post_id>/reactions/', PostReactionView.as_view(), name='post-reactions'),
     
     # Comments
     path('posts/<int:post_id>/comment/', CommentCreateView.as_view(), name='post-comment'),
+    path('posts/<int:post_id>/comments/', CommentCreateView.as_view(), name='post-comments'),
     
     # Sharing/Reposting
     path('posts/<int:post_id>/share/', SharePostView.as_view(), name='post-share'),

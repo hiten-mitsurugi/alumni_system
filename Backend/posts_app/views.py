@@ -12,7 +12,7 @@ from asgiref.sync import async_to_sync
 
 from .models import Post, Comment, Reaction, PostMedia, SavedPost, PostView, PostReport
 from .serializers import (
-    PostSerializer, PostCreateSerializer, CommentSerializer, 
+    PostSerializer, PostCreateSerializer, CommentSerializer, CommentCreateSerializer,
     ReactionSerializer, SavedPostSerializer, PostReportSerializer
 )
 
@@ -257,13 +257,49 @@ class PostReactionView(APIView):
     """Handle post reactions (Facebook-style)"""
     permission_classes = [IsAuthenticated]
     
+    def get(self, request, post_id):
+        """Get all reactions for a post"""
+        try:
+            post = Post.objects.get(id=post_id)
+            content_type = ContentType.objects.get_for_model(Post)
+            
+            reactions = Reaction.objects.filter(
+                content_type=content_type,
+                object_id=post.id
+            ).select_related('user').order_by('-created_at')
+            
+            serializer = ReactionSerializer(reactions, many=True, context={'request': request})
+            
+            return Response({
+                'reactions': serializer.data,
+                'total_count': reactions.count()
+            })
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
     def post(self, request, post_id):
         """Add or update reaction to a post"""
+        print(f"DEBUG: Received reaction request - post_id: {post_id}")
+        print(f"DEBUG: Request data: {request.data}")
+        print(f"DEBUG: Request user: {request.user}")
+        
         reaction_type = request.data.get('reaction_type')
+        print(f"DEBUG: Extracted reaction_type: '{reaction_type}'")
+        print(f"DEBUG: Available reaction types: {list(dict(Reaction.REACTION_TYPES).keys())}")
+        
+        if not reaction_type:
+            return Response(
+                {'error': 'reaction_type is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         if reaction_type not in dict(Reaction.REACTION_TYPES).keys():
             return Response(
-                {'error': 'Invalid reaction type'}, 
+                {'error': f'Invalid reaction type: {reaction_type}. Valid types: {list(dict(Reaction.REACTION_TYPES).keys())}'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -285,8 +321,27 @@ class PostReactionView(APIView):
             # Broadcast reaction update
             self._broadcast_reaction_update(post, request.user, reaction_type, created)
             
-            # Invalidate cache
+            # Invalidate cache more thoroughly
             cache.delete(f"post_reactions_{post.id}")
+            cache.delete(f"post_{post.id}")
+            
+            # Clear all post feed cache keys
+            try:
+                # Get all cache keys and delete feed-related ones
+                if hasattr(cache, '_cache'):
+                    cache_keys_to_delete = []
+                    for key in cache._cache.keys():
+                        if 'post_feed_' in str(key):
+                            cache_keys_to_delete.append(key)
+                    for key in cache_keys_to_delete:
+                        cache.delete(key)
+                else:
+                    # Alternative approach for different cache backends
+                    cache.clear()
+            except Exception as e:
+                print(f"DEBUG: Cache clearing error: {e}")
+            
+            print(f"DEBUG: Reaction {reaction_type} {'created' if created else 'updated'} for post {post_id} by user {request.user.id}")
             
             return Response({
                 'success': True,
@@ -347,22 +402,53 @@ class PostReactionView(APIView):
         """Broadcast reaction update to real-time subscribers"""
         channel_layer = get_channel_layer()
         
+        message_data = {
+            'type': 'reaction_update',
+            'post_id': post.id,
+            'user_id': user.id,
+            'user_name': f"{user.first_name} {user.last_name}",
+            'reaction_type': reaction_type,
+            'action': 'removed' if removed else ('updated' if not created else 'added'),
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        # Broadcast to specific post group
         async_to_sync(channel_layer.group_send)(
             f'post_{post.id}',
-            {
-                'type': 'reaction_update',
-                'post_id': post.id,
-                'user_id': user.id,
-                'user_name': f"{user.first_name} {user.last_name}",
-                'reaction_type': reaction_type,
-                'action': 'removed' if removed else ('updated' if not created else 'added'),
-                'timestamp': timezone.now().isoformat()
-            }
+            message_data
         )
+        
+        # Also broadcast to general posts feed for real-time updates
+        async_to_sync(channel_layer.group_send)(
+            'posts_feed',
+            message_data
+        )
+        
+        print(f"DEBUG: Broadcasted reaction update to WebSocket groups: post_{post.id} and posts_feed")
 
 class CommentCreateView(APIView):
-    """Create comments on posts"""
+    """Create and retrieve comments on posts"""
     permission_classes = [IsAuthenticated]
+    
+    def get(self, request, post_id):
+        """Get all comments for a post"""
+        try:
+            post = Post.objects.get(id=post_id)
+            
+            # Get all comments for this post ordered by creation time
+            comments = post.comments.all().order_by('created_at')
+            
+            serializer = CommentSerializer(comments, many=True, context={'request': request})
+            return Response({
+                'comments': serializer.data,
+                'total_count': post.comments.count()
+            }, status=status.HTTP_200_OK)
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
     
     def post(self, request, post_id):
         """Create a new comment"""
@@ -379,23 +465,24 @@ class CommentCreateView(APIView):
             
             # Create comment
             comment_data = {
-                'post': post.id,
                 'content': content,
                 'parent': parent_id
             }
             
-            serializer = CommentSerializer(data=comment_data, context={'request': request})
+            serializer = CommentCreateSerializer(data=comment_data, context={'request': request})
             if serializer.is_valid():
-                comment = serializer.save(user=request.user)
+                comment = serializer.save(user=request.user, post=post)
                 
-                # Update post comment count
-                self._update_post_comment_count(post)
+                # Update post comment count immediately and simply
+                post.comments_count = post.comments.count()
+                post.save(update_fields=['comments_count'])
                 
-                # Broadcast new comment
-                self._broadcast_new_comment(comment, request.user)
-                
-                # Invalidate cache
+                # Clear all cache to ensure fresh data on refresh - simple approach
                 cache.delete(f"post_comments_{post.id}")
+                cache.clear()  # Clear all post feed cache variations
+                
+                # Broadcast new comment AFTER database operations are complete
+                self._broadcast_new_comment(comment, request.user)
                 
                 response_serializer = CommentSerializer(comment, context={'request': request})
                 return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -431,6 +518,24 @@ class CommentCreateView(APIView):
                 'timestamp': comment.created_at.isoformat()
             }
         )
+    
+    def _invalidate_post_feed_cache(self):
+        """Invalidate post feed cache entries"""
+        # Use a simple approach: clear cache by pattern
+        # This will force fresh data to be loaded on next request
+        cache_patterns = [
+            'post_feed_*',  # All post feed cache entries
+        ]
+        
+        # Django's cache doesn't support pattern deletion by default
+        # So we'll use a version-based cache invalidation
+        cache.delete_many([
+            f"post_feed_{i}_{cat}_{search}_{page}" 
+            for i in range(1, 50)  # User IDs 1-50
+            for cat in ['all', 'announcement', 'job', 'event', 'achievement', 'general', None, '']
+            for search in [None, '', 'test']  # Common search terms
+            for page in range(1, 6)  # Pages 1-5
+        ])
 
 class SharePostView(APIView):
     """Share/repost functionality"""

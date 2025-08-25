@@ -5,7 +5,7 @@
     <PostHeader :post="post" :categories="categories" />
 
     <!-- Post Content -->
-    <div class="px-6">
+    <div class="px-6 cursor-pointer" @click="openPostModal">
       <h2 v-if="post.title" class="text-2xl font-bold text-slate-900 mb-4 leading-relaxed">{{ post.title }}</h2>
       <div class="text-lg text-slate-800 whitespace-pre-wrap mb-6 leading-relaxed">{{ post.content }}</div>
 
@@ -31,29 +31,44 @@
       </div>
     </div>
 
-    <!-- Engagement Stats (Clickable to open modal) -->
-    <div v-if="post.likes_count > 0 || post.comments_count > 0 || post.shares_count > 0"
-      class="px-6 py-4 border-t-2 border-slate-100">
-      <div class="flex items-center justify-between text-lg text-slate-600">
-        <div class="flex items-center space-x-6">
-          <span v-if="post.likes_count > 0" class="flex items-center space-x-2 font-semibold">
-            <div class="flex -space-x-1 text-xl">
+    <!-- Engagement Stats & Reaction Summary -->
+    <div v-if="hasEngagement" class="px-6 py-4 border-t-2 border-slate-100 hover-isolation">
+      <div class="flex items-center justify-between text-lg text-slate-600" @mouseenter.stop @mouseover.stop>
+        <div class="flex items-center space-x-4" @mouseenter.stop @mouseover.stop>
+          <!-- Facebook-style Reaction Summary -->
+          <ReactionSummary
+            :reactions-summary="post.reactions_summary"
+            :post-id="post.id"
+            @open-reactions-modal="openReactionsModal"
+          />
+          
+          <!-- Legacy reaction display (fallback) -->
+          <span v-if="!post.reactions_summary && post.likes_count > 0" class="flex items-center space-x-2 font-semibold">
+            <div class="flex -space-x-1 text-2xl">
               <span>👍</span>
+              <span>👏</span>
               <span>❤️</span>
               <span>😂</span>
+              <span>🤝</span>
             </div>
             <span class="text-blue-600">{{ post.likes_count }} reactions</span>
           </span>
+        </div>
+        
+        <div class="flex items-center space-x-4">
           <button v-if="post.comments_count > 0" @click="openPostModal"
             class="font-semibold text-green-600 hover:text-green-800 transition-colors">
             💬 {{ post.comments_count }} comments
           </button>
           <span v-if="post.shares_count > 0" class="font-semibold text-purple-600">
-            🔄 {{ post.shares_count }} shares
+            🔄 {{ post.shares_count }} reposts
           </span>
         </div>
       </div>
     </div>
+
+    <!-- Spacing to separate engagement from actions -->
+    <div class="h-2"></div>
 
     <!-- Action Buttons -->
     <PostActions :post-id="post.id" :selected-reaction="selectedReaction" @react-to-post="handleReaction"
@@ -106,6 +121,15 @@
         </button>
       </div>
     </div>
+
+    <!-- Reactions Modal -->
+    <ReactionsModal
+      v-if="showReactionsModal"
+      :post-id="post.id"
+      :current-user-id="currentUserId"
+      @close="showReactionsModal = false"
+      @reaction-updated="handleReactionUpdated"
+    />
   </div>
 </template>
 
@@ -114,6 +138,8 @@ import { ref, computed } from 'vue'
 import PostHeader from './PostHeader.vue'
 import MediaDisplay from './MediaDisplay.vue'
 import PostActions from './PostActions.vue'
+import ReactionSummary from './ReactionSummary.vue'
+import ReactionsModal from './ReactionsModal.vue'
 
 // Props
 const props = defineProps({
@@ -136,11 +162,18 @@ const props = defineProps({
   userProfilePicture: {
     type: String,
     default: ''
+  },
+  currentUserId: {
+    type: Number,
+    required: true
   }
 })
 
 // Emits
-const emit = defineEmits(['react-to-post', 'add-comment', 'share-post', 'copy-link', 'open-modal'])
+const emit = defineEmits(['react-to-post', 'add-comment', 'share-post', 'copy-link', 'open-modal', 'reaction-updated'])
+
+// Local state
+const showReactionsModal = ref(false)
 
 // Computed properties
 const hasMedia = computed(() => {
@@ -152,6 +185,13 @@ const previewComments = computed(() => {
   return props.comments.slice(0, 2) // Show only first 2 comments as preview
 })
 
+const hasEngagement = computed(() => {
+  return props.post.likes_count > 0 || 
+         props.post.comments_count > 0 || 
+         props.post.shares_count > 0 ||
+         (props.post.reactions_summary && props.post.reactions_summary.total_count > 0)
+})
+
 // Methods
 const openPostModal = () => {
   console.log('🔗 PostCard: Opening modal for post:', props.post.id)
@@ -160,6 +200,16 @@ const openPostModal = () => {
 
 const handleReaction = (postId, reactionType) => {
   emit('react-to-post', postId, reactionType)
+}
+
+const openReactionsModal = (postId) => {
+  showReactionsModal.value = true
+}
+
+const handleReactionUpdated = () => {
+  // Emit event to parent to refresh post data
+  emit('reaction-updated', props.post.id)
+  showReactionsModal.value = false
 }
 
 const formatTimeAgo = (dateString) => {
@@ -177,6 +227,31 @@ const formatTimeAgo = (dateString) => {
 </script>
 
 <style scoped>
+/* Hover isolation for engagement section */
+.hover-isolation {
+  isolation: isolate;
+  position: relative;
+}
+
+.hover-isolation:hover {
+  background-color: transparent !important;
+}
+
+.hover-isolation * {
+  pointer-events: auto;
+}
+
+/* Prevent hover bubbling from engagement to actions */
+.hover-isolation::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: transparent;
+  pointer-events: none;
+}
 /* Enhanced card shadows */
 .shadow-xl {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);

@@ -163,6 +163,19 @@ const fetchPosts = async () => {
     posts.value = response.data.results || response.data;
     console.log('📊 Loaded posts:', posts.value.length);
     
+    // Initialize selectedReaction from backend user_reaction data
+    posts.value.forEach(post => {
+      if (post.reactions_summary && post.reactions_summary.user_reaction) {
+        selectedReaction.value[post.id] = post.reactions_summary.user_reaction;
+        console.log(`🎯 Initialized reaction for post ${post.id}: ${post.reactions_summary.user_reaction}`);
+      } else {
+        // Ensure no old reactions remain for posts without current user reactions
+        selectedReaction.value[post.id] = null;
+      }
+    });
+    
+    console.log('🎯 Final selectedReaction state:', selectedReaction.value);
+    
     // Subscribe to real-time updates for all loaded posts
     subscribeToPostUpdates();
     
@@ -233,33 +246,60 @@ const createPost = async (postData) => {
 
 const reactToPost = async (postId, reactionType) => {
   try {
+    console.log('🔄 ReactToPost called with:', { postId, reactionType });
     const currentReaction = selectedReaction.value[postId];
+    console.log('🔄 Current reaction:', currentReaction);
     
     if (currentReaction === reactionType) {
       // Remove reaction
+      console.log('🗑️ Removing reaction...');
       await axios.delete(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
       selectedReaction.value[postId] = null;
     } else {
       // Add or update reaction
-      await axios.post(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
-        reaction_type: reactionType
-      }, {
+      console.log('➕ Adding/updating reaction...', { reaction_type: reactionType });
+      const requestData = { reaction_type: reactionType };
+      console.log('📤 Sending request data:', requestData);
+      
+      await axios.post(`${BASE_URL}/api/posts/posts/${postId}/react/`, requestData, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
       selectedReaction.value[postId] = reactionType;
     }
     
-    // Update post reaction count locally (will be updated via WebSocket too)
+    // Update post reaction count locally and wait for WebSocket update
     const post = posts.value.find(p => p.id === postId);
     if (post) {
-      // This will be properly updated when we get the WebSocket message
-      await fetchPosts();
+      // Fetch fresh post data to ensure reactions_summary is updated
+      try {
+        const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/`, {
+          headers: { Authorization: `Bearer ${authStore.token}` }
+        });
+        
+        const postIndex = posts.value.findIndex(p => p.id === postId);
+        if (postIndex !== -1) {
+          posts.value[postIndex] = response.data;
+          console.log('✅ Updated post with fresh reaction data after user reaction');
+          
+          // Ensure selectedReaction is synchronized with backend
+          if (response.data.reactions_summary && response.data.reactions_summary.user_reaction) {
+            selectedReaction.value[postId] = response.data.reactions_summary.user_reaction;
+          } else {
+            selectedReaction.value[postId] = null;
+          }
+        }
+      } catch (error) {
+        console.error('❌ Failed to fetch updated post after reaction:', error);
+        // Fallback to refresh all posts
+        await fetchPosts();
+      }
     }
     
   } catch (error) {
     console.error('Failed to react to post:', error);
+    console.error('Error response data:', error.response?.data);
   }
 };
 
@@ -349,6 +389,30 @@ const copyPostLink = (postId) => {
   });
 };
 
+const handleReactionUpdated = async (postId) => {
+  console.log('🔄 Handling reaction update for post:', postId);
+  try {
+    // Refresh the specific post to get updated reaction data
+    const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    });
+    
+    // Find and update the post in the posts array
+    const postIndex = posts.value.findIndex(p => p.id === postId);
+    if (postIndex !== -1) {
+      posts.value[postIndex] = response.data;
+      console.log('✅ Post reaction data updated:', response.data.reactions_summary);
+    }
+    
+    // Also update selectedPost if it's the same post
+    if (selectedPost.value && selectedPost.value.id === postId) {
+      selectedPost.value = response.data;
+    }
+  } catch (error) {
+    console.error('Failed to refresh post data after reaction update:', error);
+  }
+};
+
 // Utility Functions
 const addNotification = (message, type = 'info') => {
   notifications.value.unshift({
@@ -399,11 +463,48 @@ const toggleComments = (postId) => {
   showComments.value[postId] = !showComments.value[postId];
 };
 
-const updatePostReaction = (data) => {
+const updatePostReaction = async (data) => {
+  console.log('⚡ Received reaction update via WebSocket:', data);
+  
   const post = posts.value.find(p => p.id === data.post_id);
   if (post) {
-    // Update reaction counts based on WebSocket data
-    fetchPosts(); // Simplified - in production you'd update locally
+    console.log('🔄 Updating post reaction locally for post:', data.post_id);
+    
+    // Update selected reaction if it's for current user
+    if (data.user_id === authStore.user.id) {
+      if (data.action === 'removed') {
+        selectedReaction.value[data.post_id] = null;
+        console.log(`🗑️ Removed reaction for current user on post ${data.post_id}`);
+      } else {
+        selectedReaction.value[data.post_id] = data.reaction_type;
+        console.log(`🎯 Updated reaction for current user on post ${data.post_id}: ${data.reaction_type}`);
+      }
+    }
+    
+    // Fetch fresh data from backend to get updated reactions_summary
+    try {
+      const response = await axios.get(`${BASE_URL}/api/posts/posts/${data.post_id}/`, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      });
+      
+      // Update the post with fresh data
+      const postIndex = posts.value.findIndex(p => p.id === data.post_id);
+      if (postIndex !== -1) {
+        posts.value[postIndex] = response.data;
+        console.log('✅ Updated post with fresh reaction data:', response.data.reactions_summary);
+        
+        // Also ensure selectedReaction is synchronized with backend data
+        if (response.data.reactions_summary && response.data.reactions_summary.user_reaction) {
+          selectedReaction.value[data.post_id] = response.data.reactions_summary.user_reaction;
+        } else {
+          selectedReaction.value[data.post_id] = null;
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch updated post data:', error);
+      // Fallback: refresh all posts
+      await fetchPosts();
+    }
   }
 };
 
@@ -581,11 +682,13 @@ onUnmounted(() => {
           :selected-reaction="selectedReaction[post.id]"
           :comments="comments[post.id] || post.recent_comments || []"
           :user-profile-picture="authStore.user.profile_picture"
+          :current-user-id="authStore.user.id"
           @react-to-post="reactToPost"
           @add-comment="addComment"
           @share-post="sharePost"
           @copy-link="copyPostLink"
           @open-modal="openPostModal"
+          @reaction-updated="handleReactionUpdated"
         />
       </div>
       
@@ -630,6 +733,7 @@ onUnmounted(() => {
       :user-profile-picture="authStore.user.profile_picture"
       :categories="categories"
       :selected-reaction="selectedReaction[selectedPost.id]"
+      :current-user-id="authStore.user.id"
       @close="closePostModal"
       @react-to-post="reactToPost"
       @add-comment="addComment"
@@ -637,6 +741,7 @@ onUnmounted(() => {
       @copy-link="copyPostLink"
       @load-comments="fetchCommentsForPost"
       @navigate="navigateToPost"
+      @reaction-updated="handleReactionUpdated"
     />
   </div>
 </template>

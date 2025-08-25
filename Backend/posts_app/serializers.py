@@ -66,6 +66,13 @@ class ReactionSummarySerializer(serializers.Serializer):
     reaction_counts = serializers.DictField()
     recent_reactions = ReactionSerializer(many=True)
 
+class CommentCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating comments"""
+    
+    class Meta:
+        model = Comment
+        fields = ['content', 'parent']
+
 class CommentSerializer(serializers.ModelSerializer):
     """Enhanced comment serializer with Facebook-like features"""
     user = UserBasicSerializer(read_only=True)
@@ -79,10 +86,14 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = [
-            'id', 'user', 'content', 'parent', 'likes_count', 'replies_count',
+            'id', 'user', 'post', 'content', 'parent', 'likes_count', 'replies_count',
             'created_at', 'updated_at', 'edited_at', 'is_edited', 'time_since',
             'replies', 'reactions_summary', 'can_edit', 'can_delete'
         ]
+        extra_kwargs = {
+            'post': {'required': False, 'read_only': True},
+            'user': {'read_only': True}
+        }
     
     def get_replies(self, obj):
         if obj.replies.exists():
@@ -216,13 +227,21 @@ class PostSerializer(serializers.ModelSerializer):
     def get_reactions_summary(self, obj):
         request = self.context.get('request')
         if not request:
-            return None
+            print(f"DEBUG: No request in context for post {obj.id}")
+            return {
+                'total_count': 0,
+                'user_reaction': None,
+                'reaction_counts': {},
+                'recent_reactions': []
+            }
             
         content_type = ContentType.objects.get_for_model(Post)
         reactions = Reaction.objects.filter(
             content_type=content_type,
             object_id=obj.id
         ).select_related('user')
+        
+        print(f"DEBUG: Found {reactions.count()} reactions for post {obj.id}")
         
         total_count = reactions.count()
         user_reaction = None
@@ -232,6 +251,7 @@ class PostSerializer(serializers.ModelSerializer):
             user_reaction_obj = reactions.filter(user=request.user).first()
             if user_reaction_obj:
                 user_reaction = user_reaction_obj.reaction_type
+                print(f"DEBUG: User {request.user.id} has reaction: {user_reaction}")
         
         # Count reactions by type
         for reaction in reactions:
@@ -243,18 +263,23 @@ class PostSerializer(serializers.ModelSerializer):
                 }
             reaction_counts[reaction_type]['count'] += 1
         
+        print(f"DEBUG: Reaction counts for post {obj.id}: {reaction_counts}")
+        
         recent_reactions = ReactionSerializer(
             reactions.order_by('-created_at')[:5],
             many=True,
             context=self.context
         ).data
         
-        return {
+        result = {
             'total_count': total_count,
             'user_reaction': user_reaction,
             'reaction_counts': reaction_counts,
             'recent_reactions': recent_reactions
         }
+        
+        print(f"DEBUG: Final reactions_summary for post {obj.id}: {result}")
+        return result
     
     def get_recent_comments(self, obj):
         # Get recent comments (first 3 top-level comments)

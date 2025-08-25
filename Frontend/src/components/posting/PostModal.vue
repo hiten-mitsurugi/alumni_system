@@ -105,6 +105,17 @@
             </p>
           </div>
 
+          <!-- Engagement Summary -->
+          <div v-if="hasEngagement" class="px-6 py-4 border-b border-gray-200 hover-isolation" @mouseenter.stop @mouseover.stop>
+            <ReactionSummary
+              :reactions-summary="post.reactions_summary"
+              :likes-count="post.likes_count"
+              :comments-count="post.comments_count"
+              :shares-count="post.shares_count"
+              @click="openReactionsModal"
+            />
+          </div>
+
           <!-- Post Actions -->
           <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
             <PostActions
@@ -195,6 +206,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Reactions Modal -->
+    <ReactionsModal
+      v-if="showReactionsModal"
+      :post-id="post.id"
+      :current-user-id="currentUserId"
+      @close="showReactionsModal = false"
+      @reaction-updated="handleReactionUpdated"
+    />
   </div>
 </template>
 
@@ -202,6 +222,8 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import PostHeader from './PostHeader.vue'
 import PostActions from './PostActions.vue'
+import ReactionSummary from './ReactionSummary.vue'
+import ReactionsModal from './ReactionsModal.vue'
 
 // Props
 const props = defineProps({
@@ -236,6 +258,10 @@ const props = defineProps({
   selectedReaction: {
     type: String,
     default: null
+  },
+  currentUserId: {
+    type: Number,
+    required: true
   }
 })
 
@@ -248,13 +274,15 @@ const emit = defineEmits([
   'save-post',
   'copy-link',
   'load-comments',
-  'navigate'
+  'navigate',
+  'reaction-updated'
 ])
 
 // Local state
 const newComment = ref('')
 const currentMediaIndex = ref(0)
 const focusCommentInput = ref(false) // Add missing property to prevent Vue warning
+const showReactionsModal = ref(false)
 
 // Computed properties
 const mediaFiles = computed(() => {
@@ -299,6 +327,13 @@ const currentMediaType = computed(() => {
   return null
 })
 
+const hasEngagement = computed(() => {
+  return props.post.likes_count > 0 || 
+         props.post.comments_count > 0 || 
+         props.post.shares_count > 0 ||
+         (props.post.reactions_summary && props.post.reactions_summary.total_count > 0)
+})
+
 // Methods
 const closeModal = () => {
   emit('close')
@@ -326,6 +361,16 @@ const handleSave = (postId) => {
 
 const handleCopyLink = (postId) => {
   emit('copy-link', postId)
+}
+
+const openReactionsModal = () => {
+  showReactionsModal.value = true
+}
+
+const handleReactionUpdated = () => {
+  // Emit event to parent to refresh post data
+  emit('reaction-updated', props.post.id)
+  showReactionsModal.value = false
 }
 
 const previousMedia = () => {
@@ -387,6 +432,32 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Hover isolation for engagement section */
+.hover-isolation {
+  isolation: isolate;
+  position: relative;
+}
+
+.hover-isolation:hover {
+  background-color: transparent !important;
+}
+
+.hover-isolation * {
+  pointer-events: auto;
+}
+
+/* Prevent hover bubbling from engagement to actions */
+.hover-isolation::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: transparent;
+  pointer-events: none;
+}
+
 /* Custom scrollbar for comments */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;

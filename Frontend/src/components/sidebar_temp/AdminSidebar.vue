@@ -113,16 +113,25 @@ const isActive = (path) => route.path.startsWith(path);
             <LayoutDashboardIcon class="w-5 h-5" /> Dashboard
           </router-link>
         </li>
-        <li>
+         <li>
           <router-link
-            to="/admin/user-management"
+            to="/admin/notification"
             class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/user-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            :class="isActive('/admin/notification') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
           >
-            <UsersIcon class="w-5 h-5" /> User Management
+            <BellIcon class="w-5 h-5" /> Notification
           </router-link>
         </li>
-        <li>
+         <li>
+          <router-link
+            to="/admin/contents"
+            class="flex items-center gap-2 p-2 rounded"
+            :class="isActive('/admin/contents') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+          >
+            <FileTextIcon class="w-5 h-5" /> Contents
+          </router-link>
+        </li>
+         <li>
           <router-link
             to="/admin/messaging"
             class="flex items-center gap-2 p-2 rounded relative"
@@ -141,33 +150,6 @@ const isActive = (path) => route.path.startsWith(path);
         </li>
         <li>
           <router-link
-            to="/admin/survey-management"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/survey-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
-          >
-            <ClipboardListIcon class="w-5 h-5" /> Survey Management
-          </router-link>
-        </li>
-        <li>
-          <router-link
-            to="/admin/notification"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/notification') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
-          >
-            <BellIcon class="w-5 h-5" /> Notification
-          </router-link>
-        </li>
-        <li>
-          <router-link
-            to="/admin/contents"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/contents') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
-          >
-            <FileTextIcon class="w-5 h-5" /> Contents
-          </router-link>
-        </li>
-        <li>
-          <router-link
             to="/admin/post-approvals"
             class="flex items-center gap-2 p-2 rounded"
             :class="isActive('/admin/post-approvals') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
@@ -175,7 +157,7 @@ const isActive = (path) => route.path.startsWith(path);
             <ShieldCheckIcon class="w-5 h-5" /> Post Approvals
           </router-link>
         </li>
-        <li>
+           <li>
           <router-link
             to="/admin/pending-user-approval"
             class="flex items-center gap-2 p-2 rounded"
@@ -184,6 +166,26 @@ const isActive = (path) => route.path.startsWith(path);
             <UserCheckIcon class="w-5 h-5" /> Pending User Approval
           </router-link>
         </li>
+        <li>
+          <router-link
+            to="/admin/user-management"
+            class="flex items-center gap-2 p-2 rounded"
+            :class="isActive('/admin/user-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+          >
+            <UsersIcon class="w-5 h-5" /> User Management
+          </router-link>
+        </li>
+       
+        <li>
+          <router-link
+            to="/admin/survey-management"
+            class="flex items-center gap-2 p-2 rounded"
+            :class="isActive('/admin/survey-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+          >
+            <ClipboardListIcon class="w-5 h-5" /> Survey Management
+          </router-link>
+        </li>
+       
         <li>
           <router-link
             to="/admin/settings"
