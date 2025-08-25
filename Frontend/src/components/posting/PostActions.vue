@@ -7,13 +7,16 @@
           <button
             @click="handleReaction('like')"
             :class="[
-              'flex items-center space-x-3 px-6 py-3 rounded-2xl transition-all duration-300 font-semibold text-lg shadow-md',
+              'flex items-center transition-all duration-300',
+              size === 'small' 
+                ? 'space-x-2 px-4 py-2 rounded-xl font-medium text-sm shadow-sm'
+                : 'space-x-3 px-6 py-3 rounded-2xl font-semibold text-lg shadow-md',
               selectedReaction === 'like'
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white transform scale-105 shadow-lg'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white transform scale-105' + (size === 'small' ? ' shadow-md' : ' shadow-lg')
                 : 'text-slate-600 hover:bg-blue-100 hover:text-blue-700 bg-white'
             ]"
           >
-            <span class="text-2xl">👍</span>
+            <span :class="size === 'small' ? 'text-lg' : 'text-2xl'">👍</span>
             <span>Like</span>
           </button>
           
@@ -23,10 +26,11 @@
               v-for="reaction in reactionTypes"
               :key="reaction.type"
               @click="handleReaction(reaction.type)"
-              class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-all duration-300 transform hover:scale-110"
+              :class="size === 'small' ? 'w-10 h-10' : 'w-12 h-12'"
+              class="flex items-center justify-center rounded-xl hover:bg-slate-100 transition-all duration-300 transform hover:scale-110"
               :title="reaction.label"
             >
-              <span class="text-2xl">{{ reaction.emoji }}</span>
+              <span :class="size === 'small' ? 'text-lg' : 'text-2xl'">{{ reaction.emoji }}</span>
             </button>
           </div>
         </div>
@@ -35,10 +39,15 @@
       <div class="flex items-center space-x-2">
         <!-- Comment -->
         <button
-          @click="$emit('toggle-comments')"
-          class="flex items-center space-x-3 px-6 py-3 text-slate-600 hover:bg-green-100 hover:text-green-700 rounded-2xl transition-all duration-300 font-semibold text-lg bg-white shadow-md"
+          @click="handleCommentClick"
+          :class="[
+            'flex items-center text-slate-600 hover:bg-green-100 hover:text-green-700 transition-all duration-300 bg-white',
+            size === 'small' 
+              ? 'space-x-2 px-4 py-2 rounded-xl font-medium text-sm shadow-sm'
+              : 'space-x-3 px-6 py-3 rounded-2xl font-semibold text-lg shadow-md'
+          ]"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg :class="size === 'small' ? 'w-5 h-5' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           <span>Comment</span>
@@ -47,9 +56,14 @@
         <!-- Share -->
         <button
           @click="$emit('share-post')"
-          class="flex items-center space-x-3 px-6 py-3 text-slate-600 hover:bg-purple-100 hover:text-purple-700 rounded-2xl transition-all duration-300 font-semibold text-lg bg-white shadow-md"
+          :class="[
+            'flex items-center text-slate-600 hover:bg-purple-100 hover:text-purple-700 transition-all duration-300 bg-white',
+            size === 'small' 
+              ? 'space-x-2 px-4 py-2 rounded-xl font-medium text-sm shadow-sm'
+              : 'space-x-3 px-6 py-3 rounded-2xl font-semibold text-lg shadow-md'
+          ]"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg :class="size === 'small' ? 'w-5 h-5' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
           </svg>
           <span>Share</span>
@@ -58,9 +72,14 @@
         <!-- Copy Link -->
         <button
           @click="$emit('copy-link')"
-          class="flex items-center space-x-3 px-6 py-3 text-slate-600 hover:bg-orange-100 hover:text-orange-700 rounded-2xl transition-all duration-300 font-semibold text-lg bg-white shadow-md"
+          :class="[
+            'flex items-center text-slate-600 hover:bg-orange-100 hover:text-orange-700 transition-all duration-300 bg-white',
+            size === 'small' 
+              ? 'space-x-2 px-4 py-2 rounded-xl font-medium text-sm shadow-sm'
+              : 'space-x-3 px-6 py-3 rounded-2xl font-semibold text-lg shadow-md'
+          ]"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg :class="size === 'small' ? 'w-5 h-5' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
           <span>Copy Link</span>
@@ -82,11 +101,16 @@ const props = defineProps({
   selectedReaction: {
     type: String,
     default: null
+  },
+  size: {
+    type: String,
+    default: 'large',
+    validator: (value) => ['small', 'large'].includes(value)
   }
 })
 
 // Emits
-const emit = defineEmits(['react-to-post', 'toggle-comments', 'share-post', 'copy-link'])
+const emit = defineEmits(['react-to-post', 'comment-clicked', 'share-post', 'copy-link'])
 
 // Reaction types
 const reactionTypes = [
@@ -101,6 +125,11 @@ const reactionTypes = [
 // Methods
 const handleReaction = (reactionType) => {
   emit('react-to-post', props.postId, reactionType)
+}
+
+const handleCommentClick = () => {
+  console.log('💬 PostActions: Comment button clicked')
+  emit('comment-clicked')
 }
 </script>
 

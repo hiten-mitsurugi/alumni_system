@@ -128,7 +128,7 @@ const routes = [
       {
         path: 'home',
         name: 'AlumniHome',
-        component: () => import('../views/Alumni/AlumniHome.vue'),
+        component: () => import('@/views/Admin/ContentPage.vue'),
       },
       {
         path: 'my-profile',

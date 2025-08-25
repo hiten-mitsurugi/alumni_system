@@ -8,6 +8,7 @@ import axios from 'axios';
 import PostCreateForm from '@/components/posting/PostCreateForm.vue';
 import CategoryTabs from '@/components/posting/CategoryTabs.vue';
 import PostCard from '@/components/posting/PostCard.vue';
+import PostModal from '@/components/posting/PostModal.vue';
 import NotificationToast from '@/components/posting/NotificationToast.vue';
 
 const router = useRouter();
@@ -22,6 +23,11 @@ const selectedReaction = ref({});
 const comments = ref({});
 const showComments = ref({});
 const notifications = ref([]);
+
+// Modal state
+const showModal = ref(false);
+const selectedPost = ref(null);
+const currentPostIndex = ref(0);
 
 // WebSocket connection
 let postsSocket = null;
@@ -80,11 +86,26 @@ const connectWebSocket = () => {
   postsSocket = new WebSocket(wsUrl);
   
   postsSocket.onopen = () => {
-    console.log('Connected to posts WebSocket');
+    console.log('✅ Connected to posts WebSocket');
+    console.log('🔗 WebSocket URL:', wsUrl);
+    console.log('👤 Connected as user:', authStore.user?.email);
+    
+    // Subscribe to post updates if posts are already loaded
+    if (posts.value.length > 0) {
+      console.log('📡 WebSocket connected, subscribing to existing posts...');
+      subscribeToPostUpdates();
+    }
   };
   
   postsSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    console.log('📨 Raw WebSocket message received:', data);
+    
+    // Handle successful post group join
+    if (data.type === 'joined_post') {
+      console.log('✅ Successfully joined post group:', data.post_id);
+    }
+    
     handleWebSocketMessage(data);
   };
   
@@ -120,6 +141,7 @@ const handleWebSocketMessage = (data) => {
       updatePostReaction(data);
       break;
     case 'new_comment':
+      console.log('🔔 Received new_comment WebSocket message:', data);
       addNewComment(data);
       break;
   }
@@ -140,10 +162,29 @@ const fetchPosts = async () => {
     console.log('✅ Posts response:', response.data);
     posts.value = response.data.results || response.data;
     console.log('📊 Loaded posts:', posts.value.length);
+    
+    // Subscribe to real-time updates for all loaded posts
+    subscribeToPostUpdates();
+    
   } catch (error) {
     console.error('❌ Failed to fetch posts:', error);
     console.error('Response:', error.response?.data);
     showNotification('Failed to load posts. Please try again.', 'error');
+  }
+};
+
+// Function to subscribe to real-time updates for all loaded posts
+const subscribeToPostUpdates = () => {
+  if (postsSocket && postsSocket.readyState === WebSocket.OPEN) {
+    posts.value.forEach(post => {
+      console.log('📡 Subscribing to real-time updates for post:', post.id);
+      postsSocket.send(JSON.stringify({
+        type: 'join_post',
+        post_id: post.id
+      }));
+    });
+  } else {
+    console.log('⚠️ WebSocket not ready, will subscribe when connected');
   }
 };
 
@@ -224,16 +265,54 @@ const reactToPost = async (postId, reactionType) => {
 
 const addComment = async (postId, content) => {
   try {
-    await axios.post(`${BASE_URL}/api/posts/posts/${postId}/comment/`, {
+    console.log('🔄 Adding comment via API...', { postId, content });
+    const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/comment/`, {
       content: content
     }, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
     
-    // Comments will be updated via WebSocket
+    console.log('✅ Comment added successfully:', response.data);
+    console.log('⏳ Waiting for WebSocket real-time update...');
+    
+    // Don't manually fetch comments - rely on WebSocket for real-time updates
+    // The backend should broadcast a 'new_comment' WebSocket message that will
+    // trigger addNewComment() function for real-time updates
     
   } catch (error) {
-    console.error('Failed to add comment:', error);
+    console.error('❌ Failed to add comment:', error);
+    
+    // Show error notification
+    notifications.value.unshift({
+      id: Date.now(),
+      type: 'error',
+      message: 'Failed to add comment. Please try again.',
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+// Add function to fetch comments for a specific post
+const fetchCommentsForPost = async (postId) => {
+  try {
+    console.log(`Fetching all comments for post ${postId}`);
+    const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/comments/`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    });
+    
+    if (response.data.comments) {
+      comments.value[postId] = response.data.comments;
+      console.log(`Loaded ${response.data.comments.length} comments for post ${postId}`);
+      
+      // Update the post's comment count to match actual comments
+      const post = posts.value.find(p => p.id === postId);
+      if (post) {
+        post.comments_count = response.data.comments.length;
+        console.log(`📊 Synchronized post comment count to: ${response.data.comments.length}`);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch comments for post:', error);
   }
 };
 
@@ -329,20 +408,111 @@ const updatePostReaction = (data) => {
 };
 
 const addNewComment = (data) => {
+  console.log('📝 Processing new comment via WebSocket:', data);
+  
   // Add new comment to the comments list
   if (!comments.value[data.post_id]) {
     comments.value[data.post_id] = [];
+    console.log('📝 Created new comments array for post:', data.post_id);
   }
-  comments.value[data.post_id].push({
+  
+  // Check if comment already exists to prevent duplicates
+  const existingComment = comments.value[data.post_id].find(c => c.id === data.comment_id);
+  if (existingComment) {
+    console.log('⚠️ Comment already exists, skipping duplicate:', data.comment_id);
+    return;
+  }
+  
+  // Create comment object matching the backend structure
+  const newComment = {
     id: data.comment_id,
-    user: { id: data.user_id, name: data.user_name },
+    user: { 
+      id: data.user_id, 
+      first_name: data.user_name.split(' ')[0] || data.user_name,
+      last_name: data.user_name.split(' ').slice(1).join(' ') || '',
+      full_name: data.user_name,
+      profile_picture: null // We don't have this in WebSocket data
+    },
     content: data.content,
-    created_at: data.timestamp
-  });
+    parent: data.parent_id,
+    likes_count: 0,
+    replies_count: 0,
+    created_at: data.timestamp,
+    updated_at: data.timestamp,
+    edited_at: null,
+    is_edited: false,
+    time_since: 'Just now',
+    replies: [],
+    reactions_summary: null,
+    can_edit: data.user_id === authStore.user.id,
+    can_delete: data.user_id === authStore.user.id || authStore.user.user_type <= 2
+  };
+  
+  comments.value[data.post_id].push(newComment);
+  console.log('✅ Comment added to local state. Total comments for post', data.post_id + ':', comments.value[data.post_id].length);
+  
+  // Update the post's comment count to match actual comments array length
+  const post = posts.value.find(p => p.id === data.post_id);
+  if (post) {
+    post.comments_count = comments.value[data.post_id].length;
+    console.log('📊 Updated post comment count to match actual comments:', post.comments_count);
+  }
+  
+  console.log('✅ Real-time comment update completed');
 };
 
 const dismissNotification = (id) => {
   notifications.value = notifications.value.filter(n => n.id !== id);
+};
+
+// Modal Functions
+const openPostModal = (post) => {
+  console.log('🔍 Opening modal for post:', post)
+  selectedPost.value = post;
+  currentPostIndex.value = filteredPosts.value.findIndex(p => p.id === post.id);
+  showModal.value = true;
+  
+  // Subscribe to real-time updates for this specific post
+  if (postsSocket && postsSocket.readyState === WebSocket.OPEN) {
+    console.log('📡 Subscribing to real-time updates for post:', post.id);
+    postsSocket.send(JSON.stringify({
+      type: 'join_post',
+      post_id: post.id
+    }));
+  }
+  
+  // Automatically load comments if not already loaded
+  if (!comments.value[post.id] || comments.value[post.id].length === 0) {
+    fetchCommentsForPost(post.id);
+  }
+  
+  console.log('✅ Modal state:', { showModal: showModal.value, selectedPost: selectedPost.value?.id, currentIndex: currentPostIndex.value })
+};
+
+const closePostModal = () => {
+  console.log('🔙 Closing modal for post:', selectedPost.value?.id);
+  
+  // Unsubscribe from real-time updates for this specific post
+  if (postsSocket && postsSocket.readyState === WebSocket.OPEN && selectedPost.value) {
+    console.log('📡 Unsubscribing from real-time updates for post:', selectedPost.value.id);
+    postsSocket.send(JSON.stringify({
+      type: 'leave_post',
+      post_id: selectedPost.value.id
+    }));
+  }
+  
+  showModal.value = false;
+  selectedPost.value = null;
+  currentPostIndex.value = 0;
+};
+
+const navigateToPost = (direction) => {
+  const newIndex = direction === 'prev' 
+    ? Math.max(0, currentPostIndex.value - 1)
+    : Math.min(filteredPosts.value.length - 1, currentPostIndex.value + 1);
+  
+  currentPostIndex.value = newIndex;
+  selectedPost.value = filteredPosts.value[newIndex];
 };
 
 // Lifecycle
@@ -409,12 +579,13 @@ onUnmounted(() => {
           :post="post"
           :categories="categories"
           :selected-reaction="selectedReaction[post.id]"
-          :comments="comments[post.id] || []"
+          :comments="comments[post.id] || post.recent_comments || []"
           :user-profile-picture="authStore.user.profile_picture"
           @react-to-post="reactToPost"
           @add-comment="addComment"
           @share-post="sharePost"
           @copy-link="copyPostLink"
+          @open-modal="openPostModal"
         />
       </div>
       
@@ -446,6 +617,26 @@ onUnmounted(() => {
     <NotificationToast 
       :notifications="notifications"
       @dismiss="dismissNotification"
+    />
+
+    <!-- Post Modal -->
+    <PostModal
+      v-if="showModal && selectedPost"
+      :is-open="showModal"
+      :post="selectedPost"
+      :comments="comments[selectedPost.id] || []"
+      :current-index="currentPostIndex"
+      :total-posts="filteredPosts.length"
+      :user-profile-picture="authStore.user.profile_picture"
+      :categories="categories"
+      :selected-reaction="selectedReaction[selectedPost.id]"
+      @close="closePostModal"
+      @react-to-post="reactToPost"
+      @add-comment="addComment"
+      @share-post="sharePost"
+      @copy-link="copyPostLink"
+      @load-comments="fetchCommentsForPost"
+      @navigate="navigateToPost"
     />
   </div>
 </template>
