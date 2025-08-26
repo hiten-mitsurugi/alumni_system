@@ -632,8 +632,8 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
     <!-- Header -->
-    <div class="bg-white shadow-lg border-b-2 border-blue-100 sticky top-0 z-10">
-      <div class="max-w-6xl mx-auto px-6 py-6">
+    <div class="bg-white shadow-lg border-b-2 border-blue-100 fixed top-0 left-0 right-0 z-20 ml-[280px]">
+      <div class="w-full px-6 py-6">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-4xl font-bold text-slate-800 mb-2">Alumni Community Hub</h1>
@@ -664,7 +664,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="max-w-6xl mx-auto px-6 py-8 pt-48">
       <!-- Create Post Section -->
       <PostCreateForm 
         :user-profile-picture="authStore.user.profile_picture"

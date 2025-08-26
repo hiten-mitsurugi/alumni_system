@@ -83,7 +83,7 @@ class AlumniDirectoryCheckSerializer(serializers.Serializer):
 class AlumniDirectorySerializer(serializers.ModelSerializer):
     class Meta:
         model = AlumniDirectory
-        fields = ['first_name', 'middle_name', 'last_name', 'birth_date', 'school_id', 'program', 'year_graduated', 'gender']
+        fields = ['id', 'first_name', 'middle_name', 'last_name', 'birth_date', 'school_id', 'program', 'year_graduated', 'gender']
 
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:

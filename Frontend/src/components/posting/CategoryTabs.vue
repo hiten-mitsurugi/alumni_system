@@ -1,5 +1,5 @@
 <template>
-  <div class="flex space-x-3 mt-6 overflow-x-auto pb-2">
+  <div class="flex flex-wrap gap-3 mt-6 justify-center">
     <button
       v-for="category in categories"
       :key="category.value"

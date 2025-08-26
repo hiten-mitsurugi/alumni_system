@@ -173,22 +173,43 @@
             </div>
 
             <!-- Add Comment -->
-            <div class="px-6 py-4 border-t border-gray-200 bg-white">
+            <div class="px-6 py-4 border-t border-gray-200 bg-white relative">
               <div class="flex space-x-3">
                 <img
                   :src="userProfilePicture || '/default-avatar.png'"
                   alt="Your avatar"
                   class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                 />
-                <div class="flex-1">
-                  <div class="flex space-x-3">
+                <div class="flex-1 relative">
+                  <!-- Emoji Picker -->
+                  <EmojiPicker 
+                    :isVisible="showEmojiPicker"
+                    @emoji-selected="insertEmoji"
+                    @close="closeEmojiPicker"
+                  />
+                  
+                  <div class="flex space-x-2">
+                    <!-- Emoji Button -->
+                    <button
+                      @click="toggleEmojiPicker"
+                      class="emoji-button p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      title="Add emoji"
+                    >
+                      😀
+                    </button>
+                    
+                    <!-- Comment Input -->
                     <input
+                      ref="commentInputRef"
                       v-model="newComment"
                       type="text"
                       placeholder="Write a comment..."
                       class="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
                       @keyup.enter="addComment"
+                      @focus="closeEmojiPicker"
                     />
+                    
+                    <!-- Send Button -->
                     <button
                       @click="addComment"
                       :disabled="!newComment.trim()"
@@ -224,6 +245,7 @@ import PostHeader from './PostHeader.vue'
 import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
 import ReactionsModal from './ReactionsModal.vue'
+import EmojiPicker from './EmojiPicker.vue'
 
 // Props
 const props = defineProps({
@@ -283,6 +305,8 @@ const newComment = ref('')
 const currentMediaIndex = ref(0)
 const focusCommentInput = ref(false) // Add missing property to prevent Vue warning
 const showReactionsModal = ref(false)
+const showEmojiPicker = ref(false)
+const commentInputRef = ref(null)
 
 // Computed properties
 const mediaFiles = computed(() => {
@@ -393,10 +417,50 @@ const onImageError = () => {
   console.error('Failed to load image:', currentMediaUrl.value)
 }
 
+const insertEmoji = (emoji) => {
+  const input = commentInputRef.value
+  if (input) {
+    const start = input.selectionStart
+    const end = input.selectionEnd
+    const currentValue = newComment.value
+    
+    newComment.value = currentValue.slice(0, start) + emoji + currentValue.slice(end)
+    
+    // Set cursor position after emoji
+    setTimeout(() => {
+      input.focus()
+      input.setSelectionRange(start + emoji.length, start + emoji.length)
+    }, 0)
+  } else {
+    newComment.value += emoji
+  }
+  
+  // Don't close picker automatically - let user pick multiple emojis
+}
+
+const toggleEmojiPicker = () => {
+  showEmojiPicker.value = !showEmojiPicker.value
+}
+
+const closeEmojiPicker = () => {
+  showEmojiPicker.value = false
+}
+
 // Handle escape key
 const handleEscape = (event) => {
-  if (event.key === 'Escape' && props.isOpen) {
-    closeModal()
+  if (event.key === 'Escape') {
+    if (showEmojiPicker.value) {
+      closeEmojiPicker()
+    } else if (props.isOpen) {
+      closeModal()
+    }
+  }
+}
+
+// Handle click outside emoji picker
+const handleClickOutside = (event) => {
+  if (showEmojiPicker.value && !event.target.closest('.emoji-picker-container') && !event.target.closest('.emoji-button')) {
+    closeEmojiPicker()
   }
 }
 
@@ -422,10 +486,12 @@ watch(() => props.isOpen, (isOpen) => {
 // Lifecycle
 onMounted(() => {
   document.addEventListener('keydown', handleEscape)
+  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape)
+  document.removeEventListener('click', handleClickOutside)
   // Ensure body scroll is restored
   document.body.style.overflow = ''
 })

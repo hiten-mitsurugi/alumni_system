@@ -5,7 +5,8 @@ from .views import (
     LoginView, RegisterView, UserCreateView, ApproveUserView, ApprovedAlumniListView, RejectUserView,
     ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView,
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
-    ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView
+    ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView,
+    AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView
 )
 
 router = DefaultRouter()
@@ -31,6 +32,12 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('check-alumni-directory/', CheckAlumniDirectoryView.as_view(), name='check_alumni_directory'),
     path('test-status-broadcast/', TestStatusBroadcastView.as_view(), name='test_status_broadcast'),
+    
+    # Alumni Directory CRUD endpoints (SuperAdmin only)
+    path('alumni-directory/import/', AlumniDirectoryImportView.as_view(), name='alumni_directory_import'),
+    path('alumni-directory/', AlumniDirectoryListCreateView.as_view(), name='alumni_directory_list_create'),
+    path('alumni-directory/<int:id>/', AlumniDirectoryDetailView.as_view(), name='alumni_directory_detail'),
+    
     # JWT token refresh endpoint for frontend
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

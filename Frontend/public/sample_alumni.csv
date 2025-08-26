@@ -1,0 +1,11 @@
+first_name,middle_name,last_name,birth_date,school_id,program,year_graduated,gender
+John,Michael,Smith,1995-03-15,220-01001,BS in Information Technology,2020,male
+Maria,Elena,Garcia,1996-07-22,220-01002,BS in Computer Science,2020,female
+James,,Johnson,1997-11-08,221-01001,BS in Information Systems,2021,male
+Sarah,Ann,Davis,1998-02-14,221-01002,BS in Electronics Engineering,2021,female
+Robert,Lee,Brown,1999-05-30,222-01001,BS in Civil Engineering,2022,prefer_not_to_say
+Emily,Rose,Wilson,1997-09-12,222-01002,BS in Psychology,2022,female
+Michael,David,Taylor,1996-12-03,223-01001,BS in Mathematics,2023,male
+Jessica,Lynn,Anderson,1998-08-25,223-01002,BS in Chemistry,2023,female
+Christopher,Paul,Thomas,1999-01-17,224-01001,BS in Biology,2024,male
+Amanda,Grace,Jackson,1997-06-09,224-01002,BS in Environmental Science,2024,prefer_not_to_say
