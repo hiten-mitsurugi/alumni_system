@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, defineProps, defineEmits } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import axios from 'axios';
 
@@ -12,6 +13,7 @@ const props = defineProps({
 
 const emit = defineEmits(['edit', 'delete']);
 
+const router = useRouter();
 const authStore = useAuthStore();
 const BASE_URL = 'http://127.0.0.1:8000';
 
@@ -47,6 +49,20 @@ const genderDisplay = computed(() => {
 });
 
 // Methods
+const viewProfile = () => {
+  // Debug: Log the alumni data
+  console.log('Clicked alumni data:', props.alumni)
+  
+  // Use the alumni's ID directly for reliability
+  console.log('Navigating to alumni ID:', props.alumni.id)
+  
+  // Navigate to the alumni's profile using their ID
+  router.push({
+    name: 'AlumniProfile',
+    params: { userIdentifier: props.alumni.id.toString() }
+  });
+};
+
 const handleEdit = () => {
   emit('edit', props.alumni);
 };
@@ -85,7 +101,13 @@ const cancelDelete = () => {
 
     <!-- Full Name -->
     <td class="px-6 py-4 whitespace-nowrap">
-      <div class="text-sm font-medium text-gray-900">{{ fullName }}</div>
+      <div 
+        @click="viewProfile"
+        class="text-sm font-medium text-gray-900 cursor-pointer hover:text-green-600 hover:underline transition-colors"
+        :title="`View ${fullName}'s profile`"
+      >
+        {{ fullName }}
+      </div>
       <!--<div class="text-sm text-gray-500">{{ alumni.first_name }} {{ alumni.middle_name }} {{ alumni.last_name }}</div>-->
     </td>
 
@@ -121,6 +143,17 @@ const cancelDelete = () => {
     <!-- Actions -->
     <td class="px-6 py-4 whitespace-nowrap text-center">
       <div v-if="!showDeleteConfirm" class="flex items-center justify-center space-x-2">
+        <!-- View Profile Button -->
+        <button
+          @click="viewProfile"
+          class="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-lg transition-colors duration-200"
+          title="View Profile"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </button>
+
         <!-- Edit Button -->
         <button
           @click="handleEdit"

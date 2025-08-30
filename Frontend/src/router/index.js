@@ -128,7 +128,7 @@ const routes = [
       {
         path: 'home',
         name: 'AlumniHome',
-        component: () => import('@/views/Admin/ContentPage.vue'),
+        component: () => import('@/views/Alumni/AlumniHome.vue'),
       },
       {
         path: 'my-profile',
@@ -136,9 +136,19 @@ const routes = [
         component: () => import('../views/Alumni/MyProfile.vue'),
       },
       {
+        path: 'profile/:userIdentifier?',
+        name: 'AlumniProfile',
+        component: () => import('../views/Alumni/MyProfile.vue'),
+      },
+      {
         path: 'my-mates',
         name: 'AlumniMyMates',
         component: () => import('../views/Alumni/MyMates.vue'),
+      },
+      {
+        path: 'network/suggestions',
+        name: 'AlumniNetworkSuggestions',
+        component: () => import('../views/Alumni/NetworkSuggestions.vue'),
       },
       {
         path: 'messaging',

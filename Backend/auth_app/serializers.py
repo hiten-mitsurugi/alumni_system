@@ -7,7 +7,8 @@ import json
 
 from .models import (
     CustomUser, Skill, WorkHistory, AlumniDirectory, SkillsRelevance,
-    CurriculumRelevance, PerceptionFurtherStudies, FeedbackRecommendations, Profile
+    CurriculumRelevance, PerceptionFurtherStudies, FeedbackRecommendations, Profile,
+    Following, Achievement, Education
 )
 
 class JSONField(serializers.Field):
@@ -394,3 +395,133 @@ class UserSearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture', 'profile']
+
+
+# LinkedIn-style Social Feature Serializers
+class FollowingSerializer(serializers.ModelSerializer):
+    follower_name = serializers.CharField(source='follower.get_full_name', read_only=True)
+    following_name = serializers.CharField(source='following.get_full_name', read_only=True)
+    follower_profile_picture = serializers.ImageField(source='follower.profile_picture', read_only=True)
+    following_profile_picture = serializers.ImageField(source='following.profile_picture', read_only=True)
+    
+    class Meta:
+        model = Following
+        fields = ['id', 'follower', 'following', 'created_at', 'is_mutual', 
+                 'follower_name', 'following_name', 'follower_profile_picture', 'following_profile_picture']
+        read_only_fields = ['created_at', 'is_mutual']
+
+
+class AchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at', 'updated_at']
+
+
+class EducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Education
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at', 'updated_at']
+
+
+class EnhancedProfileSerializer(serializers.ModelSerializer):
+    """Enhanced Profile serializer with LinkedIn-style features"""
+    followers_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    connections_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+    is_followed_by = serializers.SerializerMethodField()
+    mutual_connection = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Profile
+        fields = '__all__'
+        read_only_fields = ['user', 'timestamp']
+    
+    def get_followers_count(self, obj):
+        return obj.get_followers_count()
+    
+    def get_following_count(self, obj):
+        return obj.get_following_count()
+    
+    def get_connections_count(self, obj):
+        return obj.get_connections_count()
+    
+    def get_is_following(self, obj):
+        """Check if current user is following this profile's user"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user != obj.user:
+            return Following.objects.filter(follower=request.user, following=obj.user).exists()
+        return False
+    
+    def get_is_followed_by(self, obj):
+        """Check if this profile's user is following current user"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user != obj.user:
+            return Following.objects.filter(follower=obj.user, following=request.user).exists()
+        return False
+    
+    def get_mutual_connection(self, obj):
+        """Check if there's a mutual connection"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user != obj.user:
+            return Following.objects.filter(
+                follower=request.user, 
+                following=obj.user, 
+                is_mutual=True
+            ).exists()
+        return False
+
+
+class EnhancedUserDetailSerializer(serializers.ModelSerializer):
+    """Enhanced User serializer with LinkedIn-style profile features"""
+    profile = EnhancedProfileSerializer(read_only=True)
+    work_histories = WorkHistorySerializer(many=True, read_only=True)
+    achievements = AchievementSerializer(many=True, read_only=True)
+    education = EducationSerializer(many=True, read_only=True)
+    real_time_status = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CustomUser
+        fields = [field.name for field in CustomUser._meta.fields if field.name != 'password'] + [
+            'profile', 'work_histories', 'achievements', 'education', 'real_time_status'
+        ]
+    
+    def get_real_time_status(self, obj):
+        """Get real-time status from Redis cache first, then fallback to database"""
+        try:
+            from .status_cache import UserStatusCache
+            
+            # First check Redis cache for real-time status
+            redis_status = UserStatusCache.get_user_status(obj.id)
+            redis_last_seen = UserStatusCache.get_last_seen(obj.id)
+            
+            # If Redis has valid status data, use it
+            if redis_status and redis_status in ['online', 'offline']:
+                return {
+                    'status': redis_status,
+                    'last_seen': redis_last_seen.isoformat() if redis_last_seen else None,
+                    'is_online': redis_status == 'online'
+                }
+            
+            # Fallback to database profile status
+            if hasattr(obj, 'profile') and obj.profile:
+                return {
+                    'status': obj.profile.status,
+                    'last_seen': obj.profile.last_seen.isoformat() if obj.profile.last_seen else None,
+                    'is_online': obj.profile.status == 'online'
+                }
+            else:
+                return {
+                    'status': 'offline',
+                    'last_seen': None,
+                    'is_online': False
+                }
+        except Exception as e:
+            # Fallback to offline status if there's any error
+            return {
+                'status': 'offline',
+                'last_seen': None,
+                'is_online': False
+            }

@@ -1,46 +1,48 @@
 <template>
-  <div>
-    <div class="w-full h-full md:w-96 md:h-auto bg-white  border-l border-gray-200  flex flex-col transition-colors duration-200">
-    <!-- Header -->
-    <div class="p-4 border-b border-gray-200 ">
+  <div class="w-full h-full flex flex-col">
+    <div class="w-full h-full bg-gradient-to-br from-white via-gray-50 to-gray-100 border-l border-gray-200/60 flex flex-col transition-all duration-300 shadow-lg backdrop-blur-sm overflow-hidden">
+    <!-- Enhanced Header -->
+    <div class="flex-shrink-0 p-4 md:p-6 border-b border-gray-200/80 bg-gradient-to-r from-blue-50 to-indigo-50">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-800 ">Chat Info</h3>
-        <button @click="$emit('close')" class="p-1 rounded-lg hover:bg-gray-100  transition-colors">
-          <svg class="w-5 h-5 text-gray-500 " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h3 class="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          Chat Info
+        </h3>
+        <button @click="$emit('close')" class="p-2 rounded-xl hover:bg-white/80 transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="flex-1 overflow-y-scroll chat-info-scroll bg-white  transition-colors duration-200" ref="scrollContainer">
-      <!-- User/Group Profile Section -->
-      <div class="p-4 border-b border-gray-200 ">
+    <!-- Enhanced Content with proper sizing -->
+    <div class="flex-1 overflow-y-auto chat-info-scroll bg-gradient-to-b from-white to-gray-50 transition-all duration-300 min-h-0" ref="scrollContainer">
+      <!-- Enhanced User/Group Profile Section -->
+      <div class="flex-shrink-0 p-4 md:p-6 border-b border-gray-200/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30">
         <div class="text-center">
           <div class="relative inline-block">
             <img 
               :src="currentAvatarUrl"
               :key="conversation.type === 'group' ? conversation.group?.group_picture : conversation.mate?.profile_picture"
               alt="Profile"
-              class="w-20 h-20 rounded-full object-cover mx-auto mb-3"
+              class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover mx-auto mb-3 md:mb-4 shadow-lg ring-4 ring-white hover:ring-blue-200 transition-all duration-300"
             />
-            <!-- Change group photo button (only for group admins) -->
+            <!-- Enhanced change group photo button -->
             <button 
               v-if="conversation.type === 'group' && isGroupAdmin"
               @click="triggerGroupPhotoUpload"
-              class="absolute bottom-1 right-1 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white hover:bg-green-700 transition-colors shadow-lg"
+              class="absolute bottom-1 right-1 w-7 h-7 md:w-8 md:h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
               title="Change group photo"
             >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
-            <!-- Online status for private chats -->
+            <!-- Enhanced online status for private chats -->
             <div v-if="conversation.type === 'private'" 
-                 :class="['absolute bottom-2 right-2 w-4 h-4 rounded-full border-2 border-white', getStatusColor(conversation.mate)]">
+                 :class="['absolute bottom-2 right-2 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 md:border-3 border-white shadow-md', getStatusColor(conversation.mate)]">
             </div>
           </div>
           <!-- Hidden file input for group photo upload -->
@@ -51,100 +53,113 @@
             class="hidden" 
             @change="handleGroupPhotoUpload"
           />
-          <h4 class="font-semibold text-gray-900 text-lg">
-            {{ conversation.type === 'private' 
-                ? `${conversation.mate.first_name} ${conversation.mate.last_name}` 
-                : conversation.group?.name || 'Group' }}
-          </h4>
-          <p v-if="conversation.type === 'private'" class="text-sm text-gray-500">
-            @{{ conversation.mate.username }}
-          </p>
-          <p v-if="conversation.type === 'private'" :class="['text-sm mt-1', getStatusTextColor(conversation.mate)]">
-            {{ getStatusText(conversation.mate) }}
-          </p>
-          <p v-else class="text-sm text-gray-500 mt-1">
-            {{ conversation.group?.members?.length || 0 }} members
-          </p>
+          <div class="px-2 max-w-full">
+            <h4 class="font-bold text-lg md:text-xl bg-gradient-to-r from-gray-800 to-gray-700 bg-clip-text text-transparent truncate">
+              {{ conversation.type === 'private' 
+                  ? `${conversation.mate.first_name} ${conversation.mate.last_name}` 
+                  : conversation.group?.name || 'Group' }}
+            </h4>
+            <p v-if="conversation.type === 'private'" class="text-sm text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded-full mt-2 inline-block truncate max-w-full">
+              @{{ conversation.mate.username }}
+            </p>
+            <p v-if="conversation.type === 'private'" :class="['text-sm mt-2 font-semibold px-2 py-1 rounded-full inline-block truncate max-w-full', getStatusTextColor(conversation.mate)]">
+              {{ getStatusText(conversation.mate) }}
+            </p>
+            <p v-else class="text-sm text-gray-600 mt-2 bg-blue-100 px-2 py-1 rounded-full inline-block font-medium">
+              {{ conversation.group?.members?.length || 0 }} members
+            </p>
+          </div>
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="p-4 border-b border-gray-200">
+      <!-- Enhanced Action Buttons with better sizing -->
+      <div class="flex-shrink-0 p-4 border-b border-gray-200/60 bg-gradient-to-r from-gray-50 to-blue-50/50">
         <div class="grid grid-cols-2 gap-3">
-          <!-- Block/Unblock (only for private chats) -->
+          <!-- Enhanced Block/Unblock button -->
           <button 
             v-if="conversation.type === 'private'"
             @click="toggleBlock"
             :class="[
-              'flex flex-col items-center p-3 rounded-lg transition-all duration-200',
+              'flex flex-col items-center p-3 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105',
               isBlocked 
-                ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                ? 'bg-gradient-to-br from-red-50 to-red-100 text-red-600 hover:from-red-100 hover:to-red-200 border border-red-200' 
+                : 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-600 hover:from-gray-100 hover:to-gray-200 border border-gray-200'
             ]"
           >
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 md:w-6 md:h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6"></path>
             </svg>
-            <span class="text-xs font-medium">{{ isBlocked ? 'Unblock' : 'Block' }}</span>
+            <span class="text-xs font-semibold">{{ isBlocked ? 'Unblock' : 'Block' }}</span>
           </button>
 
-          <!-- Search Messages -->
+          <!-- Enhanced Search Messages button -->
           <button 
             @click="showSearchMessages = true"
-            class="flex flex-col items-center p-3 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-all duration-200"
+            class="flex flex-col items-center p-3 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 hover:from-blue-100 hover:to-blue-200 border border-blue-200 transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105"
           >
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 md:w-6 md:h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <span class="text-xs font-medium">Search</span>
+            <span class="text-xs font-semibold">Search</span>
           </button>
 
-          <!-- Leave Group (only for group chats) -->
+          <!-- Enhanced Leave Group button -->
           <button 
             v-if="conversation.type === 'group'"
             @click="leaveGroup"
-            class="flex flex-col items-center p-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all duration-200"
+            class="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 text-red-600 hover:from-red-100 hover:to-red-200 border border-red-200 transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105"
           >
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-7 h-7 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            <span class="text-xs font-medium">Leave</span>
+            <span class="text-sm font-semibold">Leave</span>
           </button>
         </div>
       </div>
 
-      <!-- Group Members (only for groups) -->
-      <div v-if="conversation.type === 'group'" class="border-b border-gray-200">
+      <!-- Enhanced Group Members Section -->
+      <div v-if="conversation.type === 'group'" class="border-b border-gray-200/60">
         <button 
           @click="showGroupMembers = !showGroupMembers"
-          class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          class="w-full p-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-300"
         >
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-5.523-3.582-10-8-10s-8 4.477-8 10v2m8-10a3 3 0 110-6 3 3 0 010 6zm0 10a3 3 0 110-6 3 3 0 010 6z" />
-            </svg>
-            <span class="font-medium text-gray-900">Members</span>
-            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-              {{ groupMembers.length }}
-            </span>
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-5.523-3.582-10-8-10s-8 4.477-8 10v2m8-10a3 3 0 110-6 3 3 0 010 6zm0 10a3 3 0 110-6 3 3 0 010 6z" />
+              </svg>
+            </div>
+            <div class="text-left">
+              <span class="font-semibold text-gray-900 text-lg">Members</span>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-medium shadow-sm">
+                  {{ groupMembers.length }} total
+                </span>
+              </div>
+            </div>
           </div>
           <svg 
-            :class="['w-4 h-4 text-gray-400 transition-transform', showGroupMembers ? 'rotate-180' : '']" 
+            :class="['w-5 h-5 text-gray-400 transition-all duration-300', showGroupMembers ? 'rotate-180 text-green-500' : '']" 
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
         
-        <!-- Members List -->
-        <div v-if="showGroupMembers" class="max-h-64 overflow-y-auto">
-          <div v-if="groupMembers.length === 0" class="p-4 text-center text-gray-500 text-sm">
-            No members found
-            <div class="text-xs mt-1">Debug: API called, response processed</div>
+        <!-- Enhanced Members List -->
+        <div v-if="showGroupMembers" class="max-h-80 overflow-y-auto bg-gradient-to-b from-gray-50 to-white">
+          <div v-if="groupMembers.length === 0" class="p-6 text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-5.523-3.582-10-8-10s-8 4.477-8 10v2m8-10a3 3 0 110-6 3 3 0 010 6zm0 10a3 3 0 110-6 3 3 0 010 6z" />
+              </svg>
+            </div>
+            <p class="text-gray-500 font-medium">No members found</p>
+            <p class="text-xs text-gray-400 mt-1">Debug: API called, response processed</p>
           </div>
           <div 
             v-for="member in groupMembers" 

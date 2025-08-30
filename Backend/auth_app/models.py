@@ -201,9 +201,51 @@ class Profile(models.Model):
     employment_classification = models.CharField(max_length=50, choices=WorkHistory.CLASSIFICATION_CHOICES, blank=True)
     present_occupation = models.CharField(max_length=255, blank=True)
     employing_agency = models.CharField(max_length=255, blank=True)
-    status = models.CharField(max_length=20, choices=[('online', 'Online'), ('offline', 'Offline')], default='offline')  # Added
-    bio = models.TextField(blank=True, null=True)  # Added
-    last_seen = models.DateTimeField(null=True, blank=True)  # Added
+    status = models.CharField(max_length=20, choices=[('online', 'Online'), ('offline', 'Offline')], default='offline')
+    bio = models.TextField(blank=True, null=True)
+    last_seen = models.DateTimeField(null=True, blank=True)
+    
+    # LinkedIn-style additions
+    cover_photo = models.ImageField(upload_to='cover_photos/', null=True, blank=True)
+    headline = models.CharField(max_length=200, blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    summary = models.TextField(blank=True, null=True)
+    
+    # Social media links
+    linkedin_url = models.URLField(blank=True, null=True)
+    facebook_url = models.URLField(blank=True, null=True)
+    twitter_url = models.URLField(blank=True, null=True)
+    instagram_url = models.URLField(blank=True, null=True)
+    website_url = models.URLField(blank=True, null=True)
+    
+    # Privacy settings
+    profile_visibility = models.CharField(
+        max_length=20, 
+        choices=[
+            ('public', 'Public'),
+            ('alumni_only', 'Alumni Only'),
+            ('connections_only', 'Connections Only'),
+            ('private', 'Private')
+        ],
+        default='alumni_only'
+    )
+    allow_contact = models.BooleanField(default=True)
+    allow_messaging = models.BooleanField(default=True)
+    
+    def get_connections_count(self):
+        """Get total connections count"""
+        return Following.objects.filter(
+            models.Q(follower=self.user) | models.Q(following=self.user),
+            is_mutual=True
+        ).count() // 2  # Divide by 2 since mutual connections appear twice
+    
+    def get_followers_count(self):
+        """Get followers count"""
+        return Following.objects.filter(following=self.user).count()
+    
+    def get_following_count(self):
+        """Get following count"""
+        return Following.objects.filter(follower=self.user).count()
 
     def save(self, *args, **kwargs):
         self.full_name = f"{self.user.first_name} {self.user.middle_name or ''} {self.user.last_name}".strip()
@@ -228,3 +270,124 @@ class Profile(models.Model):
             self.present_occupation = current_job.occupation
             self.employing_agency = current_job.employing_agency
         super().save(*args, **kwargs)
+
+
+class Following(models.Model):
+    """Model to handle following/connections between users (LinkedIn-style)"""
+    follower = models.ForeignKey(CustomUser, related_name='following', on_delete=models.CASCADE)
+    following = models.ForeignKey(CustomUser, related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_mutual = models.BooleanField(default=False)  # True if both follow each other
+    
+    class Meta:
+        unique_together = ('follower', 'following')
+        indexes = [
+            models.Index(fields=['follower']),
+            models.Index(fields=['following']),
+            models.Index(fields=['is_mutual']),
+        ]
+    
+    def save(self, *args, **kwargs):
+        # Prevent self-following
+        if self.follower == self.following:
+            raise ValueError("Users cannot follow themselves")
+        
+        super().save(*args, **kwargs)
+        
+        # Check if mutual following exists and update is_mutual flag
+        self.update_mutual_status()
+    
+    def update_mutual_status(self):
+        """Update mutual following status for both users"""
+        # Check if the reverse relationship exists
+        reverse_follow = Following.objects.filter(
+            follower=self.following, 
+            following=self.follower
+        ).first()
+        
+        if reverse_follow:
+            # Both follow each other - mark as mutual
+            self.is_mutual = True
+            reverse_follow.is_mutual = True
+            self.save(update_fields=['is_mutual'])
+            reverse_follow.save(update_fields=['is_mutual'])
+        else:
+            # Not mutual
+            self.is_mutual = False
+            self.save(update_fields=['is_mutual'])
+    
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+
+class Achievement(models.Model):
+    """Model for user achievements and accomplishments"""
+    ACHIEVEMENT_TYPES = [
+        ('academic', 'Academic'),
+        ('professional', 'Professional'),
+        ('certification', 'Certification'),
+        ('award', 'Award'),
+        ('volunteer', 'Volunteer Work'),
+        ('project', 'Project'),
+        ('publication', 'Publication'),
+        ('patent', 'Patent'),
+        ('other', 'Other'),
+    ]
+    
+    user = models.ForeignKey(CustomUser, related_name='achievements', on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    type = models.CharField(max_length=20, choices=ACHIEVEMENT_TYPES)
+    description = models.TextField(blank=True, null=True)
+    organization = models.CharField(max_length=200, blank=True, null=True)
+    date_achieved = models.DateField(null=True, blank=True)
+    url = models.URLField(blank=True, null=True)  # Link to certificate, publication, etc.
+    attachment = models.FileField(upload_to='achievements/', blank=True, null=True)
+    is_featured = models.BooleanField(default=False)  # Show prominently on profile
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date_achieved', '-created_at']
+        indexes = [
+            models.Index(fields=['user', 'type']),
+            models.Index(fields=['is_featured']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"
+
+
+class Education(models.Model):
+    """Model for educational background"""
+    DEGREE_TYPES = [
+        ('high_school', 'High School'),
+        ('associate', 'Associate Degree'),
+        ('bachelor', 'Bachelor\'s Degree'),
+        ('master', 'Master\'s Degree'),
+        ('doctoral', 'Doctoral Degree'),
+        ('certificate', 'Certificate'),
+        ('diploma', 'Diploma'),
+        ('other', 'Other'),
+    ]
+    
+    user = models.ForeignKey(CustomUser, related_name='education', on_delete=models.CASCADE)
+    institution = models.CharField(max_length=200)
+    degree_type = models.CharField(max_length=20, choices=DEGREE_TYPES)
+    field_of_study = models.CharField(max_length=200, blank=True, null=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    is_current = models.BooleanField(default=False)
+    gpa = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    description = models.TextField(blank=True, null=True)  # Activities, honors, etc.
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-end_date', '-start_date']
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['is_current']),
+        ]
+    
+    def __str__(self):
+        return f"{self.degree_type} at {self.institution} - {self.user.username}"

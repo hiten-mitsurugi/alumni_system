@@ -816,3 +816,396 @@ class AlumniDirectoryImportView(APIView):
                 {'error': f'Import failed: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+# LinkedIn-style Social Feature Views
+class EnhancedProfileView(APIView):
+    """Enhanced Profile view with LinkedIn-style features"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id=None):
+        # If user_id is provided, get that user's profile; otherwise get current user's profile
+        if user_id:
+            try:
+                user = CustomUser.objects.get(id=user_id)
+            except CustomUser.DoesNotExist:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            user = request.user
+
+        # Get or create profile
+        from .models import Profile
+        profile, created = Profile.objects.get_or_create(user=user)
+        
+        # Use enhanced serializer with social features
+        from .serializers import EnhancedUserDetailSerializer
+        serializer = EnhancedUserDetailSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
+    def patch(self, request):
+        """Update current user's profile"""
+        user = request.user
+        from .models import Profile
+        profile, created = Profile.objects.get_or_create(user=user)
+        
+        # Update profile fields
+        profile_data = {}
+        updatable_fields = [
+            'bio', 'headline', 'location', 'summary', 'linkedin_url', 'facebook_url', 
+            'twitter_url', 'instagram_url', 'website_url', 'profile_visibility', 
+            'allow_contact', 'allow_messaging'
+        ]
+        
+        for field in updatable_fields:
+            if field in request.data:
+                profile_data[field] = request.data[field]
+        
+        # Handle cover photo upload
+        if 'cover_photo' in request.FILES:
+            profile_data['cover_photo'] = request.FILES['cover_photo']
+        
+        # Update profile
+        for field, value in profile_data.items():
+            setattr(profile, field, value)
+        profile.save()
+        
+        # Clear cache
+        cache_key = f"user_profile_{user.id}"
+        cache.delete(cache_key)
+        
+        # Return updated profile
+        from .serializers import EnhancedUserDetailSerializer
+        serializer = EnhancedUserDetailSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
+
+class FollowUserView(APIView):
+    """Follow/Unfollow a user"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, user_id):
+        """Follow a user"""
+        try:
+            target_user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if target_user == request.user:
+            return Response({'error': 'Cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create following relationship
+        from .models import Following
+        following, created = Following.objects.get_or_create(
+            follower=request.user,
+            following=target_user
+        )
+        
+        if not created:
+            return Response({'message': 'Already following this user'}, status=status.HTTP_200_OK)
+        
+        return Response({
+            'message': 'Successfully followed user',
+            'is_mutual': following.is_mutual
+        }, status=status.HTTP_201_CREATED)
+    
+    def delete(self, request, user_id):
+        """Unfollow a user"""
+        try:
+            target_user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            from .models import Following
+            following = Following.objects.get(follower=request.user, following=target_user)
+            following.delete()
+            
+            # Update mutual status for reverse relationship if it exists
+            reverse_following = Following.objects.filter(
+                follower=target_user, 
+                following=request.user
+            ).first()
+            if reverse_following:
+                reverse_following.is_mutual = False
+                reverse_following.save(update_fields=['is_mutual'])
+            
+            return Response({'message': 'Successfully unfollowed user'}, status=status.HTTP_200_OK)
+        except Following.DoesNotExist:
+            return Response({'error': 'Not following this user'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserConnectionsView(APIView):
+    """Get user's connections (followers/following)"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, user_id=None):
+        # If user_id is provided, get that user's connections; otherwise get current user's connections
+        if user_id:
+            try:
+                user = CustomUser.objects.get(id=user_id)
+            except CustomUser.DoesNotExist:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            user = request.user
+        
+        connection_type = request.query_params.get('type', 'all')  # 'followers', 'following', 'mutual', 'all'
+        
+        from .models import Following
+        from .serializers import FollowingSerializer
+        
+        if connection_type == 'followers':
+            connections = Following.objects.filter(following=user).select_related('follower')
+            serializer = FollowingSerializer(connections, many=True, context={'request': request})
+        elif connection_type == 'following':
+            connections = Following.objects.filter(follower=user).select_related('following')
+            serializer = FollowingSerializer(connections, many=True, context={'request': request})
+        elif connection_type == 'mutual':
+            connections = Following.objects.filter(
+                following=user, is_mutual=True
+            ).select_related('follower')
+            serializer = FollowingSerializer(connections, many=True, context={'request': request})
+        else:  # all
+            followers = Following.objects.filter(following=user).select_related('follower')
+            following = Following.objects.filter(follower=user).select_related('following')
+            
+            return Response({
+                'followers': FollowingSerializer(followers, many=True, context={'request': request}).data,
+                'following': FollowingSerializer(following, many=True, context={'request': request}).data,
+                'followers_count': followers.count(),
+                'following_count': following.count(),
+                'mutual_count': Following.objects.filter(following=user, is_mutual=True).count()
+            })
+        
+        return Response(serializer.data)
+
+
+class AchievementListCreateView(ListCreateAPIView):
+    """List and create achievements for authenticated user"""
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        from .serializers import AchievementSerializer
+        return AchievementSerializer
+    
+    def get_queryset(self):
+        from .models import Achievement
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            return Achievement.objects.filter(user_id=user_id)
+        return Achievement.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class AchievementDetailView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete an achievement"""
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        from .serializers import AchievementSerializer
+        return AchievementSerializer
+    
+    def get_queryset(self):
+        from .models import Achievement
+        return Achievement.objects.filter(user=self.request.user)
+
+
+class EducationListCreateView(ListCreateAPIView):
+    """List and create education entries for authenticated user"""
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        from .serializers import EducationSerializer
+        return EducationSerializer
+    
+    def get_queryset(self):
+        from .models import Education
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            return Education.objects.filter(user_id=user_id)
+        return Education.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class EducationDetailView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete an education entry"""
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        from .serializers import EducationSerializer
+        return EducationSerializer
+    
+    def get_queryset(self):
+        from .models import Education
+        return Education.objects.filter(user=self.request.user)
+
+
+class ProfileSearchView(APIView):
+    """Search for alumni profiles"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        query = request.query_params.get('q', '')
+        program = request.query_params.get('program', '')
+        year_graduated = request.query_params.get('year_graduated', '')
+        employment_status = request.query_params.get('employment_status', '')
+        location = request.query_params.get('location', '')
+        
+        # Base queryset - only approved alumni
+        queryset = CustomUser.objects.filter(
+            user_type=3,  # Alumni only
+            is_approved=True
+        ).select_related('profile')
+        
+        # Apply filters
+        if query:
+            queryset = queryset.filter(
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query) |
+                Q(profile__headline__icontains=query) |
+                Q(profile__summary__icontains=query) |
+                Q(profile__present_occupation__icontains=query) |
+                Q(profile__employing_agency__icontains=query)
+            )
+        
+        if program:
+            queryset = queryset.filter(program__icontains=program)
+        
+        if year_graduated:
+            queryset = queryset.filter(year_graduated=year_graduated)
+        
+        if employment_status:
+            queryset = queryset.filter(employment_status=employment_status)
+        
+        if location:
+            queryset = queryset.filter(profile__location__icontains=location)
+        
+        # Exclude current user
+        queryset = queryset.exclude(id=request.user.id)
+        
+        # Paginate results
+        from rest_framework.pagination import PageNumberPagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        
+        from .serializers import EnhancedUserDetailSerializer
+        serializer = EnhancedUserDetailSerializer(
+            paginated_queryset, 
+            many=True, 
+            context={'request': request}
+        )
+        
+        return paginator.get_paginated_response(serializer.data)
+
+
+class SuggestedConnectionsView(APIView):
+    """Get suggested connections for the current user"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        
+        # Get users that current user is not following
+        from .models import Following
+        following_ids = Following.objects.filter(follower=user).values_list('following_id', flat=True)
+        
+        # Get suggested connections based on:
+        # 1. Same program
+        # 2. Same year graduated
+        # 3. Same employment status
+        # 4. Mutual connections
+        suggestions = CustomUser.objects.filter(
+            user_type=3,  # Alumni only
+            is_approved=True,
+            is_active=True
+        ).exclude(
+            Q(id=user.id) |  # Exclude self
+            Q(id__in=following_ids)  # Exclude already following
+        ).select_related('profile')
+        
+        # Prioritize by same program and year
+        same_program = suggestions.filter(program=user.program)
+        same_year = suggestions.filter(year_graduated=user.year_graduated)
+        
+        # Combine and limit results
+        final_suggestions = list(same_program[:5]) + list(same_year[:5])
+        
+        # Remove duplicates and limit to 10
+        seen = set()
+        unique_suggestions = []
+        for suggestion in final_suggestions:
+            if suggestion.id not in seen:
+                unique_suggestions.append(suggestion)
+                seen.add(suggestion.id)
+                if len(unique_suggestions) >= 10:
+                    break
+        
+        # If we need more suggestions, add random approved alumni
+        if len(unique_suggestions) < 10:
+            additional = suggestions.exclude(
+                id__in=[s.id for s in unique_suggestions]
+            ).order_by('?')[:10 - len(unique_suggestions)]
+            unique_suggestions.extend(additional)
+        
+        from .serializers import EnhancedUserDetailSerializer
+        serializer = EnhancedUserDetailSerializer(
+            unique_suggestions, 
+            many=True, 
+            context={'request': request}
+        )
+        
+        return Response(serializer.data)
+
+
+class UserByNameView(APIView):
+    """
+    Resolve a user by their name (first_name + last_name) to get user ID and basic info.
+    Used for name-based URL routing.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, user_name):
+        try:
+            # Get all approved and active users
+            users = CustomUser.objects.filter(is_approved=True, is_active=True)
+            
+            # Check each user to find a match
+            for user in users:
+                # Create name identifier from first_name + last_name
+                full_name_no_space = (user.first_name + user.last_name).lower().replace(' ', '')
+                
+                # Check for exact match
+                if full_name_no_space == user_name.lower():
+                    return Response({
+                        'id': user.id,
+                        'username': user.username,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'full_name': f"{user.first_name} {user.last_name}".strip()
+                    })
+            
+            # If no exact match found, also try username match
+            user_by_username = users.filter(username__iexact=user_name).first()
+            if user_by_username:
+                return Response({
+                    'id': user_by_username.id,
+                    'username': user_by_username.username,
+                    'first_name': user_by_username.first_name,
+                    'last_name': user_by_username.last_name,
+                    'full_name': f"{user_by_username.first_name} {user_by_username.last_name}".strip()
+                })
+            
+            return Response(
+                {'error': 'User not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        except Exception as e:
+            return Response(
+                {'error': 'Error resolving user name'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

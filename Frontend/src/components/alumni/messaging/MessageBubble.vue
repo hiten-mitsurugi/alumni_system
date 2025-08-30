@@ -1,99 +1,99 @@
 <template>
-  <div :class="['flex gap-3', isSystemMessage ? 'justify-center' : isOwnMessage && 'flex-row-reverse']" :data-message-id="message.id">
-    <!-- Avatar for other user's messages (not shown for own messages or system messages) -->
+  <div :class="['flex gap-3 md:gap-4', isSystemMessage ? 'justify-center' : isOwnMessage && 'flex-row-reverse']" :data-message-id="message.id">
+    <!-- Avatar for other user's messages (enhanced styling) -->
     <div v-if="!isOwnMessage && !isSystemMessage" class="flex-shrink-0">
       <img 
         :src="getProfilePictureUrl(message.sender)" 
         :alt="`${message.sender.first_name} ${message.sender.last_name}`"
-        class="w-8 h-8 rounded-full object-cover"
+        class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover shadow-sm ring-2 ring-white hover:ring-slate-200 transition-all duration-200"
       />
     </div>
 
-    <div :class="['flex flex-col max-w-[70%] relative group', isSystemMessage ? 'items-center' : isOwnMessage && 'items-end']">
-      <!-- Pin indicator -->
-      <div v-if="message.is_pinned" class="flex items-center gap-1 mb-1 text-xs text-amber-600">
+    <div :class="['flex flex-col max-w-[75%] md:max-w-[70%] relative group', isSystemMessage ? 'items-center' : isOwnMessage && 'items-end']">
+      <!-- Pin indicator with better styling -->
+      <div v-if="message.is_pinned" class="flex items-center gap-1 mb-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
           <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
-        <span>Pinned</span>
+        <span class="font-medium">Pinned</span>
       </div>
 
-      <!-- Reply indicator - OUTSIDE the bubble -->
-      <div v-if="replyMessage && !isBumpMessage && !isForwardedMessage" class="flex items-center gap-1 mb-1 text-xs text-gray-500">
+      <!-- Reply indicator - Enhanced styling -->
+      <div v-if="replyMessage && !isBumpMessage && !isForwardedMessage" class="flex items-center gap-2 mb-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
         </svg>
-        <span>You replied to {{ replyMessage.sender.first_name }} {{ replyMessage.sender.last_name }}</span>
+        <span class="font-medium">Reply to {{ replyMessage.sender.first_name }} {{ replyMessage.sender.last_name }}</span>
       </div>
 
-      <!-- Forward indicator - OUTSIDE the bubble -->
-      <div v-if="isForwardedMessage" class="flex items-center gap-1 mb-1 text-xs text-gray-500">
+      <!-- Forward indicator - Enhanced styling -->
+      <div v-if="isForwardedMessage" class="flex items-center gap-2 mb-2 text-xs text-gray-500 bg-blue-50 px-3 py-1.5 rounded-full">
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
           <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
-        <span>{{ isOwnMessage ? 'You forwarded a message' : `${message.sender.first_name} forwarded a message` }}</span>
+        <span class="font-medium">{{ isOwnMessage ? 'You forwarded a message' : `${message.sender.first_name} forwarded a message` }}</span>
       </div>
 
-      <!-- Bump indicator - OUTSIDE the bubble -->
-      <div v-if="isBumpMessage" class="flex items-center gap-1 mb-1 text-xs text-gray-500">
-        <span>🔔 Bumped message</span>
+      <!-- Bump indicator - Enhanced styling -->
+      <div v-if="isBumpMessage" class="flex items-center gap-2 mb-2 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full">
+        <span class="font-medium">🔔 Bumped message</span>
       </div>
 
-      <!-- Message Container with Menu Button -->
+      <!-- Message Container with Enhanced Styling -->
       <div class="relative flex items-start gap-2">
         <!-- Message Content / Attachment -->
         <div
           :class="[
-            'relative shadow-sm flex-1',
+            'relative shadow-md flex-1 transition-all duration-200 group-hover:shadow-lg',
             isSystemMessage ? 'bg-yellow-100 rounded-xl border-l-4 border-yellow-400 italic text-center super-tiny-system-msg' :
-            isOwnMessage ? 'bg-blue-500 text-white rounded-xl rounded-br-none' : 'bg-gray-100 text-gray-900 rounded-xl rounded-bl-none',
-            // No padding for images, normal padding for text/files
-            hasImageAttachment ? 'p-0 overflow-hidden' : 'px-4 py-2 break-words'
+            isOwnMessage ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-md' : 'bg-white text-gray-900 rounded-2xl rounded-bl-md border border-gray-200/60',
+            // Enhanced padding for better spacing
+            hasImageAttachment ? 'p-0 overflow-hidden' : 'px-4 py-3 md:px-5 md:py-4 break-words'
           ]"
           @contextmenu.prevent="handleRightClick"
           @click="handleClick"
         >
-        <!-- Render Image Attachments -->
+        <!-- Render Image Attachments with better styling -->
         <template v-if="hasImageAttachment">
           <div class="space-y-2">
             <div 
               v-for="(attachment, index) in imageAttachments" 
               :key="index"
-              class="relative group"
+              class="relative group/image"
             >
               <img
                 :src="getAttachmentUrl(attachment)"
                 :alt="attachment.file_name || attachment.name || 'Image'"
-                class="max-w-full h-auto object-cover cursor-pointer transition-opacity group-hover:opacity-90"
-                :class="isOwnMessage ? 'rounded-xl rounded-br-none' : 'rounded-xl rounded-bl-none'"
-                style="max-height: 200px; max-width: 250px; min-width: 150px; cursor: pointer;"
+                class="max-w-full h-auto object-cover cursor-pointer transition-all duration-200 group-hover/image:scale-[1.02]"
+                :class="isOwnMessage ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md'"
+                style="max-height: 300px; max-width: 350px; min-width: 200px; cursor: pointer;"
                 @click.stop="openImageModal(getAttachmentUrl(attachment))"
               />
-              <!-- Enhanced image overlay with filename and size -->
-              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 transition-opacity"
-                   :class="isOwnMessage ? 'rounded-br-none rounded-bl-xl' : 'rounded-bl-none rounded-br-xl'">
-                <div class="text-white text-xs">
-                  <p class="font-medium truncate" v-if="attachment.file_name || attachment.name">
+              <!-- Enhanced image overlay -->
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity"
+                   :class="isOwnMessage ? 'rounded-br-md rounded-bl-2xl' : 'rounded-bl-md rounded-br-2xl'">
+                <div class="text-white text-sm">
+                  <p class="font-semibold truncate" v-if="attachment.file_name || attachment.name">
                     {{ attachment.file_name || attachment.name }}
                   </p>
-                  <p class="text-white/80 text-xs" v-if="attachment.file_size">
+                  <p class="text-white/90 text-xs mt-1" v-if="attachment.file_size">
                     {{ getFileSize(attachment) }}
                   </p>
                 </div>
               </div>
-              <!-- View full size indicator on hover -->
-              <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                   :class="isOwnMessage ? 'rounded-xl rounded-br-none' : 'rounded-xl rounded-bl-none'"
+              <!-- Enhanced hover indicator -->
+              <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/image:opacity-100 transition-all duration-200 flex items-center justify-center cursor-pointer"
+                   :class="isOwnMessage ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md'"
                    @click.stop="openImageModal(getAttachmentUrl(attachment))">
-                <div class="bg-black/60 text-white px-3 py-1 rounded-full text-sm font-medium pointer-events-none">
-                  Click to view
+                <div class="bg-black/70 text-white px-4 py-2 rounded-full text-sm font-semibold pointer-events-none backdrop-blur-sm">
+                  🔍 Click to view
                 </div>
               </div>
             </div>
           </div>
-          <!-- Text content below image if both exist -->
-          <div v-if="message.content && message.content.trim()" class="px-4 py-2">
-            <p class="text-sm">{{ message.content }}</p>
+          <!-- Text content below image with better spacing -->
+          <div v-if="message.content && message.content.trim()" class="px-4 py-3 md:px-5 md:py-4">
+            <p class="text-sm md:text-base leading-relaxed">{{ message.content }}</p>
           </div>
         </template>
 

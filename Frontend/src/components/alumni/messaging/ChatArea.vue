@@ -1,45 +1,48 @@
 <template>
   <div class="flex-1 flex flex-col">
-    <!-- Header with user/group info -->
-    <div class="p-4 bg-white  border-b border-gray-200  flex items-center justify-between transition-colors duration-200">
-      <div class="flex items-center gap-3">
-        <!-- Safe avatar with status indicator -->
+    <!-- Header with user/group info - Enhanced styling -->
+    <div class="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-b border-gray-200/60 flex items-center justify-between transition-all duration-200 shadow-sm">
+      <div class="flex items-center gap-3 md:gap-4">
+        <!-- Safe avatar with enhanced status indicator -->
         <div class="relative">
           <img 
             :src="avatarUrl" 
             :key="conversation?.group?.group_picture || conversation?.mate?.profile_picture || Date.now()"
             alt="Avatar" 
-            class="w-10 h-10 rounded-full object-cover" 
+            class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-md ring-2 ring-white hover:ring-slate-200 transition-all duration-200" 
           />
           <!-- Online/Offline status indicator for private chats -->
           <div v-if="conversation.type === 'private'" 
-               :class="['absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white', getStatusColor(conversation.mate)]">
+               :class="['absolute bottom-0 right-0 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 md:border-3 border-white shadow-sm', getStatusColor(conversation.mate)]">
           </div>
         </div>
         <div>
-          <!-- Safe name -->
-                    <h3 class="font-semibold text-gray-900 ">
+          <!-- Safe name with improved typography -->
+          <h3 class="font-bold text-gray-900 text-lg md:text-xl leading-tight">
             {{
               conversation.type === 'private'
                 ? `${conversation.mate.first_name} ${conversation.mate.last_name}`
                 : conversation.group?.name || 'Group'
             }}
           </h3>
-          <!-- Safe status text -->
-          <p v-if="conversation.type === 'private'" :class="['text-sm', getStatusTextColor(conversation.mate)]">
+          <!-- Safe status text with better styling -->
+          <p v-if="conversation.type === 'private'" :class="['text-sm md:text-base font-medium', getStatusTextColor(conversation.mate)]">
             {{ getStatusText(conversation.mate) }}
+          </p>
+          <p v-else class="text-sm md:text-base text-gray-500 font-medium">
+            {{ conversation.group?.members?.length || 0 }} members
           </p>
         </div>
       </div>
       
-      <!-- Chat Info Toggle Button -->
+      <!-- Chat Info Toggle Button with better styling -->
       <div class="flex items-center gap-2">
         <button 
           @click="$emit('toggle-chat-info')"
-          class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+          class="p-2.5 md:p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-105"
           title="Chat Info"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -47,21 +50,21 @@
       </div>
     </div>
 
-    <!-- Messages -->
+    <!-- Messages with improved background and spacing -->
     <div 
       ref="messagesContainer"
-      class="flex-1 overflow-y-auto p-4 chat-messages-container bg-gray-50  transition-colors duration-200"
+      class="flex-1 overflow-y-auto p-4 md:p-6 chat-messages-container bg-gradient-to-br from-gray-50/80 to-slate-50/60 transition-all duration-200"
       style="min-height: 0; max-height: calc(100vh - 300px);"
     >
-      <!-- Messages Display -->
+      <!-- Messages Display with enhanced spacing -->
       <div>
         <div
           v-for="(message, index) in messages"
           :key="message.id"
           :data-message-id="message.id"
           :class="[
-            // Reduce spacing for reply threads
-            isReplyMessage(message, index) ? 'mb-2' : 'mb-4'
+            // Better spacing for reply threads and regular messages
+            isReplyMessage(message, index) ? 'mb-2 md:mb-3' : 'mb-4 md:mb-6'
           ]"
         >
           <MessageBubble
@@ -75,7 +78,7 @@
           />
         </div>
 
-        <!-- Individual Pinned Message Indicators (inside messages container) -->
+        <!-- Enhanced Pinned Message Indicators -->
         <div 
           v-if="pinnedMessages && pinnedMessages.length > 0" 
           class="pinned-indicators-container"
@@ -86,13 +89,13 @@
             class="pinned-indicator-container"
             @click="scrollToMessage(pinnedMessage.id)"
           >
-            <div class="pinned-indicator">
-              <svg class="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="pinned-indicator bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg p-2 transition-all duration-200 cursor-pointer">
+              <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
                 <path fill-rule="evenodd" d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
                 <path d="M9 11H7v5a1 1 0 001 1h4a1 1 0 001-1v-5h-2V9H9v2z"/>
               </svg>
-              <span class="pinned-text">pinned message</span>
+              <span class="pinned-text text-amber-700 font-medium ml-2">Pinned message</span>
             </div>
           </div>
         </div>

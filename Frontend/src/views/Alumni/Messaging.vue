@@ -1,62 +1,62 @@
 <template>
- <!-- 📱 RESPONSIVE: Mobile-first responsive design -->
- <div class="h-[calc(100vh-120px)] flex bg-slate-50 rounded-lg shadow-sm overflow-hidden relative border border-slate-200 transition-colors duration-200">
+ <!-- 📱 RESPONSIVE: Mobile-first responsive design with improved sizing -->
+ <div class="h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl shadow-lg overflow-hidden relative border border-slate-200/60 transition-all duration-300">
  
  <!-- 📱 MOBILE: Back Button Overlay (only visible on mobile when in chat view) -->
  <div v-if="isMobile && currentMobileView === 'chat'" 
- class="absolute top-20 left-4 z-50 md:hidden">
+ class="absolute top-4 left-4 z-50 md:hidden">
  <button @click="goBackMobile" 
- class="p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200">
+ class="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50">
  <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
  </svg>
  </button>
  </div>
 
- <!-- 💻 DESKTOP / 📱 MOBILE: Conversations Panel -->
+ <!-- 💻 DESKTOP / 📱 MOBILE: Conversations Panel with improved styling -->
  <div :class="[
- 'border-r border-slate-300 flex flex-col bg-white transition-all duration-150 ease-in-out',
- // Desktop: Always show with fixed width
- 'md:w-80 md:block', // Reduced from w-96 to w-80 for better mobile fit
+ 'border-r border-slate-300/60 flex flex-col bg-white/80 backdrop-blur-sm transition-all duration-200 ease-in-out',
+ // Desktop: Always show with optimized width
+ 'md:w-80 lg:w-96 md:block',
  // Mobile: Full width when showing list, hidden when showing chat/info
- isMobile ? (currentMobileView === 'list' ? 'w-full' : 'w-0 overflow-hidden') : 'w-80'
+ isMobile ? (currentMobileView === 'list' ? 'w-full' : 'w-0 overflow-hidden') : 'w-80 lg:w-96'
  ]">
- <div class="p-4 bg-white border-b border-slate-200 shadow-sm">
+ <div class="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-b border-slate-200/60 shadow-sm">
  <div class="flex items-center justify-between mb-4">
- <h2 class="text-xl font-semibold text-slate-800">Messages</h2>
+ <h2 class="text-xl md:text-2xl font-bold text-slate-800 bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Messages</h2>
  <div class="flex gap-2">
  <button @click="showPendingMessages = true"
  :class="[
- 'relative p-2 rounded-lg transition-all duration-200',
+ 'relative p-2.5 md:p-3 rounded-xl transition-all duration-200 hover:scale-105',
  pendingMessages.length > 0 
- ? 'text-amber-600 bg-amber-50 hover:text-amber-700 hover:bg-amber-100' 
+ ? 'text-amber-600 bg-amber-50 hover:text-amber-700 hover:bg-amber-100 shadow-sm' 
  : 'text-slate-500 hover:text-amber-600 hover:bg-amber-50'
  ]"
  title="Pending Message Requests">
  <!-- Message bubble icon with pending indicator -->
- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+ <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
  :class="pendingMessages.length > 0 ? 'animate-pulse' : ''">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
  </svg>
  <!-- Notification badge -->
  <span v-if="pendingMessages.length > 0"
- class="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full min-w-[18px] h-4 flex items-center justify-center font-medium shadow-sm">
+ class="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-semibold shadow-lg">
  {{ pendingMessages.length > 99 ? '99+' : pendingMessages.length }}
  </span>
  </button>
  <button @click="showBlockedUsers = true"
- class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+ class="p-2.5 md:p-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-105"
  title="Blocked Users">
- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6"></path>
  </svg>
  </button>
  <button @click="showCreateGroup = true"
- class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+ class="p-2.5 md:p-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-105"
  title="Create Group">
- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
  d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-5.523-3.582-10-8-10s-8 4.477-8 10v2m8-10a3 3 0 110-6 3 3 0 010 6zm0 10a3 3 0 110-6 3 3 0 010 6z" />
  </svg>
@@ -65,27 +65,27 @@
  </div>
  <div class="relative">
  <svg @click="focusSearch"
- class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 cursor-pointer" fill="none"
+ class="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" fill="none"
  stroke="currentColor" viewBox="0 0 24 24">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
  </svg>
  <input ref="searchInput" v-model="searchQuery" @input="debouncedSearch" type="text"
- placeholder="Search mates or groups..."
- class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200" />
+ placeholder="Search conversations..."
+ class="w-full pl-10 md:pl-12 pr-4 py-3 md:py-4 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:bg-white transition-all duration-200 text-sm md:text-base backdrop-blur-sm" />
  <div v-if="searchQuery && searchResults.length"
- class="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
+ class="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-xl shadow-xl z-10 max-h-80 md:max-h-96 overflow-y-auto">
  <div v-for="result in searchResults" :key="result.id" @click="selectSearchResult(result)"
- class="flex items-center p-3 hover:bg-slate-50 cursor-pointer">
- <img :src="getProfilePictureUrl(result)" class="w-10 h-10 rounded-full object-cover" />
+ class="flex items-center p-3 md:p-4 hover:bg-slate-50/80 cursor-pointer transition-all duration-200">
+ <img :src="getProfilePictureUrl(result)" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-sm" />
 
- <div>
- <p class="font-semibold text-slate-800">{{ result.type === 'user' ? `${result.first_name}
+ <div class="ml-3">
+ <p class="font-semibold text-slate-800 text-sm md:text-base">{{ result.type === 'user' ? `${result.first_name}
  ${result.last_name}` : result.name }}</p>
- <p class="text-sm text-slate-500">{{ result.type === 'user' ? result.username : 'Group' }}</p>
+ <p class="text-xs md:text-sm text-slate-500">{{ result.type === 'user' ? result.username : 'Group' }}</p>
  </div>
  </div>
- <div v-if="searchQuery && searchResults.length === 0" class="p-3 text-gray-500">No results found</div>
+ <div v-if="searchQuery && searchResults.length === 0" class="p-4 text-gray-500 text-center text-sm">No results found</div>
  </div>
  </div>
  </div>
@@ -94,47 +94,49 @@
  @click="selectConversation(conversation)"
  @mouseenter="prefetchMessages(conversation)"
  :class="[
- 'relative flex items-center p-4 cursor-pointer border-b border-gray-100 transition-all duration-150 hover:bg-white conversation-item panel-transition touch-manipulation',
- selectedConversation?.id === conversation.id ? 'bg-white border-r-4 border-green-500 shadow-sm' : (conversation.unreadCount > 0 ? 'bg-green-50' : 'hover:shadow-sm')
+ 'relative flex items-center p-3 md:p-4 cursor-pointer border-b border-gray-100/60 transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50 hover:to-white conversation-item panel-transition touch-manipulation group',
+ selectedConversation?.id === conversation.id 
+ ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-r-4 border-green-500 shadow-sm' 
+ : (conversation.unreadCount > 0 ? 'bg-gradient-to-r from-green-50/30 to-white' : 'hover:shadow-sm')
  ]"
  style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
  
- <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-4">
+ <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-3 md:mr-4">
  <img :src="getProfilePictureUrl(conversation.mate)" 
       @error="$event.target.src = '/default-avatar.png'"
-      class="w-12 h-12 rounded-full object-cover" 
+      class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-md ring-2 ring-white group-hover:ring-slate-200 transition-all duration-200" 
       :alt="`${conversation.mate.first_name} ${conversation.mate.last_name}`" />
  <!-- Blocked indicator -->
  <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem" 
- class="absolute -bottom-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
- <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+ class="absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+ <svg class="w-3 h-3 md:w-4 md:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
  <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
  </svg>
  </div>
  <!-- Online status indicator (only for non-blocked users) -->
  <div v-else
- :class="['absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white', getStatusColor(conversation.mate)]" />
+ :class="['absolute bottom-0 right-0 w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border-2 border-white shadow-sm', getStatusColor(conversation.mate)]" />
  </div>
 
- <div v-else class="relative flex-shrink-0 mr-4">
+ <div v-else class="relative flex-shrink-0 mr-3 md:mr-4">
  <img :src="getProfilePictureUrl(conversation.group) || '/default-avatar.png'" 
       @error="$event.target.src = '/default-avatar.png'"
       alt="Group Avatar"
-      class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
+      class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-md group-hover:shadow-lg transition-all duration-200" />
  </div>
  <div class="flex-1 min-w-0">
  <div class="flex items-center justify-between mb-1">
- <h3 :class="['text-gray-900 truncate text-lg', conversation.unreadCount > 0 ? 'font-bold' : 'font-semibold']">{{ conversation.type === 'private' ?
+ <h3 :class="['text-gray-900 truncate text-base md:text-lg leading-tight', conversation.unreadCount > 0 ? 'font-bold' : 'font-semibold']">{{ conversation.type === 'private' ?
  `${conversation.mate.first_name} ${conversation.mate.last_name}` : conversation.group?.name || 'Unnamed Group' }}</h3>
  <div class="flex items-center gap-2">
  <!-- Block status indicators -->
  <span v-if="conversation.isBlockedByMe" 
- class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full" 
+ class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium" 
  title="You have blocked this user">
  Blocked
  </span>
  <span v-else-if="conversation.isBlockedByThem" 
- class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full" 
+ class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-medium" 
  title="This user has blocked you">
  Blocked you
  </span>
@@ -149,19 +151,21 @@
  </div>
  </div>
  <div class="flex items-center justify-between">
- <p class="text-sm text-gray-600 truncate pr-2"
+ <p class="text-sm text-gray-600 truncate pr-2 leading-relaxed"
  :class="{ 'italic text-gray-400': conversation.isBlockedByMe || conversation.isBlockedByThem }">
  {{ conversation.isBlockedByMe ? 'Messages blocked' : 
  conversation.isBlockedByThem ? 'You are blocked by this user' : 
  conversation.lastMessage }}
  </p>
+ <div class="flex items-center gap-2">
  <div v-if="conversation.type === 'private' && !conversation.isBlockedByMe && !conversation.isBlockedByThem" class="flex flex-col items-end text-xs">
  <span :class="getStatusTextColor(conversation.mate)">{{ getStatusText(conversation.mate) }}</span>
  <span class="text-gray-400 mt-0.5">{{ formatLastSeen(conversation.mate) }}</span>
  </div>
  <span v-if="conversation.unreadCount > 0 && !conversation.isBlockedByMe && !conversation.isBlockedByThem"
- class="bg-green-500 text-white text-xs rounded-full px-2 py-1 min-w-[24px] text-center font-medium">{{
+ class="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs rounded-full px-2.5 py-1 min-w-[28px] text-center font-semibold shadow-md">{{
  conversation.unreadCount }}</span>
+ </div>
  </div>
  </div>
  </div>
@@ -207,11 +211,11 @@
  <EmptyState v-else />
  </div>
  
- <!-- 💻 DESKTOP / 📱 MOBILE: Chat Info Panel -->
+ <!-- 💻 DESKTOP / 📱 MOBILE: Chat Info Panel with matching width -->
  <div :class="[
- 'transition-all duration-150 ease-in-out border-l border-gray-200',
- // Desktop: Show/hide with fixed width - reduced from w-80 to w-72 for mobile
- 'md:w-72',
+ 'transition-all duration-150 ease-in-out border-l border-gray-200/60',
+ // Desktop: Matching width with conversation list
+ 'md:w-80 lg:w-96',
  showChatInfo ? 'md:block' : 'md:hidden',
  // Mobile: Full width when showing chat-info, hidden otherwise
  isMobile ? (currentMobileView === 'chat-info' ? 'flex-1' : 'w-0 overflow-hidden') : ''

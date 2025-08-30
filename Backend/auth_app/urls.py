@@ -6,7 +6,11 @@ from .views import (
     ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView,
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
     ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView,
-    AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView
+    AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView,
+    # LinkedIn-style views
+    EnhancedProfileView, FollowUserView, UserConnectionsView, AchievementListCreateView,
+    AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
+    SuggestedConnectionsView, UserByNameView
 )
 
 router = DefaultRouter()
@@ -37,6 +41,30 @@ urlpatterns = [
     path('alumni-directory/import/', AlumniDirectoryImportView.as_view(), name='alumni_directory_import'),
     path('alumni-directory/', AlumniDirectoryListCreateView.as_view(), name='alumni_directory_list_create'),
     path('alumni-directory/<int:id>/', AlumniDirectoryDetailView.as_view(), name='alumni_directory_detail'),
+    
+    # LinkedIn-style Profile and Social Features
+    path('enhanced-profile/', EnhancedProfileView.as_view(), name='enhanced_profile'),
+    path('enhanced-profile/<int:user_id>/', EnhancedProfileView.as_view(), name='enhanced_profile_user'),
+    path('follow/<int:user_id>/', FollowUserView.as_view(), name='follow_user'),
+    path('connections/', UserConnectionsView.as_view(), name='user_connections'),
+    path('connections/<int:user_id>/', UserConnectionsView.as_view(), name='user_connections_by_id'),
+    
+    # Achievements endpoints
+    path('achievements/', AchievementListCreateView.as_view(), name='achievements_list_create'),
+    path('achievements/<int:pk>/', AchievementDetailView.as_view(), name='achievement_detail'),
+    path('achievements/user/<int:user_id>/', AchievementListCreateView.as_view(), name='user_achievements'),
+    
+    # Education endpoints
+    path('education/', EducationListCreateView.as_view(), name='education_list_create'),
+    path('education/<int:pk>/', EducationDetailView.as_view(), name='education_detail'),
+    path('education/user/<int:user_id>/', EducationListCreateView.as_view(), name='user_education'),
+    
+    # Search and suggestions
+    path('profile-search/', ProfileSearchView.as_view(), name='profile_search'),
+    path('suggested-connections/', SuggestedConnectionsView.as_view(), name='suggested_connections'),
+    
+    # User resolution by name for URL routing
+    path('alumni/by-name/<str:user_name>/', UserByNameView.as_view(), name='user_by_name'),
     
     # JWT token refresh endpoint for frontend
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
