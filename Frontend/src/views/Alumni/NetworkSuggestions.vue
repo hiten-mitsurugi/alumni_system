@@ -164,7 +164,7 @@ const fetchSuggestions = async (page = 1) => {
 const viewProfile = (person) => {
   router.push({
     name: 'AlumniProfile',
-    params: { userId: person.id }
+    params: { userIdentifier: person.username }
   })
 }
 

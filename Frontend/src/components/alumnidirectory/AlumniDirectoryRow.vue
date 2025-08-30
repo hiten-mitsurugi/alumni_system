@@ -53,13 +53,13 @@ const viewProfile = () => {
   // Debug: Log the alumni data
   console.log('Clicked alumni data:', props.alumni)
   
-  // Use the alumni's ID directly for reliability
-  console.log('Navigating to alumni ID:', props.alumni.id)
+  // Use the alumni's username for clean URLs
+  console.log('Navigating to alumni username:', props.alumni.username)
   
-  // Navigate to the alumni's profile using their ID
+  // Navigate to the alumni's profile using their username
   router.push({
     name: 'AlumniProfile',
-    params: { userIdentifier: props.alumni.id.toString() }
+    params: { userIdentifier: props.alumni.username }
   });
 };
 

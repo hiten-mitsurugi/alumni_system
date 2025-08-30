@@ -184,13 +184,17 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
+        print(f"🔍 Login attempt - Email: {email}")
         if not email or not password:
             return Response({'detail': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = CustomUser.objects.filter(email=email).first()
             if user is None:
+                print(f"❌ No user found with email: {email}")
                 return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-            authenticated_user = authenticate(request=request, username=email, password=password)
+            print(f"✅ User found: {user.username} (ID: {user.id})")
+            authenticated_user = authenticate(request=request, username=user.username, password=password)
+            print(f"🔐 Authentication result: {authenticated_user}")
             if authenticated_user is None:
                 return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
             if not user.is_approved and user.user_type == 3:
@@ -823,14 +827,22 @@ class EnhancedProfileView(APIView):
     """Enhanced Profile view with LinkedIn-style features"""
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, user_id=None):
-        # If user_id is provided, get that user's profile; otherwise get current user's profile
-        if user_id:
+    def get(self, request, user_id=None, username=None):
+        # Handle different lookup methods
+        if username:
+            # Lookup by username
+            try:
+                user = CustomUser.objects.get(username=username, is_approved=True, is_active=True)
+            except CustomUser.DoesNotExist:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        elif user_id:
+            # Lookup by ID (legacy support)
             try:
                 user = CustomUser.objects.get(id=user_id)
             except CustomUser.DoesNotExist:
                 return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
+            # Current user's profile
             user = request.user
 
         # Get or create profile

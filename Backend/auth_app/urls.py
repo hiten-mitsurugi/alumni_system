@@ -42,9 +42,10 @@ urlpatterns = [
     path('alumni-directory/', AlumniDirectoryListCreateView.as_view(), name='alumni_directory_list_create'),
     path('alumni-directory/<int:id>/', AlumniDirectoryDetailView.as_view(), name='alumni_directory_detail'),
     
-    # LinkedIn-style Profile and Social Features
+    # LinkedIn-style Profile and Social Features  
     path('enhanced-profile/', EnhancedProfileView.as_view(), name='enhanced_profile'),
     path('enhanced-profile/<int:user_id>/', EnhancedProfileView.as_view(), name='enhanced_profile_user'),
+    path('enhanced-profile/username/<str:username>/', EnhancedProfileView.as_view(), name='enhanced_profile_username'),
     path('follow/<int:user_id>/', FollowUserView.as_view(), name='follow_user'),
     path('connections/', UserConnectionsView.as_view(), name='user_connections'),
     path('connections/<int:user_id>/', UserConnectionsView.as_view(), name='user_connections_by_id'),

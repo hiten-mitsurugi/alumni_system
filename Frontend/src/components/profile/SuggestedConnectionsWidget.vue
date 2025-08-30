@@ -107,13 +107,13 @@ const viewProfile = (person) => {
   // Debug: Log the person data
   console.log('Clicked person data:', person)
   
-  // Use the person's ID directly for now (more reliable)
-  console.log('Navigating to user ID:', person.id)
+  // Use the person's username for clean URLs
+  console.log('Navigating to username:', person.username)
   
-  // Navigate to the person's profile using their ID
+  // Navigate to the person's profile using their username
   router.push({
     name: 'AlumniProfile',
-    params: { userIdentifier: person.id.toString() }
+    params: { userIdentifier: person.username }
   })
 }
 

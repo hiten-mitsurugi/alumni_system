@@ -233,25 +233,14 @@ const resolvedUserId = ref(null) // Track the resolved user ID
 const isOwnProfile = computed(() => {
   const userIdentifier = route.params.userIdentifier
   
-  // If no userIdentifier, it's own profile
+  // If no userIdentifier in route, it's own profile  
   if (!userIdentifier) {
     return true
   }
   
-  // If we have a resolved user ID, compare it with current user
-  if (resolvedUserId.value) {
-    return resolvedUserId.value === authStore.user?.id
-  }
-  
-  // If userIdentifier is a number and matches current user ID, it's own profile
-  if (!isNaN(userIdentifier) && userIdentifier == authStore.user?.id) {
+  // Check if userIdentifier matches current user's username
+  if (authStore.user && userIdentifier === authStore.user.username) {
     return true
-  }
-  
-  // If userIdentifier is a name, check if it matches current user's name
-  if (authStore.user && isNaN(userIdentifier)) {
-    const currentUserName = (authStore.user.first_name + authStore.user.last_name).toLowerCase().replace(/\s+/g, '')
-    return currentUserName === userIdentifier.toLowerCase()
   }
   
   return false
@@ -266,33 +255,54 @@ const fetchProfile = async () => {
   try {
     loading.value = true
     
-    let userId = route.params.userIdentifier || authStore.user?.id
-    console.log('fetchProfile called with userIdentifier:', route.params.userIdentifier)
-    console.log('Initial userId:', userId)
+    let userIdentifier = route.params.userIdentifier
+    console.log('fetchProfile called with userIdentifier:', userIdentifier)
     
-    // If userIdentifier is not a number, resolve it to user ID
-    if (userId && isNaN(userId)) {
-      console.log('Resolving name to ID:', userId)
+    let userId = null
+    
+    if (!userIdentifier) {
+      // No userIdentifier, use current user
+      userId = authStore.user?.id
+      console.log('No userIdentifier, using current user ID:', userId)
+    } else if (!isNaN(userIdentifier)) {
+      // userIdentifier is a number (ID)
+      userId = parseInt(userIdentifier)
+      console.log('userIdentifier is ID:', userId)
+    } else {
+      // userIdentifier is a username, need to resolve to ID
+      console.log('userIdentifier is username, resolving:', userIdentifier)
       try {
-        const response = await api.get(`/alumni/by-name/${userId}/`)
+        // For now, let's find the user by username in the suggested connections or use a direct lookup
+        const response = await api.get(`/alumni/by-name/${userIdentifier}/`)
         userId = response.data.id
-        console.log('Resolved to userId:', userId)
+        console.log('Resolved username to ID:', userId)
       } catch (error) {
-        console.error('Error resolving user name:', error)
-        // Fallback to current user
-        userId = authStore.user?.id
-        console.log('Fallback to current user ID:', userId)
+        console.error('Error resolving username:', error)
+        // Fallback: try to get the user by username directly
+        try {
+          const usersResponse = await api.get('/users/')
+          const user = usersResponse.data.find(u => u.username === userIdentifier)
+          if (user) {
+            userId = user.id
+            console.log('Found user by username search:', userId)
+          } else {
+            throw new Error('User not found')
+          }
+        } catch (fallbackError) {
+          console.error('Fallback username resolution failed:', fallbackError)
+          userId = authStore.user?.id // Ultimate fallback to current user
+          console.log('Ultimate fallback to current user ID:', userId)
+        }
       }
     }
     
     // Set the resolved user ID for isOwnProfile computation
-    resolvedUserId.value = parseInt(userId)
+    resolvedUserId.value = userId
     
     console.log('Final userId for API call:', userId)
     console.log('isOwnProfile after resolution:', isOwnProfile.value)
-    console.log('Current user ID:', authStore.user?.id)
-    console.log('Resolved user ID:', resolvedUserId.value)
     
+    // Use ID-based API endpoint (reliable)
     const endpoint = (userId === authStore.user?.id)
       ? '/enhanced-profile/' 
       : `/enhanced-profile/${userId}/`
