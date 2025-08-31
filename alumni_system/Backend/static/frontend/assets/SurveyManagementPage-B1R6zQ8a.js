@@ -1,0 +1,1 @@
+import{_ as t}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as o,o as n,e as r}from"./index-CAVRmTej.js";const a={};function s(c,e){return n(),o("div",null,e[0]||(e[0]=[r("h1",{class:"text-2xl font-bold mb-4"},"Welcome to the Survey Management",-1)]))}const f=t(a,[["render",s]]);export{f as default};

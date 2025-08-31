@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as t,o as r,e as s}from"./index-CAVRmTej.js";const a={};function c(l,e){return r(),t("div",null,e[0]||(e[0]=[s("h1",{class:"text-2xl font-bold mb-4"},"Welcome to the Post Approval",-1)]))}const f=o(a,[["render",c]]);export{f as default};

@@ -1,0 +1,1 @@
+import{_ as s}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as n,o,e as t}from"./index-CAVRmTej.js";const r={};function a(c,e){return o(),n("div",null,e[0]||(e[0]=[t("h1",{class:"text-2xl font-bold mb-4"},"Settings",-1),t("p",null,"This is where you can manage users, content, surveys, and more.",-1)]))}const m=s(r,[["render",a]]);export{m as default};
