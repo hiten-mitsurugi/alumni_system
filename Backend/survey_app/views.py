@@ -473,7 +473,7 @@ class RegistrationSurveyQuestionsView(APIView):
                     
                     # Add question-level conditional logic if exists
                     if question.depends_on_question:
-                        question_data['depends_on_question'] = question.depends_on_question.id
+                        question_data['depends_on_question_id'] = question.depends_on_question.id
                         question_data['depends_on_value'] = question.depends_on_value
                     
                     questions_data.append(question_data)

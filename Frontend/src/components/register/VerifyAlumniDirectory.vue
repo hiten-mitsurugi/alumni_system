@@ -158,16 +158,14 @@ const checkDirectory = async () => {
         />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">Gender</label>
+        <label class="block text-sm font-medium text-gray-700">Sex</label>
         <select
           v-model="localForm.gender"
           class="mt-1 block w-full border border-gray-300 rounded-md p-2"
           @change="emit('update:form', localForm)"
         >
-          <option value="">Select Gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
-          <option value="prefer_not_to_say">Prefer not to say</option>
         </select>
       </div>
     </div>

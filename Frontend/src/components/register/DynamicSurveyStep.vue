@@ -6,13 +6,12 @@
       <p v-if="category.description" class="text-sm text-gray-600">{{ category.description }}</p>
     </div>
 
-    <!-- Questions -->
-    <div class="space-y-6">
+    <!-- Questions Grid - 2 columns layout like PersonalInfo -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
         v-for="question in props.questions"
         :key="question.id"
-        v-show="isQuestionVisible(question)"
-        class="space-y-3"
+        v-show="getQuestionVisibility[question.id]"
       >
         <!-- Question Label -->
         <label class="block text-sm font-medium text-gray-700">
@@ -21,10 +20,10 @@
         </label>
 
         <!-- Help Text -->
-        <p v-if="question.help_text" class="text-sm text-gray-600">{{ question.help_text }}</p>
+        <p v-if="question.help_text" class="text-xs text-gray-600 mb-1">{{ question.help_text }}</p>
 
         <!-- Question Input Based on Type -->
-        <div class="mt-2">
+        <div>
           <!-- Text Input -->
           <input
             v-if="question.question_type === 'text'"
@@ -33,7 +32,7 @@
             :placeholder="question.placeholder_text"
             :maxlength="question.max_length"
             :required="question.is_required"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="mt-1 w-full border rounded-md p-2"
             :class="{ 'border-red-500': errors[question.id] }"
           />
 
@@ -41,11 +40,11 @@
           <textarea
             v-else-if="question.question_type === 'textarea'"
             v-model="localResponses[question.id]"
-            rows="4"
+            rows="3"
             :placeholder="question.placeholder_text"
             :maxlength="question.max_length"
             :required="question.is_required"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="mt-1 w-full border rounded-md p-2"
             :class="{ 'border-red-500': errors[question.id] }"
           ></textarea>
 
@@ -58,7 +57,7 @@
             :max="question.max_value"
             :placeholder="question.placeholder_text"
             :required="question.is_required"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="mt-1 w-full border rounded-md p-2"
             :class="{ 'border-red-500': errors[question.id] }"
           />
 
@@ -69,7 +68,7 @@
             type="email"
             :placeholder="question.placeholder_text"
             :required="question.is_required"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="mt-1 w-full border rounded-md p-2"
             :class="{ 'border-red-500': errors[question.id] }"
           />
 
@@ -79,14 +78,14 @@
             v-model="localResponses[question.id]"
             type="date"
             :required="question.is_required"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="mt-1 w-full border rounded-md p-2"
             :class="{ 'border-red-500': errors[question.id] }"
           />
 
           <!-- Radio Buttons -->
           <div
             v-else-if="question.question_type === 'radio'"
-            class="space-y-2"
+            class="mt-1 space-y-2"
           >
             <div
               v-for="option in question.options"
@@ -114,7 +113,7 @@
           <!-- Checkboxes -->
           <div
             v-else-if="question.question_type === 'checkbox'"
-            class="space-y-2"
+            class="mt-1 space-y-2"
           >
             <div
               v-for="option in question.options"
@@ -142,7 +141,7 @@
             v-else-if="question.question_type === 'select'"
             v-model="localResponses[question.id]"
             :required="question.is_required"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="mt-1 w-full border rounded-md p-2"
             :class="{ 'border-red-500': errors[question.id] }"
           >
             <option value="">Select an option</option>
@@ -158,13 +157,13 @@
           <!-- Rating Scale -->
           <div
             v-else-if="question.question_type === 'rating'"
-            class="space-y-3"
+            class="mt-1 space-y-2"
           >
             <div class="flex items-center justify-between text-sm text-gray-600">
               <span>{{ question.min_value }}</span>
               <span>{{ question.max_value }}</span>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center justify-center space-x-2">
               <div
                 v-for="rating in getRatingRange(question)"
                 :key="rating"
@@ -181,23 +180,18 @@
                 />
                 <label
                   :for="`${question.id}_${rating}`"
-                  class="text-sm text-gray-700 mt-1 cursor-pointer"
+                  class="text-sm text-gray-700 cursor-pointer"
                 >
                   {{ rating }}
                 </label>
               </div>
-            </div>
-            <div v-if="localResponses[question.id]" class="text-center">
-              <span class="text-sm font-medium text-blue-600">
-                Selected: {{ localResponses[question.id] }}
-              </span>
             </div>
           </div>
 
           <!-- Yes/No -->
           <div
             v-else-if="question.question_type === 'yes_no'"
-            class="flex items-center space-x-6"
+            class="mt-1 flex items-center space-x-6"
           >
             <div class="flex items-center">
               <input
@@ -234,10 +228,20 @@
               </label>
             </div>
           </div>
+
+          <!-- File Upload -->
+          <input
+            v-else-if="question.question_type === 'file'"
+            type="file"
+            :required="question.is_required"
+            class="mt-1 w-full border rounded-md p-2"
+            :class="{ 'border-red-500': errors[question.id] }"
+            @change="handleFileUpload(question.id, $event)"
+          />
         </div>
 
         <!-- Error Message -->
-        <p v-if="errors[question.id]" class="text-sm text-red-600">{{ errors[question.id] }}</p>
+        <p v-if="errors[question.id]" class="text-sm text-red-600 mt-1">{{ errors[question.id] }}</p>
       </div>
     </div>
   </div>
@@ -279,23 +283,54 @@ watch(
   { deep: true, immediate: true }
 )
 
+// Create a computed property for question visibility that reacts to response changes
+const getQuestionVisibility = computed(() => {
+  const visibility = {}
+  props.questions.forEach(question => {
+    // Always show questions without dependencies
+    if (!question.depends_on_question_id || !question.depends_on_value) {
+      visibility[question.id] = true
+      return
+    }
+    
+    // Get the parent question response
+    const parentResponse = localResponses[question.depends_on_question_id]
+    
+    // Hide if no response yet
+    if (parentResponse === undefined || parentResponse === null || parentResponse === '') {
+      visibility[question.id] = false
+      return
+    }
+    
+    // Handle boolean to string conversion for yes/no questions
+    let normalizedResponse = parentResponse
+    let normalizedRequiredValue = question.depends_on_value
+    
+    // Convert boolean responses to Yes/No strings for comparison
+    if (typeof parentResponse === 'boolean') {
+      normalizedResponse = parentResponse ? 'Yes' : 'No'
+    }
+    
+    // Compare values
+    const isVisible = String(normalizedResponse) === String(normalizedRequiredValue)
+    visibility[question.id] = isVisible
+    
+    // Debug log
+    console.log(`Question "${question.question_text}" visibility:`, {
+      questionId: question.id,
+      dependsOn: question.depends_on_question_id,
+      requiredValue: normalizedRequiredValue,
+      actualResponse: normalizedResponse,
+      originalResponse: parentResponse,
+      isVisible: isVisible
+    })
+  })
+  return visibility
+})
+
 // Simple function to check if question should be visible
 const isQuestionVisible = (question) => {
-  // Always show questions without dependencies
-  if (!question.depends_on_question_id || !question.depends_on_value) {
-    return true
-  }
-  
-  // Get the parent question response
-  const parentResponse = localResponses[question.depends_on_question_id]
-  
-  // Hide if no response yet
-  if (parentResponse === undefined || parentResponse === null) {
-    return false
-  }
-  
-  // Simple string comparison like the static components
-  return String(parentResponse) === String(question.depends_on_value)
+  return getQuestionVisibility.value[question.id] || false
 }
 
 // Initialize checkbox arrays and clear conditional question responses
@@ -307,7 +342,14 @@ props.questions.forEach(question => {
   // Clear responses for conditional questions that shouldn't be visible initially
   if (question.depends_on_question_id && question.depends_on_value) {
     const dependentResponse = localResponses[question.depends_on_question_id]
-    if (!dependentResponse || String(dependentResponse) !== question.depends_on_value) {
+    
+    // Normalize the response for comparison
+    let normalizedResponse = dependentResponse
+    if (typeof dependentResponse === 'boolean') {
+      normalizedResponse = dependentResponse ? 'Yes' : 'No'
+    }
+    
+    if (!dependentResponse || String(normalizedResponse) !== String(question.depends_on_value)) {
       // Clear the response if the condition is not met
       if (question.question_type === 'checkbox') {
         localResponses[question.id] = []
@@ -322,12 +364,29 @@ props.questions.forEach(question => {
 watch(
   localResponses,
   (newResponses) => {
+    console.log('🔄 Local responses changed:', newResponses)
+    
     // Clear conditional question responses when parent question changes
     props.questions.forEach(question => {
       if (question.depends_on_question_id && question.depends_on_value) {
         const dependentResponse = newResponses[question.depends_on_question_id]
+        
+        // Normalize the response for comparison
+        let normalizedResponse = dependentResponse
+        if (typeof dependentResponse === 'boolean') {
+          normalizedResponse = dependentResponse ? 'Yes' : 'No'
+        }
+        
         const requiredValue = String(question.depends_on_value)
-        const responseStr = String(dependentResponse || '')
+        const responseStr = String(normalizedResponse || '')
+        
+        console.log(`🔍 Checking conditional question "${question.question_text}":`, {
+          dependentResponse,
+          normalizedResponse,
+          requiredValue,
+          responseStr,
+          matches: responseStr === requiredValue
+        })
         
         // Clear response if condition is not met
         if (!dependentResponse || responseStr !== requiredValue) {
@@ -345,6 +404,24 @@ watch(
   { deep: true }
 )
 
+// Watch for visibility changes and clear hidden question responses
+watch(
+  getQuestionVisibility,
+  (newVisibility, oldVisibility) => {
+    props.questions.forEach(question => {
+      // If question became hidden, clear its response
+      if (oldVisibility && oldVisibility[question.id] && !newVisibility[question.id]) {
+        if (question.question_type === 'checkbox') {
+          localResponses[question.id] = []
+        } else {
+          delete localResponses[question.id]
+        }
+      }
+    })
+  },
+  { deep: true }
+)
+
 // Helper function for rating ranges
 const getRatingRange = (question) => {
   const range = []
@@ -352,6 +429,16 @@ const getRatingRange = (question) => {
     range.push(i)
   }
   return range
+}
+
+// Handle file upload
+const handleFileUpload = (questionId, event) => {
+  const file = event.target.files[0]
+  if (file) {
+    // For now, just store the file name
+    // In a real implementation, you'd upload the file to server
+    localResponses[questionId] = file.name
+  }
 }
 
 // Watch for external responses changes

@@ -284,6 +284,56 @@
             </div>
           </div>
 
+          <!-- Conditional Logic Section -->
+          <div class="border-t border-gray-200 pt-6">
+            <h4 class="text-lg font-medium text-gray-900 mb-4">Conditional Logic (Optional)</h4>
+            
+            <!-- Depends on Question -->
+            <div class="space-y-4">
+              <div>
+                <label for="depends_on_question" class="block text-sm font-medium text-gray-700 mb-1">
+                  Show this question only when
+                </label>
+                <select
+                  id="depends_on_question"
+                  v-model="form.depends_on_question"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :class="{ 'border-red-500': errors.depends_on_question }"
+                >
+                  <option value="">No condition - always show</option>
+                  <option
+                    v-for="question in availableQuestions"
+                    :key="question.id"
+                    :value="question.id"
+                  >
+                    {{ question.question_text.substring(0, 60) }}{{ question.question_text.length > 60 ? '...' : '' }}
+                  </option>
+                </select>
+                <p v-if="errors.depends_on_question" class="mt-1 text-sm text-red-600">{{ errors.depends_on_question }}</p>
+                <p class="mt-1 text-xs text-gray-500">This question will only appear if the selected question has the specified answer</p>
+              </div>
+
+              <!-- Depends on Value -->
+              <div v-if="form.depends_on_question">
+                <label for="depends_on_value" class="block text-sm font-medium text-gray-700 mb-1">
+                  Answer that triggers this question
+                </label>
+                <select
+                  id="depends_on_value"
+                  v-model="form.depends_on_value"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :class="{ 'border-red-500': errors.depends_on_value }"
+                >
+                  <option value="">Select required answer</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+                <p v-if="errors.depends_on_value" class="mt-1 text-sm text-red-600">{{ errors.depends_on_value }}</p>
+                <p class="mt-1 text-xs text-gray-500">This question will only appear when the selected question is answered with this value</p>
+              </div>
+            </div>
+          </div>
+
           <!-- Error Display -->
           <div v-if="submitError" class="bg-red-50 border border-red-200 rounded-md p-3">
             <p class="text-sm text-red-800">{{ submitError }}</p>
@@ -362,6 +412,7 @@ export default {
     const submitError = ref(null)
     const errors = ref({})
     const questionTypes = ref(surveyService.getQuestionTypes())
+    const allQuestions = ref([])
     
     const form = ref({
       category: '',
@@ -375,7 +426,9 @@ export default {
       placeholder_text: '',
       help_text: '',
       order: 1,
-      is_active: true
+      is_active: true,
+      depends_on_question: '',
+      depends_on_value: ''
     })
 
     const isEditing = computed(() => !!props.question)
@@ -383,6 +436,32 @@ export default {
     const requiresOptions = computed(() => {
       return ['radio', 'checkbox', 'select'].includes(form.value.question_type)
     })
+
+    // Get available questions for conditional logic (excluding the current question)
+    const availableQuestions = computed(() => {
+      return allQuestions.value.filter(q => {
+        // Don't include self
+        if (q.id === props.question?.id) return false
+        
+        // Only radio questions with exactly Yes/No options
+        if (q.question_type === 'radio' && q.options && Array.isArray(q.options)) {
+          const options = q.options.map(opt => opt.toLowerCase().trim())
+          return options.includes('yes') && options.includes('no') && options.length === 2
+        }
+        
+        return false
+      })
+    })
+
+    // Load all questions for conditional logic
+    const loadQuestions = async () => {
+      try {
+        const response = await surveyService.getQuestions()
+        allQuestions.value = response.data
+      } catch (error) {
+        console.error('Error loading questions:', error)
+      }
+    }
 
     // Watch for question prop changes
     watch(
@@ -401,7 +480,9 @@ export default {
             placeholder_text: newQuestion.placeholder_text || '',
             help_text: newQuestion.help_text || '',
             order: newQuestion.order || 1,
-            is_active: newQuestion.is_active ?? true
+            is_active: newQuestion.is_active ?? true,
+            depends_on_question: newQuestion.depends_on_question || '',
+            depends_on_value: newQuestion.depends_on_value || ''
           }
         } else {
           resetForm()
@@ -425,13 +506,14 @@ export default {
     watch(
       () => props.show,
       (show) => {
-        if (show && !props.question) {
-          resetForm()
-          if (props.selectedCategory) {
-            form.value.category = props.selectedCategory.id
-          }
-        }
         if (show) {
+          loadQuestions() // Load questions for conditional logic
+          if (!props.question) {
+            resetForm()
+            if (props.selectedCategory) {
+              form.value.category = props.selectedCategory.id
+            }
+          }
           errors.value = {}
           submitError.value = null
         }
@@ -461,6 +543,32 @@ export default {
       }
     )
 
+    // Watch for props.question changes to populate form when editing
+    watch(
+      () => props.question,
+      (question) => {
+        if (question) {
+          form.value = {
+            category: question.category || '',
+            question_text: question.question_text || '',
+            question_type: question.question_type || '',
+            options: question.options || ['', ''],
+            is_required: question.is_required || false,
+            min_value: question.min_value || null,
+            max_value: question.max_value || null,
+            max_length: question.max_length || null,
+            placeholder_text: question.placeholder_text || '',
+            help_text: question.help_text || '',
+            order: question.order || 1,
+            is_active: question.is_active !== undefined ? question.is_active : true,
+            depends_on_question: question.depends_on_question || null,
+            depends_on_value: question.depends_on_value || ''
+          }
+        }
+      },
+      { immediate: true }
+    )
+
     const resetForm = () => {
       form.value = {
         category: '',
@@ -474,7 +582,9 @@ export default {
         placeholder_text: '',
         help_text: '',
         order: 1,
-        is_active: true
+        is_active: true,
+        depends_on_question: null,
+        depends_on_value: ''
       }
       errors.value = {}
       submitError.value = null
@@ -569,7 +679,8 @@ export default {
       requiresOptions,
       addOption,
       removeOption,
-      handleSubmit
+      handleSubmit,
+      availableQuestions
     }
   }
 }

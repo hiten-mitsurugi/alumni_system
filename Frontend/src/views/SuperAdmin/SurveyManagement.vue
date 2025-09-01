@@ -102,11 +102,21 @@ const questionsEllipsis = computed(() => {
 
 // Available questions for conditional logic (exclude current question being edited)
 const availableQuestions = computed(() => {
-  if (!questionForm.value.category) return []
-  return questions.value.filter(q => 
-    q.category === questionForm.value.category && 
-    q.id !== questionForm.value.id
-  )
+  return questions.value.filter(q => {
+    // Exclude current question being edited
+    if (q.id === questionForm.value.id) return false
+    
+    // Include yes_no question type
+    if (q.question_type === 'yes_no') return true
+    
+    // Include radio questions with exactly Yes/No options
+    if (q.question_type === 'radio' && q.options && Array.isArray(q.options)) {
+      const options = q.options.map(opt => opt.toLowerCase().trim())
+      return options.includes('yes') && options.includes('no') && options.length === 2
+    }
+    
+    return false
+  })
 })
 
 // Pagination functions
@@ -1067,14 +1077,16 @@ const exportData = async () => {
 
               <div v-if="questionForm.depends_on_question">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Show when answer is</label>
-                <input
+                <select
                   v-model="questionForm.depends_on_value"
-                  type="text"
-                  placeholder="Enter the exact answer value..."
                   class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                >
+                  <option value="">Select required answer</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
                 <p class="text-xs text-slate-500 mt-1">
-                  For Yes/No questions, use "Yes" or "No". For checkboxes, use the exact option text.
+                  This question will only appear when the selected question is answered with the chosen value.
                 </p>
               </div>
             </div>
