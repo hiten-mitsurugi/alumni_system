@@ -65,7 +65,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:8000,http://localhost:8080,http://localhos
 
 python mange.py makemigrations
 python mange.py migrate
-
+python mange.py create_admin_accounts
 
 ```
 

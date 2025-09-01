@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db.models import Count, Q
 from django.utils import timezone
 from django.core.cache import cache
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 
 from .models import SurveyCategory, SurveyQuestion, SurveyResponse, SurveyTemplate
 from .serializers import (
@@ -15,6 +17,17 @@ from .serializers import (
     SurveyTemplateSerializer
 )
 from .permissions import IsSurveyAdmin, IsSuperAdminOnly, CanRespondToSurveys, IsSurveyOwnerOrAdmin
+
+
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
+
+# Note: Registration survey no longer uses caching for immediate updates
+    
+    # Clear user-specific active survey caches (pattern-based)
+    # Note: In production, you might want to use cache.delete_pattern if available
+    # For now, we'll clear the main caches which will force refresh for all users
 
 
 # =============================================================================
@@ -31,6 +44,11 @@ class SurveyCategoryListCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         return SurveyCategory.objects.all().order_by('order', 'name')
+    
+    def perform_create(self, serializer):
+        """Save category with audit information"""
+        super().perform_create(serializer)
+        # No cache clearing needed - registration endpoint doesn't use cache
 
 
 class SurveyCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -45,6 +63,16 @@ class SurveyCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'DELETE':
             return [IsSuperAdminOnly()]
         return [IsSurveyAdmin()]
+    
+    def perform_update(self, serializer):
+        """Update category"""
+        super().perform_update(serializer)
+        # No cache clearing needed - registration endpoint doesn't use cache
+    
+    def perform_destroy(self, instance):
+        """Delete category"""
+        super().perform_destroy(instance)
+        # No cache clearing needed - registration endpoint doesn't use cache
 
 
 class SurveyQuestionListCreateView(generics.ListCreateAPIView):
@@ -69,6 +97,11 @@ class SurveyQuestionListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(is_active=is_active.lower() == 'true')
         
         return queryset.order_by('category__order', 'order', 'question_text')
+    
+    def perform_create(self, serializer):
+        """Save question with audit information"""
+        super().perform_create(serializer)
+        # No cache clearing needed - registration endpoint doesn't use cache
 
 
 class SurveyQuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -83,6 +116,16 @@ class SurveyQuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'DELETE':
             return [IsSuperAdminOnly()]
         return [IsSurveyAdmin()]
+    
+    def perform_update(self, serializer):
+        """Update question"""
+        super().perform_update(serializer)
+        # No cache clearing needed - registration endpoint doesn't use cache
+    
+    def perform_destroy(self, instance):
+        """Delete question"""
+        super().perform_destroy(instance)
+        # No cache clearing needed - registration endpoint doesn't use cache
 
 
 class SurveyResponseAnalyticsView(APIView):
@@ -375,37 +418,25 @@ def clear_survey_cache_view(request):
     """
     Clear all survey-related cache.
     Super admin only utility endpoint.
+    NOTE: Registration survey no longer uses caching.
     """
-    cache_keys = [
-        'survey_analytics_data',
-        'active_survey_questions_user_*',  # Pattern
-    ]
-    
-    # Clear specific cache keys
-    cache.delete('survey_analytics_data')
-    
-    # Clear user-specific caches (would need more sophisticated cache management)
-    # For now, we'll just clear the analytics cache
-    
     return Response({
-        'message': 'Survey cache cleared successfully',
+        'message': 'No cache clearing needed - registration survey fetches live data',
         'cleared_at': timezone.now().isoformat()
     })
 
 
+@method_decorator(never_cache, name='dispatch')
 class RegistrationSurveyQuestionsView(APIView):
     """
     Get survey questions specifically for registration process.
     Public endpoint (no authentication required for registration).
+    NO CACHING - Always fetch fresh data from database.
     """
     permission_classes = [AllowAny]
     
     def get(self, request):
-        cache_key = 'registration_survey_questions'
-        cached_data = cache.get(cache_key)
-        
-        if cached_data:
-            return Response(cached_data)
+        print(f"🔄 Loading fresh registration survey data from database (no cache)")
         
         # Get active categories with their questions
         # Filter out categories that should not be in registration (e.g., Personal Info, Alumni Verification)
@@ -466,7 +497,11 @@ class RegistrationSurveyQuestionsView(APIView):
                 
                 survey_data.append(category_data)
         
-        # Cache for 30 minutes
-        cache.set(cache_key, survey_data, 1800)
+        # Return fresh data directly (no caching)
+        print(f"✅ Returning fresh survey data with {len(survey_data)} categories")
         
-        return Response(survey_data)
+        response = Response(survey_data)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response

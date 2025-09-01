@@ -25,6 +25,11 @@ class SurveyCategoryAdmin(admin.ModelAdmin):
         if not change:  # If creating new object
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+        # No cache clearing needed - registration endpoint doesn't use cache
+    
+    def delete_model(self, request, obj):
+        super().delete_model(request, obj)
+        # No cache clearing needed - registration endpoint doesn't use cache
 
 
 @admin.register(SurveyQuestion)
@@ -59,6 +64,11 @@ class SurveyQuestionAdmin(admin.ModelAdmin):
         if not change:  # If creating new object
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+        # No cache clearing needed - registration endpoint doesn't use cache
+    
+    def delete_model(self, request, obj):
+        super().delete_model(request, obj)
+        # No cache clearing needed - registration endpoint doesn't use cache
 
 
 @admin.register(SurveyResponse)

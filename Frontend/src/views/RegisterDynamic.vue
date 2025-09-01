@@ -284,7 +284,7 @@ onMounted(async () => {
       <div class="bg-white bg-opacity-90 backdrop-blur-md shadow-xl rounded-xl p-10 w-full max-w-3xl">
         <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Register (Alumni Only)</h2>
         
-        <!-- Progress Indicator -->
+                <!-- Progress Indicator -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-gray-700">Progress</span>
