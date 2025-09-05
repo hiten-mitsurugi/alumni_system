@@ -6,7 +6,8 @@ from .views import (
     ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView,
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
     ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView,
-    AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView,
+    AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView, DebugUsersView, ClearCacheView,
+    CheckEmailExistsView,
     # LinkedIn-style views
     EnhancedProfileView, FollowUserView, UserConnectionsView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
@@ -36,6 +37,9 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('check-alumni-directory/', CheckAlumniDirectoryView.as_view(), name='check_alumni_directory'),
     path('test-status-broadcast/', TestStatusBroadcastView.as_view(), name='test_status_broadcast'),
+    path('debug-users/', DebugUsersView.as_view(), name='debug_users'),
+    path('clear-cache/', ClearCacheView.as_view(), name='clear_cache'),
+    path('check-email/', CheckEmailExistsView.as_view(), name='check_email'),
     
     # Alumni Directory CRUD endpoints (SuperAdmin only)
     path('alumni-directory/import/', AlumniDirectoryImportView.as_view(), name='alumni_directory_import'),

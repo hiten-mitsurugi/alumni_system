@@ -1,9 +1,20 @@
 <script setup>
-import { defineProps, defineEmits, reactive, watch } from 'vue';
+import { defineProps, defineEmits, reactive, watch, ref, computed } from 'vue';
+import { Eye, EyeOff, Check, X, AlertCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-vue-next';
+import api from '@/services/api';
 
 // Define props and emits
 const props = defineProps(['form']);
-const emit = defineEmits(['update:form']);
+const emit = defineEmits(['update:form', 'validation-change']);
+
+// Password visibility toggles
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+
+// Validation states
+const emailExists = ref(false);
+const checkingEmail = ref(false);
+const emailError = ref('');
 
 // Initialize localForm with all expected fields to prevent undefined errors
 const localForm = reactive({
@@ -23,11 +34,146 @@ const localForm = reactive({
   fathers_occupation: props.form?.fathers_occupation || '',
 });
 
+// Password validation rules
+const passwordRequirements = computed(() => {
+  const password = localForm.password;
+  return {
+    minLength: password.length >= 8,
+    hasUpperCase: /[A-Z]/.test(password),
+    hasLowerCase: /[a-z]/.test(password),
+    hasNumber: /\d/.test(password),
+    hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  };
+});
+
+const isPasswordValid = computed(() => {
+  const reqs = passwordRequirements.value;
+  return reqs.minLength && reqs.hasUpperCase && reqs.hasLowerCase && reqs.hasNumber && reqs.hasSpecialChar;
+});
+
+const passwordsMatch = computed(() => {
+  return localForm.password && localForm.confirm_password && localForm.password === localForm.confirm_password;
+});
+
+// Password strength calculation (1 = Weak, 2 = Medium, 3 = Strong)
+const passwordStrength = computed(() => {
+  if (!localForm.password) return 0;
+  
+  const reqs = passwordRequirements.value;
+  let score = 0;
+  
+  // Basic requirements (length + 1 type)
+  if (reqs.minLength && (reqs.hasLowerCase || reqs.hasUpperCase || reqs.hasNumber)) {
+    score = 1; // Weak
+  }
+  
+  // Medium strength (length + 3 types)
+  if (reqs.minLength && 
+      [reqs.hasUpperCase, reqs.hasLowerCase, reqs.hasNumber, reqs.hasSpecialChar].filter(Boolean).length >= 3) {
+    score = 2; // Medium
+  }
+  
+  // Strong (all requirements + good length)
+  if (reqs.minLength && reqs.hasUpperCase && reqs.hasLowerCase && reqs.hasNumber && reqs.hasSpecialChar) {
+    score = 3; // Strong
+  }
+  
+  return score;
+});
+
+const passwordStrengthText = computed(() => {
+  switch (passwordStrength.value) {
+    case 1: return 'Weak';
+    case 2: return 'Medium';
+    case 3: return 'Strong';
+    default: return '';
+  }
+});
+
+// Email validation function
+const checkEmailExists = async (email) => {
+  if (!email || !email.includes('@')) {
+    emailError.value = '';
+    emailExists.value = false;
+    return;
+  }
+
+  checkingEmail.value = true;
+  emailError.value = '';
+
+  try {
+    // Use the correct endpoint path - auth_app.urls is included at 'api/' so the endpoint is 'api/check-email/'
+    const response = await api.get(`/check-email/?email=${encodeURIComponent(email)}`);
+    
+    if (response.data.exists) {
+      emailExists.value = true;
+      emailError.value = 'This email is already registered. Please use a different email.';
+    } else {
+      emailExists.value = false;
+      emailError.value = '';
+    }
+  } catch (error) {
+    console.error('Email check error:', error);
+    // On any error, assume email is available to not block registration
+    emailExists.value = false;
+    emailError.value = '';
+    
+    // Only show error message if it's not a network/auth issue
+    if (error.response && error.response.status !== 401 && error.response.status !== 403) {
+      emailError.value = 'Unable to verify email. Please try again.';
+    }
+  } finally {
+    checkingEmail.value = false;
+  }
+};
+
+// Debounced email check
+let emailCheckTimeout = null;
+const debouncedEmailCheck = (email) => {
+  clearTimeout(emailCheckTimeout);
+  emailCheckTimeout = setTimeout(() => {
+    checkEmailExists(email);
+  }, 500);
+};
+
 // Handle file input
 const handleFileChange = (event, field) => {
   localForm[field] = event.target.files[0];
   emit('update:form', { ...localForm });
 };
+
+// Emit validation status to parent
+const emitValidation = () => {
+  const isValid = !emailExists.value && isPasswordValid.value && passwordsMatch.value && localForm.email && localForm.password;
+  emit('validation-change', {
+    isValid,
+    errors: {
+      email: emailError.value,
+      password: !isPasswordValid.value ? 'Password does not meet requirements' : '',
+      confirmPassword: !passwordsMatch.value ? 'Passwords do not match' : ''
+    }
+  });
+};
+
+// Watch for email changes
+watch(() => localForm.email, (newEmail) => {
+  if (newEmail) {
+    debouncedEmailCheck(newEmail);
+  } else {
+    emailExists.value = false;
+    emailError.value = '';
+  }
+});
+
+// Watch for password changes
+watch([() => localForm.password, () => localForm.confirm_password], () => {
+  emitValidation();
+});
+
+// Watch for email validation changes
+watch([emailExists, emailError], () => {
+  emitValidation();
+});
 
 // Sync updates to parent
 watch(
@@ -45,7 +191,38 @@ watch(
       <!-- Contact Info -->
       <div>
         <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input v-model="localForm.email" type="email" class="mt-1 w-full border rounded-md p-2" />
+        <div class="relative">
+          <input 
+            v-model="localForm.email" 
+            type="email" 
+            :class="[
+              'mt-1 w-full border rounded-md p-2 pr-10',
+              emailError ? 'border-red-500' : emailExists === false && localForm.email ? 'border-green-500' : ''
+            ]"
+          />
+          <!-- Email validation icons -->
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <CheckCircle2 
+              v-if="emailExists === false && localForm.email" 
+              class="h-5 w-5 text-green-500" 
+            />
+            <XCircle 
+              v-if="emailExists === true" 
+              class="h-5 w-5 text-red-500" 
+            />
+            <Loader2 
+              v-if="checkingEmail" 
+              class="h-5 w-5 text-blue-500 animate-spin" 
+            />
+          </div>
+        </div>
+        <!-- Email error message -->
+        <div v-if="emailError" class="mt-1 text-xs text-red-600">
+          {{ emailError }}
+        </div>
+        <div v-else-if="emailExists === false && localForm.email" class="mt-1 text-xs text-green-600">
+          Email is available
+        </div>
       </div>
 
       <div>
@@ -56,12 +233,84 @@ watch(
       <!-- Passwords -->
       <div>
         <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input v-model="localForm.password" type="password" class="mt-1 w-full border rounded-md p-2" />
+        <div class="relative">
+          <input 
+            v-model="localForm.password" 
+            :type="showPassword ? 'text' : 'password'" 
+            :class="[
+              'mt-1 w-full border rounded-md p-2 pr-10',
+              localForm.password ? (isPasswordValid ? 'border-green-500' : 'border-red-500') : ''
+            ]"
+          />
+          <button
+            type="button"
+            @click="showPassword = !showPassword"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center"
+          >
+            <Eye v-if="!showPassword" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+            <EyeOff v-else class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+          </button>
+        </div>
+        
+        <!-- Password Strength Indicator -->
+        <div v-if="localForm.password" class="mt-1">
+          <div class="flex items-center gap-2 text-xs">
+            <span>Strength:</span>
+            <div class="flex gap-1">
+              <div :class="['h-1 w-4 rounded', passwordStrength >= 1 ? 'bg-red-500' : 'bg-gray-200']"></div>
+              <div :class="['h-1 w-4 rounded', passwordStrength >= 2 ? 'bg-yellow-500' : 'bg-gray-200']"></div>
+              <div :class="['h-1 w-4 rounded', passwordStrength >= 3 ? 'bg-green-500' : 'bg-gray-200']"></div>
+            </div>
+            <span :class="[
+              'font-medium', 
+              passwordStrength === 1 ? 'text-red-500' : 
+              passwordStrength === 2 ? 'text-yellow-500' : 
+              passwordStrength === 3 ? 'text-green-500' : 'text-gray-400'
+            ]">
+              {{ passwordStrengthText }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- Compact Password Requirements - Only show if password is weak -->
+        <div v-if="localForm.password && !isPasswordValid" class="mt-1">
+          <div class="text-xs text-gray-600 mb-1">Missing:</div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span v-if="!passwordRequirements.length" class="bg-red-100 text-red-600 px-2 py-1 rounded">8+ chars</span>
+            <span v-if="!passwordRequirements.uppercase" class="bg-red-100 text-red-600 px-2 py-1 rounded">A-Z</span>
+            <span v-if="!passwordRequirements.lowercase" class="bg-red-100 text-red-600 px-2 py-1 rounded">a-z</span>
+            <span v-if="!passwordRequirements.number" class="bg-red-100 text-red-600 px-2 py-1 rounded">0-9</span>
+            <span v-if="!passwordRequirements.special" class="bg-red-100 text-red-600 px-2 py-1 rounded">!@#$</span>
+          </div>
+        </div>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Confirm Password</label>
-        <input v-model="localForm.confirm_password" type="password" class="mt-1 w-full border rounded-md p-2" />
+        <div class="relative">
+          <input 
+            v-model="localForm.confirm_password" 
+            :type="showConfirmPassword ? 'text' : 'password'" 
+            :class="[
+              'mt-1 w-full border rounded-md p-2 pr-10',
+              localForm.confirm_password ? (passwordsMatch ? 'border-green-500' : 'border-red-500') : ''
+            ]"
+          />
+          <button
+            type="button"
+            @click="showConfirmPassword = !showConfirmPassword"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center"
+          >
+            <Eye v-if="!showConfirmPassword" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+            <EyeOff v-else class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+          </button>
+        </div>
+        <div v-if="localForm.confirm_password && !passwordsMatch" class="mt-1 text-xs text-red-600">
+          Passwords do not match
+        </div>
+        <div v-else-if="localForm.confirm_password && passwordsMatch" class="mt-1 text-xs text-green-600">
+          Passwords match
+        </div>
       </div>
 
       <!-- Address -->

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { 
   Plus, 
   Edit, 
@@ -17,7 +17,8 @@ import {
   TrendingUp,
   Users,
   FileCheck,
-  Calendar
+  Calendar,
+  Move
 } from 'lucide-vue-next'
 import surveyService from '@/services/surveyService'
 
@@ -172,6 +173,73 @@ const questionTypes = [
   { value: 'yes_no', label: 'Yes/No', hasOptions: false }
 ]
 
+// Draggable functionality
+const isDragging = ref(false)
+const draggedModal = ref(null)
+const dragOffset = ref({ x: 0, y: 0 })
+const modalPositions = ref({
+  category: { x: 0, y: 0 },
+  question: { x: 0, y: 0 },
+  analytics: { x: 0, y: 0 },
+  export: { x: 0, y: 0 },
+  categoryQuestions: { x: 0, y: 0 }
+})
+
+const startDrag = (event, modalType) => {
+  isDragging.value = true
+  draggedModal.value = modalType
+  
+  const rect = event.target.closest('.draggable-modal').getBoundingClientRect()
+  dragOffset.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  }
+  
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  event.preventDefault()
+}
+
+const onDrag = (event) => {
+  if (!isDragging.value || !draggedModal.value) return
+  
+  const modal = document.querySelector(`[data-modal="${draggedModal.value}"]`)
+  if (!modal) return
+  
+  const newX = event.clientX - dragOffset.value.x
+  const newY = event.clientY - dragOffset.value.y
+  
+  // Keep modal within viewport bounds
+  const maxX = window.innerWidth - modal.offsetWidth
+  const maxY = window.innerHeight - modal.offsetHeight
+  
+  const clampedX = Math.max(0, Math.min(newX, maxX))
+  const clampedY = Math.max(0, Math.min(newY, maxY))
+  
+  modalPositions.value[draggedModal.value] = { x: clampedX, y: clampedY }
+  
+  modal.style.transform = `translate(${clampedX}px, ${clampedY}px)`
+  modal.style.position = 'fixed'
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  draggedModal.value = null
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+}
+
+const resetModalPosition = (modalType) => {
+  modalPositions.value[modalType] = { x: 0, y: 0 }
+  nextTick(() => {
+    const modal = document.querySelector(`[data-modal="${modalType}"]`)
+    if (modal) {
+      modal.style.transform = 'translate(0px, 0px)'
+      modal.style.position = 'relative'
+    }
+  })
+}
+
 // Load data
 const loadCategories = async () => {
   try {
@@ -269,6 +337,7 @@ const openQuestionModal = (question = null) => {
 
 const saveQuestion = async () => {
   try {
+
     if (questionForm.value.id) {
       await surveyService.updateQuestion(questionForm.value.id, questionForm.value)
     } else {
@@ -276,8 +345,23 @@ const saveQuestion = async () => {
     }
     showQuestionModal.value = false
     await loadQuestions(selectedCategory.value?.id)
+    await loadCategories() // Reload categories to update counters
   } catch (error) {
     console.error('Error saving question:', error)
+    
+    // Handle specific error responses
+    if (error.response?.status === 400) {
+      const errorData = error.response.data
+      if (errorData.category && Array.isArray(errorData.category)) {
+        alert(errorData.category[0]) // Show the specific error message
+      } else if (typeof errorData.category === 'string') {
+        alert(errorData.category)
+      } else {
+        alert('Failed to save question. Please check your input and try again.')
+      }
+    } else {
+      alert('An error occurred while saving the question. Please try again.')
+    }
   }
 }
 
@@ -286,6 +370,7 @@ const deleteQuestion = async (id) => {
     try {
       await surveyService.deleteQuestion(id)
       await loadQuestions(selectedCategory.value?.id)
+      await loadCategories() // Reload categories to update counters
     } catch (error) {
       console.error('Error deleting question:', error)
     }
@@ -307,6 +392,16 @@ onMounted(async () => {
   await loadQuestions() // Load ALL questions initially
   await loadAnalytics()
   loading.value = false
+  
+  // Add global event listeners for drag functionality
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+})
+
+// Clean up event listeners
+onUnmounted(() => {
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
 })
 
 // Watch category selection
@@ -470,6 +565,15 @@ const exportData = async () => {
             <span class="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-700 rounded-full">
               <FileText class="w-3 h-3" />
               {{ category.active_questions_count || 0 }} questions
+              <span class="ml-1 text-xs" :class="[
+                (category.total_questions_count || 0) >= 50 
+                  ? 'text-red-600' 
+                  : (category.total_questions_count || 0) >= 40 
+                    ? 'text-yellow-600' 
+                    : 'text-slate-500'
+              ]">
+                ({{ category.total_questions_count || 0 }}/50)
+              </span>
             </span>
             <span :class="[
               'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium',
@@ -839,16 +943,41 @@ const exportData = async () => {
     <div
       v-if="showCategoryModal"
       class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
-      @click="showCategoryModal = false"
     >
-      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md" @click.stop>
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-2xl">
-          <h3 class="text-xl font-bold text-white">
-            {{ categoryForm.id ? 'Edit Category' : 'Create New Category' }}
-          </h3>
-          <p class="text-blue-100 text-sm mt-1">
-            {{ categoryForm.id ? 'Update category information' : 'Add a new category for organizing questions' }}
-          </p>
+      <div 
+        :class="[
+          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-md',
+          isDragging && draggedModal === 'category' ? 'dragging' : ''
+        ]"
+        data-modal="category"
+        @click.stop
+        :style="{ transform: `translate(${modalPositions.category.x}px, ${modalPositions.category.y}px)` }"
+      >
+        <div 
+          :class="[
+            'bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-2xl select-none flex items-center justify-between',
+            isDragging && draggedModal === 'category' ? 'cursor-grabbing' : 'cursor-move'
+          ]"
+          @mousedown="startDrag($event, 'category')"
+        >
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <Move class="w-5 h-5 opacity-70" />
+              {{ categoryForm.id ? 'Edit Category' : 'Create New Category' }}
+            </h3>
+            <p class="text-blue-100 text-sm mt-1">
+              {{ categoryForm.id ? 'Update category information' : 'Add a new category for organizing questions' }}
+            </p>
+          </div>
+          <button
+            @click="resetModalPosition('category')"
+            class="text-blue-200 hover:text-white p-1 rounded transition-colors"
+            title="Reset position"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </button>
         </div>
         
         <form @submit.prevent="saveCategory" class="p-6 space-y-6">
@@ -919,16 +1048,41 @@ const exportData = async () => {
     <div
       v-if="showQuestionModal"
       class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
-      @click="showQuestionModal = false"
     >
-      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden" @click.stop>
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-          <h3 class="text-xl font-bold text-white">
-            {{ questionForm.id ? 'Edit Question' : 'Create New Question' }}
-          </h3>
-          <p class="text-blue-100 text-sm mt-1">
-            {{ questionForm.id ? 'Update question details and settings' : 'Add a new question to your survey' }}
-          </p>
+      <div 
+        :class="[
+          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden',
+          isDragging && draggedModal === 'question' ? 'dragging' : ''
+        ]"
+        data-modal="question"
+        @click.stop
+        :style="{ transform: `translate(${modalPositions.question.x}px, ${modalPositions.question.y}px)` }"
+      >
+        <div 
+          :class="[
+            'bg-gradient-to-r from-blue-600 to-purple-600 p-6 select-none flex items-center justify-between',
+            isDragging && draggedModal === 'question' ? 'cursor-grabbing' : 'cursor-move'
+          ]"
+          @mousedown="startDrag($event, 'question')"
+        >
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <Move class="w-5 h-5 opacity-70" />
+              {{ questionForm.id ? 'Edit Question' : 'Create New Question' }}
+            </h3>
+            <p class="text-blue-100 text-sm mt-1">
+              {{ questionForm.id ? 'Update question details and settings' : 'Add a new question to your survey' }}
+            </p>
+          </div>
+          <button
+            @click="resetModalPosition('question')"
+            class="text-blue-200 hover:text-white p-1 rounded transition-colors"
+            title="Reset position"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </button>
         </div>
         
         <form @submit.prevent="saveQuestion" class="p-6 space-y-6 max-h-[calc(90vh-120px)] overflow-y-auto">
@@ -1139,12 +1293,39 @@ const exportData = async () => {
     <div
       v-if="showAnalyticsModal && analytics"
       class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
-      @click="showAnalyticsModal = false"
     >
-      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden" @click.stop>
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6">
-          <h3 class="text-xl font-bold text-white">Survey Analytics Dashboard</h3>
-          <p class="text-purple-100 text-sm mt-1">Comprehensive overview of survey performance and responses</p>
+      <div 
+        :class="[
+          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden',
+          isDragging && draggedModal === 'analytics' ? 'dragging' : ''
+        ]"
+        data-modal="analytics"
+        @click.stop
+        :style="{ transform: `translate(${modalPositions.analytics.x}px, ${modalPositions.analytics.y}px)` }"
+      >
+        <div 
+          :class="[
+            'bg-gradient-to-r from-purple-600 to-pink-600 p-6 select-none flex items-center justify-between',
+            isDragging && draggedModal === 'analytics' ? 'cursor-grabbing' : 'cursor-move'
+          ]"
+          @mousedown="startDrag($event, 'analytics')"
+        >
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <Move class="w-5 h-5 opacity-70" />
+              Survey Analytics Dashboard
+            </h3>
+            <p class="text-purple-100 text-sm mt-1">Comprehensive overview of survey performance and responses</p>
+          </div>
+          <button
+            @click="resetModalPosition('analytics')"
+            class="text-purple-200 hover:text-white p-1 rounded transition-colors"
+            title="Reset position"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </button>
         </div>
         
         <div class="p-6">
@@ -1218,12 +1399,39 @@ const exportData = async () => {
     <div
       v-if="showExportModal"
       class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
-      @click="showExportModal = false"
     >
-      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md" @click.stop>
-        <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-6 rounded-t-2xl">
-          <h3 class="text-xl font-bold text-white">Export Survey Data</h3>
-          <p class="text-green-100 text-sm mt-1">Choose export format and filters</p>
+      <div 
+        :class="[
+          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-md',
+          isDragging && draggedModal === 'export' ? 'dragging' : ''
+        ]"
+        data-modal="export"
+        @click.stop
+        :style="{ transform: `translate(${modalPositions.export.x}px, ${modalPositions.export.y}px)` }"
+      >
+        <div 
+          :class="[
+            'bg-gradient-to-r from-green-600 to-emerald-600 p-6 rounded-t-2xl select-none flex items-center justify-between',
+            isDragging && draggedModal === 'export' ? 'cursor-grabbing' : 'cursor-move'
+          ]"
+          @mousedown="startDrag($event, 'export')"
+        >
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <Move class="w-5 h-5 opacity-70" />
+              Export Survey Data
+            </h3>
+            <p class="text-green-100 text-sm mt-1">Choose export format and filters</p>
+          </div>
+          <button
+            @click="resetModalPosition('export')"
+            class="text-green-200 hover:text-white p-1 rounded transition-colors"
+            title="Reset position"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </button>
         </div>
         
         <div class="p-6 space-y-6">
@@ -1308,23 +1516,46 @@ const exportData = async () => {
     <div
       v-if="showCategoryQuestionsModal"
       class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
-      @click="showCategoryQuestionsModal = false"
     >
-      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden" @click.stop>
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6">
-          <h3 class="text-xl font-bold text-white">
-            Questions in "{{ selectedCategoryForModal?.name }}" Category
-          </h3>
-          <p class="text-indigo-100 text-sm mt-1">
-            {{ categoryQuestions.length }} question{{ categoryQuestions.length !== 1 ? 's' : '' }} found
-          </p>
-        </div>
-        
-        <div class="p-6">
+      <div 
+        :class="[
+          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden',
+          isDragging && draggedModal === 'categoryQuestions' ? 'dragging' : ''
+        ]"
+        data-modal="categoryQuestions"
+        @click.stop
+        :style="{ transform: `translate(${modalPositions.categoryQuestions.x}px, ${modalPositions.categoryQuestions.y}px)` }"
+      >
+          <div 
+            :class="[
+              'bg-gradient-to-r from-indigo-600 to-purple-600 p-6 select-none flex items-center justify-between',
+              isDragging && draggedModal === 'categoryQuestions' ? 'cursor-grabbing' : 'cursor-move'
+            ]"
+            @mousedown="startDrag($event, 'categoryQuestions')"
+          >
+            <div>
+              <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                <Move class="w-5 h-5 opacity-70" />
+                Questions in "{{ selectedCategoryForModal?.name }}" Category
+              </h3>
+              <p class="text-indigo-100 text-sm mt-1">
+                {{ categoryQuestions.length }} question{{ categoryQuestions.length !== 1 ? 's' : '' }} found
+              </p>
+            </div>
+            <button
+              @click="resetModalPosition('categoryQuestions')"
+              class="text-indigo-200 hover:text-white p-1 rounded transition-colors"
+              title="Reset position"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </button>
+          </div>        <div class="p-6 max-h-[calc(90vh-200px)] overflow-y-auto">
           <!-- Questions Table -->
           <div v-if="categoryQuestions.length > 0" class="overflow-x-auto">
             <table class="w-full table-auto">
-              <thead>
+              <thead class="sticky top-0 bg-white z-10">
                 <tr class="bg-slate-50 text-left">
                   <th class="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider border-b border-slate-200">
                     Question
@@ -1432,7 +1663,7 @@ const exportData = async () => {
             </button>
           </div>
 
-          <div class="flex justify-end pt-6 border-t border-slate-200 mt-6">
+          <div class="flex justify-end pt-6 border-t border-slate-200 mt-6 sticky bottom-0 bg-white">
             <button
               @click="showCategoryQuestionsModal = false"
               class="px-6 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
@@ -1446,3 +1677,58 @@ const exportData = async () => {
   </div>
 </div>
 </template>
+
+<style scoped>
+/* Draggable modal styles */
+.draggable-modal {
+  transition: transform 0.1s ease-out;
+  z-index: 9999;
+}
+
+.draggable-modal.dragging {
+  transition: none;
+  z-index: 10000;
+}
+
+/* Custom cursor styles for drag handles */
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+/* Ensure proper stacking for modals */
+.fixed.z-50 {
+  z-index: 50;
+}
+
+.draggable-modal[data-modal] {
+  position: relative;
+}
+
+/* Animation for modal positioning */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translate(0, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+.draggable-modal {
+  animation: modalSlideIn 0.2s ease-out;
+}
+
+/* Disable text selection during drag */
+.select-none {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+</style>

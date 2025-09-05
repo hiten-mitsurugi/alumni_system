@@ -1,22 +1,26 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from .email_templates.approval_email import get_approval_email_template, get_rejection_email_template
 from django.core.cache import cache
 from django.db.models import Q
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db import transaction
+from django.utils import timezone
 import pandas as pd
 import io
 from datetime import datetime
-from .models import CustomUser, Skill, WorkHistory, AlumniDirectory
+from .models import CustomUser, Skill, WorkHistory, AlumniDirectory, Profile
+from .status_cache import set_user_online, set_user_offline, get_user_status
 from .serializers import (
     RegisterSerializer, UserDetailSerializer, UserCreateSerializer,
     SkillSerializer, WorkHistorySerializer, AlumniDirectoryCheckSerializer,
@@ -35,12 +39,23 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        # Add detailed logging for debugging
+        logger.info("=== REGISTRATION ATTEMPT ===")
+        logger.info(f"Request data keys: {list(request.data.keys())}")
+        logger.info(f"Alumni exists value: {request.data.get('alumni_exists')}")
+        logger.info(f"Survey responses: {request.data.get('survey_responses')}")
+        logger.info(f"Email: {request.data.get('email')}")
+        logger.info(f"Employment status: {request.data.get('employment_status')}")
+        logger.info(f"Gender: {request.data.get('gender')}")
+        logger.info(f"Civil status: {request.data.get('civil_status')}")
+        
         serializer = RegisterSerializer(data=request.data)
 
         if serializer.is_valid():
             try:
                 with transaction.atomic():
                     user = serializer.save()
+                    logger.info(f"User created successfully: {user.email}")
 
                     try:
                         channel_layer = get_channel_layer()
@@ -72,6 +87,12 @@ class RegisterView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
+        # Log validation errors for debugging
+        logger.error("=== REGISTRATION VALIDATION FAILED ===")
+        logger.error(f"Serializer errors: {serializer.errors}")
+        for field, errors in serializer.errors.items():
+            logger.error(f"Field '{field}': {errors}")
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ApproveUserView(APIView):
@@ -79,12 +100,189 @@ class ApproveUserView(APIView):
 
     def post(self, request, user_id):
         try:
-            user = CustomUser.objects.get(id=user_id, user_type=3, is_approved=False)
-            user.is_approved = True
-            user.save()
-            return Response({'message': 'User approved successfully'}, status=status.HTTP_200_OK)
+            with transaction.atomic():
+                user = CustomUser.objects.get(id=user_id, user_type=3, is_approved=False)
+                user.is_approved = True
+                user.save()
+                
+                # Clear all related caches after approval
+                cache.delete('approved_alumni_list')
+                cache.delete('pending_alumni_list')
+                
+                # Clear all cached variations of approved_alumni_list (comprehensive clearing)
+                # This ensures approved user appears in filtered lists immediately
+                cache_patterns = [
+                    'approved_alumni_list_*',  # All filter combinations
+                    f'user_detail_{user.id}',  # User-specific cache
+                ]
+                
+                # Django cache doesn't support pattern deletion, so we clear key types we know exist
+                # Clear common filter combinations to ensure immediate visibility
+                for emp_status in ['', 'employed_locally', 'employed_internationally', 'self_employed', 'unemployed', 'retired']:
+                    for gender in ['', 'male', 'female']:
+                        for status_filter in ['', 'active', 'blocked']:
+                            cache_key = f"approved_alumni_list_{emp_status}_{gender}_{user.year_graduated or ''}_{user.program or ''}_{status_filter}_"
+                            cache.delete(cache_key)
+                            # Also clear with search terms
+                            cache.delete(f"{cache_key}{user.first_name.lower()}")
+                            cache.delete(f"{cache_key}{user.last_name.lower()}")
+            
+            # Send approval confirmation email
+            try:
+                subject, html_content, text_content = get_approval_email_template(user)
+                
+                # Create email message with both HTML and text versions
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_content,  # Plain text version
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                )
+                email.attach_alternative(html_content, "text/html")  # HTML version
+                email.send(fail_silently=False)
+                
+                # Log successful email sending
+                logger.info(f"Approval email sent successfully to {user.email} (User ID: {user.id})")
+                
+                # Send WebSocket notification to update admin interfaces
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    'admin_group',
+                    {
+                        'type': 'notification',
+                        'message': f'User {user.first_name} {user.last_name} has been approved.',
+                    }
+                )
+                
+                return Response({
+                    'message': 'User approved successfully and email notification sent',
+                    'email_sent': True
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as email_error:
+                # User is still approved even if email fails
+                logger.error(f"Failed to send approval email to {user.email}: {str(email_error)}")
+                
+                # Send WebSocket notification even if email failed
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    'admin_group',
+                    {
+                        'type': 'notification',
+                        'message': f'User {user.first_name} {user.last_name} has been approved.',
+                    }
+                )
+                
+                return Response({
+                    'message': 'User approved successfully but email notification failed',
+                    'email_sent': False,
+                    'email_error': str(email_error)
+                }, status=status.HTTP_200_OK)
+                
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found or already approved'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            logger.error(f"Error approving user {user_id}: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CheckEmailExistsView(APIView):
+    """Public endpoint to check if an email is already registered - for use during registration"""
+    permission_classes = [AllowAny]  # No authentication required
+    
+    def get(self, request):
+        email = request.query_params.get('email', '').strip()
+        
+        if not email:
+            return Response({'error': 'Email parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            # Check if email already exists
+            user_exists = CustomUser.objects.filter(email__iexact=email).exists()
+            
+            return Response({
+                'exists': user_exists,
+                'email': email,
+                'message': 'Email is already registered' if user_exists else 'Email is available'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error checking email existence for {email}: {str(e)}")
+            return Response({'error': 'Unable to check email availability'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ClearCacheView(APIView):
+    """Debug view to manually clear all caches"""
+    permission_classes = [IsAdminOrSuperAdmin]
+    
+    def post(self, request):
+        try:
+            # Clear all known cache keys
+            cache_keys = [
+                'approved_alumni_list',
+                'pending_alumni_list'
+            ]
+            
+            # Clear base cache keys
+            for key in cache_keys:
+                cache.delete(key)
+            
+            # Clear filtered cache variations
+            filter_combinations = [
+                ('', '', '', '', '', ''),  # No filters
+                ('employed_locally', '', '', '', '', ''),
+                ('employed_internationally', '', '', '', '', ''),
+                ('self_employed', '', '', '', '', ''),
+                ('unemployed', '', '', '', '', ''),
+                ('retired', '', '', '', '', ''),
+                ('', 'male', '', '', '', ''),
+                ('', 'female', '', '', '', ''),
+                ('', '', '', '', 'active', ''),
+                ('', '', '', '', 'blocked', ''),
+            ]
+            
+            cleared_count = 0
+            for emp, gen, year, prog, stat, search in filter_combinations:
+                cache_key = f"approved_alumni_list_{emp}_{gen}_{year}_{prog}_{stat}_{search}"
+                if cache.delete(cache_key):
+                    cleared_count += 1
+            
+            return Response({
+                'message': f'Cache cleared successfully. {cleared_count} cache keys removed.',
+                'cleared_keys': cache_keys
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class DebugUsersView(APIView):
+    """Debug view to see current users and their status"""
+    permission_classes = [IsAdminOrSuperAdmin]
+    
+    def get(self, request):
+        try:
+            # Get all users
+            all_users = CustomUser.objects.all().values('id', 'email', 'user_type', 'is_approved', 'is_active', 'first_name', 'last_name')
+            
+            # Get approved alumni specifically
+            approved_alumni = CustomUser.objects.filter(user_type=3, is_approved=True).values('id', 'email', 'first_name', 'last_name', 'is_active')
+            
+            # Get pending alumni
+            pending_alumni = CustomUser.objects.filter(user_type=3, is_approved=False).values('id', 'email', 'first_name', 'last_name')
+            
+            # Check cache status
+            cache_info = {
+                'approved_alumni_cache': cache.get('approved_alumni_list'),
+                'pending_alumni_cache': cache.get('pending_alumni_list')
+            }
+            
+            return Response({
+                'all_users': list(all_users),
+                'approved_alumni_count': len(approved_alumni),
+                'approved_alumni': list(approved_alumni),
+                'pending_alumni_count': len(pending_alumni), 
+                'pending_alumni': list(pending_alumni),
+                'cache_info': cache_info
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ApprovedAlumniListView(ListAPIView):
     serializer_class = UserDetailSerializer
@@ -98,11 +296,20 @@ class ApprovedAlumniListView(ListAPIView):
         program = request.query_params.get('program', '').strip()
         status = request.query_params.get('status', '').strip().lower()
         search = request.query_params.get('search', '').strip()
-        cache_key = f"approved_alumni_list_{employment_status}_{gender}_{year_graduated}_{program}_{status}_{search}"
-        cached_ids = cache.get(cache_key)
-        if cached_ids is not None:
-            return CustomUser.objects.filter(id__in=cached_ids)
+        
+        # Temporarily disable caching to debug approved users issue
+        # cache_key = f"approved_alumni_list_{employment_status}_{gender}_{year_graduated}_{program}_{status}_{search}"
+        # cached_ids = cache.get(cache_key)
+        # if cached_ids is not None:
+        #     return CustomUser.objects.filter(id__in=cached_ids)
+            
         queryset = CustomUser.objects.filter(user_type=3, is_approved=True)
+        
+        # Log the base queryset for debugging
+        logger.info(f"ApprovedAlumniListView: Base queryset count: {queryset.count()}")
+        for user in queryset[:5]:  # Log first 5 users
+            logger.info(f"Approved user: {user.id} - {user.email} - {user.first_name} {user.last_name}")
+        
         if employment_status:
             queryset = queryset.filter(employment_status__iexact=employment_status)
         if gender:
@@ -122,8 +329,12 @@ class ApprovedAlumniListView(ListAPIView):
                 Q(last_name__icontains=search) |
                 Q(school_id__icontains=search)
             )
-        user_ids = list(queryset.values_list('id', flat=True))
-        cache.set(cache_key, user_ids, timeout=3600)
+        
+        logger.info(f"ApprovedAlumniListView: Final queryset count after filters: {queryset.count()}")
+        
+        # Re-enable caching later after fixing the issue
+        # user_ids = list(queryset.values_list('id', flat=True))
+        # cache.set(cache_key, user_ids, timeout=3600)
         return queryset
 class ConfirmTokenView(APIView):
     permission_classes = [AllowAny]
@@ -162,21 +373,55 @@ class RejectUserView(APIView):
 
     def post(self, request, user_id):
         try:
-            user = CustomUser.objects.get(id=user_id)
+            user = CustomUser.objects.get(id=user_id, user_type=3, is_approved=False)
+            
+            # Send rejection notification email before deleting
+            try:
+                subject, html_content, text_content = get_rejection_email_template(user)
+                
+                # Create email message with both HTML and text versions
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_content,  # Plain text version
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                )
+                email.attach_alternative(html_content, "text/html")  # HTML version
+                email.send(fail_silently=True)  # Don't fail if email sending fails
+                
+                logger.info(f"Rejection notification email sent to {user.email} (User ID: {user.id})")
+                
+            except Exception as email_error:
+                logger.error(f"Failed to send rejection email to {user.email}: {str(email_error)}")
+            
+            # Delete the user account
+            user_email = user.email
             user.delete()
+            
+            # Send WebSocket notification
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f'user_{user_id}',
                 {
                     'type': 'notification',
-                    'message': 'Your account was rejected.',
+                    'message': 'Your account application requires additional review.',
                 }
             )
+            
+            # Clear caches
             cache.delete('approved_alumni_list')
             cache.delete('pending_alumni_list')
-            return Response({'message': 'User rejected and deleted successfully'})
+            
+            return Response({
+                'message': 'User application rejected and notification email sent',
+                'email_sent': True
+            }, status=status.HTTP_200_OK)
+            
         except CustomUser.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'User not found or already processed'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error rejecting user {user_id}: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -211,12 +456,6 @@ class LoginView(APIView):
                 )
             
             # Update user status to online when logging in
-            from .models import Profile
-            from django.utils import timezone
-            from asgiref.sync import async_to_sync
-            from channels.layers import get_channel_layer
-            from .status_cache import set_user_online
-            
             # Update user's last_login field
             user.last_login = timezone.now()
             user.save(update_fields=['last_login'])
@@ -225,6 +464,34 @@ class LoginView(APIView):
             set_user_online(user.id)
             
             profile, created = Profile.objects.get_or_create(user=user)
+            profile.status = 'online'
+            profile.last_seen = timezone.now()
+            profile.save()
+            
+            logger.info(f"User {user.id} status set to online on login")
+            
+            # Broadcast status change to all connected users
+            try:
+                channel_layer = get_channel_layer()
+                status_payload = {
+                    'type': 'status_update',
+                    'user_id': user.id,
+                    'status': 'online',
+                    'last_seen': profile.last_seen.isoformat(),
+                    'last_login': user.last_login.isoformat()
+                }
+                logger.info(f"Broadcasting login status update: {status_payload}")
+                
+                async_to_sync(channel_layer.group_send)(
+                    'status_updates',
+                    {
+                        'type': 'status_update',
+                        'data': status_payload
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Failed to broadcast status update on login: {str(e)}")
+            
             profile.status = 'online'
             profile.last_seen = timezone.now()
             profile.save()
@@ -411,12 +678,6 @@ class LogoutView(APIView):
     def post(self, request):
         try:
             # Update user status to offline when logging out
-            from .models import Profile
-            from django.utils import timezone
-            from asgiref.sync import async_to_sync
-            from channels.layers import get_channel_layer
-            from .status_cache import set_user_offline
-            
             user = request.user
             
             # Set user offline in both Redis cache and database
@@ -447,20 +708,14 @@ class LogoutView(APIView):
                 logger.info(f"Broadcasting logout status update: {status_payload}")
                 
                 async_to_sync(channel_layer.group_send)(
-                    'user_management',  # User management group
+                    'status_updates',
                     {
-                        'type': 'broadcast_message',
-                        'message': status_payload
+                        'type': 'status_update',
+                        'data': status_payload
                     }
                 )
-                # Also broadcast to status updates group for backward compatibility
-                async_to_sync(channel_layer.group_send)(
-                    'status_updates',  # Global status updates group
-                    status_payload
-                )
-                logger.info(f"Successfully broadcast logout status update for user {user.id}")
-            except Exception as ws_error:
-                logger.error(f"WebSocket status broadcast failed in LogoutView: {str(ws_error)}")
+            except Exception as e:
+                logger.error(f"Failed to broadcast status update on logout: {str(e)}")
             
             refresh_token = request.data.get("refresh")
             if not refresh_token:
@@ -516,7 +771,7 @@ class ProfileView(APIView):
     
 CustomUser = get_user_model()
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSearchSerializer
     permission_classes = [IsAuthenticated]
@@ -531,6 +786,91 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(username__icontains=search_query)
             ).exclude(id=self.request.user.id)
         return queryset
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        Only allow admins and super admins to delete users.
+        """
+        if self.action == 'destroy':
+            # Custom permission check for delete - must be Admin or SuperAdmin
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Custom delete method for user deletion with additional checks
+        """
+        instance = self.get_object()
+        
+        # Check if user has permission to delete (Admin=2 or SuperAdmin=1)
+        if request.user.user_type not in [1, 2]:
+            return Response(
+                {"error": "You don't have permission to delete users"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Prevent users from deleting themselves
+        if instance == request.user:
+            return Response(
+                {"error": "You cannot delete your own account"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Prevent deletion of super admin by regular admin
+        # user_type: 1=Super Admin, 2=Admin, 3=Alumni
+        if instance.user_type == 1 and request.user.user_type != 1:
+            return Response(
+                {"error": "Only super admins can delete other super admin accounts"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Clear any cached data related to this user
+        cache_keys_to_clear = [
+            f"user_approval_count",
+            f"pending_users_list",
+            f"approved_users_list",
+            f"user_status_{instance.id}",
+            f"user_profile_{instance.id}",
+        ]
+        
+        for key in cache_keys_to_clear:
+            cache.delete(key)
+        
+        # Also clear pattern-based cache keys
+        cache_patterns = [
+            "user_*",
+            "approval_*",
+            "pending_*",
+            "approved_*"
+        ]
+        
+        for pattern in cache_patterns:
+            cache_keys = cache.keys(pattern)
+            if cache_keys:
+                cache.delete_many(cache_keys)
+        
+        # Broadcast the user deletion to WebSocket
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            try:
+                async_to_sync(channel_layer.group_send)(
+                    "admin_notifications",
+                    {
+                        "type": "user_deleted",
+                        "user_id": instance.id,
+                        "user_name": f"{instance.first_name} {instance.last_name}",
+                        "deleted_by": f"{request.user.first_name} {request.user.last_name}"
+                    }
+                )
+            except Exception as e:
+                print(f"Error broadcasting user deletion: {e}")
+        
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class UserUpdateView(APIView):
     permission_classes = [IsAdminOrSuperAdmin]

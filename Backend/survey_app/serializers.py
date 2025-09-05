@@ -8,6 +8,7 @@ User = get_user_model()
 class SurveyCategorySerializer(serializers.ModelSerializer):
     """Serializer for survey categories"""
     active_questions_count = serializers.ReadOnlyField()
+    total_questions_count = serializers.ReadOnlyField()
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
     depends_on_category_name = serializers.CharField(source='depends_on_category.name', read_only=True)
 
@@ -17,7 +18,7 @@ class SurveyCategorySerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'order', 'is_active',
             'depends_on_category', 'depends_on_category_name', 
             'depends_on_question_text', 'depends_on_value',
-            'active_questions_count', 'created_by', 'created_by_name',
+            'active_questions_count', 'total_questions_count', 'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_by', 'created_at', 'updated_at']

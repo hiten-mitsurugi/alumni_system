@@ -47,6 +47,10 @@ class SurveyCategory(models.Model):
     @property
     def active_questions_count(self):
         return self.questions.filter(is_active=True).count()
+        
+    @property 
+    def total_questions_count(self):
+        return self.questions.count()
 
 
 class SurveyQuestion(models.Model):

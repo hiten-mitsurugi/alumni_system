@@ -44,23 +44,76 @@ const closeModal = () => {
 
 const approveUser = async () => {
   if (!selectedUser.value) return;
+  
+  // Store user details before potential modal close
+  const userEmail = selectedUser.value.email;
+  const userId = selectedUser.value.id;
+  
   try {
-    await api.post(`/approve-user/${selectedUser.value.id}/`);
-    pendingUsers.value = pendingUsers.value.filter(u => u.id !== selectedUser.value.id);
-    closeModal();
+    console.log('Attempting to approve user:', userId);
+    const response = await api.post(`/approve-user/${userId}/`);
+    console.log('Approval response:', response.data);
+    console.log('Response status:', response.status);
+    
+    // Check if response is successful (200-299 range)
+    if (response.status >= 200 && response.status < 300) {
+      // Remove from pending list immediately
+      pendingUsers.value = pendingUsers.value.filter(u => u.id !== userId);
+      closeModal();
+      
+      // Show success message based on backend response
+      const message = response.data.message || 'User approved successfully';
+      if (response.data.email_sent) {
+        alert(`✅ ${message}\n📧 Confirmation email sent to ${userEmail}`);
+      } else {
+        const emailError = response.data.email_error ? `\n\nEmail error: ${response.data.email_error}` : '';
+        alert(`✅ ${message}\n⚠️ Email notification failed to send.${emailError}`);
+      }
+    } else {
+      throw new Error(`Unexpected response status: ${response.status}`);
+    }
+    
   } catch (error) {
     console.error('Failed to approve user:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+    console.error('Full error object:', error);
+    
+    // More detailed error message
+    let errorMessage = 'Failed to approve user. Please try again.';
+    if (error.response?.data?.error) {
+      errorMessage = `Failed to approve user: ${error.response.data.error}`;
+    } else if (error.response?.status === 404) {
+      errorMessage = 'User not found or already approved.';
+    } else if (error.response?.status === 500) {
+      errorMessage = 'Server error occurred. Please try again later.';
+    }
+    
+    alert(`❌ ${errorMessage}`);
   }
 };
 
 const rejectUser = async () => {
   if (!selectedUser.value) return;
+  
+  if (!confirm(`Are you sure you want to reject ${selectedUser.value.first_name} ${selectedUser.value.last_name}'s application?\n\nThis will:\n- Delete their account permanently\n- Send them an email notification\n- They will need to reapply`)) {
+    return;
+  }
+  
   try {
-    await api.post(`/reject-user/${selectedUser.value.id}/`);
+    const response = await api.post(`/reject-user/${selectedUser.value.id}/`);
     pendingUsers.value = pendingUsers.value.filter(u => u.id !== selectedUser.value.id);
     closeModal();
+    
+    // Show success message with email status
+    if (response.data.email_sent) {
+      alert(`✅ User application rejected.\n📧 Notification email sent to ${selectedUser.value.email}`);
+    } else {
+      alert(`✅ User application rejected.\n⚠️ Email notification failed to send.`);
+    }
   } catch (error) {
     console.error('Failed to reject user:', error);
+    alert('❌ Failed to reject user. Please try again.');
   }
 };
 
@@ -69,10 +122,35 @@ const changePage = (page) => {
 };
 
 const handleWebSocketMessage = (data) => {
-  if (data.message.includes('New alumni registered') ||
-      data.message.includes('approved') ||
-      data.message.includes('rejected')) {
-    fetchPendingUsers(); // Refresh list on relevant events
+  try {
+    // Add comprehensive safety checks for data structure
+    if (!data || typeof data !== 'object') {
+      console.log('PendingUserApprovalPage: Invalid WebSocket data received:', data);
+      return;
+    }
+    
+    // Try multiple ways to extract the message
+    let message = '';
+    if (data.message && typeof data.message === 'string') {
+      message = data.message;
+    } else if (data.data?.message && typeof data.data.message === 'string') {
+      message = data.data.message;
+    } else if (typeof data === 'string') {
+      message = data;
+    }
+    
+    // Only proceed if we have a valid string message
+    if (message && typeof message === 'string') {
+      if (message.includes('New alumni registered') ||
+          message.includes('approved') ||
+          message.includes('rejected')) {
+        fetchPendingUsers(); // Refresh list on relevant events
+      }
+    } else {
+      console.log('PendingUserApprovalPage: No valid message found in WebSocket data:', data);
+    }
+  } catch (error) {
+    console.error('PendingUserApprovalPage: Error handling WebSocket message:', error, 'Data:', data);
   }
 };
 

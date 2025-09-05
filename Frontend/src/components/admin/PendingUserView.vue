@@ -50,7 +50,6 @@ const userType = (type) => type === 1 ? 'Super Admin' : type === 2 ? 'Admin' : '
           <strong>Government ID:</strong>
           <a :href="user.government_id" target="_blank" class="text-blue-500 underline">View ID</a>
         </div>
-        <div><strong>Password (encrypted):</strong> <span class="text-gray-400 italic">Hidden</span></div>
       </div>
 
       <div class="mt-6 flex justify-end space-x-4">

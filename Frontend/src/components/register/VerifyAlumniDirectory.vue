@@ -1,5 +1,6 @@
-a<script setup>
-import { defineProps, defineEmits, reactive, ref } from 'vue';
+a
+<script setup>
+import { defineProps, defineEmits, reactive, ref, computed } from 'vue';
 import api from '../../services/api';
 
 const props = defineProps(['form']);
@@ -7,6 +8,9 @@ const emit = defineEmits(['verified', 'update:form']);
 
 const localForm = reactive({ ...props.form });
 const error = ref('');
+
+// Calculate current year for the year graduated input
+const currentYear = computed(() => new Date().getFullYear());
 
 const validateName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*(?: (Sr|Jr)\.?)?$/.test(name.trim());
 const validateSchoolId = (id) => /^\d{3}-\d{5}$/.test(id);
@@ -61,63 +65,52 @@ const checkDirectory = async () => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-medium text-gray-700">First Name</label>
-        <input
-          v-model="localForm.first_name"
-          type="text"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @input="emit('update:form', localForm)"
-        />
+        <input v-model="localForm.first_name" type="text"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2" @input="emit('update:form', localForm)" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Middle Name (Optional)</label>
-        <input
-          v-model="localForm.middle_name"
-          type="text"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @input="emit('update:form', localForm)"
-        />
+        <input v-model="localForm.middle_name" type="text"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2" @input="emit('update:form', localForm)" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Last Name</label>
-        <input
-          v-model="localForm.last_name"
-          type="text"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @input="emit('update:form', localForm)"
-        />
+        <input v-model="localForm.last_name" type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          @input="emit('update:form', localForm)" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">School ID</label>
-        <input
-          v-model="localForm.school_id"
-          type="text"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @input="emit('update:form', localForm)"
-        />
+        <input v-model="localForm.school_id" type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          @input="emit('update:form', localForm)" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Program</label>
-        <select
-          v-model="localForm.program"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @change="emit('update:form', localForm)"
-        >
+        <select v-model="localForm.program" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          @change="emit('update:form', localForm)">
           <option value="">Select Program</option>
           <option value="BA in Sociology">BA in Sociology</option>
           <option value="Bachelor of Agricultural Technology">Bachelor of Agricultural Technology</option>
           <option value="Bachelor of Elementary Education">Bachelor of Elementary Education</option>
-          <option value="Bachelor of Secondary Education Major in English">Bachelor of Secondary Education Major in English</option>
-          <option value="Bachelor of Secondary Education Major in Filipino">Bachelor of Secondary Education Major in Filipino</option>
-          <option value="Bachelor of Secondary Education Major in Mathematics">Bachelor of Secondary Education Major in Mathematics</option>
-          <option value="Bachelor of Secondary Education Major in Science">Bachelor of Secondary Education Major in Science</option>
+          <option value="Bachelor of Secondary Education Major in English">Bachelor of Secondary Education Major in
+            English</option>
+          <option value="Bachelor of Secondary Education Major in Filipino">Bachelor of Secondary Education Major in
+            Filipino</option>
+          <option value="Bachelor of Secondary Education Major in Mathematics">Bachelor of Secondary Education Major in
+            Mathematics</option>
+          <option value="Bachelor of Secondary Education Major in Science">Bachelor of Secondary Education Major in
+            Science</option>
           <option value="BS in Agroforestry">BS in Agroforestry</option>
-          <option value="BS in Agricultural and Biosystems Engineering">BS in Agricultural and Biosystems Engineering</option>
+          <option value="BS in Agricultural and Biosystems Engineering">BS in Agricultural and Biosystems Engineering
+          </option>
           <option value="BS in Agriculture">BS in Agriculture</option>
-          <option value="BS in Agriculture, Major in Agribusiness Management">BS in Agriculture, Major in Agribusiness Management</option>
-          <option value="BS in Agriculture, Major in Agricultural Economics">BS in Agriculture, Major in Agricultural Economics</option>
+          <option value="BS in Agriculture, Major in Agribusiness Management">BS in Agriculture, Major in Agribusiness
+            Management</option>
+          <option value="BS in Agriculture, Major in Agricultural Economics">BS in Agriculture, Major in Agricultural
+            Economics</option>
           <option value="BS in Agriculture, Major in Agronomy">BS in Agriculture, Major in Agronomy</option>
           <option value="BS in Agriculture, Major in Animal Science">BS in Agriculture, Major in Animal Science</option>
-          <option value="BS in Agriculture, Major in Crop Protection">BS in Agriculture, Major in Crop Protection</option>
+          <option value="BS in Agriculture, Major in Crop Protection">BS in Agriculture, Major in Crop Protection
+          </option>
           <option value="BS in Agriculture, Major in Horticulture">BS in Agriculture, Major in Horticulture</option>
           <option value="BS in Agriculture, Major in Soil Science">BS in Agriculture, Major in Soil Science</option>
           <option value="BS in Applied Mathematics">BS in Applied Mathematics</option>
@@ -141,38 +134,26 @@ const checkDirectory = async () => {
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Birth Date</label>
-        <input
-          v-model="localForm.birth_date"
-          type="date"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @input="emit('update:form', localForm)"
-        />
+        <input v-model="localForm.birth_date" type="date"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2" @input="emit('update:form', localForm)" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Year Graduated</label>
-        <input
-          v-model="localForm.year_graduated"
-          type="text"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @input="emit('update:form', localForm)"
-        />
+        <input v-model="localForm.year_graduated" type="number" :min="currentYear - 50" :max="currentYear + 50"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          placeholder="Enter year (YYYY)" @input="emit('update:form', localForm)" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Sex</label>
-        <select
-          v-model="localForm.gender"
-          class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @change="emit('update:form', localForm)"
-        >
+        <select v-model="localForm.gender" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          @change="emit('update:form', localForm)">
           <option value="male">Male</option>
           <option value="female">Female</option>
         </select>
       </div>
     </div>
-    <button
-      @click="checkDirectory"
-      class="w-full mt-6 bg-green-700 text-white py-2 rounded hover:bg-green-800 font-semibold"
-    >
+    <button @click="checkDirectory"
+      class="w-full mt-6 bg-green-700 text-white py-2 rounded hover:bg-green-800 font-semibold">
       Verify
     </button>
     <p v-if="error" class="text-red-500 text-sm text-center mt-2">{{ error }}</p>

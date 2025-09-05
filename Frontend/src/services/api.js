@@ -2,8 +2,20 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
+// Dynamic API base URL that adapts to any environment and IP changes
+const getApiBaseURL = () => {
+  // Allow override via environment variable for production
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // Auto-detect based on current location (works with any IP)
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:8000/api`;
+};
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api', // Django backend API base URL
+  baseURL: getApiBaseURL(), // Dynamic API base URL
 });
 
 // Request interceptor to add token

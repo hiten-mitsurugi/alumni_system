@@ -365,41 +365,62 @@ watch(
   localResponses,
   (newResponses) => {
     console.log('🔄 Local responses changed:', newResponses)
-    
-    // Clear conditional question responses when parent question changes
+    emit('update:responses', { ...newResponses })
+  },
+  { deep: true }
+)
+
+// Separate watcher for conditional question cleanup - only when dependency changes
+watch(
+  () => {
+    // Create an object of just the dependency values to watch
+    const dependencies = {}
+    props.questions.forEach(question => {
+      if (question.depends_on_question_id) {
+        dependencies[question.depends_on_question_id] = localResponses[question.depends_on_question_id]
+      }
+    })
+    return dependencies
+  },
+  (newDependencies, oldDependencies) => {
+    // Only clear responses when a parent question's value actually changes
     props.questions.forEach(question => {
       if (question.depends_on_question_id && question.depends_on_value) {
-        const dependentResponse = newResponses[question.depends_on_question_id]
+        const oldValue = oldDependencies?.[question.depends_on_question_id]
+        const newValue = newDependencies[question.depends_on_question_id]
         
-        // Normalize the response for comparison
-        let normalizedResponse = dependentResponse
-        if (typeof dependentResponse === 'boolean') {
-          normalizedResponse = dependentResponse ? 'Yes' : 'No'
-        }
-        
-        const requiredValue = String(question.depends_on_value)
-        const responseStr = String(normalizedResponse || '')
-        
-        console.log(`🔍 Checking conditional question "${question.question_text}":`, {
-          dependentResponse,
-          normalizedResponse,
-          requiredValue,
-          responseStr,
-          matches: responseStr === requiredValue
-        })
-        
-        // Clear response if condition is not met
-        if (!dependentResponse || responseStr !== requiredValue) {
-          if (question.question_type === 'checkbox') {
-            newResponses[question.id] = []
-          } else {
-            delete newResponses[question.id]
+        // Only clear if the parent value actually changed
+        if (oldValue !== newValue) {
+          const dependentResponse = newValue
+          
+          // Normalize the response for comparison
+          let normalizedResponse = dependentResponse
+          if (typeof dependentResponse === 'boolean') {
+            normalizedResponse = dependentResponse ? 'Yes' : 'No'
+          }
+          
+          const requiredValue = String(question.depends_on_value)
+          const responseStr = String(normalizedResponse || '')
+          
+          console.log(`🔍 Checking conditional question "${question.question_text}":`, {
+            dependentResponse,
+            normalizedResponse,
+            requiredValue,
+            responseStr,
+            matches: responseStr === requiredValue
+          })
+          
+          // Clear response if condition is not met
+          if (!dependentResponse || responseStr !== requiredValue) {
+            if (question.question_type === 'checkbox') {
+              localResponses[question.id] = []
+            } else {
+              delete localResponses[question.id]
+            }
           }
         }
       }
     })
-    
-    emit('update:responses', { ...newResponses })
   },
   { deep: true }
 )

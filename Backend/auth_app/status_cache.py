@@ -89,16 +89,17 @@ class UserStatusCache:
             return "offline"
             
         try:
-            # First check individual status (more accurate)
+            # Check individual status first
             status = redis_client.get(f"{cls.USER_STATUS_PREFIX}{user_id}")
             if status:
                 return status
             
-            # If no individual status, check online set (fallback)
+            # If no individual status, the user is offline
+            # Remove from online set if present (cleanup expired status)
             if redis_client.sismember(cls.ONLINE_USERS_KEY, user_id):
-                return "online"
+                redis_client.srem(cls.ONLINE_USERS_KEY, user_id)
+                print(f"Cleaned up expired online status for user {user_id}")
             
-            # Default to offline
             return "offline"
             
         except Exception as e:

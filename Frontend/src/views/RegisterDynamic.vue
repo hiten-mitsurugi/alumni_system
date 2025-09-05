@@ -239,8 +239,20 @@ const submitForm = async () => {
   const surveyResponsesData = getSurveyResponsesForSubmission();
   formData.append('survey_responses', JSON.stringify(surveyResponsesData));
 
+  // Debug logging - let's see exactly what's being sent
+  console.log("=== REGISTRATION DEBUG INFO ===");
+  console.log("Form data being sent:");
+  console.log("- alumni_exists:", form.value.alumni_exists);
+  console.log("- email:", form.value.email);
+  console.log("- employment_status:", form.value.employment_status);
+  console.log("- gender:", form.value.gender);
+  console.log("- civil_status:", form.value.civil_status);
+  console.log("- survey_responses:", surveyResponsesData);
+  console.log("- survey_responses length:", surveyResponsesData.length);
+  console.log("Full form object:", form.value);
+
   try {
-    await api.post('/register/', formData, {
+    const response = await api.post('/register/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     success.value = '✅ Registration successful! Please wait for approval.';
@@ -248,6 +260,12 @@ const submitForm = async () => {
     clearSurveyData();
     window.location.reload();
   } catch (err) {
+    console.error("=== REGISTRATION ERROR ===");
+    console.error('Full error object:', err);
+    console.error('Error response:', err.response);
+    console.error('Error response data:', err.response?.data);
+    console.error('Error status:', err.response?.status);
+    
     error.value = err.response?.data?.non_field_errors?.[0] || 'Registration failed.';
     console.error('Submission error:', err.response?.data);
   }

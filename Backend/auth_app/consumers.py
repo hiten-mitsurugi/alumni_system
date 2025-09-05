@@ -1,11 +1,19 @@
 import json
 import logging
+import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
+from channels.db import database_sync_to_async
+from .status_cache import UserStatusCache
 
 logger = logging.getLogger(__name__)
 
 class NotificationConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.heartbeat_task = None
+        self.heartbeat_interval = 30  # Send heartbeat every 30 seconds
+    
     async def connect(self):
         logger.info(f"WebSocket connect attempt from user: {self.scope['user']}")
         
@@ -19,9 +27,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket connecting authenticated user: {user.username} (ID: {user.id})")
             
-            # NOTE: Do not automatically set user online here
-            # User status should only be managed through login/logout endpoints
-            # WebSocket connection != user login status
+            # Set user online when WebSocket connects (for real-time status)
+            await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
+            logger.info(f"Set user {user.id} online via WebSocket connect")
             
             # Join global groups
             await self.channel_layer.group_add('admin_notifications', self.channel_name)
@@ -32,7 +40,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_add(f'user_{user.id}', self.channel_name)
             
             await self.accept()
-            logger.info(f"WebSocket connection accepted for user {user.username}. Joined groups without affecting online status")
+            
+            # Start heartbeat to keep user online
+            self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
+            
+            logger.info(f"WebSocket connection accepted for user {user.username} with heartbeat")
             
         except Exception as e:
             logger.error(f"WebSocket connect error for user {self.scope['user']}: {str(e)}")
@@ -43,9 +55,16 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket disconnecting user {user.username} (ID: {user.id}) with code: {close_code}")
             
-            # NOTE: Do not automatically set user offline here
-            # User status should only be managed through login/logout endpoints
-            # WebSocket disconnection != user logout
+            # Cancel heartbeat task
+            if self.heartbeat_task:
+                self.heartbeat_task.cancel()
+                
+            # Set user offline when WebSocket disconnects (for real-time status)
+            try:
+                await database_sync_to_async(UserStatusCache.set_user_offline)(user.id)
+                logger.info(f"Set user {user.id} offline via WebSocket disconnect")
+            except Exception as e:
+                logger.error(f"Error setting user {user.id} offline: {e}")
             
             # Leave all groups
             await self.channel_layer.group_discard('admin_notifications', self.channel_name)
@@ -54,9 +73,39 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(f'user_{user.id}', self.channel_name)
         else:
             logger.info(f"WebSocket disconnected anonymous user with code: {close_code}")
+    
+    async def heartbeat_loop(self):
+        """Send periodic heartbeat to keep user status fresh"""
+        try:
+            while True:
+                await asyncio.sleep(self.heartbeat_interval)
+                if not isinstance(self.scope['user'], AnonymousUser):
+                    user = self.scope['user']
+                    # Refresh user activity to keep them online
+                    await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
+                    logger.debug(f"Heartbeat: refreshed online status for user {user.id}")
+        except asyncio.CancelledError:
+            logger.debug("Heartbeat cancelled")
+        except Exception as e:
+            logger.error(f"Heartbeat error: {e}")
 
     async def receive(self, text_data):
         logger.debug(f"Received message from user {self.scope['user']}: {text_data}")
+        
+        # Handle heartbeat responses from frontend
+        try:
+            data = json.loads(text_data)
+            if data.get('type') == 'heartbeat':
+                if not isinstance(self.scope['user'], AnonymousUser):
+                    user = self.scope['user']
+                    # Refresh user status on heartbeat
+                    await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
+                    await self.send(text_data=json.dumps({
+                        'type': 'heartbeat_ack',
+                        'timestamp': data.get('timestamp')
+                    }))
+        except (json.JSONDecodeError, Exception) as e:
+            logger.debug(f"Error handling received message: {e}")
 
     async def notification(self, event):
         # Unified handler for all broadcast notifications

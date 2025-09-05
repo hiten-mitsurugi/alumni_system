@@ -170,16 +170,16 @@ class SurveyResponseAnalyticsView(APIView):
         # Question statistics (top 10 most answered)
         question_stats = []
         top_questions = SurveyQuestion.objects.filter(is_active=True).annotate(
-            response_count=Count('responses')
-        ).order_by('-response_count')[:10]
+            responses_total=Count('responses')
+        ).order_by('-responses_total')[:10]
         
         for question in top_questions:
             question_stats.append({
                 'id': question.id,
                 'question_text': question.question_text[:50] + '...' if len(question.question_text) > 50 else question.question_text,
                 'category': question.category.name,
-                'response_count': question.response_count,
-                'response_rate': (question.response_count / total_alumni * 100) if total_alumni > 0 else 0
+                'response_count': question.responses_total,
+                'response_rate': (question.responses_total / total_alumni * 100) if total_alumni > 0 else 0
             })
         
         analytics_data = {

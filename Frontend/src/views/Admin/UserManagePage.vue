@@ -86,9 +86,10 @@ const closeCreateModal = () => {
 
 // Actions
 const deleteUser = async (user) => {
-  if (confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) {
+  if (confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}? This action cannot be undone.`)) {
     try {
-      await api.post(`/reject-user/${user.id}/`);
+      // Use the proper delete endpoint for approved users (UserViewSet DELETE method)
+      await api.delete(`/users/${user.id}/`);
       approvedUsers.value = approvedUsers.value.filter(u => u.id !== user.id);
       alert('User deleted successfully');
     } catch (error) {
@@ -128,18 +129,25 @@ const unblockUser = async (user) => {
 const handleWebSocketMessage = (message) => {
   console.log('UserManagePage received WebSocket message:', message);
   
-  // Handle legacy string messages
-  if (typeof message === 'string' || (message.message && typeof message.message === 'string')) {
-    const msg = message.message || message;
-    if (msg.includes('blocked') || msg.includes('unblocked') || msg.includes('created')) {
-      fetchApprovedUsers();
-    }
-    return;
-  }
-  
   try {
+    // Handle legacy string messages with safety checks
+    if (typeof message === 'string') {
+      if (message.includes('blocked') || message.includes('unblocked') || message.includes('created') || message.includes('approved')) {
+        fetchApprovedUsers();
+      }
+      return;
+    }
+    
+    if (message && typeof message === 'object' && message.message && typeof message.message === 'string') {
+      const msg = message.message;
+      if (msg.includes('blocked') || msg.includes('unblocked') || msg.includes('created') || msg.includes('approved')) {
+        fetchApprovedUsers();
+      }
+      return;
+    }
+    
     // Handle real-time status updates
-    if (message.type === 'status_update') {
+    if (message && message.type === 'status_update') {
       const { user_id, status, last_seen, last_login } = message.data || message;
       console.log(`Updating status for user ${user_id} to ${status}`);
       

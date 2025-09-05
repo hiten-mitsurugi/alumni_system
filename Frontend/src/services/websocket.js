@@ -1,16 +1,65 @@
 import { useAuthStore } from '@/stores/auth';
 
+// Dynamic WebSocket URL that adapts to any environment and IP changes
+const getWebSocketBaseURL = () => {
+  // Allow override via environment variable for production
+  if (import.meta.env.VITE_WS_BASE_URL) {
+    return import.meta.env.VITE_WS_BASE_URL;
+  }
+  
+  // Auto-detect based on current location (works with any IP)
+  const { protocol, hostname } = window.location;
+  const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProtocol}//${hostname}:8000/ws`;
+};
+
 export class WebSocketService {
   constructor() {
     this.sockets = new Map();
     this.listeners = new Map();
     this.reconnectAttempts = new Map();
     this.maxReconnectAttempts = 5;
+    this.heartbeatIntervals = new Map(); // Store heartbeat intervals
+    this.heartbeatInterval = 30000; // Send heartbeat every 30 seconds
   }
 
   getAuthStore() {
     // Lazy initialization of auth store to avoid Pinia timing issues
     return useAuthStore();
+  }
+
+  sendHeartbeat(endpoint) {
+    const socket = this.sockets.get(endpoint);
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      const heartbeat = {
+        type: 'heartbeat',
+        timestamp: new Date().toISOString()
+      };
+      socket.send(JSON.stringify(heartbeat));
+      console.log(`Sent heartbeat to ${endpoint}`);
+    }
+  }
+
+  startHeartbeat(endpoint) {
+    // Clear any existing heartbeat for this endpoint
+    this.stopHeartbeat(endpoint);
+    
+    // Start new heartbeat
+    const intervalId = setInterval(() => {
+      this.sendHeartbeat(endpoint);
+    }, this.heartbeatInterval);
+    
+    this.heartbeatIntervals.set(endpoint, intervalId);
+    console.log(`Started heartbeat for ${endpoint}`);
+  }
+
+  stopHeartbeat(endpoint) {
+    const intervalId = this.heartbeatIntervals.get(endpoint);
+    if (intervalId) {
+      clearInterval(intervalId);
+      this.heartbeatIntervals.delete(endpoint);
+      console.log(`Stopped heartbeat for ${endpoint}`);
+    }
   }
 
   async connect(endpoint = 'notifications') {
@@ -29,7 +78,7 @@ export class WebSocketService {
       }
     }
 
-    const wsUrl = `ws://localhost:8000/ws/${endpoint}/?token=${authStore.token}`;
+    const wsUrl = `${getWebSocketBaseURL()}/${endpoint}/?token=${authStore.token}`;
     if (this.sockets.has(endpoint)) {
       const socket = this.sockets.get(endpoint);
       if (socket.readyState === WebSocket.OPEN) {
@@ -46,12 +95,22 @@ export class WebSocketService {
       console.log(`WebSocket connected to ${endpoint}`);
       console.log(`WebSocket service: Active listeners for ${endpoint}:`, this.listeners.get(endpoint) || []);
       this.reconnectAttempts.delete(endpoint);
+      
+      // Start heartbeat to keep connection alive and status accurate
+      this.startHeartbeat(endpoint);
     };
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log(`WebSocket service: Received message on ${endpoint}:`, data);
+        
+        // Handle heartbeat acknowledgments
+        if (data.type === 'heartbeat_ack') {
+          console.log(`Received heartbeat ack from ${endpoint}`);
+          return;
+        }
+        
         const listeners = this.listeners.get(endpoint) || [];
         console.log(`WebSocket service: Found ${listeners.length} listeners for ${endpoint}`);
         listeners.forEach((listener) => {
@@ -66,6 +125,10 @@ export class WebSocketService {
     socket.onclose = (event) => {
       console.log(`WebSocket disconnected from ${endpoint} (code: ${event.code})`);
       this.sockets.delete(endpoint);
+      
+      // Stop heartbeat when connection closes
+      this.stopHeartbeat(endpoint);
+      
       
       // Handle authentication failures - stop reconnecting immediately
       if (event.code === 403 || event.code === 4001 || event.code === 1002) {
@@ -166,6 +229,8 @@ export class WebSocketService {
   disconnect(endpoint) {
     const socket = this.sockets.get(endpoint);
     if (socket) {
+      // Stop heartbeat before closing
+      this.stopHeartbeat(endpoint);
       socket.close();
       this.sockets.delete(endpoint);
       this.listeners.delete(endpoint);
@@ -176,11 +241,14 @@ export class WebSocketService {
   disconnectAll() {
     console.log('Disconnecting all WebSocket connections');
     for (const [endpoint, socket] of this.sockets.entries()) {
+      // Stop all heartbeats
+      this.stopHeartbeat(endpoint);
       socket.close();
     }
     this.sockets.clear();
     this.listeners.clear();
     this.reconnectAttempts.clear();
+    this.heartbeatIntervals.clear();
   }
 
   getSocket(endpoint) {
