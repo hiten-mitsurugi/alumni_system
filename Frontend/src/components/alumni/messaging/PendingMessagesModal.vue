@@ -9,15 +9,15 @@
           <p>No pending messages</p>
         </div>
         <div v-else class="space-y-3">
-          <div v-for="pending in pendingMessages" :key="pending.id" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <img :src="pending.avatar" alt="Avatar" class="w-10 h-10 rounded-full object-cover" />
-            <div class="flex-1">
-              <p class="font-medium text-gray-800">{{ pending.name }}</p>
-              <p class="text-sm text-gray-600">{{ pending.message }}</p>
+          <div v-for="pending in pendingMessages" :key="pending.id" class="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+            <img :src="pending.avatar" alt="Avatar" class="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-gray-800 mb-1">{{ pending.name }}</p>
+              <p class="text-sm text-gray-600 leading-relaxed break-words">{{ pending.message }}</p>
             </div>
-            <div class="flex space-x-2">
-              <button @click="$emit('accept', pending.id)" class="px-3 py-1 bg-green-500 text-white rounded-full hover:bg-green-600">Accept</button>
-              <button @click="$emit('reject', pending.id)" class="px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600">Reject</button>
+            <div class="flex flex-col space-y-2 flex-shrink-0">
+              <button @click="$emit('accept', pending.id)" class="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium">Accept</button>
+              <button @click="$emit('reject', pending.id)" class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors duration-200 font-medium">Reject</button>
             </div>
           </div>
         </div>

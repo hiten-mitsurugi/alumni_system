@@ -2,18 +2,7 @@
  <!-- 📱 RESPONSIVE: Mobile-first responsive design with improved sizing -->
  <div class="h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl shadow-lg overflow-hidden relative border border-slate-200/60 transition-all duration-300">
  
- <!-- 📱 MOBILE: Back Button Overlay (only visible on mobile when in chat view) -->
- <div v-if="isMobile && currentMobileView === 'chat'" 
- class="absolute top-4 left-4 z-50 md:hidden">
- <button @click="goBackMobile" 
- class="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50">
- <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
- </svg>
- </button>
- </div>
-
- <!-- 💻 DESKTOP / 📱 MOBILE: Conversations Panel with improved styling -->
+ <!--  DESKTOP / 📱 MOBILE: Conversations Panel with improved styling -->
  <div :class="[
  'border-r border-slate-300/60 flex flex-col bg-white/80 backdrop-blur-sm transition-all duration-200 ease-in-out',
  // Desktop: Always show with optimized width
@@ -206,8 +195,9 @@
  isMobile ? (currentMobileView === 'chat' ? 'flex-1' : (currentMobileView === 'chat-info' ? 'w-0 overflow-hidden' : 'flex-1')) : (showChatInfo ? 'flex-1' : 'flex-1')
  ]">
  <ChatArea v-if="selectedConversation" :conversation="selectedConversation" :messages="messages"
- :current-user="currentUser" @send-message="sendMessage" @message-action="handleMessageAction" @message-read="handleMessageRead" 
- @toggle-chat-info="toggleChatInfo" />
+ :current-user="currentUser" :private-ws="privateWs" :group-ws="groupWs" 
+ @send-message="sendMessage" @message-action="handleMessageAction" @message-read="handleMessageRead" 
+ @toggle-chat-info="toggleChatInfo" @back-to-conversations="handleBackToConversations" />
  <EmptyState v-else />
  </div>
  
@@ -591,10 +581,16 @@ const fetchPendingMessages = async () => {
  id: req.id,
  name: `${req.sender.first_name} ${req.sender.last_name}`,
  avatar: getProfilePictureUrl(req.sender),
- message: 'Message request',
+ message: req.content ? truncateMessage(req.content, 50) : 'Message request',
  timestamp: req.timestamp
  }));
  } catch (e) { console.error('Pending fetch error', e); }
+};
+
+// Helper function to truncate message content for preview
+const truncateMessage = (message, maxLength = 50) => {
+ if (!message || message.length <= maxLength) return message || 'Message request';
+ return message.substring(0, maxLength).trim() + '...';
 };
 
 const fetchAvailableMates = async () => {
@@ -734,16 +730,6 @@ function updateConversation(msg) {
 // 📱 MOBILE RESPONSIVENESS METHODS
 function checkScreenSize() {
  isMobile.value = window.innerWidth < 768; // md breakpoint
-}
-
-function goBackMobile() {
- if (currentMobileView.value === 'chat-info') {
- currentMobileView.value = 'chat';
- } else if (currentMobileView.value === 'chat') {
- currentMobileView.value = 'list';
- // Close chat info when going back to list
- showChatInfo.value = false;
- }
 }
 
 function toggleChatInfo() {
@@ -1184,6 +1170,43 @@ function handleMessageRead(data) {
  messages.value = [...messages.value];
  console.log('✅ Immediate read feedback: Updated message read status in UI');
  });
+ }
+}
+
+// Handle back to conversations button for mobile view
+function handleBackToConversations() {
+ console.log('📱 Back to conversations button clicked');
+ 
+ // Handle different mobile view transitions
+ if (currentMobileView.value === 'chat-info') {
+ currentMobileView.value = 'chat';
+ } else if (currentMobileView.value === 'chat') {
+ // Clear selected conversation to show conversation list in mobile view
+ selectedConversation.value = null;
+ 
+ // Reset mobile view to conversation list
+ currentMobileView.value = 'list';
+ 
+ // Close chat info when going back to list
+ showChatInfo.value = false;
+ 
+ // Clear chat messages to prevent stale data
+ messages.value = [];
+ 
+ // Close any active WebSocket connections
+ if (privateWs.value) {
+ console.log('🔌 Closing private WebSocket connection');
+ privateWs.value.close();
+ privateWs.value = null;
+ }
+ 
+ if (groupWs.value) {
+ console.log('🔌 Closing group WebSocket connection');
+ groupWs.value.close();
+ groupWs.value = null;
+ }
+ 
+ console.log('📱 Successfully returned to conversation list');
  }
 }
 
@@ -2582,19 +2605,42 @@ const getStatusText = (user) => {
 };
 
 const isRecentlyActive = (user) => {
- if (!user?.profile?.last_seen) {
- console.log(`isRecentlyActive: User ${user?.id} has no last_seen`);
+ // Rely primarily on backend status, with time-based fallback
+ if (!user?.profile) {
+ console.log(`isRecentlyActive: User ${user?.id} has no profile`);
  return false;
  }
+ 
+ // If backend status is explicitly offline, user is offline
+ if (user.profile.status === 'offline') {
+ console.log(`isRecentlyActive: User ${user.id} is offline per backend status`);
+ return false;
+ }
+ 
+ // If backend status is online, check if last_seen is reasonable
+ if (user.profile.status === 'online') {
+ if (!user.profile.last_seen) {
+ console.log(`isRecentlyActive: User ${user.id} is online but no last_seen`);
+ return true; // Trust backend status
+ }
+ 
  const lastSeen = new Date(user.profile.last_seen);
  const now = new Date();
  const diffMinutes = (now - lastSeen) / (1000 * 60);
- // Consider active if seen within last 2 minutes AND status is online
- const isRecent = diffMinutes <= 2;
- const isOnlineStatus = user.profile.status === 'online';
- const result = isRecent && isOnlineStatus;
- console.log(`isRecentlyActive for user ${user.id} (${user.first_name}): lastSeen=${lastSeen.toISOString()}, diffMinutes=${diffMinutes.toFixed(2)}, status=${user.profile.status}, isRecent=${isRecent}, isOnlineStatus=${isOnlineStatus}, result=${result}`);
- return result;
+ 
+ // If backend says online but last seen is over 10 minutes ago, something's wrong
+ if (diffMinutes > 10) {
+ console.log(`isRecentlyActive: User ${user.id} backend says online but last_seen ${diffMinutes.toFixed(2)} min ago - treating as offline`);
+ return false;
+ }
+ 
+ console.log(`isRecentlyActive: User ${user.id} is online per backend, last_seen ${diffMinutes.toFixed(2)} min ago`);
+ return true;
+ }
+ 
+ // Default to offline for unknown status
+ console.log(`isRecentlyActive: User ${user.id} has unknown status: ${user.profile.status}`);
+ return false;
 };
 
 const formatLastSeen = (user) => {

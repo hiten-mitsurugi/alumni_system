@@ -54,8 +54,10 @@ export function formatRelativeTime(dateString) {
  * @returns {string} - Formatted last login or status
  */
 export function formatLastLogin(lastLogin, realTimeStatus) {
-  // If user is currently online, show "Online now"
-  if (realTimeStatus && realTimeStatus.is_online) {
+  // Check if user is actually online using same logic as messaging components
+  const isOnline = isUserActuallyOnline(realTimeStatus);
+  
+  if (isOnline) {
     return 'Online now';
   }
   
@@ -68,13 +70,48 @@ export function formatLastLogin(lastLogin, realTimeStatus) {
 }
 
 /**
+ * Check if user is actually online using same logic as messaging components
+ * @param {object} realTimeStatus - Real-time status object
+ * @returns {boolean} - True if user is actually online
+ */
+function isUserActuallyOnline(realTimeStatus) {
+  if (!realTimeStatus) return false;
+  
+  // If backend status is explicitly offline, user is offline
+  if (realTimeStatus.status === 'offline') {
+    return false;
+  }
+  
+  // If backend status is online, check if last_seen is reasonable
+  if (realTimeStatus.status === 'online') {
+    if (!realTimeStatus.last_seen) {
+      return true; // Trust backend status
+    }
+    
+    const lastSeen = new Date(realTimeStatus.last_seen);
+    const now = new Date();
+    const diffMinutes = (now - lastSeen) / (1000 * 60);
+    
+    // If backend says online but last seen is over 10 minutes ago, something's wrong
+    if (diffMinutes > 10) {
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // Fallback to legacy is_online field if status field is not available
+  return realTimeStatus.is_online === true;
+}
+
+/**
  * Get online status indicator class
  * @param {object} realTimeStatus - Real-time status object
  * @returns {string} - CSS class for status indicator
  */
 export function getOnlineStatusClass(realTimeStatus) {
-  if (!realTimeStatus) return 'bg-gray-400';
-  return realTimeStatus.is_online ? 'bg-green-500' : 'bg-gray-400';
+  const isOnline = isUserActuallyOnline(realTimeStatus);
+  return isOnline ? 'bg-green-500' : 'bg-gray-400';
 }
 
 /**
@@ -83,8 +120,8 @@ export function getOnlineStatusClass(realTimeStatus) {
  * @returns {string} - CSS class for status text
  */
 export function getOnlineStatusTextClass(realTimeStatus) {
-  if (!realTimeStatus) return 'text-gray-600';
-  return realTimeStatus.is_online ? 'text-green-600 font-medium' : 'text-gray-600';
+  const isOnline = isUserActuallyOnline(realTimeStatus);
+  return isOnline ? 'text-green-600 font-medium' : 'text-gray-600';
 }
 
 /**
@@ -93,6 +130,6 @@ export function getOnlineStatusTextClass(realTimeStatus) {
  * @returns {string} - Status text
  */
 export function getOnlineStatusText(realTimeStatus) {
-  if (!realTimeStatus) return 'Unknown';
-  return realTimeStatus.is_online ? 'Online' : 'Offline';
+  const isOnline = isUserActuallyOnline(realTimeStatus);
+  return isOnline ? 'Online' : 'Offline';
 }

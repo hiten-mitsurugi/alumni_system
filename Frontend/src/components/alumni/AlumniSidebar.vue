@@ -1,15 +1,15 @@
 <template>
   <div :class="[
-    'bg-slate-900 text-slate-100 h-full transition-all duration-200 shadow-xl border-r border-slate-700',
+    'bg-green-600 text-slate-100 h-full transition-all duration-200 shadow-xl border-r bg-green-700',
     'lg:static',
     // Mobile: Always show collapsed (w-20), expand to w-64 when toggled
     isExpanded ? 'w-64' : 'w-20'
   ]">
-    <div class="p-4 flex justify-between items-center border-b border-slate-700">
+    <div class="p-4 flex justify-between items-center border-b bg-green-700">
       <span v-if="isExpanded" class="text-xl font-semibold text-slate-100">Alumni System</span>
       <button 
         @click="$emit('toggle')"
-        class="p-2 rounded-lg hover:bg-slate-800 transition-colors duration-200"
+        class="p-2 rounded-lg hover:bg-green-800 transition-colors duration-200"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />

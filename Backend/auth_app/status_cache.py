@@ -49,6 +49,18 @@ class UserStatusCache:
             # Update last seen
             cls.update_last_seen(user_id)
             
+            # Update database profile status to online
+            try:
+                from auth_app.models import Alumni
+                alumni = Alumni.objects.get(id=user_id)
+                if hasattr(alumni, 'profile') and alumni.profile:
+                    alumni.profile.status = 'online'
+                    alumni.profile.last_seen = timezone.now()
+                    alumni.profile.save(update_fields=['status', 'last_seen'])
+                    print(f"Updated database profile for user {user_id} to online")
+            except Exception as db_error:
+                print(f"Error updating database profile for user {user_id}: {db_error}")
+            
             # Broadcast status change
             cls.broadcast_status_change(user_id, "online")
             
@@ -75,6 +87,18 @@ class UserStatusCache:
             
             # Update last seen
             cls.update_last_seen(user_id)
+            
+            # Update database profile status to offline
+            try:
+                from auth_app.models import Alumni
+                alumni = Alumni.objects.get(id=user_id)
+                if hasattr(alumni, 'profile') and alumni.profile:
+                    alumni.profile.status = 'offline'
+                    alumni.profile.last_seen = timezone.now()
+                    alumni.profile.save(update_fields=['status', 'last_seen'])
+                    print(f"Updated database profile for user {user_id} to offline")
+            except Exception as db_error:
+                print(f"Error updating database profile for user {user_id}: {db_error}")
             
             # Broadcast status change
             cls.broadcast_status_change(user_id, "offline")

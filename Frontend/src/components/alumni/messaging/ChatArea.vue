@@ -1,10 +1,21 @@
 <template>
   <div class="flex-1 flex flex-col">
-    <!-- Header with user/group info - Enhanced styling -->
+    <!-- Header with user/group info - Enhanced styling with integrated back button -->
     <div class="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-b border-gray-200/60 flex items-center justify-between transition-all duration-200 shadow-sm">
       <div class="flex items-center gap-3 md:gap-4">
-        <!-- Safe avatar with enhanced status indicator -->
-        <div class="relative">
+        <!-- Back button - integrated into header layout for mobile -->
+        <button 
+          @click="$emit('back-to-conversations')"
+          class="md:hidden p-2.5 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-xl transition-all duration-200 flex-shrink-0 border border-gray-200/50 hover:border-blue-200"
+          title="Back to conversations"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <!-- Avatar with status indicator -->
+        <div class="relative flex-shrink-0">
           <img 
             :src="avatarUrl" 
             :key="conversation?.group?.group_picture || conversation?.mate?.profile_picture || Date.now()"
@@ -16,9 +27,11 @@
                :class="['absolute bottom-0 right-0 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 md:border-3 border-white shadow-sm', getStatusColor(conversation.mate)]">
           </div>
         </div>
-        <div>
+        
+        <!-- Name and status info -->
+        <div class="flex-1 min-w-0">
           <!-- Safe name with improved typography -->
-          <h3 class="font-bold text-gray-900 text-lg md:text-xl leading-tight">
+          <h3 class="font-bold text-gray-900 text-lg md:text-xl leading-tight truncate">
             {{
               conversation.type === 'private'
                 ? `${conversation.mate.first_name} ${conversation.mate.last_name}`
@@ -26,10 +39,10 @@
             }}
           </h3>
           <!-- Safe status text with better styling -->
-          <p v-if="conversation.type === 'private'" :class="['text-sm md:text-base font-medium', getStatusTextColor(conversation.mate)]">
+          <p v-if="conversation.type === 'private'" :class="['text-sm md:text-base font-medium truncate', getStatusTextColor(conversation.mate)]">
             {{ getStatusText(conversation.mate) }}
           </p>
-          <p v-else class="text-sm md:text-base text-gray-500 font-medium">
+          <p v-else class="text-sm md:text-base text-gray-500 font-medium truncate">
             {{ conversation.group?.members?.length || 0 }} members
           </p>
         </div>
@@ -158,7 +171,7 @@ const props = defineProps({
   groupWs: Object,   // WebSocket for group chats
 })
 
-const emit = defineEmits(['send-message', 'message-action', 'toggle-chat-info', 'message-read'])
+const emit = defineEmits(['send-message', 'message-action', 'toggle-chat-info', 'message-read', 'back-to-conversations'])
 const messagesContainer = ref(null)
 
 // Reply state
@@ -205,15 +218,39 @@ const getStatusText = (user) => {
 }
 
 const isRecentlyActive = (user) => {
-  if (!user?.profile?.last_seen) return false
-  const lastSeen = new Date(user.profile.last_seen)
-  const now = new Date()
-  const diffMinutes = (now - lastSeen) / (1000 * 60)
-  // Consider active if seen within last 2 minutes AND status is online
-  const isRecent = diffMinutes <= 2
-  const isOnlineStatus = user.profile.status === 'online'
-  console.log(`ChatArea isRecentlyActive for user ${user.id}: lastSeen=${lastSeen.toISOString()}, diffMinutes=${diffMinutes.toFixed(2)}, status=${user.profile.status}, isRecent=${isRecent}, isOnlineStatus=${isOnlineStatus}`)
-  return isRecent && isOnlineStatus
+  // Rely primarily on backend status, with time-based fallback
+  if (!user?.profile) return false
+  
+  // If backend status is explicitly offline, user is offline
+  if (user.profile.status === 'offline') {
+    console.log(`ChatArea: User ${user.id} is offline per backend status`)
+    return false
+  }
+  
+  // If backend status is online, check if last_seen is reasonable
+  if (user.profile.status === 'online') {
+    if (!user.profile.last_seen) {
+      console.log(`ChatArea: User ${user.id} is online but no last_seen`)
+      return true // Trust backend status
+    }
+    
+    const lastSeen = new Date(user.profile.last_seen)
+    const now = new Date()
+    const diffMinutes = (now - lastSeen) / (1000 * 60)
+    
+    // If backend says online but last seen is over 10 minutes ago, something's wrong
+    if (diffMinutes > 10) {
+      console.log(`ChatArea: User ${user.id} backend says online but last_seen ${diffMinutes.toFixed(2)} min ago - treating as offline`)
+      return false
+    }
+    
+    console.log(`ChatArea: User ${user.id} is online per backend, last_seen ${diffMinutes.toFixed(2)} min ago`)
+    return true
+  }
+  
+  // Default to offline for unknown status
+  console.log(`ChatArea: User ${user.id} has unknown status: ${user.profile.status}`)
+  return false
 }
 
 const formatLastSeen = (lastSeen) => {

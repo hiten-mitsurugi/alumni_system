@@ -48,7 +48,7 @@ class Post(models.Model):
     shares_count = models.PositiveIntegerField(default=0)
     
     # Status and permissions
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=True)  # Auto-approve all posts
     is_pinned = models.BooleanField(default=False)
     visibility = models.CharField(max_length=20, choices=[
         ('public', 'Public'),

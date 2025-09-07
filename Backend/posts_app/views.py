@@ -82,15 +82,8 @@ class PostFeedView(APIView):
             Prefetch('comments', queryset=Comment.objects.select_related('user').order_by('-created_at'))
         )
         
-        # Filter approved posts based on user type
-        if user.user_type in [1, 2]:  # Admin/SuperAdmin see all approved posts
-            queryset = queryset.filter(is_approved=True)
-        else:  # Alumni see approved posts + their own pending posts
-            queryset = queryset.filter(
-                Q(is_approved=True) | Q(user=user)
-            )
-        
-        # Apply visibility filters
+        # All posts are now auto-approved, so no approval filtering needed
+        # Just apply visibility filters based on user type
         if user.user_type == 3:  # Alumni
             queryset = queryset.exclude(visibility='admin_only')
         
@@ -167,29 +160,16 @@ class PostCreateView(APIView):
         """Broadcast new post to real-time subscribers"""
         channel_layer = get_channel_layer()
         
-        # Broadcast to admin notifications if post needs approval
-        if not post.is_approved:
-            async_to_sync(channel_layer.group_send)(
-                'admin_notifications',
-                {
-                    'type': 'post_pending_approval',
-                    'post_id': post.id,
-                    'user': f"{user.first_name} {user.last_name}",
-                    'title': post.title or post.content[:50],
-                    'timestamp': post.created_at.isoformat()
-                }
-            )
-        else:
-            # Broadcast approved post to all users
-            async_to_sync(channel_layer.group_send)(
-                'posts_feed',
-                {
-                    'type': 'new_post',
-                    'post_id': post.id,
-                    'user_id': user.id,
-                    'timestamp': post.created_at.isoformat()
-                }
-            )
+        # Since all posts are now auto-approved, always broadcast to all users
+        async_to_sync(channel_layer.group_send)(
+            'posts_feed',
+            {
+                'type': 'new_post',
+                'post_id': post.id,
+                'user_id': user.id,
+                'timestamp': post.created_at.isoformat()
+            }
+        )
 
 class PostDetailView(APIView):
     """Get detailed post information"""
@@ -232,15 +212,7 @@ class PostDetailView(APIView):
         if user.user_type in [1, 2]:
             return True
         
-        # Users can see their own posts even if not approved
-        if post.user == user:
-            return True
-        
-        # Only approved posts for other users
-        if not post.is_approved:
-            return False
-        
-        # Check visibility settings
+        # Since all posts are auto-approved, just check visibility settings
         if post.visibility == 'admin_only' and user.user_type not in [1, 2]:
             return False
         
@@ -555,7 +527,7 @@ class SharePostView(APIView):
                 post_type='shared',
                 shared_post=original_post,
                 shared_text=shared_text,
-                is_approved=True if request.user.user_type in [1, 2] else False
+                is_approved=True  # All posts are now auto-approved
             )
             
             # Update share count
