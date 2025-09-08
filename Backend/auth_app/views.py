@@ -1236,32 +1236,42 @@ class FollowUserView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request, user_id):
-        """Follow a user"""
+        """Send connection invitation to a user (LinkedIn-style)"""
         try:
             target_user = CustomUser.objects.get(id=user_id)
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         
         if target_user == request.user:
-            return Response({'error': 'Cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Cannot connect to yourself'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Create following relationship
+        # Check if already connected or has pending request
         from .models import Following
-        following, created = Following.objects.get_or_create(
+        existing_connection = Following.objects.filter(
             follower=request.user,
             following=target_user
+        ).first()
+        
+        if existing_connection:
+            if existing_connection.status == 'pending':
+                return Response({'message': 'Connection request already sent'}, status=status.HTTP_200_OK)
+            elif existing_connection.status == 'accepted':
+                return Response({'message': 'Already connected to this user'}, status=status.HTTP_200_OK)
+        
+        # Create pending connection request (LinkedIn-style)
+        following = Following.objects.create(
+            follower=request.user,
+            following=target_user,
+            status='pending'
         )
         
-        if not created:
-            return Response({'message': 'Already following this user'}, status=status.HTTP_200_OK)
-        
         return Response({
-            'message': 'Successfully followed user',
-            'is_mutual': following.is_mutual
+            'message': 'Connection request sent successfully',
+            'status': 'pending'
         }, status=status.HTTP_201_CREATED)
     
     def delete(self, request, user_id):
-        """Unfollow a user"""
+        """Disconnect from a user (removes mutual connection)"""
         try:
             target_user = CustomUser.objects.get(id=user_id)
         except CustomUser.DoesNotExist:
@@ -1269,21 +1279,21 @@ class FollowUserView(APIView):
         
         try:
             from .models import Following
+            # Remove the connection from current user to target user
             following = Following.objects.get(follower=request.user, following=target_user)
             following.delete()
             
-            # Update mutual status for reverse relationship if it exists
+            # Remove the reverse connection (mutual disconnection)
             reverse_following = Following.objects.filter(
                 follower=target_user, 
                 following=request.user
             ).first()
             if reverse_following:
-                reverse_following.is_mutual = False
-                reverse_following.save(update_fields=['is_mutual'])
+                reverse_following.delete()
             
-            return Response({'message': 'Successfully unfollowed user'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Successfully disconnected from user'}, status=status.HTTP_200_OK)
         except Following.DoesNotExist:
-            return Response({'error': 'Not following this user'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Not connected to this user'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserConnectionsView(APIView):
@@ -1300,35 +1310,160 @@ class UserConnectionsView(APIView):
         else:
             user = request.user
         
-        connection_type = request.query_params.get('type', 'all')  # 'followers', 'following', 'mutual', 'all'
+        connection_type = request.query_params.get('type', 'all')  # 'followers', 'following', 'mutual', 'all', 'invitations'
         
         from .models import Following
         from .serializers import FollowingSerializer
         
         if connection_type == 'followers':
-            connections = Following.objects.filter(following=user).select_related('follower')
+            connections = Following.objects.filter(following=user, status='accepted').select_related('follower')
             serializer = FollowingSerializer(connections, many=True, context={'request': request})
         elif connection_type == 'following':
-            connections = Following.objects.filter(follower=user).select_related('following')
+            connections = Following.objects.filter(follower=user, status='accepted').select_related('following')
             serializer = FollowingSerializer(connections, many=True, context={'request': request})
         elif connection_type == 'mutual':
             connections = Following.objects.filter(
-                following=user, is_mutual=True
+                following=user, is_mutual=True, status='accepted'
             ).select_related('follower')
             serializer = FollowingSerializer(connections, many=True, context={'request': request})
+        elif connection_type == 'invitations':
+            # Get pending invitations sent TO the current user
+            invitations = Following.objects.filter(
+                following=user, status='pending'
+            ).select_related('follower')
+            serializer = FollowingSerializer(invitations, many=True, context={'request': request})
+            return Response(serializer.data)
         else:  # all
-            followers = Following.objects.filter(following=user).select_related('follower')
-            following = Following.objects.filter(follower=user).select_related('following')
+            followers = Following.objects.filter(following=user, status='accepted').select_related('follower')
+            following = Following.objects.filter(follower=user, status='accepted').select_related('following')
+            invitations = Following.objects.filter(following=user, status='pending').select_related('follower')
             
             return Response({
                 'followers': FollowingSerializer(followers, many=True, context={'request': request}).data,
                 'following': FollowingSerializer(following, many=True, context={'request': request}).data,
+                'invitations': FollowingSerializer(invitations, many=True, context={'request': request}).data,
                 'followers_count': followers.count(),
                 'following_count': following.count(),
-                'mutual_count': Following.objects.filter(following=user, is_mutual=True).count()
+                'mutual_count': Following.objects.filter(following=user, is_mutual=True, status='accepted').count(),
+                'invitations_count': invitations.count()
             })
         
         return Response(serializer.data)
+
+
+class InvitationManageView(APIView):
+    """Accept or reject connection invitations"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, invitation_id):
+        """Accept a connection invitation"""
+        try:
+            from .models import Following
+            invitation = Following.objects.get(
+                id=invitation_id,
+                following=request.user,  # Invitation sent TO current user
+                status='pending'
+            )
+            
+            # Accept the invitation
+            invitation.status = 'accepted'
+            invitation.save()
+            
+            return Response({
+                'message': f'Connection accepted with {invitation.follower.first_name} {invitation.follower.last_name}!',
+                'status': 'accepted'
+            }, status=status.HTTP_200_OK)
+            
+        except Following.DoesNotExist:
+            return Response({'error': 'Invitation not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error accepting invitation {invitation_id}: {str(e)}")
+            return Response({'error': 'Failed to accept invitation'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def delete(self, request, invitation_id):
+        """Reject/ignore a connection invitation"""
+        try:
+            from .models import Following
+            invitation = Following.objects.get(
+                id=invitation_id,
+                following=request.user,  # Invitation sent TO current user
+                status='pending'
+            )
+            
+            # Delete the invitation (reject it)
+            sender_name = f"{invitation.follower.first_name} {invitation.follower.last_name}"
+            invitation.delete()
+            
+            return Response({
+                'message': f'Connection request from {sender_name} has been ignored.',
+                'status': 'rejected'
+            }, status=status.HTTP_200_OK)
+            
+        except Following.DoesNotExist:
+            return Response({'error': 'Invitation not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error rejecting invitation {invitation_id}: {str(e)}")
+            return Response({'error': 'Failed to reject invitation'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class InvitationAcceptView(APIView):
+    """Accept connection invitations"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, invitation_id):
+        """Accept a connection invitation"""
+        try:
+            from .models import Following
+            invitation = Following.objects.get(
+                id=invitation_id,
+                following=request.user,  # Invitation sent TO current user
+                status='pending'
+            )
+            
+            # Accept the invitation
+            invitation.status = 'accepted'
+            invitation.save()
+            
+            return Response({
+                'message': f'Connection accepted with {invitation.follower.first_name} {invitation.follower.last_name}!',
+                'status': 'accepted'
+            }, status=status.HTTP_200_OK)
+            
+        except Following.DoesNotExist:
+            return Response({'error': 'Invitation not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error accepting invitation {invitation_id}: {str(e)}")
+            return Response({'error': 'Failed to accept invitation'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class InvitationRejectView(APIView):
+    """Reject connection invitations"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, invitation_id):
+        """Reject/ignore a connection invitation"""
+        try:
+            from .models import Following
+            invitation = Following.objects.get(
+                id=invitation_id,
+                following=request.user,  # Invitation sent TO current user
+                status='pending'
+            )
+            
+            # Delete the invitation (reject it)
+            sender_name = f"{invitation.follower.first_name} {invitation.follower.last_name}"
+            invitation.delete()
+            
+            return Response({
+                'message': f'Connection request from {sender_name} has been ignored.',
+                'status': 'rejected'
+            }, status=status.HTTP_200_OK)
+            
+        except Following.DoesNotExist:
+            return Response({'error': 'Invitation not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error rejecting invitation {invitation_id}: {str(e)}")
+            return Response({'error': 'Failed to reject invitation'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AchievementListCreateView(ListCreateAPIView):

@@ -1,14 +1,17 @@
 <template>
- <!-- 📱 RESPONSIVE: Mobile-first responsive design with improved sizing -->
- <div class="h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl shadow-lg overflow-hidden relative border border-slate-200/60 transition-all duration-300">
+ <!-- 📱 RESPONSIVE: Simplified layout that works with AlumniLayout -->
+ <div class="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl shadow-lg overflow-hidden border border-slate-200/60">
  
- <!--  DESKTOP / 📱 MOBILE: Conversations Panel with improved styling -->
+ <!--  DESKTOP / 📱 MOBILE: Conversations Panel -->
  <div :class="[
- 'border-r border-slate-300/60 flex flex-col bg-white/80 backdrop-blur-sm transition-all duration-200 ease-in-out',
- // Desktop: Always show with optimized width
- 'md:w-80 lg:w-96 md:block',
- // Mobile: Full width when showing list, hidden when showing chat/info
- isMobile ? (currentMobileView === 'list' ? 'w-full' : 'w-0 overflow-hidden') : 'w-80 lg:w-96'
+ 'border-r border-slate-300/60 flex flex-col bg-white/80 backdrop-blur-sm',
+ // Simple responsive width - let the layout handle positioning
+ 'w-full md:w-80 lg:w-96',
+ // Mobile responsive visibility
+ { 
+ 'block': !isMobile || currentMobileView === 'list',
+ 'hidden': isMobile && currentMobileView !== 'list'
+ }
  ]">
  <div class="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-b border-slate-200/60 shadow-sm">
  <div class="flex items-center justify-between mb-4">
@@ -177,22 +180,24 @@
  </div>
  </div>
  
- <!-- 💻 DESKTOP / 📱 MOBILE: Main Content Area (Chat + Chat Info) -->
+ <!-- 💻 DESKTOP / 📱 MOBILE: Main Content Area -->
  <div :class="[
- 'flex transition-all duration-150 ease-in-out',
- // Desktop: Always show with flex-1
- 'md:flex-1',
- // Mobile: Full width when showing chat/info, hidden when showing list
- isMobile ? (currentMobileView !== 'list' ? 'flex-1' : 'w-0 overflow-hidden') : 'flex-1'
+ 'flex flex-1',
+ // Mobile responsive visibility
+ { 
+ 'block': !isMobile || (currentMobileView === 'chat' || currentMobileView === 'chat-info'),
+ 'hidden': isMobile && currentMobileView === 'list'
+ }
  ]">
  
  <!-- 📱 MOBILE / 💻 DESKTOP: Chat Area -->
  <div :class="[
- 'flex flex-col transition-all duration-150 ease-in-out',
- // Desktop: Always flex-1, hide when chat info is shown
- 'md:flex-1',
- // Mobile: Full width when showing chat, hidden when showing chat-info
- isMobile ? (currentMobileView === 'chat' ? 'flex-1' : (currentMobileView === 'chat-info' ? 'w-0 overflow-hidden' : 'flex-1')) : (showChatInfo ? 'flex-1' : 'flex-1')
+ 'flex flex-col flex-1',
+ // Mobile responsive visibility
+ { 
+ 'block': !isMobile || currentMobileView === 'chat',
+ 'hidden': isMobile && currentMobileView === 'chat-info'
+ }
  ]">
  <ChatArea v-if="selectedConversation" :conversation="selectedConversation" :messages="messages"
  :current-user="currentUser" :private-ws="privateWs" :group-ws="groupWs" 
@@ -201,14 +206,15 @@
  <EmptyState v-else />
  </div>
  
- <!-- 💻 DESKTOP / 📱 MOBILE: Chat Info Panel with matching width -->
- <div :class="[
- 'transition-all duration-150 ease-in-out border-l border-gray-200/60',
- // Desktop: Matching width with conversation list
- 'md:w-80 lg:w-96',
- showChatInfo ? 'md:block' : 'md:hidden',
- // Mobile: Full width when showing chat-info, hidden otherwise
- isMobile ? (currentMobileView === 'chat-info' ? 'flex-1' : 'w-0 overflow-hidden') : ''
+ <!--  Chat Info Panel -->
+ <div v-if="showChatInfo && selectedConversation" 
+ :class="[
+ 'w-80 border-l bg-white',
+ // Mobile responsive visibility
+ { 
+ 'block': !isMobile || currentMobileView === 'chat-info',
+ 'hidden': isMobile && currentMobileView !== 'chat-info'
+ }
  ]">
  <ChatInfoPanel 
  v-if="selectedConversation && showChatInfo" 
@@ -294,11 +300,11 @@ const privateWs = ref(null);
 const groupWs = ref(null);
 const notificationWs = ref(null);
 
-// � MOBILE RESPONSIVENESS STATE
-const isMobile = ref(false);
+// 📱 MOBILE RESPONSIVENESS STATE
+const isMobile = ref(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 const currentMobileView = ref('list'); // 'list', 'chat', 'chat-info'
 
-// �🔧 FIX: Enhanced heartbeat system to track multiple WebSocket connections
+// 🔧 FIX: Enhanced heartbeat system to track multiple WebSocket connections
 // Heartbeat system to keep WebSocket connections alive
 let heartbeatInterval = null;
 let heartbeatIntervals = new Set(); // Track multiple WebSocket heartbeats

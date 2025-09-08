@@ -43,9 +43,10 @@
               class="cursor-pointer mb-4"
             >
               <img 
-                :src="person.profile_picture || '/default-avatar.png'" 
+                :src="getProfilePictureUrl(person.profile_picture)" 
                 :alt="`${person.first_name} ${person.last_name}`"
-                class="w-20 h-20 rounded-full object-cover hover:ring-4 hover:ring-green-500 transition-all"
+                class="w-20 h-20 rounded-full object-cover hover:ring-4 hover:ring-green-500 transition-all mx-auto"
+                @error="handleImageError"
               />
             </div>
             
@@ -60,8 +61,8 @@
               <p class="text-sm text-gray-600 mb-2">
                 {{ person.profile?.headline || person.profile?.present_occupation || 'Alumni' }}
               </p>
-              <p v-if="person.profile?.location" class="text-xs text-gray-500 mb-2">
-                📍 {{ person.profile.location }}
+              <p v-if="getPersonAddress(person)" class="text-xs text-gray-500 mb-2">
+                📍 {{ getPersonAddress(person) }}
               </p>
               <p v-if="person.mutual_connections > 0" class="text-xs text-gray-500">
                 {{ person.mutual_connections }} mutual connection{{ person.mutual_connections !== 1 ? 's' : '' }}
@@ -187,6 +188,31 @@ const connect = async (person) => {
 
 const loadMore = () => {
   fetchSuggestions(currentPage.value + 1)
+}
+
+const getProfilePictureUrl = (profilePicture) => {
+  if (!profilePicture) {
+    return '/default-avatar.png';
+  }
+  
+  if (profilePicture.startsWith('http')) {
+    return profilePicture;
+  }
+  
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+  return `${BASE_URL}${profilePicture}`;
+}
+
+const getPersonAddress = (person) => {
+  return person.present_address || 
+         person.profile?.location || 
+         person.profile?.present_address ||
+         '';
+}
+
+const handleImageError = (event) => {
+  console.log('Image failed to load, using default avatar');
+  event.target.src = '/default-avatar.png';
 }
 
 onMounted(() => {

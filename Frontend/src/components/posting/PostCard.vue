@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 overflow-hidden mb-4">
+    class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 overflow-hidden mb-4 w-full max-w-[396px] sm:max-w-none mx-auto">
     <!-- Post Header -->
     <PostHeader :post="post" :categories="categories" />
 
@@ -26,8 +26,12 @@
 
       <!-- Media Files (Clickable to open modal) -->
       <div v-if="hasMedia" class="cursor-pointer relative rounded-lg overflow-hidden" @click="openPostModal">
-        <MediaDisplay :media-files="post.media_files" :alt-text="post.title || 'Post image'"
-          @media-click="openPostModal" />
+        <MediaDisplay 
+          :media-files="post.media_files" 
+          :alt-text="post.title || 'Post image'"
+          display-mode="card"
+          @media-click="openPostModal" 
+        />
       </div>
     </div>
 

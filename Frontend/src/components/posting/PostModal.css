@@ -1,0 +1,402 @@
+/* Hover isolation for engagement section */
+.post-modal .hover-isolation {
+  isolation: isolate;
+  position: relative;
+}
+
+.post-modal .hover-isolation:hover {
+  background-color: transparent !important;
+}
+
+.post-modal .hover-isolation * {
+  pointer-events: auto;
+}
+
+/* Prevent hover bubbling from engagement to actions */
+.post-modal .hover-isolation::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Custom scrollbar for comments */
+.post-modal .overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.post-modal .overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.post-modal .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.post-modal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Smooth transitions */
+.post-modal .transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+/* ARROW FIXES - APPLY TO ALL VIEWS (MOBILE AND WEB) */
+
+/* PostModal comment send button arrow fix - MORE SPECIFIC SELECTOR */
+.post-modal button.bg-blue-600 svg,
+.post-modal .bg-blue-600 svg,
+.fixed.inset-0.z-50 button.bg-blue-600 svg {
+  transform: rotate(90deg) !important;
+  transition: transform 0.2s ease !important;
+}
+
+/* PostCreateForm share button arrow fix - Global selectors */
+.bg-gradient-to-r.from-green-600.to-green-700 svg,
+.bg-gradient-to-r.from-green-700.to-green-800 svg {
+  transform: rotate(90deg) !important;
+}
+
+/* Modal animation - ONLY for PostModal */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.9) translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+}
+
+/* ONLY PostModal gets animation */
+.post-modal {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.post-modal .bg-white {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Mobile-specific optimizations - ONLY FOR POSTMODAL */
+@media (max-width: 640px) {
+  /* Full screen modal on mobile - ONLY PostModal */
+  .post-modal {
+    padding: 0;
+  }
+  
+  .post-modal .bg-white {
+    border-radius: 0;
+    max-height: 100vh;
+    height: 100vh;
+    max-width: 100vw;
+  }
+  
+  /* Stack layout on mobile - ONLY PostModal */
+  .post-modal .flex.flex-col.sm\:flex-row {
+    flex-direction: column;
+  }
+  
+  /* Media takes specific space on mobile - ONLY PostModal */
+  .post-modal .bg-gray-900 {
+    height: 25vh; /* Fixed height instead of max-height */
+    min-height: 180px;
+    flex: 0 0 auto;
+  }
+  
+  /* Make content container use remaining space - ONLY PostModal */
+  .post-modal .flex.flex-col.bg-white.sm\:border-l {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure full height usage */
+  }
+  
+  /* Override the calc height for mobile - ONLY PostModal */
+  .post-modal .overflow-y-auto[style*="calc(100% - 70px)"] {
+    height: auto !important; /* Remove fixed height and let it scroll only if needed */
+    max-height: calc(100vh - 25vh - 120px) !important; /* Set max-height instead */
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  
+  /* Fixed input area height - ONLY PostModal */
+  .post-modal .h-16 {
+    height: 60px !important; /* Smaller on mobile */
+  }
+  
+  /* Compact spacing on mobile - ONLY PostModal */
+  .post-modal .space-x-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-left: 0.5rem;
+  }
+  
+  .post-modal .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.5rem;
+    height: auto !important; /* Ensure each comment item fits its content */
+  }
+  
+  /* Compact reaction buttons for mobile - ONLY PostModal */
+  .post-modal button {
+    min-height: 28px !important; /* Slightly bigger for better touch */
+    height: 28px !important; 
+    min-width: auto !important; 
+    padding: 3px 6px !important; /* Slightly more padding */
+    line-height: 1 !important; 
+    display: inline-flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    font-size: 0.65rem !important; /* Slightly bigger font */
+    white-space: nowrap !important; 
+    border-radius: 14px !important; /* Nicer rounded corners */
+  }
+
+  /* Specific styling for reaction buttons in post actions - ONLY PostModal */
+  .post-modal .bg-gray-50 button {
+    max-width: 70px !important; /* Slightly wider for better readability */
+    padding: 3px 8px !important; 
+    font-size: 0.6rem !important; /* Better readable size */
+    height: 24px !important; 
+    min-height: 24px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Icon + text spacing in buttons - ONLY PostModal */
+  .post-modal button svg {
+    width: 14px !important; /* Slightly bigger icons */
+    height: 14px !important;
+    margin-right: 3px !important; /* Better spacing */
+  }
+
+  /* Reaction container spacing - ONLY PostModal */
+  .post-modal .space-x-2 > button:not([hidden]) ~ button:not([hidden]) {
+    margin-left: 0.375rem !important; /* Better spacing between buttons */
+  }
+
+  /* Hover effects removal for mobile touch - ONLY PostModal */
+  .post-modal button:hover {
+    transform: none !important;
+    scale: 1 !important;
+  }
+
+  /* Fix send button arrow to point right - ONLY PostModal - MORE SPECIFIC */
+  .post-modal button.bg-blue-600 svg,
+  .post-modal .bg-blue-600 svg {
+    transform: rotate(90deg) !important;
+    transition: transform 0.2s ease !important;
+  }
+
+  /* UNIVERSAL ARROW FIXES FOR BOTH MOBILE AND WEB */
+  
+  /* PostModal comment send button - Apply to both mobile and web */
+  .fixed.inset-0.z-50 .bg-blue-600 svg,
+  .post-modal .bg-blue-600 svg {
+    transform: rotate(90deg) !important;
+  }
+
+  /* PostCreateForm share button - Apply to both mobile and web */
+  .bg-gradient-to-r.from-green-600.to-green-700 svg,
+  .bg-gradient-to-r.from-green-700.to-green-800 svg {
+    transform: rotate(90deg) !important;
+  }
+
+  /* Smaller input padding on mobile */
+  .post-modal input {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  /* Compact text sizes on mobile */
+  .post-modal .text-xs {
+    font-size: 0.65rem;
+    line-height: 1rem;
+  }
+  
+  .post-modal .text-sm {
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+  }
+  
+  /* Reduce padding even more on mobile for better space usage */
+  .post-modal .p-2 {
+    padding: 0.25rem;
+  }
+  
+  /* Make image container take full available space */
+  .post-modal .bg-gray-900 .relative {
+    height: 100%;
+    width: 100%;
+  }
+  
+  /* Force proper layout on mobile - Fix class name escaping */
+  .post-modal .flex-1.overflow-hidden.flex.flex-col.sm\:flex-row {
+    height: calc(100vh - 60px); /* Account for modal header */
+    min-height: 0;
+    flex-direction: column;
+  }
+  
+  /* Force smaller comment bubbles on mobile */
+  .post-modal .bg-white.rounded {
+    padding: 2px 4px !important;
+    min-height: 16px !important; /* Fixed minimum height */
+    max-height: none !important; /* Remove any unintended max-height constraints */
+    height: auto !important; /* Allow height to adjust to content */
+    display: inline-block; /* Change to inline-block to prevent full-width stretching */
+    vertical-align: top; /* Align to top of container */
+    line-height: 1.1 !important;
+  }
+  
+  .post-modal .bg-white.rounded p {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.1 !important;
+  }
+  
+  .post-modal .bg-white.rounded .font-medium {
+    font-size: 10px !important;
+    line-height: 1 !important;
+  }
+  
+  .post-modal .bg-white.rounded .text-gray-700 {
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+    margin-top: 1px !important;
+  }
+
+  /* Ensure the comment container doesn't force extra height */
+  .post-modal .flex-1.min-w-0 {
+    min-height: 0 !important; /* Prevent flex-1 from forcing height */
+    height: auto !important; /* Allow natural height based on content */
+  }
+
+  /* Reduce padding for post actions container */
+  .post-modal .bg-gray-50 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  /* Reduce padding for engagement summary container */
+  .post-modal .hover-isolation {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  /* Compact engagement summary bubbles */
+  .post-modal .hover-isolation span {
+    font-size: 0.6rem !important;
+    padding: 1px 3px !important;
+    line-height: 1 !important;
+    height: 16px !important;
+    min-height: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Compact engagement icons */
+  .post-modal .hover-isolation svg {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  /* Tighter spacing in engagement area */
+  .post-modal .hover-isolation .space-x-1 > :not([hidden]) ~ :not([hidden]) {
+    margin-left: 0.125rem !important;
+  }
+
+  /* Engagement counts text */
+  .post-modal .hover-isolation .text-gray-500 {
+    font-size: 0.55rem !important;
+    line-height: 1 !important;
+  }
+
+  /* Compact reaction summary spans/bubbles - Made nicer and bigger */
+  .post-modal .bg-gray-100 {
+    padding: 2px 6px !important; /* Better padding */
+    font-size: 0.6rem !important; /* More readable size */
+    line-height: 1.2 !important; /* Better line height */
+    height: 20px !important; /* Nicer height */
+    min-height: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    max-width: 100px !important; /* Allow wider bubbles */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    border-radius: 10px !important; /* Nicer rounded corners */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; /* Subtle shadow */
+  }
+
+  /* Reaction summary container */
+  .post-modal .bg-gray-100 span {
+    font-size: 0.55rem !important; /* Slightly bigger */
+    line-height: 1.2 !important;
+  }
+
+  /* Reaction icons in summary */
+  .post-modal .bg-gray-100 svg {
+    width: 10px !important; /* Keep compact but visible */
+    height: 10px !important;
+    margin-right: 2px !important; /* Better spacing */
+  }
+
+  /* Reaction count badges - Made nicer */
+  .post-modal .rounded-full {
+    padding: 1px 4px !important; /* Better padding */
+    font-size: 0.55rem !important; /* More readable */
+    line-height: 1.2 !important;
+    min-height: 16px !important; /* Nicer height */
+    height: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; /* Subtle shadow */
+  }
+
+  /* AVATAR FIXES FOR MOBILE - ONLY IN POSTMODAL */
+  
+  /* Only target avatars specifically in PostModal with precise selectors */
+  .post-modal img.rounded-full {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  /* Comment avatars only - very specific selector */
+  .post-modal .flex.space-x-2 img.rounded-full,
+  .post-modal .flex.space-x-3 img.rounded-full {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Comment input avatar only - very specific selector */
+  .post-modal .h-16 img.rounded-full {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+  }
+}

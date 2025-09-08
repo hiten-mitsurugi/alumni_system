@@ -565,8 +565,8 @@ onUnmounted(() => {
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 md:py-6">
-      <div class="flex flex-col lg:flex-row gap-3 lg:gap-4">
+    <div class="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-4 md:py-6">
+      <div class="flex flex-col lg:flex-row gap-2 sm:gap-3 lg:gap-4">
         
         <!-- Left Sidebar: Profile Card (Desktop only) -->
         <aside class="hidden lg:block lg:w-64 flex-shrink-0">
@@ -579,23 +579,23 @@ onUnmounted(() => {
         </aside>
 
         <!-- Main Feed -->
-        <main class="flex-1 lg:max-w-2xl space-y-4 md:space-y-6">
+        <main class="flex-1 lg:max-w-2xl space-y-2 sm:space-y-4 md:space-y-6 w-full">
           <!-- Category Tabs -->
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="flex overflow-x-auto scrollbar-hide border-b border-gray-100">
               <button
                 v-for="category in categories"
                 :key="category.value"
                 @click="selectedCategory = category.value; activeTab = category.value"
                 :class="[
-                  'flex items-center space-x-1 px-2 md:px-3 py-2 text-xs md:text-sm font-medium whitespace-nowrap transition-colors border-b-2 flex-shrink-0',
+                  'flex items-center space-x-1 px-2 sm:px-2 md:px-3 py-2 text-xs md:text-sm font-medium whitespace-nowrap transition-colors border-b-2 flex-shrink-0',
                   selectedCategory === category.value
                     ? 'text-blue-600 border-blue-600 bg-blue-50'
                     : 'text-gray-600 border-transparent hover:text-blue-600 hover:bg-blue-50'
                 ]"
               >
-                <span class="text-sm md:text-base">{{ category.icon }}</span>
-                <span>{{ category.label }}</span>
+                <span class="text-xs sm:text-sm md:text-base">{{ category.icon }}</span>
+                <span class="hidden sm:inline">{{ category.label }}</span>
               </button>
             </div>
           </div>
@@ -639,7 +639,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Posts Feed -->
-          <div class="space-y-4 md:space-y-6">
+          <div class="space-y-2 sm:space-y-4 md:space-y-6">
             <PostCard
               v-for="post in filteredPosts"
               :key="post.id"
@@ -818,6 +818,26 @@ onUnmounted(() => {
     margin-top: 0.75rem;
   }
   
+  .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.5rem;
+  }
+  
+  /* Ensure full width usage on mobile */
+  .max-w-7xl {
+    max-width: 100%;
+  }
+  
+  /* Mobile container adjustments */
+  .px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
   /* Touch-friendly buttons */
   button {
     min-height: 40px;
@@ -833,6 +853,30 @@ onUnmounted(() => {
   .text-xl {
     font-size: 1.125rem;
     line-height: 1.75rem;
+  }
+  
+  /* Main feed adjustments for mobile */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Category tabs mobile optimization */
+  .flex.overflow-x-auto button {
+    min-width: auto;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Hide category labels on very small screens, show only icons */
+  @media (max-width: 480px) {
+    .hidden.sm\\:inline {
+      display: none !important;
+    }
+    
+    .space-x-1 {
+      gap: 0.25rem;
+    }
   }
   
   /* Modal adjustments */

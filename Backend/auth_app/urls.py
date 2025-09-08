@@ -11,7 +11,7 @@ from .views import (
     # LinkedIn-style views
     EnhancedProfileView, FollowUserView, UserConnectionsView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
-    SuggestedConnectionsView, UserByNameView
+    SuggestedConnectionsView, UserByNameView, InvitationAcceptView, InvitationRejectView
 )
 
 router = DefaultRouter()
@@ -53,6 +53,10 @@ urlpatterns = [
     path('follow/<int:user_id>/', FollowUserView.as_view(), name='follow_user'),
     path('connections/', UserConnectionsView.as_view(), name='user_connections'),
     path('connections/<int:user_id>/', UserConnectionsView.as_view(), name='user_connections_by_id'),
+    
+    # Invitation management
+    path('invitations/<int:invitation_id>/accept/', InvitationAcceptView.as_view(), name='accept_invitation'),
+    path('invitations/<int:invitation_id>/reject/', InvitationRejectView.as_view(), name='reject_invitation'),
     
     # Achievements endpoints
     path('achievements/', AchievementListCreateView.as_view(), name='achievements_list_create'),

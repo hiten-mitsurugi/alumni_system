@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold">Alumni Home</h1>
-    <p>Welcome to your My Mates</p>
-  </div>
+  <MyMatesContainer />
 </template>
+
+<script setup>
+import MyMatesContainer from '@/components/mymates/MyMatesContainer.vue';
+</script>

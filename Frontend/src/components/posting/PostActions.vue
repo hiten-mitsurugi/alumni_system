@@ -1,6 +1,6 @@
 <template>
-  <div :class="size === 'small' ? 'px-4 py-4 border-t border-slate-200 bg-slate-50' : 'px-6 py-6 border-t-2 border-slate-100 bg-slate-50'">
-    <div :class="size === 'small' ? 'flex items-center justify-around' : 'flex items-center justify-between'">
+  <div :class="size === 'small' ? 'px-2 sm:px-4 py-2 sm:py-4 border-t border-slate-200 bg-slate-50' : 'px-4 sm:px-6 py-3 sm:py-6 border-t-2 border-slate-100 bg-slate-50'">
+    <div :class="size === 'small' ? 'flex items-center justify-around' : 'flex items-center justify-between space-x-1 sm:space-x-2'">
       <!-- Reactions -->
       <div class="flex items-center">
         <div class="relative group">
@@ -9,20 +9,21 @@
             :class="[
               'flex items-center transition-all duration-300 cursor-pointer relative z-10',
               size === 'small' 
-                ? 'space-x-2 px-3 py-2 rounded-lg font-medium text-sm shadow-sm'
-                : 'space-x-3 px-4 py-2 rounded-2xl font-semibold text-lg shadow-md',
+                ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
+                : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md',
               selectedReaction
                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white transform scale-105' + (size === 'small' ? ' shadow-md' : ' shadow-lg')
                 : 'text-slate-600 hover:bg-blue-100 hover:text-blue-700 bg-white'
             ]"
           >
             <!-- Reaction Icon (consistent with other buttons) -->
-            <svg v-if="!selectedReaction" :class="size === 'small' ? 'w-5 h-5' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="!selectedReaction" :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.20-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
             </svg>
             <!-- Show emoji when reaction is selected -->
-            <span v-if="selectedReaction" :class="size === 'small' ? 'text-xl' : 'text-2xl'">{{ currentReactionEmoji }}</span>
-            <span>{{ selectedReaction ? currentReactionLabel : 'React' }}</span>
+            <span v-if="selectedReaction" :class="size === 'small' ? 'text-base sm:text-xl' : 'text-xl sm:text-2xl'">{{ currentReactionEmoji }}</span>
+            <span class="hidden sm:inline">{{ selectedReaction ? currentReactionLabel : 'React' }}</span>
+            <span class="sm:hidden text-xs">React</span>
           </button>
           
           <!-- Reaction Picker -->
@@ -47,14 +48,15 @@
         :class="[
           'flex items-center text-slate-600 hover:bg-green-100 hover:text-green-700 transition-all duration-300 bg-white cursor-pointer',
           size === 'small' 
-            ? 'space-x-2 px-3 py-2 rounded-lg font-medium text-sm shadow-sm'
-            : 'space-x-3 px-4 py-2 rounded-2xl font-semibold text-lg shadow-md'
+            ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
+            : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md'
         ]"
       >
-        <svg :class="size === 'small' ? 'w-5 h-5' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
-        <span>Comment</span>
+        <span class="hidden sm:inline">Comment</span>
+        <span class="sm:hidden text-xs">Comment</span>
       </button>
       
       <!-- Repost -->
@@ -63,14 +65,15 @@
         :class="[
           'flex items-center text-slate-600 hover:bg-purple-100 hover:text-purple-700 transition-all duration-300 bg-white cursor-pointer',
           size === 'small' 
-            ? 'space-x-2 px-3 py-2 rounded-lg font-medium text-sm shadow-sm'
-            : 'space-x-3 px-4 py-2 rounded-2xl font-semibold text-lg shadow-md'
+            ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
+            : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md'
         ]"
       >
-        <svg :class="size === 'small' ? 'w-5 h-5' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        <span>Repost</span>
+        <span class="hidden sm:inline">Repost</span>
+        <span class="sm:hidden text-xs">Repost</span>
       </button>
       
       <!-- Copy Link -->
@@ -79,14 +82,15 @@
         :class="[
           'flex items-center text-slate-600 hover:bg-orange-100 hover:text-orange-700 transition-all duration-300 bg-white cursor-pointer',
           size === 'small' 
-            ? 'space-x-2 px-3 py-2 rounded-lg font-medium text-sm shadow-sm'
-            : 'space-x-3 px-4 py-2 rounded-2xl font-semibold text-lg shadow-md'
+            ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
+            : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md'
         ]"
       >
-        <svg :class="size === 'small' ? 'w-5 h-5' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
-        <span>Copy Link</span>
+        <span class="hidden sm:inline">Copy Link</span>
+        <span class="sm:hidden text-xs">Copy</span>
       </button>
     </div>
   </div>
@@ -188,5 +192,46 @@ button:focus {
 /* Reaction picker positioning */
 .group:hover .group-hover\:opacity-100 {
   opacity: 1;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  /* Ensure buttons are evenly spaced on mobile */
+  .justify-between {
+    justify-content: space-around;
+  }
+  
+  /* Compact button sizing on mobile */
+  .space-x-1 > :not([hidden]) ~ :not([hidden]) {
+    margin-left: 0.25rem;
+  }
+  
+  /* Make sure all buttons fit within mobile viewport */
+  button {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  
+  /* Reduce padding on very small screens */
+  .px-2 {
+    padding-left: 0.375rem;
+    padding-right: 0.375rem;
+  }
+  
+  .py-1\.5 {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+  
+  /* Ensure text doesn't wrap */
+  span {
+    white-space: nowrap;
+  }
+  
+  /* Mobile-specific button adjustments */
+  .text-xs {
+    font-size: 0.7rem;
+    line-height: 1rem;
+  }
 }
 </style>
