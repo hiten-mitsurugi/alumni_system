@@ -158,7 +158,7 @@
     align-items: center !important; 
     justify-content: center !important; 
     font-size: 0.65rem !important; /* Slightly bigger font */
-    white-space: nowrap !important; 
+    white-space: nowrap !important;
     border-radius: 14px !important; /* Nicer rounded corners */
   }
 

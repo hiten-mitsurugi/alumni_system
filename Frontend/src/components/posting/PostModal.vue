@@ -8,6 +8,68 @@
       class="bg-white rounded-lg sm:rounded-2xl shadow-2xl w-full h-full sm:max-w-[70vw] sm:w-full sm:max-h-[95vh] overflow-hidden flex flex-col"
       @click.stop
     >
+      <!-- Mobile-only Media (above header) -->
+      <div
+        v-if="hasMedia"
+        class="sm:hidden bg-gray-900 flex items-center justify-center min-h-0"
+        style="height: 40vh; min-height: 200px; max-height: 400px;"
+      >
+        <div class="relative w-full h-full flex items-center justify-center p-2">
+          <!-- Image Display -->
+          <div v-if="currentMediaType === 'image'" class="relative w-full h-full flex items-center justify-center">
+            <img
+              :src="getMediaUrl(currentMediaUrl)"
+              :alt="post.title"
+              class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
+              loading="lazy"
+              @load="onImageLoad"
+              @error="onImageError"
+            />
+          </div>
+
+          <!-- Video Display -->
+          <div v-else-if="currentMediaType === 'video'" class="relative w-full h-full flex items-center justify-center">
+            <video
+              :src="getMediaUrl(currentMediaUrl)"
+              controls
+              class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
+              @error="onVideoError"
+            />
+          </div>
+
+          <!-- Multiple Media Navigation -->
+          <div v-if="mediaFiles.length > 1" class="absolute inset-0 flex items-center justify-between p-2 pointer-events-none">
+            <button
+              v-if="currentMediaIndex > 0"
+              @click="previousMedia"
+              class="bg-black bg-opacity-50 text-white p-1.5 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <!-- Spacer to push next button to the right -->
+            <div class="flex-1 pointer-events-none"></div>
+            
+            <button
+              v-if="currentMediaIndex < mediaFiles.length - 1"
+              @click="nextMedia"
+              class="bg-black bg-opacity-50 text-white p-1.5 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Media Counter -->
+          <div v-if="mediaFiles.length > 1" class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
+            {{ currentMediaIndex + 1 }} / {{ mediaFiles.length }}
+          </div>
+        </div>
+      </div>
+
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
         <h3 class="text-base sm:text-lg font-semibold text-gray-900 truncate">
@@ -25,19 +87,20 @@
 
       <!-- Modal Content -->
       <div class="flex-1 overflow-hidden flex flex-col sm:flex-row">
-        <!-- Left side - Media (if exists) -->
+        <!-- Desktop-only Left side - Media (if exists) -->
         <div
           v-if="hasMedia"
-          class="flex-1 bg-gray-900 flex items-center justify-center min-h-0 sm:min-h-0"
+          class="hidden sm:flex flex-1 bg-gray-900 flex items-center justify-center min-h-0 sm:min-h-0"
         >
-          <div class="relative w-full h-full flex items-center justify-center p-2 sm:p-4">
+          <div class="relative w-full h-full flex items-center justify-center p-4">
             <!-- Image Display -->
             <div v-if="currentMediaType === 'image'" class="relative w-full h-full flex items-center justify-center">
               <img
-                :src="currentMediaUrl"
+                :src="getMediaUrl(currentMediaUrl)"
                 :alt="post.title"
                 class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
                 style="max-height: calc(100vh - 80px); max-width: calc(100vw - 40px);"
+                loading="lazy"
                 @load="onImageLoad"
                 @error="onImageError"
               />
@@ -46,38 +109,42 @@
             <!-- Video Display -->
             <div v-else-if="currentMediaType === 'video'" class="relative w-full h-full flex items-center justify-center">
               <video
-                :src="currentMediaUrl"
+                :src="getMediaUrl(currentMediaUrl)"
                 controls
                 class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
                 style="max-height: calc(100vh - 80px); max-width: calc(100vw - 40px);"
+                @error="onVideoError"
               />
             </div>
 
             <!-- Multiple Media Navigation -->
-            <div v-if="mediaFiles.length > 1" class="absolute inset-0 flex items-center justify-between p-2 sm:p-4 pointer-events-none">
+            <div v-if="mediaFiles.length > 1" class="absolute inset-0 flex items-center justify-between p-4 pointer-events-none">
               <button
                 v-if="currentMediaIndex > 0"
                 @click="previousMedia"
-                class="bg-black bg-opacity-50 text-white p-1.5 sm:p-2 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto"
+                class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
               >
-                <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               
+              <!-- Spacer to push next button to the right -->
+              <div class="flex-1 pointer-events-none"></div>
+              
               <button
                 v-if="currentMediaIndex < mediaFiles.length - 1"
                 @click="nextMedia"
-                class="bg-black bg-opacity-50 text-white p-1.5 sm:p-2 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto"
+                class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
               >
-                <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
 
             <!-- Media Counter -->
-            <div v-if="mediaFiles.length > 1" class="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-black bg-opacity-50 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
+            <div v-if="mediaFiles.length > 1" class="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
               {{ currentMediaIndex + 1 }} / {{ mediaFiles.length }}
             </div>
           </div>
@@ -417,8 +484,14 @@ const onImageLoad = () => {
   // Handle successful image load
 }
 
-const onImageError = () => {
-  console.error('Failed to load image:', currentMediaUrl.value)
+const onImageError = (event) => {
+  console.error('Failed to load image:', currentMediaUrl.value);
+  event.target.src = '/default-placeholder.png'; // Fallback image
+}
+
+const onVideoError = (event) => {
+  console.error('Failed to load video:', currentMediaUrl.value);
+  // Handle video error, e.g., show placeholder
 }
 
 const insertEmoji = (emoji) => {
@@ -461,6 +534,17 @@ const getProfilePictureUrl = (profilePicture) => {
   // If relative path, prepend base URL
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
   return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`
+}
+
+const getMediaUrl = (url) => {
+  if (!url) return '/default-placeholder.png'; // Fallback if null
+  
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+  return url.startsWith('/') ? `${BASE_URL}${url}` : `${BASE_URL}/${url}`;
 }
 
 // Handle escape key
