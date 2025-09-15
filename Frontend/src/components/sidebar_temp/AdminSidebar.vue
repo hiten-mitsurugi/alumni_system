@@ -92,53 +92,61 @@ const isActive = (path) => route.path.startsWith(path);
 </script>
 
 <template>
-  <aside class="bg-green-700 text-white w-70 min-h-screen p-4">
+  <aside class="bg-white text-gray-800 w-[350px] min-h-screen p-4 flex flex-col">
     <!-- Profile Section -->
     <div class="flex flex-col items-center mb-6" v-if="user && user.first_name">
       <img :src="profilePicture" alt="Profile Picture"
-           class="w-20 h-20 rounded-full border-2 border-white object-cover mb-2" />
-      <h2 class="text-lg font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
-      <p class="text-sm text-gray-300">{{ userTypeLabel }}</p>
+        class="w-24 h-24 rounded-full border-2 border-white object-cover mb-2" />
+      <h2 class="text-xl font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
+      <p class="text-base text-gray-400">{{ userTypeLabel }}</p>
     </div>
 
     <!-- Navigation -->
-    <nav>
-      <ul class="space-y-2">
+    <nav class="flex-grow">
+      <ul class="space-y-3">
         <li>
           <router-link
             to="/admin"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin') && route.path === '/admin' ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin') && route.path === '/admin' 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <LayoutDashboardIcon class="w-5 h-5" /> Dashboard
+            <LayoutDashboardIcon class="w-6 h-6" /> <span>Dashboard</span>
           </router-link>
         </li>
          <li>
           <router-link
             to="/admin/notification"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/notification') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin/notification') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <BellIcon class="w-5 h-5" /> Notification
+            <BellIcon class="w-6 h-6" /> <span>Notification</span>
           </router-link>
         </li>
          <li>
           <router-link
             to="/admin/contents"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/contents') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin/contents') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <FileTextIcon class="w-5 h-5" /> Contents
+            <FileTextIcon class="w-6 h-6" /> <span>Contents</span>
           </router-link>
         </li>
          <li>
           <router-link
             to="/admin/messaging"
-            class="flex items-center gap-2 p-2 rounded relative"
-            :class="isActive('/admin/messaging') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg relative"
+            :class="isActive('/admin/messaging') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <MessageCircleIcon class="w-5 h-5" /> 
-            Messaging
+            <MessageCircleIcon class="w-6 h-6" /> 
+            <span>Messaging</span>
             <!-- Badge for unread messages -->
             <div 
               v-if="messagingBadgeCount" 
@@ -151,56 +159,69 @@ const isActive = (path) => route.path.startsWith(path);
         <li>
           <router-link
             to="/admin/post-approvals"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/post-approvals') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin/post-approvals') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <ShieldCheckIcon class="w-5 h-5" /> Post Approvals
+            <ShieldCheckIcon class="w-6 h-6" /> <span>Post Approvals</span>
           </router-link>
         </li>
            <li>
           <router-link
             to="/admin/pending-user-approval"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/pending-user-approval') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin/pending-user-approval') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <UserCheckIcon class="w-5 h-5" /> Pending User Approval
+            <UserCheckIcon class="w-6 h-6" /> <span>Pending User Approval</span>
           </router-link>
         </li>
         <li>
           <router-link
             to="/admin/user-management"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/user-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin/user-management') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <UsersIcon class="w-5 h-5" /> User Management
+            <UsersIcon class="w-6 h-6" /> <span>User Management</span>
           </router-link>
         </li>
        
         <li>
           <router-link
             to="/admin/survey-management"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/survey-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin/survey-management') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <ClipboardListIcon class="w-5 h-5" /> Survey Management
+            <ClipboardListIcon class="w-6 h-6" /> <span>Survey Management</span>
           </router-link>
         </li>
        
         <li>
           <router-link
             to="/admin/settings"
-            class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/admin/settings') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/admin/settings') 
+              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
           >
-            <SettingsIcon class="w-5 h-5" /> Settings
+            <SettingsIcon class="w-6 h-6" /> <span>Settings</span>
           </router-link>
-        </li>
-        <li>
-          <button @click="logout" class="flex items-center gap-2 w-full text-left p-2 hover:bg-green-800 rounded">
-            <LogOutIcon class="w-5 h-5" /> Logout
-          </button>
         </li>
       </ul>
     </nav>
+
+    <!-- Logout at the bottom -->
+    <div class="border-t border-gray-200 pt-4 mt-4">
+      <button @click="logout"
+        class="flex items-center gap-3 w-full text-left p-3 rounded transition transform text-lg hover:text-red-600 hover:scale-105 hover:bg-red-200">
+        <LogOutIcon class="w-6 h-6" /> <span>Logout</span>
+      </button>
+    </div>
   </aside>
 </template>

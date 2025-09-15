@@ -11,7 +11,7 @@ import SuperAdminSidebar from '../sidebar_temp/SuperAdminSidebar.vue'
       <SuperAdminSidebar />
     </div>
     <!-- Main content area with left margin -->
-    <div class="ml-[280px] p-6 overflow-auto">
+    <div class="ml-[350px] p-6 overflow-auto">
       <router-view />
     </div>
   </div>

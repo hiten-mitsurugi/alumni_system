@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import api from '@/services/api';
-import UserFilters from '@/components/admin/UserFilters.vue';
 import ApprovedUsersTable from '@/components/admin/ApprovedUsersTable.vue';
 import { websocketService } from '@/services/websocket';
 import CreateUserModal from '@/components/admin/CreateUserModal.vue';
@@ -221,10 +220,7 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <!-- Filters -->
-    <UserFilters @apply-filters="handleFilters" />
-
-    <!-- Table -->
+    <!-- Enhanced Table with Integrated Filters -->
     <ApprovedUsersTable
       :users="paginatedUsers"
       :search="filters.search"
@@ -232,6 +228,7 @@ onUnmounted(() => {
       @delete-user="deleteUser"
       @block-user="blockUser"
       @unblock-user="unblockUser"
+      @apply-filters="handleFilters"
     />
 
     <!-- Pagination -->

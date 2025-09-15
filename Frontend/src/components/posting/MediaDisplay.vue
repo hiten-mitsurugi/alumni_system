@@ -37,12 +37,12 @@
     <!-- Multiple images layout - Facebook style -->
     <div v-else class="rounded-2xl overflow-hidden bg-white">
       <!-- Always 2x2 grid, show maximum 4 images -->
-      <div class="grid grid-cols-2 gap-1">
+      <div class="grid grid-cols-2 gap-0.5 sm:gap-1 media-grid">
         <div
           v-for="(media, index) in mediaFiles.slice(0, 4)"
           :key="media.id"
           :class="[
-            'relative bg-white',
+            'relative bg-white media-item',
             displayMode === 'card' ? 'aspect-square' : 'aspect-square'
           ]"
         >
@@ -264,6 +264,22 @@ img {
 
 /* Mobile responsive adjustments */
 @media (max-width: 640px) {
+  /* Force grid layout on mobile */
+  .media-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto auto !important;
+    width: 100% !important;
+  }
+  
+  .media-item {
+    display: block !important;
+    width: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    min-height: 120px !important;
+    max-height: 200px !important;
+  }
+  
   /* Reduce max height for mobile */
   .max-h-\[400px\] {
     max-height: 300px !important;
@@ -279,29 +295,45 @@ img {
   }
   
   /* Better gap spacing on mobile */
-  .gap-1 {
+  .gap-0\.5 {
     gap: 2px;
+  }
+  
+  .gap-1 {
+    gap: 4px;
   }
   
   /* Ensure proper aspect ratio on mobile */
   .aspect-square {
     aspect-ratio: 1 / 1;
-    min-height: 150px;
+    min-height: 120px;
   }
   
   /* More overlay text size for mobile */
   .text-xl {
-    font-size: 1.25rem !important;
-    line-height: 1.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
   }
   
   .text-2xl {
-    font-size: 1.5rem !important;
-    line-height: 2rem !important;
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
   }
 }
 
 /* Grid layout utilities */
+.media-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.media-item {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .grid-rows-2 {
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }

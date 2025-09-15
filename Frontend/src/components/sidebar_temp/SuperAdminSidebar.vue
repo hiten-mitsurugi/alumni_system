@@ -60,71 +60,106 @@ const isActive = (path) => route.path.startsWith(path);
 </script>
 
 <template>
-  <aside class="bg-green-700 text-white w-70 min-h-screen p-4">
+  <aside class="bg-white text-gray-800 w-[350px] min-h-screen p-4 flex flex-col">
     <!-- Profile Section -->
     <div class="flex flex-col items-center mb-6" v-if="user && user.first_name">
-      <img :src="profilePicture" alt="Profile Picture" class="w-20 h-20 rounded-full border-2 border-white object-cover mb-2" />
-      <h2 class="text-lg font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
-      <p class="text-sm text-gray-300">{{ userTypeLabel }}</p>
+      <img :src="profilePicture" alt="Profile Picture"
+        class="w-24 h-24 rounded-full border-2 border-white object-cover mb-2" />
+      <h2 class="text-xl font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
+      <p class="text-base text-gray-400">{{ userTypeLabel }}</p>
     </div>
 
     <!-- Navigation -->
-    <nav>
-      <ul class="space-y-2">
+    <nav class="flex-grow">
+      <ul class="space-y-3">
         <li>
-          <router-link to="/super-admin" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin') && route.path === '/super-admin' ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <DashboardIcon class="w-5 h-5" /> Dashboard
+          <router-link to="/super-admin"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin') && route.path === '/super-admin'
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <DashboardIcon class="w-6 h-6" /> <span>Dashboard</span>
           </router-link>
         </li>
+
         <li>
-          <router-link to="/super-admin/user-management" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin/user-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <UserManagementIcon class="w-5 h-5" /> User Management
+          <router-link to="/super-admin/user-management"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin/user-management')
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <UserManagementIcon class="w-6 h-6" /> <span>User Management</span>
           </router-link>
         </li>
+
         <li>
-          <router-link to="/super-admin/survey-management" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin/survey-management') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <SurveyIcon class="w-5 h-5" /> Survey Management
+          <router-link to="/super-admin/survey-management"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin/survey-management')
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <SurveyIcon class="w-6 h-6" /> <span>Survey Management</span>
           </router-link>
         </li>
+
         <li>
-          <router-link to="/super-admin/alumni-directory" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin/alumni-directory') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <DirectoryIcon class="w-5 h-5" /> Alumni Directory
+          <router-link to="/super-admin/alumni-directory"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin/alumni-directory')
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <DirectoryIcon class="w-6 h-6" /> <span>Alumni Directory</span>
           </router-link>
         </li>
+
         <li>
-          <router-link to="/super-admin/system-monitoring" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin/system-monitoring') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <MonitoringIcon class="w-5 h-5" /> System Monitoring
+          <router-link to="/super-admin/system-monitoring"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin/system-monitoring')
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <MonitoringIcon class="w-6 h-6" /> <span>System Monitoring</span>
           </router-link>
         </li>
+
         <li>
-          <router-link to="/super-admin/analytic-dashboard" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin/analytic-dashboard') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <AnalyticsIcon class="w-5 h-5" /> Analytic Dashboard
+          <router-link to="/super-admin/analytic-dashboard"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin/analytic-dashboard')
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <AnalyticsIcon class="w-6 h-6" /> <span>Analytic Dashboard</span>
           </router-link>
         </li>
+
         <li>
-          <router-link to="/super-admin/pending-user-approval" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin/pending-user-approval') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <ApprovalIcon class="w-5 h-5" /> Pending User Approval
+          <router-link to="/super-admin/pending-user-approval"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin/pending-user-approval')
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <ApprovalIcon class="w-6 h-6" /> <span>Pending User Approval</span>
           </router-link>
         </li>
+
         <li>
-          <router-link to="/super-admin/settings" class="flex items-center gap-2 p-2 rounded"
-            :class="isActive('/super-admin/settings') ? 'bg-gray-900 font-semibold' : 'hover:bg-green-800'">
-            <SettingsIcon class="w-5 h-5" /> Settings
+          <router-link to="/super-admin/settings"
+            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            :class="isActive('/super-admin/settings')
+              ? 'font-semibold text-green-600 scale-105 bg-green-100'
+              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
+            <SettingsIcon class="w-6 h-6" /> <span>Settings</span>
           </router-link>
-        </li>
-        <li>
-          <button @click="logout" class="flex items-center gap-2 w-full text-left p-2 hover:bg-green-800 rounded">
-            <LogOutIcon class="w-5 h-5" /> Logout
-          </button>
         </li>
       </ul>
     </nav>
+
+    <!-- Logout at the bottom -->
+    <div class="border-t border-gray-200 pt-4 mt-4">
+      <button @click="logout"
+        class="flex items-center gap-3 w-full text-left p-3 rounded transition transform text-lg hover:text-red-600 hover:scale-105 hover:bg-red-200">
+        <LogOutIcon class="w-6 h-6" /> <span>Logout</span>
+      </button>
+    </div>
   </aside>
 </template>

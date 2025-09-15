@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 overflow-hidden mb-4 w-full max-w-[396px] sm:max-w-none mx-auto">
+    class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 overflow-hidden mb-4 w-full mx-auto">
     <!-- Post Header -->
     <PostHeader :post="post" :categories="categories" />
 
