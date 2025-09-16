@@ -9,7 +9,7 @@
             <div class="relative">
               <input v-model="internalFilters.search" type="text"
                 placeholder="Search by firstname, last name or fullname..."
-                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                class="w-full pl-10 pr-4 py-3 border border-white rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                 @keyup.enter="applyFilters" @input="applyFilters" />
               <SearchIcon class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
             </div>
@@ -20,7 +20,7 @@
             <!-- Filter Button -->
             <div class="relative">
               <button @click="toggleFilterDropdown"
-                class="flex items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 rounded-lg shadow-sm transition-all duration-200 border border-gray-300 cursor-pointer">
+                class="flex items-center gap-2 px-4 py-3 bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 rounded-lg shadow-sm transition-all duration-200 border border-gray-300 cursor-pointer">
                 <FilterIcon class="w-5 h-5" />
                 <span>Filters</span>
                 <ChevronDownIcon
@@ -44,10 +44,10 @@
                       <select v-model="internalFilters.employment_status" @change="applyFilters"
                         class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
                         <option value="">All</option>
-                        <option value="Employed Locally">Employed Locally</option>
-                        <option value="Employed Internationally">Employed Internationally</option>
-                        <option value="Self-Employed">Self-Employed</option>
-                        <option value="Unemployed">Unemployed</option>
+                        <option value="employed_locally">Employed Locally</option>
+                        <option value="employed_internationally">Employed Internationally</option>
+                        <option value="self_employed">Self-Employed</option>
+                        <option value="unemployed">Unemployed</option>
                       </select>
                     </div>
 
@@ -111,8 +111,8 @@
               <button @click="toggleActionsDropdown" :disabled="selectedUsers.length === 0" :class="[
                 'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border',
                 selectedUsers.length > 0
-                  ? 'bg-green-100 hover:bg-green-200 text-green-700 border-green-300 cursor-pointer'
-                  : 'bg-gray-100 text-gray-800 border-gray-300 cursor-not-allowed'
+                  ? 'bg-white hover:bg-green-200 text-green-700 border-green-300 cursor-pointer'
+                  : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
               ]">
                 <MoreVerticalIcon class="w-5 h-5" />
                 <span>Actions</span>
@@ -303,7 +303,6 @@ watch(() => props.search, (newSearch) => {
 const applyFilters = () => {
   emit('apply-filters', {
     ...internalFilters.value,
-    employment_status: internalFilters.value.employment_status?.toLowerCase() || '',
     gender: internalFilters.value.gender?.toLowerCase() || ''
   });
 };

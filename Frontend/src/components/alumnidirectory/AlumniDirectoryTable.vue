@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { SearchIcon, FilterIcon, ChevronDownIcon, MoreVerticalIcon, TrashIcon, EyeIcon, EditIcon } from 'lucide-vue-next';
 import AlumniModalSimple from './AlumniModalSimple.vue';
-import AlumniDirectoryRow from './AlumniDirectoryRow.vue';
 import AlumniFileImport from '../AlumniFileImport.vue';
 import axios from 'axios';
 
@@ -20,6 +20,12 @@ const sortBy = ref('last_name');
 const sortOrder = ref('asc');
 const selectedProgram = ref('');
 const selectedYear = ref('');
+const selectedGender = ref('');
+
+// Dropdown and selection state
+const showFilterDropdown = ref(false);
+const showActionsDropdown = ref(false);
+const selectedAlumniIds = ref([]);
 
 // Pagination variables
 const currentPage = ref(1);
@@ -71,6 +77,10 @@ const uniqueYears = computed(() => {
   return years.filter(year => year != null).sort((a, b) => b - a);
 });
 
+const isAllSelected = computed(() => 
+  filteredAlumni.value.length > 0 && selectedAlumniIds.value.length === filteredAlumni.value.length
+);
+
 const filteredAlumni = computed(() => {
   let filtered = alumni.value;
   
@@ -81,8 +91,8 @@ const filteredAlumni = computed(() => {
       person.first_name?.toLowerCase().includes(query) ||
       person.last_name?.toLowerCase().includes(query) ||
       person.middle_name?.toLowerCase().includes(query) ||
-      person.school_id?.toLowerCase().includes(query) ||
-      person.program?.toLowerCase().includes(query)
+      `${person.first_name} ${person.last_name}`.toLowerCase().includes(query) ||
+      `${person.first_name} ${person.middle_name} ${person.last_name}`.toLowerCase().includes(query)
     );
   }
   
@@ -94,9 +104,12 @@ const filteredAlumni = computed(() => {
   // Year graduated filter
   if (selectedYear.value) {
     const yearToFilter = parseInt(selectedYear.value);
-    console.log('🎯 Filtering by year:', yearToFilter, 'Available years:', alumni.value.map(p => p.year_graduated));
     filtered = filtered.filter(person => person.year_graduated === yearToFilter);
-    console.log('🎯 Filtered results:', filtered.length, 'matches');
+  }
+
+  // Gender filter
+  if (selectedGender.value) {
+    filtered = filtered.filter(person => person.gender === selectedGender.value);
   }
   
   // Sort filtered results
@@ -199,7 +212,79 @@ const clearFilters = () => {
   searchQuery.value = '';
   selectedProgram.value = '';
   selectedYear.value = '';
+  selectedGender.value = '';
   currentPage.value = 1; // Reset to first page when filters are cleared
+};
+
+// Dropdown management methods
+const toggleFilterDropdown = () => {
+  showFilterDropdown.value = !showFilterDropdown.value;
+  showActionsDropdown.value = false;
+};
+
+const toggleActionsDropdown = () => {
+  if (selectedAlumniIds.value.length > 0) {
+    showActionsDropdown.value = !showActionsDropdown.value;
+    showFilterDropdown.value = false;
+  }
+};
+
+const closeDropdowns = () => {
+  showFilterDropdown.value = false;
+  showActionsDropdown.value = false;
+};
+
+// Selection management
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedAlumniIds.value = [];
+  } else {
+    selectedAlumniIds.value = filteredAlumni.value.map(person => person.id);
+  }
+};
+
+const toggleAlumniSelection = (alumniId) => {
+  const index = selectedAlumniIds.value.indexOf(alumniId);
+  if (index > -1) {
+    selectedAlumniIds.value.splice(index, 1);
+  } else {
+    selectedAlumniIds.value.push(alumniId);
+  }
+};
+
+// Bulk actions
+const bulkDeleteAlumni = async () => {
+  if (selectedAlumniIds.value.length === 0) return;
+  
+  if (confirm(`Are you sure you want to delete ${selectedAlumniIds.value.length} selected alumni? This action cannot be undone.`)) {
+    try {
+      for (const alumniId of selectedAlumniIds.value) {
+        await axios.delete(`${BASE_URL}/api/alumni-directory/${alumniId}/`, {
+          headers: { Authorization: `Bearer ${authStore.token}` }
+        });
+      }
+      selectedAlumniIds.value = [];
+      showActionsDropdown.value = false;
+      fetchAlumni();
+      showNotification(`${selectedAlumniIds.value.length} alumni deleted successfully!`, 'success');
+    } catch (error) {
+      console.error('❌ Failed to delete alumni:', error);
+      showNotification('Failed to delete some alumni. Please try again.', 'error');
+    }
+  }
+};
+
+const bulkEditAlumni = () => {
+  if (selectedAlumniIds.value.length === 1) {
+    const alumniToEdit = alumni.value.find(person => person.id === selectedAlumniIds.value[0]);
+    if (alumniToEdit) {
+      openEditModal(alumniToEdit);
+      selectedAlumniIds.value = [];
+      showActionsDropdown.value = false;
+    }
+  } else {
+    showNotification('Please select only one alumni to edit.', 'info');
+  }
 };
 
 // Pagination methods
@@ -222,7 +307,7 @@ const nextPage = () => {
 };
 
 // Watch for filter changes to reset pagination
-watch([searchQuery, selectedProgram, selectedYear], () => {
+watch([searchQuery, selectedProgram, selectedYear, selectedGender], () => {
   currentPage.value = 1;
 });
 
@@ -250,7 +335,7 @@ onMounted(() => {
           <div class="flex space-x-3">
             <button
               @click="openImportModal"
-              class="bg-white  text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-300 transition-colors duration-200 flex items-center space-x-2"
+              class="bg-white  text-gr-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-300 transition-colors duration-200 flex items-center space-x-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -270,112 +355,192 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Search and Stats -->
+      <!-- Search and Controls -->
       <div class="p-6 border-b border-gray-200">
-        <!-- Search Bar -->
-        <div class="flex justify-between items-center mb-4">
-          <div class="relative flex-1 max-w-md">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search alumni by name, school ID, or program..."
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        <div class="flex items-center gap-4">
+          <!-- Search Bar -->
+          <div class="flex-1 max-w-md">
+            <div class="relative">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search by firstname, lastname or fullname..."
+                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+              />
+              <SearchIcon class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+            </div>
           </div>
-          <div class="ml-6 text-sm text-gray-600">
-            <span class="font-semibold">{{ filteredAlumni.length }}</span> 
-            of 
-            <span class="font-semibold">{{ alumni.length }}</span> 
-            alumni displayed
+
+          <!-- Right Side: Filter and Actions -->
+          <div class="flex items-center gap-3 ml-auto relative">
+            <!-- Filter Button -->
+            <div class="relative">
+              <button
+                @click="toggleFilterDropdown"
+                class="flex items-center gap-2 px-4 py-3 bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 rounded-lg shadow-sm transition-all duration-200 border border-gray-300 cursor-pointer"
+              >
+                <FilterIcon class="w-5 h-5" />
+                <span>Filters</span>
+                <ChevronDownIcon
+                  :class="['w-4 h-4 transition-transform duration-200', showFilterDropdown ? 'rotate-180' : '']"
+                />
+              </button>
+
+              <!-- Filter Dropdown -->
+              <transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="transform scale-95 opacity-0"
+                enter-to-class="transform scale-100 opacity-100"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="transform scale-100 opacity-100"
+                leave-to-class="transform scale-95 opacity-0"
+              >
+                <div
+                  v-if="showFilterDropdown"
+                  class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                  @click.stop
+                >
+                  <div class="p-4 space-y-4">
+                    <h3 class="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">Filter Options</h3>
+
+                    <!-- Program Filter -->
+                    <div>
+                      <label class="text-sm font-medium text-gray-700 mb-1 block">Program</label>
+                      <select
+                        v-model="selectedProgram"
+                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 hover:bg-green-200 transition-colors duration-200"
+                      >
+                        <option value="">All Programs</option>
+                        <option v-for="program in programs" :key="program" :value="program">{{ program }}</option>
+                      </select>
+                    </div>
+
+                    <!-- Year Graduated Filter -->
+                    <div>
+                      <label class="text-sm font-medium text-gray-700 mb-1 block">Year Graduated</label>
+                      <input
+                        v-model="selectedYear"
+                        type="number"
+                        :min="currentYear - 50"
+                        :max="currentYear + 5"
+                        placeholder="Enter year (YYYY)"
+                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 hover:bg-green-200 transition-colors duration-200"
+                      />
+                    </div>
+
+                    <!-- Gender Filter -->
+                    <div>
+                      <label class="text-sm font-medium text-gray-700 mb-1 block">Gender</label>
+                      <select
+                        v-model="selectedGender"
+                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 hover:bg-green-200 transition-colors duration-200"
+                      >
+                        <option value="">All Genders</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="prefer_not_to_say">Prefer not to say</option>
+                      </select>
+                    </div>
+
+                    <!-- Clear Filters Button -->
+                    <div class="pt-2 border-t border-gray-200">
+                      <button
+                        @click="clearFilters"
+                        class="w-full py-2 px-3 text-sm bg-green-600 text-gray-100 hover:bg-green-200 hover:text-green-800 rounded-md transition-colors duration-200 font-medium"
+                      >
+                        Clear All Filters
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Actions Button -->
+            <div class="relative">
+              <button
+                @click="toggleActionsDropdown"
+                :disabled="selectedAlumniIds.length === 0"
+                :class="[
+                  'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border',
+                  selectedAlumniIds.length > 0
+                    ? 'bg-white hover:bg-green-200 text-green-700 border-green-300 cursor-pointer'
+                    : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                ]"
+              >
+                <MoreVerticalIcon class="w-5 h-5" />
+                <span>Actions</span>
+                <span
+                  v-if="selectedAlumniIds.length > 0"
+                  class="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full"
+                >
+                  {{ selectedAlumniIds.length }}
+                </span>
+              </button>
+
+              <!-- Actions Dropdown -->
+              <transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="transform scale-95 opacity-0"
+                enter-to-class="transform scale-100 opacity-100"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="transform scale-100 opacity-100"
+                leave-to-class="transform scale-95 opacity-0"
+              >
+                <div
+                  v-if="showActionsDropdown && selectedAlumniIds.length > 0"
+                  class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                  @click.stop
+                >
+                  <div class="py-2">
+                    <button
+                      @click="bulkEditAlumni"
+                      class="w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-200 flex items-center gap-2"
+                    >
+                      <EditIcon class="w-4 h-4" />
+                      Edit Selected ({{ selectedAlumniIds.length }})
+                    </button>
+                    <hr class="my-1">
+                    <button
+                      @click="bulkDeleteAlumni"
+                      class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-200 flex items-center gap-2"
+                    >
+                      <TrashIcon class="w-4 h-4" />
+                      Delete Selected ({{ selectedAlumniIds.length }})
+                    </button>
+                  </div>
+                </div>
+              </transition>
+            </div>
           </div>
         </div>
 
-        <!-- Filters -->
-        <div class="flex flex-wrap gap-4 items-center">
-          <!-- Program Filter -->
-          <div class="flex-1 min-w-0 max-w-xs">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Program</label>
-            <select
-              v-model="selectedProgram"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            >
-              <option value="">All Programs</option>
-              <option v-for="program in programs" :key="program" :value="program">{{ program }}</option>
-            </select>
-          </div>
-
-          <!-- Year Filter -->
-          <div class="flex-1 min-w-0 max-w-xs">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Filter by Year Graduated
-            </label>
-            <input
-              v-model="selectedYear"
-              type="number"
-              :min="currentYear - 50"
-              :max="currentYear + 5"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              placeholder="Enter year (YYYY)"
-            />
-          </div>
-
-          <!-- Clear Filters Button -->
-          <div class="flex-shrink-0">
-            <label class="block text-sm font-medium text-gray-700 mb-1 opacity-0">Clear</label>
-            <button
-              @click="clearFilters"
-              v-if="searchQuery || selectedProgram || selectedYear"
-              class="px-4 py-2 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm flex items-center space-x-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span>Clear Filters</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Active Filters Display -->
-        <div v-if="searchQuery || selectedProgram || selectedYear" class="mt-3 flex flex-wrap gap-2">
-          <span class="text-sm text-gray-600">Active filters:</span>
-          <span v-if="searchQuery" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            Search: "{{ searchQuery }}"
-            <button @click="searchQuery = ''" class="ml-1 hover:text-blue-600">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </span>
-          <span v-if="selectedProgram" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            Program: {{ selectedProgram }}
-            <button @click="selectedProgram = ''" class="ml-1 hover:text-green-600">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </span>
-          <span v-if="selectedYear" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-            Year: {{ selectedYear }}
-            <button @click="selectedYear = ''" class="ml-1 hover:text-purple-600">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </span>
+        <!-- Results info -->
+        <div class="mt-4 text-sm text-gray-600">
+          <span class="font-semibold">{{ filteredAlumni.length }}</span> 
+          of 
+          <span class="font-semibold">{{ alumni.length }}</span> 
+          alumni displayed
         </div>
       </div>
 
       <!-- Table -->
       <div class="overflow-x-auto">
         <table class="w-full">
-          <thead class="bg-gray-50">
+          <thead class="bg-gradient-to-r from-green-600 to-green-700">
             <tr>
+              <!-- Select All Checkbox -->
+              <th class="px-6 py-3 w-12">
+                <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  @change="toggleSelectAll"
+                  class="w-4 h-4 accent-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+              </th>
               <th 
                 @click="sortTable('school_id')"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
               >
                 <div class="flex items-center space-x-1">
                   <span>School ID</span>
@@ -386,7 +551,7 @@ onMounted(() => {
               </th>
               <th 
                 @click="sortTable('last_name')"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
               >
                 <div class="flex items-center space-x-1">
                   <span>Full Name</span>
@@ -397,7 +562,7 @@ onMounted(() => {
               </th>
               <th 
                 @click="sortTable('program')"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
               >
                 <div class="flex items-center space-x-1">
                   <span>Program</span>
@@ -408,7 +573,7 @@ onMounted(() => {
               </th>
               <th 
                 @click="sortTable('year_graduated')"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
               >
                 <div class="flex items-center space-x-1">
                   <span>Year Graduated</span>
@@ -417,25 +582,76 @@ onMounted(() => {
                   </svg>
                 </div>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Birth Date
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Gender
-              </th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <AlumniDirectoryRow
+            <tr
               v-for="person in paginatedAlumni"
               :key="person.id"
-              :alumni="person"
-              @edit="openEditModal"
-              @delete="handleAlumniDeleted"
-            />
+              class="hover:bg-green-200 transition-colors duration-150"
+            >
+              <!-- Row Checkbox -->
+              <td class="px-6 py-4" @click.stop>
+                <input
+                  type="checkbox"
+                  :checked="selectedAlumniIds.includes(person.id)"
+                  @change="toggleAlumniSelection(person.id)"
+                  class="w-4 h-4 accent-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+              </td>
+
+              <!-- School ID -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ person.school_id }}</div>
+              </td>
+
+              <!-- Full Name -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900 cursor-pointer hover:text-green-600 hover:underline transition-colors">
+                  {{ `${person.first_name} ${person.middle_name || ''} ${person.last_name}`.replace(/\s+/g, ' ').trim() }}
+                </div>
+              </td>
+
+              <!-- Program -->
+              <td class="px-6 py-4">
+                <div class="text-sm text-gray-900 max-w-xs">
+                  <span class="line-clamp-2">{{ person.program }}</span>
+                </div>
+              </td>
+
+              <!-- Year Graduated -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900 font-medium">{{ person.year_graduated }}</div>
+              </td>
+
+              <!-- Birth Date -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                  {{ person.birth_date ? new Date(person.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-' }}
+                </div>
+              </td>
+
+              <!-- Gender -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                  :class="{
+                    'bg-blue-100 text-blue-800': person.gender === 'male',
+                    'bg-pink-100 text-pink-800': person.gender === 'female',
+                    'bg-gray-100 text-gray-800': person.gender === 'prefer_not_to_say'
+                  }"
+                >
+                  {{ person.gender === 'male' ? 'Male' : person.gender === 'female' ? 'Female' : person.gender === 'prefer_not_to_say' ? 'Prefer not to say' : person.gender }}
+                </span>
+              </td>
+            </tr>
+
             <tr v-if="paginatedAlumni.length === 0 && filteredAlumni.length === 0">
               <td colspan="7" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
@@ -542,6 +758,9 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Click Outside Handler -->
+    <div v-if="showFilterDropdown || showActionsDropdown" @click="closeDropdowns" class="fixed inset-0 z-40"></div>
+
     <!-- Modal -->
     <AlumniModalSimple
       :show="showModal"
@@ -551,7 +770,7 @@ onMounted(() => {
     />
 
     <!-- Import Modal -->
-    <div v-if="showImportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="showImportModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-6 border-b border-gray-200">
           <h3 class="text-xl font-semibold text-gray-800">Import Alumni Data</h3>
@@ -573,6 +792,15 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Line clamp utility for long program names */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Custom scrollbar for table */
 .overflow-x-auto::-webkit-scrollbar {
   height: 6px;
@@ -597,13 +825,43 @@ onMounted(() => {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+.transition-all {
+  transition: all 0.2s ease;
+}
+
 /* Table hover effects */
 tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: #dcfce7; /* green-200 equivalent */
 }
 
 /* Sort icons */
 .transform {
   transition: transform 0.2s ease;
+}
+
+/* Dropdown animations */
+.transition {
+  transition-property: transform, opacity;
+}
+
+/* Button hover effects */
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+  accent-color: #16a34a;
+}
+
+/* Focus states */
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #16a34a;
+  border-color: #16a34a;
 }
 </style>

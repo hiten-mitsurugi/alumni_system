@@ -237,7 +237,7 @@ watch(() => props.show, (newValue) => {
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click="handleBackdropClick">
+  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click="handleBackdropClick">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">

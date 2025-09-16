@@ -444,7 +444,7 @@ const exportData = async () => {
 
 <template>
 <div>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-green-50 p-6">
     <!-- Header Section -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">
       <div class="flex justify-between items-center">
@@ -455,7 +455,7 @@ const exportData = async () => {
         <div class="flex gap-3">
           <button
             @click="showExportModal = true"
-            class="group flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
+            class="group flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
           >
             <Download class="w-4 h-4 group-hover:animate-bounce" />
             Export Data
@@ -472,7 +472,7 @@ const exportData = async () => {
           :class="[
             'flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer',
             activeTab === 'categories'
-              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+              ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
               : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
           ]"
         >
@@ -484,7 +484,7 @@ const exportData = async () => {
           :class="[
             'flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer',
             activeTab === 'questions'
-              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+              ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
               : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
           ]"
         >
@@ -496,7 +496,7 @@ const exportData = async () => {
           :class="[
             'flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer',
             activeTab === 'analytics'
-              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+              ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
               : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
           ]"
         >
@@ -509,7 +509,7 @@ const exportData = async () => {
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-16">
       <div class="flex flex-col items-center">
-        <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-green-200 border-t-green-600"></div>
         <p class="mt-4 text-slate-600 font-medium">Loading survey data...</p>
       </div>
     </div>
@@ -523,7 +523,7 @@ const exportData = async () => {
         </div>
         <button
           @click="openCategoryModal()"
-          class="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
+          class="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
         >
           <Plus class="w-5 h-5 group-hover:rotate-90 transition-transform" />
           Add Category
@@ -538,7 +538,7 @@ const exportData = async () => {
         >
           <div class="flex justify-between items-start mb-4">
             <div class="flex-1">
-              <h3 class="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors">
+              <h3 class="font-bold text-lg text-slate-800 group-hover:text-green-600 transition-colors">
                 {{ category.name }}
               </h3>
               <p class="text-slate-600 text-sm mt-2 line-clamp-2">{{ category.description }}</p>
@@ -546,7 +546,7 @@ const exportData = async () => {
             <div class="flex gap-1 ml-4">
               <button
                 @click.stop="openCategoryModal(category)"
-                class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
+                class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 cursor-pointer"
                 title="Edit Category"
               >
                 <Edit class="w-4 h-4" />
@@ -570,7 +570,7 @@ const exportData = async () => {
                   ? 'text-red-600' 
                   : (category.total_questions_count || 0) >= 40 
                     ? 'text-yellow-600' 
-                    : 'text-slate-500'
+                    : 'text-green-500'
               ]">
                 ({{ category.total_questions_count || 0 }}/50)
               </span>
@@ -591,7 +591,7 @@ const exportData = async () => {
           
           <button
             @click.stop="selectCategory(category)"
-            class="w-full px-4 py-2 text-sm bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105"
+            class="w-full px-4 py-2 text-sm bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105"
           >
             View Questions →
           </button>
@@ -658,7 +658,7 @@ const exportData = async () => {
         <div class="flex gap-3">
           <button
             @click="openQuestionModal()"
-            class="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
+            class="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
           >
             <Plus class="w-5 h-5 group-hover:rotate-90 transition-transform" />
             Add Question
@@ -708,7 +708,7 @@ const exportData = async () => {
                   </div>
                 </td>
                 <td class="px-6 py-4">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {{ question.category?.name }}
                   </span>
                 </td>
@@ -753,10 +753,10 @@ const exportData = async () => {
                 </td>
                 <td class="px-6 py-4">
                   <div v-if="question.depends_on_question" class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
-                    <span class="text-xs text-blue-600 font-medium">
+                    <span class="text-xs text-green-600 font-medium">
                       Conditional
                     </span>
                   </div>
@@ -768,7 +768,7 @@ const exportData = async () => {
                   <div class="flex gap-2">
                     <button
                       @click="openQuestionModal(question)"
-                      class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
+                      class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 cursor-pointer"
                       title="Edit Question"
                     >
                       <Edit class="w-4 h-4" />
@@ -796,7 +796,7 @@ const exportData = async () => {
           </p>
           <button
             @click="openQuestionModal()"
-            class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 cursor-pointer"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
             Create First Question
@@ -867,15 +867,15 @@ const exportData = async () => {
       <div v-if="analytics" class="space-y-6">
         <!-- Analytics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200">
+          <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200">
             <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-blue-900">Total Questions</h4>
-              <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <h4 class="text-sm font-semibold text-green-900">Total Questions</h4>
+              <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                 <FileCheck class="w-4 h-4 text-white" />
               </div>
             </div>
-            <p class="text-3xl font-bold text-blue-700">{{ analytics.total_questions }}</p>
-            <p class="text-xs text-blue-600 mt-1">Active survey questions</p>
+            <p class="text-3xl font-bold text-green-700">{{ analytics.total_questions }}</p>
+            <p class="text-xs text-green-600 mt-1">Active survey questions</p>
           </div>
           
           <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200">
@@ -934,7 +934,7 @@ const exportData = async () => {
 
       <!-- Loading Analytics -->
       <div v-else class="text-center py-12">
-        <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-green-200 border-t-green-600 mx-auto mb-4"></div>
         <p class="text-slate-600 font-medium">Loading analytics data...</p>
       </div>
     </div>
@@ -955,7 +955,7 @@ const exportData = async () => {
       >
         <div 
           :class="[
-            'bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-2xl select-none flex items-center justify-between',
+            'bg-gradient-to-r from-green-600 to-green-700 p-6 rounded-t-2xl select-none flex items-center justify-between',
             isDragging && draggedModal === 'category' ? 'cursor-grabbing' : 'cursor-move'
           ]"
           @mousedown="startDrag($event, 'category')"
@@ -965,13 +965,13 @@ const exportData = async () => {
               <Move class="w-5 h-5 opacity-70" />
               {{ categoryForm.id ? 'Edit Category' : 'Create New Category' }}
             </h3>
-            <p class="text-blue-100 text-sm mt-1">
+            <p class="text-green-100 text-sm mt-1">
               {{ categoryForm.id ? 'Update category information' : 'Add a new category for organizing questions' }}
             </p>
           </div>
           <button
             @click="resetModalPosition('category')"
-            class="text-blue-200 hover:text-white p-1 rounded transition-colors"
+            class="text-green-200 hover:text-white p-1 rounded transition-colors"
             title="Reset position"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1018,7 +1018,7 @@ const exportData = async () => {
             <input
               v-model="categoryForm.is_active"
               type="checkbox"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer"
+              class="h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded cursor-pointer"
             />
             <label class="ml-3 block text-sm font-medium text-slate-700 cursor-pointer">
               Active Category
@@ -1035,7 +1035,7 @@ const exportData = async () => {
             </button>
             <button
               type="submit"
-              class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg"
+              class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg"
             >
               {{ categoryForm.id ? 'Update Category' : 'Create Category' }}
             </button>
@@ -1060,7 +1060,7 @@ const exportData = async () => {
       >
         <div 
           :class="[
-            'bg-gradient-to-r from-blue-600 to-purple-600 p-6 select-none flex items-center justify-between',
+            'bg-gradient-to-r from-green-600 to-green-700 p-6 select-none flex items-center justify-between',
             isDragging && draggedModal === 'question' ? 'cursor-grabbing' : 'cursor-move'
           ]"
           @mousedown="startDrag($event, 'question')"
@@ -1070,13 +1070,13 @@ const exportData = async () => {
               <Move class="w-5 h-5 opacity-70" />
               {{ questionForm.id ? 'Edit Question' : 'Create New Question' }}
             </h3>
-            <p class="text-blue-100 text-sm mt-1">
+            <p class="text-green-100 text-sm mt-1">
               {{ questionForm.id ? 'Update question details and settings' : 'Add a new question to your survey' }}
             </p>
           </div>
           <button
             @click="resetModalPosition('question')"
-            class="text-blue-200 hover:text-white p-1 rounded transition-colors"
+            class="text-green-200 hover:text-white p-1 rounded transition-colors"
             title="Reset position"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1171,7 +1171,7 @@ const exportData = async () => {
               <button
                 type="button"
                 @click="addOption"
-                class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                class="flex items-center gap-2 px-4 py-2 text-sm text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
               >
                 <Plus class="w-4 h-4" />
                 Add Option
@@ -1201,14 +1201,14 @@ const exportData = async () => {
             </div>
 
             <!-- Conditional Logic Section -->
-            <div class="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 class="text-sm font-semibold text-blue-800 flex items-center gap-2">
+            <div class="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <h4 class="text-sm font-semibold text-green-800 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                 </svg>
                 Conditional Logic (Optional)
               </h4>
-              <p class="text-xs text-blue-600">
+              <p class="text-xs text-green-600">
                 Make this question appear only when another question has a specific answer.
               </p>
               
@@ -1251,7 +1251,7 @@ const exportData = async () => {
               <input
                 v-model="questionForm.is_required"
                 type="checkbox"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer"
+                class="h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded cursor-pointer"
               />
               <label class="ml-3 block text-sm font-medium text-slate-700 cursor-pointer">
                 Required Question
@@ -1262,7 +1262,7 @@ const exportData = async () => {
               <input
                 v-model="questionForm.is_active"
                 type="checkbox"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer"
+                class="h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded cursor-pointer"
               />
               <label class="ml-3 block text-sm font-medium text-slate-700 cursor-pointer">
                 Active Question
@@ -1280,7 +1280,7 @@ const exportData = async () => {
             </button>
             <button
               type="submit"
-              class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg"
+              class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg"
             >
               {{ questionForm.id ? 'Update Question' : 'Create Question' }}
             </button>
@@ -1330,17 +1330,17 @@ const exportData = async () => {
         
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 cursor-default">
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 cursor-default">
               <div class="flex items-center justify-between mb-3">
-                <h4 class="text-sm font-semibold text-blue-900">Total Questions</h4>
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <h4 class="text-sm font-semibold text-green-900">Total Questions</h4>
+                <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                   <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                 </div>
               </div>
-              <p class="text-3xl font-bold text-blue-700">{{ analytics.total_questions }}</p>
-              <p class="text-xs text-blue-600 mt-1">Active survey questions</p>
+              <p class="text-3xl font-bold text-green-700">{{ analytics.total_questions }}</p>
+              <p class="text-xs text-green-600 mt-1">Active survey questions</p>
             </div>
             
             <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 cursor-default">
@@ -1528,7 +1528,7 @@ const exportData = async () => {
       >
           <div 
             :class="[
-              'bg-gradient-to-r from-indigo-600 to-purple-600 p-6 select-none flex items-center justify-between',
+              'bg-gradient-to-r from-green-600 to-green-700 p-6 select-none flex items-center justify-between',
               isDragging && draggedModal === 'categoryQuestions' ? 'cursor-grabbing' : 'cursor-move'
             ]"
             @mousedown="startDrag($event, 'categoryQuestions')"
@@ -1586,7 +1586,7 @@ const exportData = async () => {
                     </div>
                   </td>
                   <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       {{ questionTypes.find(t => t.value === question.question_type)?.label }}
                     </span>
                   </td>
@@ -1628,7 +1628,7 @@ const exportData = async () => {
                     <div class="flex gap-2">
                       <button
                         @click="openQuestionModal(question)"
-                        class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
+                        class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 cursor-pointer"
                         title="Edit Question"
                       >
                         <Edit class="w-4 h-4" />
@@ -1656,7 +1656,7 @@ const exportData = async () => {
             </p>
             <button
               @click="openQuestionModal(); showCategoryQuestionsModal = false"
-              class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 cursor-pointer"
+              class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 cursor-pointer"
             >
               <Plus class="w-4 h-4" />
               Create First Question
