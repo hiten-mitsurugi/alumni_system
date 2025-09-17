@@ -13,7 +13,6 @@ const error = ref('');
 const currentYear = computed(() => new Date().getFullYear());
 
 const validateName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*(?: (Sr|Jr)\.?)?$/.test(name.trim());
-const validateSchoolId = (id) => /^\d{3}-\d{5}$/.test(id);
 const validateYear = (year) => /^\d{4}$/.test(year);
 
 const validateFields = () => {
@@ -21,11 +20,10 @@ const validateFields = () => {
     !validateName(localForm.first_name) ||
     !validateName(localForm.last_name) ||
     (localForm.middle_name && !validateName(localForm.middle_name)) ||
-    !validateSchoolId(localForm.school_id) ||
     !localForm.program ||
     !localForm.birth_date ||
     !validateYear(localForm.year_graduated) ||
-    !localForm.gender
+    !localForm.sex
   ) {
     return false;
   }
@@ -43,11 +41,10 @@ const checkDirectory = async () => {
       first_name: localForm.first_name,
       middle_name: localForm.middle_name,
       last_name: localForm.last_name,
-      school_id: localForm.school_id,
       program: localForm.program,
       birth_date: localForm.birth_date,
       year_graduated: localForm.year_graduated,
-      gender: localForm.gender,
+      sex: localForm.sex,
     });
     if (response.data.exists) {
       emit('verified');
@@ -76,11 +73,6 @@ const checkDirectory = async () => {
       <div>
         <label class="block text-sm font-medium text-gray-700">Last Name</label>
         <input v-model="localForm.last_name" type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          @input="emit('update:form', localForm)" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">School ID</label>
-        <input v-model="localForm.school_id" type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
           @input="emit('update:form', localForm)" />
       </div>
       <div>
@@ -145,8 +137,9 @@ const checkDirectory = async () => {
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Sex</label>
-        <select v-model="localForm.gender" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+        <select v-model="localForm.sex" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
           @change="emit('update:form', localForm)">
+          <option value="">Select Sex</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
         </select>

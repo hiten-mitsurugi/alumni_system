@@ -29,55 +29,129 @@ class CustomUser(AbstractUser):
     )
 
     user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=3)
-    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True, null=True)
+    sex = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True, null=True)
     civil_status = models.CharField(max_length=20, choices=CIVIL_STATUS_CHOICES, blank=True, null=True)
     employment_status = models.CharField(max_length=100, choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
     is_approved = models.BooleanField(default=False)
     email = models.EmailField(_('email address'), unique=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     middle_name = models.CharField(max_length=150, blank=True, null=True)
-    school_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     government_id = models.FileField(upload_to='government_ids/', null=True, blank=True)
     program = models.CharField(max_length=100, blank=True, null=True)
     contact_number = models.CharField(max_length=20, blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
     year_graduated = models.PositiveIntegerField(blank=True, null=True)
+    
+    # Legacy address fields (keep for backward compatibility)
     present_address = models.TextField(blank=True, null=True)
     permanent_address = models.TextField(blank=True, null=True)
+    
+    # Present Address - Structured Fields
+    present_address_type = models.CharField(max_length=20, choices=[('philippines', 'Philippines'), ('international', 'International')], default='philippines', blank=True)
+    present_region_code = models.CharField(max_length=10, blank=True, null=True)
+    present_region_name = models.CharField(max_length=100, blank=True, null=True)
+    present_province_code = models.CharField(max_length=10, blank=True, null=True)
+    present_province_name = models.CharField(max_length=100, blank=True, null=True)
+    present_city_code = models.CharField(max_length=10, blank=True, null=True)
+    present_city_name = models.CharField(max_length=100, blank=True, null=True)
+    present_barangay = models.CharField(max_length=100, blank=True, null=True)
+    present_street_address = models.CharField(max_length=255, blank=True, null=True)
+    present_postal_code = models.CharField(max_length=10, blank=True, null=True)
+    present_country = models.CharField(max_length=100, blank=True, null=True)
+    present_full_address = models.TextField(blank=True, null=True)
+    
+    # Permanent Address - Structured Fields
+    permanent_address_type = models.CharField(max_length=20, choices=[('philippines', 'Philippines'), ('international', 'International')], default='philippines', blank=True)
+    permanent_region_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_region_name = models.CharField(max_length=100, blank=True, null=True)
+    permanent_province_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_province_name = models.CharField(max_length=100, blank=True, null=True)
+    permanent_city_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_city_name = models.CharField(max_length=100, blank=True, null=True)
+    permanent_barangay = models.CharField(max_length=100, blank=True, null=True)
+    permanent_street_address = models.CharField(max_length=255, blank=True, null=True)
+    permanent_postal_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_country = models.CharField(max_length=100, blank=True, null=True)
+    permanent_full_address = models.TextField(blank=True, null=True)
+    
     mothers_name = models.CharField(max_length=150, blank=True, null=True)
     mothers_occupation = models.CharField(max_length=100, blank=True, null=True)
     fathers_name = models.CharField(max_length=150, blank=True, null=True)
     fathers_occupation = models.CharField(max_length=100, blank=True, null=True)
 
-    REQUIRED_FIELDS = ['email', 'school_id', 'first_name', 'last_name', 'password', 'program']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'password', 'program', 'birth_date', 'year_graduated']
 
     class Meta:
         indexes = [
             models.Index(fields=['user_type', 'is_approved']),
-            models.Index(fields=['school_id']),
+            models.Index(fields=['first_name', 'last_name', 'birth_date', 'program', 'year_graduated']),
         ]
 
     def __str__(self):
         return self.username
+    
+    def get_formatted_present_address(self):
+        """Get formatted present address for display"""
+        if self.present_address_type == 'philippines':
+            parts = []
+            if self.present_street_address:
+                parts.append(self.present_street_address)
+            if self.present_barangay:
+                parts.append(f"Brgy. {self.present_barangay}")
+            if self.present_city_name:
+                parts.append(self.present_city_name)
+            if self.present_province_name:
+                parts.append(self.present_province_name)
+            if self.present_region_name:
+                parts.append(self.present_region_name)
+            if self.present_postal_code:
+                parts.append(self.present_postal_code)
+            return ", ".join(parts) if parts else self.present_address or ''
+        elif self.present_address_type == 'international':
+            if self.present_full_address and self.present_country:
+                return f"{self.present_full_address}, {self.present_country}"
+            return self.present_address or ''
+        return self.present_address or ''
+    
+    def get_formatted_permanent_address(self):
+        """Get formatted permanent address for display"""
+        if self.permanent_address_type == 'philippines':
+            parts = []
+            if self.permanent_street_address:
+                parts.append(self.permanent_street_address)
+            if self.permanent_barangay:
+                parts.append(f"Brgy. {self.permanent_barangay}")
+            if self.permanent_city_name:
+                parts.append(self.permanent_city_name)
+            if self.permanent_province_name:
+                parts.append(self.permanent_province_name)
+            if self.permanent_region_name:
+                parts.append(self.permanent_region_name)
+            if self.permanent_postal_code:
+                parts.append(self.permanent_postal_code)
+            return ", ".join(parts) if parts else self.permanent_address or ''
+        elif self.permanent_address_type == 'international':
+            if self.permanent_full_address and self.permanent_country:
+                return f"{self.permanent_full_address}, {self.permanent_country}"
+            return self.permanent_address or ''
+        return self.permanent_address or ''
 
 class AlumniDirectory(models.Model):
     first_name = models.CharField(max_length=150)
     middle_name = models.CharField(max_length=150, blank=True, null=True)
     last_name = models.CharField(max_length=150)
     birth_date = models.DateField()
-    school_id = models.CharField(max_length=50, unique=True)
     program = models.CharField(max_length=100)
     year_graduated = models.PositiveIntegerField()
-    gender = models.CharField(max_length=20, choices=CustomUser.GENDER_CHOICES)
+    sex = models.CharField(max_length=20, choices=CustomUser.GENDER_CHOICES)
 
     class Meta:
         indexes = [
-            models.Index(fields=['school_id']),
-            models.Index(fields=['first_name', 'last_name']),
+            models.Index(fields=['first_name', 'last_name', 'birth_date', 'program', 'year_graduated']),
         ]
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.school_id})"
+        return f"{self.first_name} {self.last_name} ({self.program} - {self.year_graduated})"
 
 class Skill(models.Model):
     name = models.CharField(max_length=100, unique=True, db_index=True)
@@ -184,13 +258,43 @@ class Profile(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     full_name = models.CharField(max_length=450)
     email_address = models.EmailField()
-    school_id = models.CharField(max_length=50)
     mobile_number = models.CharField(max_length=20)
     sex = models.CharField(max_length=20, choices=CustomUser.GENDER_CHOICES)
     civil_status = models.CharField(max_length=20, choices=CustomUser.CIVIL_STATUS_CHOICES)
     year_of_birth = models.DateField()
+    
+    # Legacy address fields (keep for backward compatibility)
     present_address = models.TextField()
     permanent_address = models.TextField()
+    
+    # Present Address - Structured Fields
+    present_address_type = models.CharField(max_length=20, choices=[('philippines', 'Philippines'), ('international', 'International')], default='philippines', blank=True)
+    present_region_code = models.CharField(max_length=10, blank=True, null=True)
+    present_region_name = models.CharField(max_length=100, blank=True, null=True)
+    present_province_code = models.CharField(max_length=10, blank=True, null=True)
+    present_province_name = models.CharField(max_length=100, blank=True, null=True)
+    present_city_code = models.CharField(max_length=10, blank=True, null=True)
+    present_city_name = models.CharField(max_length=100, blank=True, null=True)
+    present_barangay = models.CharField(max_length=100, blank=True, null=True)
+    present_street_address = models.CharField(max_length=255, blank=True, null=True)
+    present_postal_code = models.CharField(max_length=10, blank=True, null=True)
+    present_country = models.CharField(max_length=100, blank=True, null=True)
+    present_full_address_international = models.TextField(blank=True, null=True)
+    
+    # Permanent Address - Structured Fields
+    permanent_address_type = models.CharField(max_length=20, choices=[('philippines', 'Philippines'), ('international', 'International')], default='philippines', blank=True)
+    permanent_region_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_region_name = models.CharField(max_length=100, blank=True, null=True)
+    permanent_province_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_province_name = models.CharField(max_length=100, blank=True, null=True)
+    permanent_city_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_city_name = models.CharField(max_length=100, blank=True, null=True)
+    permanent_barangay = models.CharField(max_length=100, blank=True, null=True)
+    permanent_street_address = models.CharField(max_length=255, blank=True, null=True)
+    permanent_postal_code = models.CharField(max_length=10, blank=True, null=True)
+    permanent_country = models.CharField(max_length=100, blank=True, null=True)
+    permanent_full_address_international = models.TextField(blank=True, null=True)
+    
     mothers_name = models.CharField(max_length=150)
     mothers_occupation = models.CharField(max_length=100)
     fathers_name = models.CharField(max_length=150)
@@ -250,13 +354,42 @@ class Profile(models.Model):
     def save(self, *args, **kwargs):
         self.full_name = f"{self.user.first_name} {self.user.middle_name or ''} {self.user.last_name}".strip()
         self.email_address = self.user.email
-        self.school_id = self.user.school_id
         self.mobile_number = self.user.contact_number
-        self.sex = self.user.gender
+        self.sex = self.user.sex
         self.civil_status = self.user.civil_status
         self.year_of_birth = self.user.birth_date
-        self.present_address = self.user.present_address
-        self.permanent_address = self.user.permanent_address
+        
+        # Sync address fields
+        self.present_address = self.user.get_formatted_present_address()
+        self.permanent_address = self.user.get_formatted_permanent_address()
+        
+        # Sync structured address fields
+        self.present_address_type = self.user.present_address_type
+        self.present_region_code = self.user.present_region_code
+        self.present_region_name = self.user.present_region_name
+        self.present_province_code = self.user.present_province_code
+        self.present_province_name = self.user.present_province_name
+        self.present_city_code = self.user.present_city_code
+        self.present_city_name = self.user.present_city_name
+        self.present_barangay = self.user.present_barangay
+        self.present_street_address = self.user.present_street_address
+        self.present_postal_code = self.user.present_postal_code
+        self.present_country = self.user.present_country
+        self.present_full_address_international = self.user.present_full_address
+        
+        self.permanent_address_type = self.user.permanent_address_type
+        self.permanent_region_code = self.user.permanent_region_code
+        self.permanent_region_name = self.user.permanent_region_name
+        self.permanent_province_code = self.user.permanent_province_code
+        self.permanent_province_name = self.user.permanent_province_name
+        self.permanent_city_code = self.user.permanent_city_code
+        self.permanent_city_name = self.user.permanent_city_name
+        self.permanent_barangay = self.user.permanent_barangay
+        self.permanent_street_address = self.user.permanent_street_address
+        self.permanent_postal_code = self.user.permanent_postal_code
+        self.permanent_country = self.user.permanent_country
+        self.permanent_full_address_international = self.user.permanent_full_address
+        
         self.mothers_name = self.user.mothers_name
         self.mothers_occupation = self.user.mothers_occupation
         self.fathers_name = self.user.fathers_name

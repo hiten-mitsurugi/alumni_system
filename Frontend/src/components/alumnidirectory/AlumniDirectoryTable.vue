@@ -20,7 +20,7 @@ const sortBy = ref('last_name');
 const sortOrder = ref('asc');
 const selectedProgram = ref('');
 const selectedYear = ref('');
-const selectedGender = ref('');
+const selectedSex = ref('');
 
 // Dropdown and selection state
 const showFilterDropdown = ref(false);
@@ -107,9 +107,9 @@ const filteredAlumni = computed(() => {
     filtered = filtered.filter(person => person.year_graduated === yearToFilter);
   }
 
-  // Gender filter
-  if (selectedGender.value) {
-    filtered = filtered.filter(person => person.gender === selectedGender.value);
+  // Sex filter
+  if (selectedSex.value) {
+    filtered = filtered.filter(person => person.sex === selectedSex.value);
   }
   
   // Sort filtered results
@@ -212,7 +212,7 @@ const clearFilters = () => {
   searchQuery.value = '';
   selectedProgram.value = '';
   selectedYear.value = '';
-  selectedGender.value = '';
+  selectedSex.value = '';
   currentPage.value = 1; // Reset to first page when filters are cleared
 };
 
@@ -307,7 +307,7 @@ const nextPage = () => {
 };
 
 // Watch for filter changes to reset pagination
-watch([searchQuery, selectedProgram, selectedYear, selectedGender], () => {
+watch([searchQuery, selectedProgram, selectedYear, selectedSex], () => {
   currentPage.value = 1;
 });
 
@@ -428,14 +428,14 @@ onMounted(() => {
                       />
                     </div>
 
-                    <!-- Gender Filter -->
+                    <!-- Sex Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Gender</label>
+                      <label class="text-sm font-medium text-gray-700 mb-1 block">Sex</label>
                       <select
-                        v-model="selectedGender"
+                        v-model="selectedSex"
                         class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 hover:bg-green-200 transition-colors duration-200"
                       >
-                        <option value="">All Genders</option>
+                        <option value="">All</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="prefer_not_to_say">Prefer not to say</option>
@@ -539,17 +539,6 @@ onMounted(() => {
                 />
               </th>
               <th 
-                @click="sortTable('school_id')"
-                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
-              >
-                <div class="flex items-center space-x-1">
-                  <span>School ID</span>
-                  <svg v-if="sortBy === 'school_id'" class="w-4 h-4" :class="{ 'transform rotate-180': sortOrder === 'desc' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                  </svg>
-                </div>
-              </th>
-              <th 
                 @click="sortTable('last_name')"
                 class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
               >
@@ -586,7 +575,7 @@ onMounted(() => {
                 Birth Date
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Gender
+                Sex
               </th>
             </tr>
           </thead>
@@ -604,11 +593,6 @@ onMounted(() => {
                   @change="toggleAlumniSelection(person.id)"
                   class="w-4 h-4 accent-green-600 border-gray-300 rounded focus:ring-green-500"
                 />
-              </td>
-
-              <!-- School ID -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ person.school_id }}</div>
               </td>
 
               <!-- Full Name -->
@@ -637,23 +621,23 @@ onMounted(() => {
                 </div>
               </td>
 
-              <!-- Gender -->
+              <!-- Sex -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
                   :class="{
-                    'bg-blue-100 text-blue-800': person.gender === 'male',
-                    'bg-pink-100 text-pink-800': person.gender === 'female',
-                    'bg-gray-100 text-gray-800': person.gender === 'prefer_not_to_say'
+                    'bg-blue-100 text-blue-800': person.sex === 'male',
+                    'bg-pink-100 text-pink-800': person.sex === 'female',
+                    'bg-gray-100 text-gray-800': person.sex === 'prefer_not_to_say'
                   }"
                 >
-                  {{ person.gender === 'male' ? 'Male' : person.gender === 'female' ? 'Female' : person.gender === 'prefer_not_to_say' ? 'Prefer not to say' : person.gender }}
+                  {{ person.sex === 'male' ? 'Male' : person.sex === 'female' ? 'Female' : person.sex === 'prefer_not_to_say' ? 'Prefer not to say' : person.sex }}
                 </span>
               </td>
             </tr>
 
             <tr v-if="paginatedAlumni.length === 0 && filteredAlumni.length === 0">
-              <td colspan="7" class="px-6 py-12 text-center">
+              <td colspan="6" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m0 0V9a2 2 0 012-2h2m0 0V6a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414A1 1 0 0016 7.414V9a2 2 0 012 2v2m0 0v2a2 2 0 01-2 2h-2m0 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v10.586a1 1 0 001.707.707l2.414-2.414A1 1 0 0012.586 17H15a2 2 0 002-2v-2z" />

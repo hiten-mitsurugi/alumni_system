@@ -51,15 +51,15 @@
                       </select>
                     </div>
 
-                    <!-- Gender Filter -->
+                    <!-- Sex Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Gender</label>
-                      <select v-model="internalFilters.gender" @change="applyFilters"
+                      <label class="text-sm font-medium text-gray-700 mb-1 block">Sex</label>
+                      <select v-model="internalFilters.sex" @change="applyFilters"
                         class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
                         <option value="">All</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Prefer not to say">Prefer not to say</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="prefer_not_to_say">Prefer not to say</option>
                       </select>
                     </div>
 
@@ -168,7 +168,7 @@
               <th class="p-4">Profile</th>
               <th class="p-4">First Name</th>
               <th class="p-4">Last Name</th>
-              <th class="p-4">Gender</th>
+              <th class="p-4">Sex</th>
               <th class="p-4">Program</th>
               <th class="p-4">Year</th>
               <th class="p-4">Employment</th>
@@ -190,7 +190,7 @@
               </td>
               <td class="p-4">{{ user.first_name }}</td>
               <td class="p-4">{{ user.last_name }}</td>
-              <td class="p-4">{{ user.gender || 'N/A' }}</td>
+              <td class="p-4">{{ user.sex || 'N/A' }}</td>
               <td class="p-4">{{ user.program }}</td>
               <td class="p-4">{{ user.year_graduated }}</td>
               <td class="p-4">{{ formatEmployment(user.employment_status) }}</td>
@@ -282,7 +282,7 @@ const internalFilters = ref({
   year_graduated: '',
   program: '',
   status: '',
-  gender: ''
+  sex: ''
 });
 
 // Data for filter dropdowns

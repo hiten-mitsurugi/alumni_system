@@ -39,6 +39,8 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        import json
+        
         # Add detailed logging for debugging
         logger.info("=== REGISTRATION ATTEMPT ===")
         logger.info(f"Request data keys: {list(request.data.keys())}")
@@ -49,7 +51,25 @@ class RegisterView(APIView):
         logger.info(f"Gender: {request.data.get('gender')}")
         logger.info(f"Civil status: {request.data.get('civil_status')}")
         
-        serializer = RegisterSerializer(data=request.data)
+        # Parse JSON fields from FormData
+        data = request.data.copy()
+        
+        # Parse address data if present
+        if 'present_address_data' in data and isinstance(data['present_address_data'], str):
+            try:
+                data['present_address_data'] = json.loads(data['present_address_data'])
+                logger.info(f"Parsed present_address_data: {data['present_address_data']}")
+            except json.JSONDecodeError:
+                logger.error("Failed to parse present_address_data JSON")
+                
+        if 'permanent_address_data' in data and isinstance(data['permanent_address_data'], str):
+            try:
+                data['permanent_address_data'] = json.loads(data['permanent_address_data'])
+                logger.info(f"Parsed permanent_address_data: {data['permanent_address_data']}")
+            except json.JSONDecodeError:
+                logger.error("Failed to parse permanent_address_data JSON")
+        
+        serializer = RegisterSerializer(data=data)
 
         if serializer.is_valid():
             try:
@@ -313,7 +333,7 @@ class ApprovedAlumniListView(ListAPIView):
         if employment_status:
             queryset = queryset.filter(employment_status__iexact=employment_status)
         if gender:
-            queryset = queryset.filter(gender__iexact=gender)
+            queryset = queryset.filter(sex__iexact=gender)
         if year_graduated:
             queryset = queryset.filter(year_graduated=year_graduated)
         if program:
@@ -327,7 +347,7 @@ class ApprovedAlumniListView(ListAPIView):
             queryset = queryset.filter(
                 Q(first_name__icontains=search) |
                 Q(last_name__icontains=search) |
-                Q(school_id__icontains=search)
+                Q(email__icontains=search)
             )
         
         logger.info(f"ApprovedAlumniListView: Final queryset count after filters: {queryset.count()}")
@@ -1016,7 +1036,7 @@ class AlumniDirectoryImportView(APIView):
                 )
             
             # Validate required columns
-            required_columns = ['first_name', 'last_name', 'birth_date', 'school_id', 'program', 'year_graduated', 'gender']
+            required_columns = ['first_name', 'last_name', 'birth_date', 'program', 'year_graduated', 'sex']
             missing_columns = [col for col in required_columns if col not in df.columns]
             
             if missing_columns:
@@ -1075,12 +1095,11 @@ class AlumniDirectoryImportView(APIView):
                         first_name = str(row['first_name']).strip()
                         middle_name = str(row.get('middle_name', '')).strip() if pd.notna(row.get('middle_name', '')) else ''
                         last_name = str(row['last_name']).strip()
-                        school_id = str(row['school_id']).strip()
                         program = str(row['program']).strip()
-                        gender = str(row['gender']).strip().lower()
+                        sex = str(row['sex']).strip().lower()
                         
                         # Validate required fields
-                        if not first_name or not last_name or not school_id:
+                        if not first_name or not last_name:
                             errors.append(f'Row {index + 2}: Missing required fields')
                             error_count += 1
                             continue
@@ -1091,9 +1110,9 @@ class AlumniDirectoryImportView(APIView):
                             error_count += 1
                             continue
                         
-                        # Validate gender
-                        if gender not in ['male', 'female', 'prefer_not_to_say']:
-                            errors.append(f'Row {index + 2}: Gender must be male, female, or prefer_not_to_say')
+                        # Validate sex
+                        if sex not in ['male', 'female', 'prefer_not_to_say']:
+                            errors.append(f'Row {index + 2}: Sex must be male, female, or prefer_not_to_say')
                             error_count += 1
                             continue
                         
@@ -1122,9 +1141,15 @@ class AlumniDirectoryImportView(APIView):
                             error_count += 1
                             continue
                         
-                        # Check for duplicates by school_id
-                        if AlumniDirectory.objects.filter(school_id=school_id).exists():
-                            errors.append(f'Row {index + 2}: School ID "{school_id}" already exists')
+                        # Check for duplicates by combination of fields (since school_id is removed)
+                        if AlumniDirectory.objects.filter(
+                            first_name__iexact=first_name,
+                            last_name__iexact=last_name,
+                            birth_date=birth_date,
+                            program__iexact=program,
+                            year_graduated=year_graduated
+                        ).exists():
+                            errors.append(f'Row {index + 2}: Alumni record with same details already exists')
                             error_count += 1
                             continue
                         
@@ -1134,10 +1159,9 @@ class AlumniDirectoryImportView(APIView):
                             middle_name=middle_name,
                             last_name=last_name,
                             birth_date=birth_date,
-                            school_id=school_id,
                             program=program,
                             year_graduated=year_graduated,
-                            gender=gender
+                            sex=sex
                         )
                         
                         success_count += 1

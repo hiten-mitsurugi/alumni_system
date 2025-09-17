@@ -7,7 +7,25 @@ const auth = useAuthStore();
 const emit = defineEmits(['created', 'close']);
 
 const loading = ref(false);
-const errors = reactive({});
+const errors = reactive({
+  first_name: '',
+  middle_name: '',
+  last_name: '',
+  email: '',
+  password: '',
+  government_id: '',
+  program: '',
+  address: '',
+  birth_date: '',
+  year_graduated: '',
+  employment_status: '',
+  civil_status: '',
+  sex: '',
+  profile_picture: '',
+  contact_number: '',
+  server: '',
+  general: ''
+});
 
 const form = reactive({
   first_name: '',
@@ -15,7 +33,6 @@ const form = reactive({
   last_name: '',
   email: '',
   password: '',
-  school_id: '',
   government_id: null,
   program: '',
   address: '',
@@ -23,18 +40,17 @@ const form = reactive({
   year_graduated: '',
   employment_status: '',
   civil_status: '',
-  gender: '',
+  sex: '',
   profile_picture: null,
   user_type: 3,
   is_approved: false,
   contact_number: ''
 });
 
-const validateName = (name) => /^[A-Za-z]+$/.test(name);
+const validateName = (name) => /^[A-Za-z\s]+$/.test(name);
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validatePassword = (password) =>
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
-const validateSchoolId = (id) => /^\d{3}-\d{5}$/.test(id);
 const validatePhoneNumber = (num) => /^\d{11}$/.test(num);
 
 const clearErrors = () => {
@@ -48,13 +64,11 @@ const handleSubmit = async () => {
   clearErrors();
 
   let hasError = false;
-  const requiredFields = [
-    'first_name', 'last_name', 'email', 'password', 'school_id', 'program',
-    'address', 'birth_date', 'year_graduated', 'employment_status',
-    'civil_status', 'gender', 'contact_number'
-  ];
-
-  for (const field of requiredFields) {
+const requiredFields = [
+  'first_name', 'last_name', 'email', 'password', 
+  'program', 'address', 'birth_date', 'year_graduated', 
+  'employment_status', 'civil_status', 'sex', 'contact_number'
+];  for (const field of requiredFields) {
     if (!form[field]) {
       errors[field] = 'This field is required.';
       hasError = true;
@@ -62,15 +76,15 @@ const handleSubmit = async () => {
   }
 
   if (form.middle_name && !validateName(form.middle_name)) {
-    errors.middle_name = 'Middle name must contain only letters.';
+    errors.middle_name = 'Middle name must contain only letters and spaces.';
     hasError = true;
   }
   if (form.first_name && !validateName(form.first_name)) {
-    errors.first_name = 'First name must contain only letters.';
+    errors.first_name = 'First name must contain only letters and spaces.';
     hasError = true;
   }
   if (form.last_name && !validateName(form.last_name)) {
-    errors.last_name = 'Last name must contain only letters.';
+    errors.last_name = 'Last name must contain only letters and spaces.';
     hasError = true;
   }
   if (form.email && !validateEmail(form.email)) {
@@ -83,10 +97,6 @@ const handleSubmit = async () => {
   }
   if (form.password && !validatePassword(form.password)) {
     errors.password = 'Password must have 8+ characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character.';
-    hasError = true;
-  }
-  if (form.school_id && !validateSchoolId(form.school_id)) {
-    errors.school_id = 'School ID must follow format 123-45678.';
     hasError = true;
   }
   if (form.government_id && !['image/jpeg', 'image/jpg', 'image/png'].includes(form.government_id.type)) {
@@ -150,7 +160,7 @@ const handleSubmit = async () => {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Middle Name (Optional)</label>
           <input v-model="form.middle_name" type="text" class="w-full border rounded-lg px-4 py-2" />
           <p v-if="errors.middle_name" class="text-red-600 text-sm mt-1">{{ errors.middle_name }}</p>
         </div>
@@ -171,12 +181,6 @@ const handleSubmit = async () => {
           <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
           <input v-model="form.password" type="password" class="w-full border rounded-lg px-4 py-2" />
           <p v-if="errors.password" class="text-red-600 text-sm mt-1">{{ errors.password }}</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">School ID</label>
-          <input v-model="form.school_id" type="text" class="w-full border rounded-lg px-4 py-2" />
-          <p v-if="errors.school_id" class="text-red-600 text-sm mt-1">{{ errors.school_id }}</p>
         </div>
 
         <div>
@@ -237,22 +241,27 @@ const handleSubmit = async () => {
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
           <input v-model="form.birth_date" type="date" class="w-full border rounded-lg px-4 py-2" />
+          <p v-if="errors.birth_date" class="text-red-600 text-sm mt-1">{{ errors.birth_date }}</p>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Year Graduated</label>
-          <input v-model="form.year_graduated" type="number" class="w-full border rounded-lg px-4 py-2" />
+          <input v-model="form.year_graduated" type="number" min="1990" max="2030" class="w-full border rounded-lg px-4 py-2" />
+          <p v-if="errors.year_graduated" class="text-red-600 text-sm mt-1">{{ errors.year_graduated }}</p>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Employment Status</label>
           <select v-model="form.employment_status" class="w-full border rounded-lg px-4 py-2">
             <option value="" disabled>Select Status</option>
-            <option value="employed locally">Employed Locally</option>
-            <option value="employed internationally">Employed Internationally</option>
-            <option value="self-employed">Self-Employed</option>
+            <option value="employed_locally">Employed Locally</option>
+            <option value="employed_abroad">Employed Abroad</option>
+            <option value="self_employed">Self-Employed</option>
             <option value="unemployed">Unemployed</option>
+            <option value="student">Student</option>
+            <option value="retired">Retired</option>
           </select>
+          <p v-if="errors.employment_status" class="text-red-600 text-sm mt-1">{{ errors.employment_status }}</p>
         </div>
 
         <div>
@@ -261,18 +270,22 @@ const handleSubmit = async () => {
             <option value="" disabled>Select Civil Status</option>
             <option value="single">Single</option>
             <option value="married">Married</option>
-            <option value="widow">Widow</option>
+            <option value="divorced">Divorced</option>
+            <option value="widowed">Widowed</option>
+            <option value="separated">Separated</option>
           </select>
+          <p v-if="errors.civil_status" class="text-red-600 text-sm mt-1">{{ errors.civil_status }}</p>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-          <select v-model="form.gender" class="w-full border rounded-lg px-4 py-2">
-            <option value="" disabled>Select Gender</option>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Sex</label>
+          <select v-model="form.sex" class="w-full border rounded-lg px-4 py-2">
+            <option value="" disabled>Select Sex</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
-            <option value="prefer not to say">Prefer not to say</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
           </select>
+          <p v-if="errors.sex" class="text-red-600 text-sm mt-1">{{ errors.sex }}</p>
         </div>
 
         <div>
@@ -302,7 +315,7 @@ const handleSubmit = async () => {
 
         <div class="sm:col-span-2 flex justify-end mt-6">
           <button type="submit" :disabled="loading"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md disabled:opacity-50">
+            class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2 px-6 rounded-lg shadow-md disabled:opacity-50 transition-all duration-200">
             {{ loading ? 'Creating...' : 'Create User' }}
           </button>
         </div>

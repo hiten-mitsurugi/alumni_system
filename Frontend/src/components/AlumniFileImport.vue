@@ -10,7 +10,7 @@
       @dragleave="handleDragLeave"
       :class="[
         'border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-200 cursor-pointer',
-        isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50',
+        isDragging ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50',
         isUploading ? 'pointer-events-none opacity-50' : ''
       ]"
       @click="triggerFileInput"
@@ -44,7 +44,7 @@
         <div class="flex justify-center space-x-4">
           <button
             @click.stop="uploadFile"
-            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            class="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-all duration-200"
           >
             Upload File
           </button>
@@ -58,11 +58,11 @@
       </div>
       
       <div v-else-if="isUploading" class="space-y-4">
-        <div class="animate-spin mx-auto h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+        <div class="animate-spin mx-auto h-12 w-12 border-4 border-green-600 border-t-transparent rounded-full"></div>
         <p class="text-lg text-gray-600">Uploading and processing file...</p>
         <div class="w-full bg-gray-200 rounded-full h-2">
           <div 
-            class="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+            class="bg-green-600 h-2 rounded-full transition-all duration-300 ease-out"
             :style="{ width: uploadProgress + '%' }"
           ></div>
         </div>
@@ -135,7 +135,7 @@
         <button
           v-if="uploadResult.success_count > 0"
           @click="$emit('import-completed')"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          class="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-all duration-200"
         >
           Refresh Alumni List
         </button>
@@ -150,14 +150,13 @@
         <div>• first_name</div>
         <div>• last_name</div>
         <div>• birth_date (YYYY-MM-DD)</div>
-        <div>• school_id</div>
         <div>• program</div>
         <div>• year_graduated</div>
-        <div>• gender (male or female)</div>
+        <div>• sex (male or female)</div>
         <div>• middle_name (optional)</div>
       </div>
       <div class="mt-3 p-2 bg-blue-100 rounded text-sm text-blue-800">
-        <strong>Gender values must be exactly:</strong> "male", "female", or "prefer_not_to_say"
+        <strong>Sex values must be exactly:</strong> "male" or "female"
       </div>
       <div class="mt-3 flex space-x-4">
         <a

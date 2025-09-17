@@ -66,6 +66,41 @@
           </div>
         </div>
 
+        <!-- Address Information -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-medium text-gray-900">Address Information</h3>
+          
+          <!-- Present Address -->
+          <div>
+            <h4 class="text-md font-medium text-gray-700 mb-3">Present Address</h4>
+            <AddressSelector 
+              v-model="formData.present_address_data"
+              label="Present Address"
+            />
+          </div>
+
+          <!-- Permanent Address -->
+          <div>
+            <h4 class="text-md font-medium text-gray-700 mb-3">Permanent Address</h4>
+            <div class="mb-3">
+              <label class="flex items-center">
+                <input 
+                  v-model="formData.same_as_present"
+                  type="checkbox"
+                  class="text-green-600 focus:ring-green-500 rounded"
+                />
+                <span class="ml-2 text-sm text-gray-700">Same as present address</span>
+              </label>
+            </div>
+            <div v-if="!formData.same_as_present">
+              <AddressSelector 
+                v-model="formData.permanent_address_data"
+                label="Permanent Address"
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- Social Links -->
         <div class="space-y-4">
           <h3 class="text-lg font-medium text-gray-900">Social Links</h3>
@@ -232,7 +267,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
+import AddressSelector from '@/components/common/AddressSelector.vue'
 
 const props = defineProps({
   profile: Object
@@ -253,14 +289,65 @@ const formData = reactive({
   instagram_url: '',
   profile_visibility: 'public',
   allow_contact: true,
-  allow_messaging: true
+  allow_messaging: true,
+  // Address fields
+  present_address_data: {
+    address_type: 'philippines',
+    region_code: '',
+    region_name: '',
+    province_code: '',
+    province_name: '',
+    city_code: '',
+    city_name: '',
+    barangay: '',
+    street_address: '',
+    postal_code: '',
+    country: '',
+    full_address: ''
+  },
+  permanent_address_data: {
+    address_type: 'philippines',
+    region_code: '',
+    region_name: '',
+    province_code: '',
+    province_name: '',
+    city_code: '',
+    city_name: '',
+    barangay: '',
+    street_address: '',
+    postal_code: '',
+    country: '',
+    full_address: ''
+  },
+  same_as_present: false
 })
+
+// Watch for "same as present address" checkbox
+watch(() => formData.same_as_present, (newValue) => {
+  if (newValue) {
+    Object.assign(formData.permanent_address_data, formData.present_address_data);
+  }
+});
+
+// Watch for changes in present address when "same as present" is checked
+watch(() => formData.present_address_data, (newAddressData) => {
+  if (formData.same_as_present) {
+    Object.assign(formData.permanent_address_data, newAddressData);
+  }
+}, { deep: true });
 
 const initializeForm = () => {
   if (props.profile) {
     Object.keys(formData).forEach(key => {
       if (props.profile[key] !== undefined) {
-        formData[key] = props.profile[key]
+        if (key === 'present_address_data' || key === 'permanent_address_data') {
+          // Handle address data objects
+          if (props.profile[key] && typeof props.profile[key] === 'object') {
+            Object.assign(formData[key], props.profile[key]);
+          }
+        } else {
+          formData[key] = props.profile[key]
+        }
       }
     })
   }

@@ -2,6 +2,7 @@
 import { defineProps, defineEmits, reactive, watch, ref, computed } from 'vue';
 import { Eye, EyeOff, Check, X, AlertCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-vue-next';
 import api from '@/services/api';
+import AddressSelector from '@/components/common/AddressSelector.vue';
 
 // Define props and emits
 const props = defineProps(['form']);
@@ -24,6 +25,35 @@ const localForm = reactive({
   confirm_password: props.form?.confirm_password || '',
   present_address: props.form?.present_address || '',
   permanent_address: props.form?.permanent_address || '',
+  present_address_data: props.form?.present_address_data || {
+    address_type: 'philippines',
+    region_code: '',
+    region_name: '',
+    province_code: '',
+    province_name: '',
+    city_code: '',
+    city_name: '',
+    barangay: '',
+    street_address: '',
+    postal_code: '',
+    country: '',
+    full_address: ''
+  },
+  permanent_address_data: props.form?.permanent_address_data || {
+    address_type: 'philippines',
+    region_code: '',
+    region_name: '',
+    province_code: '',
+    province_name: '',
+    city_code: '',
+    city_name: '',
+    barangay: '',
+    street_address: '',
+    postal_code: '',
+    country: '',
+    full_address: ''
+  },
+  same_as_present: props.form?.same_as_present || false,
   civil_status: props.form?.civil_status || '',
   employment_status: props.form?.employment_status || '',
   government_id: props.form?.government_id || null,
@@ -154,6 +184,30 @@ const emitValidation = () => {
     }
   });
 };
+
+// Watch for "same as present address" checkbox
+watch(() => localForm.same_as_present, (newValue) => {
+  if (newValue) {
+    // Copy present address data to permanent address
+    Object.assign(localForm.permanent_address_data, localForm.present_address_data);
+    localForm.permanent_address = localForm.present_address;
+  }
+});
+
+// Watch for changes in present address when "same as present" is checked
+watch(() => localForm.present_address_data, (newAddressData) => {
+  if (localForm.same_as_present) {
+    Object.assign(localForm.permanent_address_data, newAddressData);
+    localForm.permanent_address = localForm.present_address;
+  }
+}, { deep: true });
+
+// Watch for present address text changes
+watch(() => localForm.present_address, (newAddress) => {
+  if (localForm.same_as_present) {
+    localForm.permanent_address = newAddress;
+  }
+});
 
 // Watch for email changes
 watch(() => localForm.email, (newEmail) => {
@@ -313,15 +367,41 @@ watch(
         </div>
       </div>
 
-      <!-- Address -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Present Address</label>
-        <input v-model="localForm.present_address" type="text" class="mt-1 w-full border rounded-md p-2" />
-      </div>
+      <!-- Address Section -->
+      <div class="col-span-2">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">Address Information</h4>
+        
+        <!-- Present Address -->
+        <div class="mb-6">
+          <h5 class="text-md font-medium text-gray-700 mb-3">Present Address</h5>
+          <AddressSelector 
+            v-model="localForm.present_address_data"
+            label="Present Address"
+            :required="true"
+          />
+        </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Permanent Address</label>
-        <input v-model="localForm.permanent_address" type="text" class="mt-1 w-full border rounded-md p-2" />
+        <!-- Permanent Address -->
+        <div class="mb-6">
+          <h5 class="text-md font-medium text-gray-700 mb-3">Permanent Address</h5>
+          <div class="mb-3">
+            <label class="flex items-center">
+              <input 
+                v-model="localForm.same_as_present"
+                type="checkbox"
+                class="text-green-600 focus:ring-green-500 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-700">Same as present address</span>
+            </label>
+          </div>
+          <div v-if="!localForm.same_as_present">
+            <AddressSelector 
+              v-model="localForm.permanent_address_data"
+              label="Permanent Address"
+              :required="true"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Civil Status -->

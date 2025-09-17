@@ -96,7 +96,7 @@ const form = ref({
   program: '',
   birth_date: '',
   year_graduated: '',
-  gender: '',
+  sex: '',
   alumni_exists: false,
   
   // Step 2: Personal Information
@@ -106,6 +106,36 @@ const form = ref({
   confirm_password: '',
   present_address: '',
   permanent_address: '',
+  // Structured address data for new system
+  present_address_data: {
+    address_type: 'philippines',
+    region_code: '',
+    region_name: '',
+    province_code: '',
+    province_name: '',
+    city_code: '',
+    city_name: '',
+    barangay: '',
+    street_address: '',
+    postal_code: '',
+    country: '',
+    full_address: ''
+  },
+  permanent_address_data: {
+    address_type: 'philippines',
+    region_code: '',
+    region_name: '',
+    province_code: '',
+    province_name: '',
+    city_code: '',
+    city_name: '',
+    barangay: '',
+    street_address: '',
+    postal_code: '',
+    country: '',
+    full_address: ''
+  },
+  same_as_present: false,
   civil_status: '',
   employment_status: '',
   government_id: null,
@@ -221,6 +251,15 @@ const submitForm = async () => {
   formData.append('school_id', form.value.school_id || '');
   if (form.value.government_id) formData.append('government_id', form.value.government_id);
   formData.append('program', form.value.program || '');
+  // Add address data as JSON
+  if (form.value.present_address_data) {
+    formData.append('present_address_data', JSON.stringify(form.value.present_address_data));
+  }
+  if (form.value.permanent_address_data) {
+    formData.append('permanent_address_data', JSON.stringify(form.value.permanent_address_data));
+  }
+  
+  // Keep legacy address fields for backward compatibility
   formData.append('present_address', form.value.present_address || '');
   formData.append('permanent_address', form.value.permanent_address || '');
   formData.append('birth_date', form.value.birth_date || '');
@@ -228,7 +267,7 @@ const submitForm = async () => {
   formData.append('employment_status', form.value.employment_status || '');
   if (form.value.profile_picture) formData.append('profile_picture', form.value.profile_picture);
   formData.append('civil_status', form.value.civil_status || '');
-  formData.append('gender', form.value.gender || '');
+  formData.append('sex', form.value.sex || '');
   formData.append('mothers_name', form.value.mothers_name || '');
   formData.append('mothers_occupation', form.value.mothers_occupation || '');
   formData.append('fathers_name', form.value.fathers_name || '');
@@ -245,8 +284,11 @@ const submitForm = async () => {
   console.log("- alumni_exists:", form.value.alumni_exists);
   console.log("- email:", form.value.email);
   console.log("- employment_status:", form.value.employment_status);
-  console.log("- gender:", form.value.gender);
+  console.log("- sex:", form.value.sex);
   console.log("- civil_status:", form.value.civil_status);
+  console.log("- present_address_data:", form.value.present_address_data);
+  console.log("- permanent_address_data:", form.value.permanent_address_data);
+  console.log("- same_as_present:", form.value.same_as_present);
   console.log("- survey_responses:", surveyResponsesData);
   console.log("- survey_responses length:", surveyResponsesData.length);
   console.log("Full form object:", form.value);
