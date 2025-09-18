@@ -1,19 +1,19 @@
 <template>
   <div
-    class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 overflow-hidden mb-4 w-full mx-auto">
+    class="bg-white rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg border border-slate-100 hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full mx-auto">
     <!-- Post Header -->
     <PostHeader :post="post" :categories="categories" />
 
     <!-- Post Content -->
-    <div class="px-4 md:px-6 cursor-pointer" @click="openPostModal">
-      <h2 v-if="post.title" class="text-base md:text-lg font-semibold text-slate-900 mb-2 leading-snug">{{ post.title }}</h2>
+    <div class="px-3 md:px-4 lg:px-6 cursor-pointer" @click="openPostModal">
+      <h2 v-if="post.title" class="text-sm md:text-base lg:text-lg font-semibold text-slate-900 mb-2 leading-snug">{{ post.title }}</h2>
       <div class="text-sm md:text-base text-slate-800 whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed">{{ post.content }}</div>
 
       <!-- Shared Post Display -->
-      <div v-if="post.shared_post" class="border border-slate-200 rounded-lg p-3 mb-3 md:mb-4 bg-slate-50">
+      <div v-if="post.shared_post" class="border border-slate-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4 bg-slate-50">
         <div class="flex items-center space-x-2 mb-2">
           <img :src="post.shared_post.user?.profile_picture || '/default-avatar.png'" alt="Profile"
-            class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border border-slate-300" />
+            class="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border border-slate-300" />
           <span class="text-xs md:text-sm font-medium text-slate-700">
             {{ post.shared_post.user?.first_name }} {{ post.shared_post.user?.last_name }}
           </span>
@@ -36,9 +36,9 @@
     </div>
 
     <!-- Engagement Stats & Reaction Summary -->
-    <div v-if="hasEngagement" class="px-4 md:px-6 py-2 border-t border-slate-100 hover-isolation">
+    <div v-if="hasEngagement" class="px-3 md:px-4 lg:px-6 py-2 border-t border-slate-100 hover-isolation">
       <div class="flex items-center justify-between text-xs md:text-sm text-slate-600" @mouseenter.stop @mouseover.stop>
-        <div class="flex items-center space-x-2 md:space-x-3" @mouseenter.stop @mouseover.stop>
+        <div class="flex items-center space-x-1 md:space-x-2 lg:space-x-3" @mouseenter.stop @mouseover.stop>
           <!-- Facebook-style Reaction Summary -->
           <ReactionSummary
             :reactions-summary="post.reactions_summary"
@@ -59,7 +59,7 @@
           </span>
         </div>
         
-        <div class="flex items-center space-x-2 md:space-x-3">
+        <div class="flex items-center space-x-1 md:space-x-2 lg:space-x-3">
           <button v-if="post.comments_count > 0" @click="openPostModal"
             class="font-medium text-green-600 hover:text-green-800 transition-colors text-xs">
             💬 {{ post.comments_count }}
@@ -79,13 +79,13 @@
       @copy-link="$emit('copy-link', post.id)" />
 
     <!-- Quick Comment Preview (if comments exist) -->
-    <div v-if="previewComments.length > 0" class="px-4 md:px-6 pb-2">
+    <div v-if="previewComments.length > 0" class="px-3 md:px-4 lg:px-6 pb-2">
       <div class="space-y-2">
         <div v-for="comment in previewComments.slice(0, 2)" :key="comment.id"
           class="flex space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
           @click="openPostModal">
           <img :src="comment.user.profile_picture || '/default-avatar.png'" :alt="comment.user.full_name"
-            class="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover flex-shrink-0" />
+            class="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full object-cover flex-shrink-0" />
           <div class="flex-1 min-w-0">
             <div class="bg-gray-100 rounded-lg px-2 py-1">
               <p class="font-medium text-xs text-gray-900">
@@ -114,10 +114,10 @@
     </div>
 
     <!-- Quick Comment Input -->
-    <div class="px-4 md:px-6 pb-3 md:pb-4">
+    <div class="px-3 md:px-4 lg:px-6 pb-3 md:pb-4">
       <div class="flex space-x-2 items-center">
         <img :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'" alt="Your avatar"
-          class="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover flex-shrink-0" />
+          class="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full object-cover flex-shrink-0" />
         <button @click="openPostModal"
           class="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-2 text-left text-gray-600 transition-colors text-xs md:text-sm">
           Write a comment...

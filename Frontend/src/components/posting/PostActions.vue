@@ -13,7 +13,7 @@
                 : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md',
               selectedReaction
                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white transform scale-105' + (size === 'small' ? ' shadow-md' : ' shadow-lg')
-                : 'text-slate-600 hover:bg-blue-100 hover:text-blue-700 bg-white'
+                : 'text-slate-600 hover:bg-gray-50 hover:text-green-700 bg-white'
             ]"
           >
             <!-- Reaction Icon (consistent with other buttons) -->
@@ -46,7 +46,7 @@
       <button
         @click="handleCommentClick"
         :class="[
-          'flex items-center text-slate-600 hover:bg-green-100 hover:text-green-700 transition-all duration-300 bg-white cursor-pointer',
+          'flex items-center text-green-700 hover:bg-green-100 hover:text-green-700 transition-all duration-300 bg-white border border-green-700 rounded-md',
           size === 'small' 
             ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
             : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md'
@@ -63,7 +63,7 @@
       <button
         @click="$emit('share-post')"
         :class="[
-          'flex items-center text-slate-600 hover:bg-purple-100 hover:text-purple-700 transition-all duration-300 bg-white cursor-pointer',
+          'flex items-center text-green-700 hover:bg-green-100 hover:text-green-700 transition-all duration-300 bg-white border border-green-700 rounded-md',
           size === 'small' 
             ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
             : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md'
@@ -80,7 +80,7 @@
       <button
         @click="$emit('copy-link')"
         :class="[
-          'flex items-center text-slate-600 hover:bg-orange-100 hover:text-orange-700 transition-all duration-300 bg-white cursor-pointer',
+          'flex items-center text-green-700 hover:bg-green-100 hover:text-green-700 transition-all duration-300 bg-white border border-green-700 rounded-md',
           size === 'small' 
             ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
             : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md'

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gray-100 relative transition-colors duration-200">
+  <div class="flex h-screen bg-white relative transition-colors duration-200">
     <!-- Transparent overlay when sidebar is expanded on mobile -->
     <div 
       v-if="sidebarExpanded" 
@@ -17,7 +17,7 @@
     <!-- Main content area - static ml-20 on mobile, no shift when expanded -->
     <div class="flex-1 flex flex-col ml-20 lg:ml-0">
       <AlumniNavbar />
-      <main class="p-4 overflow-auto flex-1 bg-gray-100 transition-colors duration-200">
+      <main class="p-4 overflow-auto flex-1 bg-amber-50 transition-colors duration-200">
         <router-view />
       </main>
     </div>

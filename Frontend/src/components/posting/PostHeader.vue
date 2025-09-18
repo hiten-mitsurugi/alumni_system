@@ -5,12 +5,12 @@
         class="w-16 h-16 rounded-full object-cover border-4 border-blue-200 shadow-lg" />
       <div>
         <div class="flex items-center space-x-3">
-          <h3 class="text-xl font-bold text-slate-800">
+          <h3 class="text-lg font-bold text-slate-800">
             {{ post.user?.first_name }} {{ post.user?.last_name }}
           </h3>
 
         </div>
-        <div class="flex items-center space-x-3 text-lg text-slate-600 mt-1">
+        <div class="flex items-center space-x-3 text-md text-slate-600 mt-1">
           <span class="font-medium">{{ formatTimeAgo(post.created_at) }}</span>
           <span class="text-slate-400">•</span>
           <span

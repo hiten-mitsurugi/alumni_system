@@ -1,5 +1,5 @@
 <template>
-  <div class="mymates-container h-full bg-gray-50">
+  <div class="mymates-container h-full bg-amber-50">
     <!-- Header - Account for sidebar margin on mobile -->
     <div class="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div class="px-3 sm:px-6 lg:px-8">
@@ -122,7 +122,7 @@ import FollowersList from './FollowersList.vue';
 import FollowingList from './FollowingList.vue';
 
 // Import external stylesheet
-import './mymates-styles.css';
+import '@/components/css/mymates-styles.css';
 
 const router = useRouter();
 
