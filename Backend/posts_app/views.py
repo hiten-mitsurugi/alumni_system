@@ -348,8 +348,14 @@ class PostReactionView(APIView):
             # Broadcast reaction removal
             self._broadcast_reaction_update(post, request.user, None, False, removed=True)
             
-            # Invalidate cache
+            # Invalidate cache completely to ensure fresh data
             cache.delete(f"post_reactions_{post.id}")
+            cache.delete(f"post_{post.id}")
+            
+            # Clear all post feed caches since they contain user reaction data
+            self._invalidate_feed_cache()
+            
+            print(f"DEBUG: Cleared all caches after removing reaction from post {post_id}")
             
             return Response({'success': True, 'removed': True})
             

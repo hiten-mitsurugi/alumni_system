@@ -5,16 +5,17 @@
       <div class="flex items-center">
         <div class="relative group">
           <button
-            @click="handleReaction('like')"
+            @click="handleMainButtonClick"
             :class="[
-              'flex items-center transition-all duration-300 cursor-pointer relative z-10',
+              'flex items-center transition-all duration-300 cursor-pointer relative z-10 group',
               size === 'small' 
                 ? 'space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm shadow-sm'
                 : 'space-x-2 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-2xl font-semibold text-sm sm:text-lg shadow-md',
               selectedReaction
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white transform scale-105' + (size === 'small' ? ' shadow-md' : ' shadow-lg')
-                : 'text-slate-600 hover:bg-gray-50 hover:text-green-700 bg-white'
+                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105 hover:from-green-700 hover:to-green-800 hover:scale-110' + (size === 'small' ? ' shadow-md' : ' shadow-lg')
+                : 'text-green-700 border border-green-700 hover:bg-green-100 hover:text-green-700 bg-white hover:scale-105'
             ]"
+            :title="getMainButtonTooltip()"
           >
             <!-- Reaction Icon (consistent with other buttons) -->
             <svg v-if="!selectedReaction" :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,8 +23,8 @@
             </svg>
             <!-- Show emoji when reaction is selected -->
             <span v-if="selectedReaction" :class="size === 'small' ? 'text-base sm:text-xl' : 'text-xl sm:text-2xl'">{{ currentReactionEmoji }}</span>
-            <span class="hidden sm:inline">{{ selectedReaction ? currentReactionLabel : 'React' }}</span>
-            <span class="sm:hidden text-xs">React</span>
+            <span class="hidden sm:inline">{{ selectedReaction ? currentReactionLabel : 'Like' }}</span>
+            <span class="sm:hidden text-xs">{{ selectedReaction ? currentReactionEmoji : 'Like' }}</span>
           </button>
           
           <!-- Reaction Picker -->
@@ -32,9 +33,14 @@
               v-for="reaction in reactionTypes"
               :key="reaction.type"
               @click="handleReaction(reaction.type)"
-              :class="size === 'small' ? 'w-10 h-10' : 'w-12 h-12'"
-              class="flex flex-col items-center justify-center rounded-xl hover:bg-slate-100 transition-all duration-200 transform hover:scale-110 hover:shadow-lg group/reaction"
-              :title="reaction.label"
+              :class="[
+                size === 'small' ? 'w-10 h-10' : 'w-12 h-12',
+                'flex flex-col items-center justify-center rounded-xl transition-all duration-200 transform hover:scale-110 hover:shadow-lg group/reaction',
+                selectedReaction === reaction.type 
+                  ? 'bg-green-100 border-2 border-green-500 scale-105' 
+                  : 'hover:bg-slate-100'
+              ]"
+              :title="selectedReaction === reaction.type ? `Click to remove ${reaction.label}` : reaction.label"
             >
               <span :class="size === 'small' ? 'text-lg' : 'text-2xl'" class="filter drop-shadow-sm">{{ reaction.emoji }}</span>
             </button>
@@ -131,7 +137,39 @@ const reactionTypes = [
 
 // Methods
 const handleReaction = (reactionType) => {
+  console.log('🎯 PostActions: handleReaction called', {
+    reactionType,
+    currentSelectedReaction: props.selectedReaction,
+    postId: props.postId,
+    isUndo: props.selectedReaction === reactionType
+  });
+  
+  // Just emit the reaction - let the parent handle the undo logic
   emit('react-to-post', props.postId, reactionType)
+}
+
+// Smart main button handler for Facebook-style behavior
+const handleMainButtonClick = () => {
+  console.log('🎯 PostActions: Main button clicked', {
+    currentSelectedReaction: props.selectedReaction,
+    postId: props.postId
+  });
+  
+  if (props.selectedReaction) {
+    // If user has a reaction, clicking main button should remove it
+    emit('react-to-post', props.postId, props.selectedReaction)
+  } else {
+    // If no reaction, add 'like' as default
+    emit('react-to-post', props.postId, 'like')
+  }
+}
+
+// Enhanced tooltip for better UX
+const getMainButtonTooltip = () => {
+  if (props.selectedReaction) {
+    return `Click to remove your ${currentReactionLabel.value} reaction`
+  }
+  return 'Click to like this post'
 }
 
 const handleCommentClick = () => {
@@ -162,6 +200,23 @@ const currentReactionLabel = computed(() => {
 /* Enhanced hover effects */
 button:hover:not(:disabled) {
   transform: translateY(-1px);
+}
+
+/* Smooth scale animations for buttons */
+.group:hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reaction button specific animations */
+button[title]:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Active state feedback */
+button:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
 }
 
 /* Focus states for accessibility */

@@ -174,12 +174,20 @@ const fetchPosts = async () => {
     
     // Initialize selectedReaction from backend user_reaction data
     posts.value.forEach(post => {
-      if (post.reactions_summary && post.reactions_summary.user_reaction) {
-        selectedReaction.value[post.id] = post.reactions_summary.user_reaction;
-        console.log(`🎯 Initialized reaction for post ${post.id}: ${post.reactions_summary.user_reaction}`);
+      const currentReaction = selectedReaction.value[post.id];
+      const serverReaction = post.reactions_summary?.user_reaction;
+      
+      // Only update if we don't have a recent user interaction
+      if (currentReaction === undefined || currentReaction === null || currentReaction === serverReaction) {
+        if (serverReaction) {
+          selectedReaction.value[post.id] = serverReaction;
+          console.log(`🎯 Initialized reaction for post ${post.id}: ${serverReaction}`);
+        } else {
+          selectedReaction.value[post.id] = null;
+          console.log(`🧹 Cleared reaction state for post ${post.id}`);
+        }
       } else {
-        // Ensure no old reactions remain for posts without current user reactions
-        selectedReaction.value[post.id] = null;
+        console.log(`⏭️ Preserving user reaction state for post ${post.id}: ${currentReaction} (server has: ${serverReaction})`);
       }
     });
     
@@ -305,12 +313,28 @@ const reactToPost = async (postId, reactionType) => {
     if (currentUserReaction === reactionType) {
       console.log(`🗑️ Removing reaction ${reactionType} from post ${postId}`);
       
-      const response = await axios.delete(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
-        headers: { Authorization: `Bearer ${authStore.token}` }
-      });
-      
-      console.log('✅ Reaction removed:', response.data);
-      selectedReaction.value[postId] = null;
+      try {
+        const response = await axios.delete(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
+          headers: { Authorization: `Bearer ${authStore.token}` }
+        });
+        
+        console.log('✅ Reaction removed:', response.data);
+        selectedReaction.value[postId] = null;
+        console.log(`🎯 Frontend state updated: post ${postId} reaction cleared`);
+        
+      } catch (deleteError) {
+        // Handle 404 - reaction doesn't exist in database but frontend thinks it does
+        if (deleteError.response?.status === 404) {
+          console.warn(`⚠️ Reaction ${reactionType} on post ${postId} not found in database - fixing frontend state`);
+          
+          // Reset frontend state to match database reality
+          selectedReaction.value[postId] = null;
+          
+          showNotification('Reaction state synchronized', 'success');
+        } else {
+          throw deleteError; // Re-throw other errors
+        }
+      }
       
     } else {
       // Add or change reaction
@@ -326,12 +350,20 @@ const reactToPost = async (postId, reactionType) => {
       selectedReaction.value[postId] = reactionType;
     }
     
-    // Refresh the specific post data
-    await fetchPosts();
+    // Don't call fetchPosts() here - let WebSocket handle updates
+    console.log('🎯 Reaction updated, waiting for WebSocket confirmation');
     
   } catch (error) {
     console.error('❌ Failed to react to post:', error);
-    showNotification('Failed to add reaction. Please try again.', 'error');
+    
+    // Enhanced error handling
+    if (error.response?.status === 404 && error.config?.method === 'delete') {
+      // This case is already handled above, but just in case
+      selectedReaction.value[postId] = null;
+      showNotification('Reaction state fixed', 'success');
+    } else {
+      showNotification('Failed to add reaction. Please try again.', 'error');
+    }
   }
 };
 
@@ -432,8 +464,30 @@ const updatePostReaction = (data) => {
   // Find the post and update its reaction data
   const postIndex = posts.value.findIndex(p => p.id === data.post_id);
   if (postIndex !== -1) {
-    // Update the post's reaction counts
-    fetchPosts(); // Simple approach: refresh all posts
+    console.log(`📡 WebSocket reaction update for post ${data.post_id}: ${data.action} ${data.reaction_type}`);
+    
+    // Only update selectedReaction if this is the current user's reaction
+    if (data.user_id === authStore.user?.id) {
+      if (data.action === 'removed') {
+        selectedReaction.value[data.post_id] = null;
+        console.log(`🧹 WebSocket: Cleared reaction state for post ${data.post_id}`);
+      } else {
+        selectedReaction.value[data.post_id] = data.reaction_type;
+        console.log(`🎯 WebSocket: Set reaction for post ${data.post_id} to ${data.reaction_type}`);
+      }
+    }
+    
+    // Update reaction counts without full refresh to avoid race conditions
+    const post = posts.value[postIndex];
+    if (post && post.reactions_summary) {
+      // Just update the count, don't override selectedReaction
+      if (data.action === 'removed') {
+        post.reactions_summary.total_count = Math.max(0, post.reactions_summary.total_count - 1);
+      } else if (data.action === 'added') {
+        post.reactions_summary.total_count = (post.reactions_summary.total_count || 0) + 1;
+      }
+      console.log(`📊 Updated reaction count for post ${data.post_id}: ${post.reactions_summary.total_count}`);
+    }
   }
 };
 
