@@ -9,7 +9,9 @@ from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.utils import timezone
+from datetime import timedelta
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db import transaction
@@ -499,6 +501,20 @@ class ProfileView(APIView):
 
     def patch(self, request):
         user = request.user
+        
+        # For simple field updates (like profile_picture), update directly
+        if 'profile_picture' in request.data and len(request.data) == 1:
+            # Simple profile picture update
+            user.profile_picture = request.data['profile_picture']
+            user.save()
+            
+            # Return simplified response using UserDetailSerializer
+            response_serializer = UserDetailSerializer(user)
+            cache_key = f"user_profile_{user.id}"
+            cache.set(cache_key, response_serializer.data, timeout=300)
+            return Response(response_serializer.data)
+        
+        # For complex updates, use ProfileSerializer
         serializer = ProfileSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -588,5 +604,106 @@ class TestStatusBroadcastView(APIView):
             logger.error(f"Test status broadcast failed: {str(e)}")
             return Response(
                 {'error': f'Test failed: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AdminAnalyticsView(APIView):
+    """
+    Provide analytics data for the admin dashboard
+    """
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def get(self, request):
+        try:
+            from posts_app.models import Post, PostReport
+            
+            # Get current date
+            today = timezone.now().date()
+            week_ago = today - timedelta(days=7)
+            
+            # User analytics
+            total_users = CustomUser.objects.count()
+            active_users = CustomUser.objects.filter(is_active=True).count()
+            pending_approvals = CustomUser.objects.filter(
+                user_type=3, 
+                is_approved=False
+            ).count()
+            
+            # Recent registrations (last 7 days)
+            recent_registrations = CustomUser.objects.filter(
+                date_joined__date__gte=week_ago
+            ).count()
+            
+            # Online users (users active in last 15 minutes)
+            fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
+            online_users = CustomUser.objects.filter(
+                last_login__gte=fifteen_minutes_ago
+            ).count()
+            
+            # Post analytics
+            total_posts = Post.objects.count()
+            pending_posts = Post.objects.filter(status='pending').count()
+            approved_posts = Post.objects.filter(status='approved').count()
+            declined_posts = Post.objects.filter(status='declined').count()
+            
+            # Reported posts analytics
+            reported_posts = PostReport.objects.filter(is_resolved=False).count()
+            
+            # Posts by status breakdown
+            posts_by_status = Post.objects.values('status').annotate(
+                count=Count('id')
+            )
+            
+            # Weekly activity
+            weekly_posts = Post.objects.filter(
+                created_at__date__gte=week_ago
+            ).count()
+            
+            # Approval rate
+            total_reviewed = approved_posts + declined_posts
+            approval_rate = (approved_posts / total_reviewed * 100) if total_reviewed > 0 else 0
+            
+            analytics_data = {
+                'users': {
+                    'total': total_users,
+                    'active': active_users,
+                    'pending_approvals': pending_approvals,
+                    'recent_registrations': recent_registrations,
+                    'online_now': online_users,
+                    'activity_rate': round((active_users / total_users * 100), 2) if total_users > 0 else 0
+                },
+                'posts': {
+                    'total': total_posts,
+                    'pending': pending_posts,
+                    'approved': approved_posts,
+                    'declined': declined_posts,
+                    'reported': reported_posts,
+                    'weekly_posts': weekly_posts,
+                    'approval_rate': round(approval_rate, 2),
+                    'by_status': list(posts_by_status)
+                },
+                'reports': {
+                    'pending': reported_posts,
+                    'total': PostReport.objects.count(),
+                    'resolved_today': PostReport.objects.filter(
+                        is_resolved=True,
+                        resolved_at__date=today
+                    ).count()
+                },
+                'summary': {
+                    'pending_actions': reported_posts + pending_approvals,
+                    'total_content': total_posts,
+                    'user_engagement': round((online_users / active_users * 100), 2) if active_users > 0 else 0
+                },
+                'last_updated': timezone.now().isoformat()
+            }
+            
+            return Response(analytics_data)
+            
+        except Exception as e:
+            logger.error(f"Analytics data fetch failed: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch analytics data'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

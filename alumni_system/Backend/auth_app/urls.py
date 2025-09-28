@@ -5,7 +5,8 @@ from .views import (
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
     ProfileView, CheckAlumniDirectoryView, PendingAlumniListView,
     SurveyCategoryListCreateView, SurveyCategoryDetailView, SurveyQuestionListCreateView,
-    SurveyQuestionDetailView, ActiveSurveyQuestionsView, SurveyResponseSubmitView, UserSurveyResponsesView
+    SurveyQuestionDetailView, ActiveSurveyQuestionsView, SurveyResponseSubmitView, UserSurveyResponsesView,
+    AdminAnalyticsView
 )
 
 urlpatterns = [
@@ -17,6 +18,7 @@ urlpatterns = [
     path('reject-user/<int:user_id>/', RejectUserView.as_view(), name='reject_user'),
     path('confirm/<str:token>/', ConfirmTokenView.as_view(), name='confirm_token'),
     path('user/', UserDetailView.as_view(), name='user_detail'),  # ✅ Keep only this
+    path('users/', ApprovedAlumniListView.as_view(), name='users_list'),  # For dashboard fallback
     path('logout/', LogoutView.as_view(), name='logout'),
     path('approved-users/', ApprovedAlumniListView.as_view(), name='approved-users'),
     path('skills/', SkillListCreateView.as_view(), name='skills'),
@@ -38,4 +40,7 @@ urlpatterns = [
     path('survey/responses/', SurveyResponseSubmitView.as_view(), name='survey_responses'),
     path('survey/responses/<int:user_id>/', UserSurveyResponsesView.as_view(), name='user_survey_responses'),
     path('survey/my-responses/', UserSurveyResponsesView.as_view(), name='my_survey_responses'),
+    
+    # Admin Analytics
+    path('admin/analytics/', AdminAnalyticsView.as_view(), name='admin_analytics'),
 ]

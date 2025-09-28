@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 from auth_app.models import CustomUser
 import uuid
 
@@ -27,6 +28,12 @@ class Post(models.Model):
         ('repost', 'Repost'),
     )
     
+    APPROVAL_STATUS = (
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined'),
+    )
+    
     # Keep existing ID structure to avoid migration issues
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='posts')
     title = models.CharField(max_length=200, blank=True)  # Optional for Facebook-style posts
@@ -48,7 +55,11 @@ class Post(models.Model):
     shares_count = models.PositiveIntegerField(default=0)
     
     # Status and permissions
-    is_approved = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=APPROVAL_STATUS, default='pending')
+    is_approved = models.BooleanField(default=False)  # Keep for backward compatibility
+    approved_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_posts')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    decline_reason = models.TextField(blank=True, null=True)
     is_pinned = models.BooleanField(default=False)
     visibility = models.CharField(max_length=20, choices=[
         ('public', 'Public'),
@@ -67,10 +78,20 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.user.first_name}'s post - {self.content[:50]}..."
 
-    def auto_approve_if_admin(self):
-        """Auto-approve posts from admin/superadmin users"""
-        if self.user.user_type in [1, 2]:  # Admin or SuperAdmin
-            self.is_approved = True
+    def auto_approve_all_posts(self):
+        """Auto-approve all posts since admin serves as post moderator"""
+        self.status = 'approved'
+        self.is_approved = True
+        # Don't set approved_by for regular users, only for admin posts
+        if hasattr(self.user, 'user_type') and self.user.user_type in [1, 2]:
+            self.approved_by = self.user
+            self.approved_at = timezone.now()
+    
+    def save(self, *args, **kwargs):
+        """Override save to auto-approve all posts"""
+        if not self.pk:  # New post
+            self.auto_approve_all_posts()
+        super().save(*args, **kwargs)
 
 class PostMedia(models.Model):
     """Support for multiple media files per post"""

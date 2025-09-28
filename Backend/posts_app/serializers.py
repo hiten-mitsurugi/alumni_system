@@ -196,7 +196,8 @@ class PostSerializer(serializers.ModelSerializer):
             'id', 'user', 'title', 'content', 'content_category', 'category',
             'post_type', 'shared_post', 'shared_text', 'image', 'image_url',
             'media_files', 'likes_count', 'comments_count', 'shares_count',
-            'is_approved', 'is_pinned', 'visibility', 'created_at', 'updated_at',
+            'status', 'is_approved', 'approved_by', 'approved_at', 'decline_reason',
+            'is_pinned', 'visibility', 'created_at', 'updated_at',
             'edited_at', 'is_edited', 'time_since', 'reactions_summary',
             'recent_comments', 'can_edit', 'can_delete', 'is_saved', 'engagement_stats'
         ]
@@ -338,12 +339,9 @@ class PostCreateSerializer(serializers.ModelSerializer):
         media_files = validated_data.pop('media_files', [])
         user = self.context['request'].user
         
-        # Auto-approve admin posts
-        is_approved = user.user_type in [1, 2]
-        
+        # Create post - auto-approval is handled by the model's save() method
         post = Post.objects.create(
             user=user,
-            is_approved=is_approved,
             **validated_data
         )
         
@@ -376,7 +374,12 @@ class SavedPostSerializer(serializers.ModelSerializer):
 
 class PostReportSerializer(serializers.ModelSerializer):
     reporter = UserBasicSerializer(read_only=True)
+    post = PostSerializer(read_only=True)
+    resolved_by = UserBasicSerializer(read_only=True)
     
     class Meta:
         model = PostReport
-        fields = ['id', 'reason', 'description', 'reporter', 'created_at', 'is_resolved']
+        fields = [
+            'id', 'post', 'reporter', 'reason', 'description', 
+            'is_resolved', 'resolved_by', 'created_at', 'resolved_at'
+        ]

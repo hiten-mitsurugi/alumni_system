@@ -1,17 +1,16 @@
 <template>
-  <div class="flex space-x-3 mt-6 overflow-x-auto pb-2">
+  <div class="flex space-x-1 mt-6 overflow-x-auto pb-0">
     <button
       v-for="category in categories"
       :key="category.value"
       @click="$emit('category-change', category.value)"
       :class="[
-        'flex items-center space-x-3 px-6 py-4 rounded-2xl text-lg font-semibold transition-all duration-300 whitespace-nowrap min-w-fit shadow-md',
+        'relative px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-full focus:outline-none',
         activeTab === category.value
-          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white transform scale-105 shadow-xl'
-          : 'bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:shadow-lg'
+          ? 'bg-blue-600 text-white shadow-md'
+          : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
       ]"
     >
-      <span class="text-2xl">{{ category.icon }}</span>
       <span>{{ category.label }}</span>
     </button>
   </div>
@@ -19,7 +18,7 @@
 
 <script setup>
 // Props
-const props = defineProps({
+defineProps({
   categories: {
     type: Array,
     required: true
@@ -31,42 +30,36 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['category-change'])
+defineEmits(['category-change'])
 </script>
 
 <style scoped>
 /* Custom scrollbar for category tabs */
 .overflow-x-auto::-webkit-scrollbar {
-  height: 6px;
+  height: 4px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
+  background: transparent;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  background: #e2e8f0;
+  border-radius: 2px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Smooth transitions for all interactive elements */
-.transition-all {
-  transition: all 0.3s ease;
-}
-
-/* Enhanced hover effects */
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
+  background: #cbd5e1;
 }
 
 /* Focus states for accessibility */
 button:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>

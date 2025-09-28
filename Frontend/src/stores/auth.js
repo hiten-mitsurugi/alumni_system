@@ -30,12 +30,16 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('access_token');            // ✅ updated
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
-      
+
       // Disconnect WebSocket connections to prevent reconnection attempts
       try {
-        const { websocketService } = require('../services/websocket');
-        websocketService.disconnectAll();
-      } catch (error) {
+        // Use dynamic import with then() to avoid async/await in non-async function
+        import('../services/websocket').then((websocketModule) => {
+          websocketModule.websocketService.disconnectAll();
+        }).catch(() => {
+          console.log('WebSocket service not available during logout');
+        });
+      } catch {
         console.log('WebSocket service not available during logout');
       }
     },
@@ -44,7 +48,7 @@ export const useAuthStore = defineStore('auth', {
       console.log('=== AUTH STORE DEBUG: Starting logoutWithAPI ===');
       console.log('AUTH STORE DEBUG: Current refreshToken:', this.refreshToken ? 'exists' : 'null');
       console.log('AUTH STORE DEBUG: Current token:', this.token ? 'exists' : 'null');
-      
+
       try {
         // Call backend logout API to set status to offline and broadcast
         if (this.refreshToken) {
@@ -64,7 +68,7 @@ export const useAuthStore = defineStore('auth', {
         // This ensures the user can always log out from the frontend
         // even if there are network issues
       }
-      
+
       console.log('AUTH STORE DEBUG: Calling frontend logout to clear tokens');
       // Clear frontend state regardless of backend success/failure
       this.logout();
@@ -100,6 +104,82 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async updateProfile(profileData) {
+      try {
+        console.log('Updating profile with data:', profileData)
+        const response = await api.patch('/profile/', profileData);
+        // Update the user data in the store
+        this.setUser(response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Profile update error:', error.response?.data)
+        const response = error.response;
+        if (response?.status === 403 && response?.data?.code === 'token_not_valid') {
+          const refreshed = await this.tryRefreshToken();
+          if (refreshed) {
+            try {
+              const retry = await api.patch('/profile/', profileData);
+              this.setUser(retry.data);
+              return retry.data;
+            } catch (err) {
+              console.error('Profile update retry after refresh failed:', err);
+              throw err;
+            }
+          } else {
+            this.logout();
+            throw new Error('Authentication failed');
+          }
+        } else {
+          console.error('Profile update failed:', error);
+          throw error;
+        }
+      }
+    },
+
+    async uploadProfilePicture(file) {
+      try {
+        const formData = new FormData();
+        formData.append('profile_picture', file);
+
+        const response = await api.patch('/profile/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        // Update the user data in the store
+        this.setUser(response.data);
+        return response.data;
+      } catch (error) {
+        const response = error.response;
+        if (response?.status === 403 && response?.data?.code === 'token_not_valid') {
+          const refreshed = await this.tryRefreshToken();
+          if (refreshed) {
+            try {
+              const retryFormData = new FormData();
+              retryFormData.append('profile_picture', file);
+              const retry = await api.patch('/profile/', retryFormData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              });
+              this.setUser(retry.data);
+              return retry.data;
+            } catch (err) {
+              console.error('Profile picture upload retry after refresh failed:', err);
+              throw err;
+            }
+          } else {
+            this.logout();
+            throw new Error('Authentication failed');
+          }
+        } else {
+          console.error('Profile picture upload failed:', error);
+          throw error;
+        }
+      }
+    },
+
     async tryRefreshToken() {
       if (!this.refreshToken) {
         console.log('No refresh token available');
@@ -115,7 +195,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         this.isRefreshing = true;
         console.log('Attempting to refresh token...');
-        
+
         const response = await api.post('/token/refresh/', {
           refresh: this.refreshToken,
         });
@@ -126,13 +206,13 @@ export const useAuthStore = defineStore('auth', {
         return true;
       } catch (error) {
         console.error('Token refresh failed:', error);
-        
+
         // If refresh fails, clear all tokens to prevent infinite loops
         if (error.response?.status === 401) {
           console.log('Refresh token is invalid, clearing all tokens');
           this.logout();
         }
-        
+
         return false;
       } finally {
         this.isRefreshing = false;

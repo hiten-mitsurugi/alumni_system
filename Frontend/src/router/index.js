@@ -102,9 +102,9 @@ const routes = [
         component: () => import('../views/Admin/ContentPage.vue'),
       },
       {
-        path: 'post-approvals',
-        name: 'AdminPostApprovals',
-        component: () => import('../views/Admin/PostApprovalPage.vue'),
+        path: 'post-reports',
+        name: 'AdminPostReports',
+        component: () => import('../views/Admin/PostReportPage.vue'),
       },
       {
         path: 'pending-user-approval',

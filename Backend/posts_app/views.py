@@ -39,8 +39,9 @@ class PostFeedView(APIView):
         search = request.query_params.get('search')
         page = int(request.query_params.get('page', 1))
         
-        # Create cache key
-        cache_key = f"post_feed_{user.id}_{category}_{search}_{page}"
+        # Create cache key with version for easy invalidation
+        cache_version = cache.get('post_feed_version', 1)
+        cache_key = f"post_feed_v{cache_version}_{user.id}_{category}_{search}_{page}"
         cached_data = cache.get(cache_key)
         
         if cached_data:
@@ -65,7 +66,7 @@ class PostFeedView(APIView):
         # Get paginated response
         response_data = paginator.get_paginated_response(serializer.data).data
         
-        # Cache for 5 minutes
+        # Cache with version for easy invalidation
         cache.set(cache_key, response_data, 300)
         
         # Track post views
@@ -82,13 +83,13 @@ class PostFeedView(APIView):
             Prefetch('comments', queryset=Comment.objects.select_related('user').order_by('-created_at'))
         )
         
-        # Filter approved posts based on user type
-        if user.user_type in [1, 2]:  # Admin/SuperAdmin see all approved posts
-            queryset = queryset.filter(is_approved=True)
-        else:  # Alumni see approved posts + their own pending posts
-            queryset = queryset.filter(
-                Q(is_approved=True) | Q(user=user)
-            )
+        # Filter approved posts - since all posts are now auto-approved, show all posts
+        # Admin still sees all posts, alumni see approved posts (which is all posts now)
+        if user.user_type in [1, 2]:  # Admin/SuperAdmin see ALL posts
+            # No filtering by approval status for admins
+            pass
+        else:  # Alumni see approved posts (which is all posts since auto-approved)
+            queryset = queryset.filter(status='approved')
         
         # Apply visibility filters
         if user.user_type == 3:  # Alumni
@@ -156,11 +157,16 @@ class PostCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def _invalidate_feed_cache(self):
-        """Invalidate all feed caches"""
+        """Invalidate all feed caches using version bump approach"""
         try:
-            # This is a simplified approach - in production, you'd want more targeted cache invalidation
-            cache.delete_many(cache.keys('post_feed_*'))
-        except:
+            # Increment cache version to invalidate all cached data
+            current_version = cache.get('post_feed_version', 1)
+            new_version = current_version + 1
+            cache.set('post_feed_version', new_version, None)  # Never expire the version
+            print(f"🧹 Cache invalidated: v{current_version} → v{new_version}")
+            
+        except Exception as e:
+            print(f"⚠️ Cache invalidation failed (non-critical): {e}")
             pass
     
     def _broadcast_new_post(self, post, user):
@@ -168,7 +174,7 @@ class PostCreateView(APIView):
         channel_layer = get_channel_layer()
         
         # Broadcast to admin notifications if post needs approval
-        if not post.is_approved:
+        if post.status == 'pending':
             async_to_sync(channel_layer.group_send)(
                 'admin_notifications',
                 {
@@ -237,7 +243,7 @@ class PostDetailView(APIView):
             return True
         
         # Only approved posts for other users
-        if not post.is_approved:
+        if post.status != 'approved':
             return False
         
         # Check visibility settings
@@ -252,6 +258,65 @@ class PostDetailView(APIView):
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0]
         return request.META.get('REMOTE_ADDR')
+
+    def delete(self, request, post_id):
+        """Delete a post (Admin/SuperAdmin only)"""
+        try:
+            print(f"🗑️ Delete request for post {post_id}")
+            print(f"👤 User: {request.user}, Type: {getattr(request.user, 'user_type', 'Unknown')}")
+            
+            # Check if user is admin/superadmin
+            if not hasattr(request.user, 'user_type') or request.user.user_type not in [1, 2]:
+                print(f"❌ Permission denied for user type: {getattr(request.user, 'user_type', 'None')}")
+                return Response(
+                    {'error': 'Permission denied. Admin access required.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Get the post
+            try:
+                post = Post.objects.get(id=post_id)
+                print(f"📝 Found post: {post.id} by {post.user}")
+            except Post.DoesNotExist:
+                print(f"❌ Post {post_id} not found")
+                return Response(
+                    {'error': 'Post not found', 'detail': f'Post with ID {post_id} does not exist'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Delete the post (this will cascade delete related objects)
+            post.delete()
+            print(f"✅ Post {post_id} deleted successfully from database")
+            
+            # Invalidate all feed cache (comprehensive approach)
+            self._invalidate_feed_cache()
+            
+            return Response({
+                'success': True,
+                'message': 'Post deleted successfully'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"💥 Unexpected error deleting post {post_id}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {'error': f'Internal server error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def _invalidate_feed_cache(self):
+        """Invalidate all feed caches using version bump approach"""
+        try:
+            # Increment cache version to invalidate all cached data
+            current_version = cache.get('post_feed_version', 1)
+            new_version = current_version + 1
+            cache.set('post_feed_version', new_version, None)  # Never expire the version
+            print(f"🧹 Cache invalidated: v{current_version} → v{new_version}")
+            
+        except Exception as e:
+            print(f"⚠️ Cache invalidation failed (non-critical): {e}")
+            pass
 
 class PostReactionView(APIView):
     """Handle post reactions (Facebook-style)"""
@@ -449,8 +514,8 @@ class SharePostView(APIView):
                 content_category=original_post.content_category,
                 post_type='shared',
                 shared_post=original_post,
-                shared_text=shared_text,
-                is_approved=True if request.user.user_type in [1, 2] else False
+                shared_text=shared_text
+                # Status and is_approved will be set by the model's save method
             )
             
             # Update share count
@@ -492,15 +557,18 @@ class PostApprovalView(APIView):
     
     def get(self, request):
         """Get pending posts for approval"""
-        posts = Post.objects.filter(is_approved=False).select_related('user').order_by('-created_at')
+        posts = Post.objects.filter(status='pending').select_related('user').order_by('-created_at')
         serializer = PostSerializer(posts, many=True, context={'request': request})
         return Response(serializer.data)
     
     def post(self, request, post_id):
         """Approve a post"""
         try:
-            post = Post.objects.get(id=post_id, is_approved=False)
-            post.is_approved = True
+            post = Post.objects.get(id=post_id, status='pending')
+            post.status = 'approved'
+            post.is_approved = True  # Keep for backward compatibility
+            post.approved_by = request.user
+            post.approved_at = timezone.now()
             post.save()
             
             # Broadcast approval
@@ -513,21 +581,48 @@ class PostApprovalView(APIView):
             
         except Post.DoesNotExist:
             return Response(
-                {'error': 'Post not found or already approved'}, 
+                {'error': 'Post not found or already processed'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
     
     def delete(self, request, post_id):
-        """Reject a post"""
+        """Decline a post"""
         try:
-            post = Post.objects.get(id=post_id, is_approved=False)
-            post_user = post.user
-            post.delete()
+            post = Post.objects.get(id=post_id, status='pending')
+            decline_reason = request.data.get('reason', '')
             
-            # Broadcast rejection
+            post.status = 'declined'
+            post.decline_reason = decline_reason
+            post.save()
+            
+            # Broadcast decline
             self._broadcast_post_approval(post, request.user, approved=False)
             
-            return Response({'message': 'Post rejected successfully'})
+            return Response({'message': 'Post declined successfully'})
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    def put(self, request, post_id):
+        """Decline a post with reason (alternative to DELETE)"""
+        try:
+            post = Post.objects.get(id=post_id, status='pending')
+            decline_reason = request.data.get('reason', '')
+            
+            post.status = 'declined'
+            post.decline_reason = decline_reason
+            post.save()
+            
+            # Broadcast decline
+            self._broadcast_post_approval(post, request.user, approved=False)
+            
+            return Response({
+                'message': 'Post declined successfully',
+                'reason': decline_reason
+            })
             
         except Post.DoesNotExist:
             return Response(
@@ -587,4 +682,392 @@ class SavePostView(APIView):
             return Response(
                 {'error': 'Post not found'}, 
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PostPinView(APIView):
+    """Pin or unpin a post (Admin/SuperAdmin only)"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, post_id):
+        """Pin a post"""
+        try:
+            # Check if user is admin/superadmin
+            if request.user.user_type not in [1, 2]:
+                return Response(
+                    {'error': 'Permission denied. Admin access required.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            post = Post.objects.get(id=post_id)
+            post.is_pinned = True
+            post.save()
+            
+            # Clear cache
+            cache.delete_many(cache.keys('post_feed_*'))
+            
+            return Response({
+                'pinned': True,
+                'message': 'Post pinned successfully'
+            })
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PostUnpinView(APIView):
+    """Unpin a post (Admin/SuperAdmin only)"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, post_id):
+        """Unpin a post"""
+        try:
+            # Check if user is admin/superadmin
+            if request.user.user_type not in [1, 2]:
+                return Response(
+                    {'error': 'Permission denied. Admin access required.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            post = Post.objects.get(id=post_id)
+            post.is_pinned = False
+            post.save()
+            
+            # Clear cache
+            cache.delete_many(cache.keys('post_feed_*'))
+            
+            return Response({
+                'pinned': False,
+                'message': 'Post unpinned successfully'
+            })
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PostFeatureView(APIView):
+    """Feature or unfeature a post (Admin/SuperAdmin only)"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, post_id):
+        """Feature a post"""
+        try:
+            # Check if user is admin/superadmin
+            if request.user.user_type not in [1, 2]:
+                return Response(
+                    {'error': 'Permission denied. Admin access required.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            post = Post.objects.get(id=post_id)
+            post.is_featured = True
+            post.save()
+            
+            # Clear cache
+            cache.delete_many(cache.keys('post_feed_*'))
+            
+            return Response({
+                'featured': True,
+                'message': 'Post featured successfully'
+            })
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PostUnfeatureView(APIView):
+    """Remove a post from featured (Admin/SuperAdmin only)"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, post_id):
+        """Unfeature a post"""
+        try:
+            # Check if user is admin/superadmin
+            if request.user.user_type not in [1, 2]:
+                return Response(
+                    {'error': 'Permission denied. Admin access required.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            post = Post.objects.get(id=post_id)
+            post.is_featured = False
+            post.save()
+            
+            # Clear cache
+            cache.delete_many(cache.keys('post_feed_*'))
+            
+            return Response({
+                'featured': False,
+                'message': 'Post removed from featured successfully'
+            })
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PostEditView(APIView):
+    """Edit a post (Admin/SuperAdmin only)"""
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request, post_id):
+        """Update a post"""
+        try:
+            # Check if user is admin/superadmin
+            if request.user.user_type not in [1, 2]:
+                return Response(
+                    {'error': 'Permission denied. Admin access required.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            post = Post.objects.get(id=post_id)
+            
+            # Update fields if provided
+            if 'content' in request.data:
+                post.content = request.data['content']
+            if 'title' in request.data:
+                post.title = request.data['title']
+            if 'content_category' in request.data:
+                post.content_category = request.data['content_category']
+            
+            # Set edited timestamp
+            post.edited_at = timezone.now()
+            post.save()
+            
+            # Clear cache
+            cache.delete_many(cache.keys('post_feed_*'))
+            
+            # Return updated post data
+            from .serializers import PostSerializer
+            serializer = PostSerializer(post)
+            return Response({
+                'message': 'Post updated successfully',
+                'post': serializer.data
+            })
+
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PostReportView(APIView):
+    """Handle post reporting functionality"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, post_id):
+        """Report a post"""
+        try:
+            post = Post.objects.get(id=post_id)
+            
+            # Check if user already reported this post
+            existing_report = PostReport.objects.filter(
+                post=post,
+                reporter=request.user
+            ).first()
+            
+            if existing_report:
+                return Response(
+                    {'error': 'You have already reported this post'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get report data
+            reason = request.data.get('reason')
+            details = request.data.get('details', '')
+            
+            if not reason:
+                return Response(
+                    {'error': 'Report reason is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create report
+            report = PostReport.objects.create(
+                post=post,
+                reporter=request.user,
+                reason=reason,
+                description=details
+            )
+            
+            # Serialize and return
+            serializer = PostReportSerializer(report)
+            
+            return Response({
+                'message': 'Post reported successfully. Thank you for helping keep our community safe.',
+                'report': serializer.data
+            }, status=status.HTTP_201_CREATED)
+            
+        except Post.DoesNotExist:
+            return Response(
+                {'error': 'Post not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'An error occurred while processing your report: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AdminReportListView(APIView):
+    """Admin view to list all post reports"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get all post reports for admin review"""
+        # Check if user is admin
+        if not hasattr(request.user, 'user_type') or request.user.user_type not in [1, 2]:
+            return Response(
+                {'error': 'Admin access required'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            # Get query parameters
+            status_filter = request.query_params.get('status', 'pending')  # pending, resolved, all
+            reason_filter = request.query_params.get('reason', '')
+            page = int(request.query_params.get('page', 1))
+            page_size = int(request.query_params.get('page_size', 10))
+            
+            # Build queryset
+            queryset = PostReport.objects.select_related('post', 'post__user', 'reporter', 'resolved_by')
+            
+            # Apply filters
+            if status_filter == 'pending':
+                queryset = queryset.filter(is_resolved=False)
+            elif status_filter == 'resolved':
+                queryset = queryset.filter(is_resolved=True)
+            # 'all' shows everything
+            
+            if reason_filter:
+                queryset = queryset.filter(reason=reason_filter)
+            
+            # Order by creation date (newest first)
+            queryset = queryset.order_by('-created_at')
+            
+            # Pagination
+            start = (page - 1) * page_size
+            end = start + page_size
+            reports = queryset[start:end]
+            total_count = queryset.count()
+            
+            # Serialize data
+            serializer = PostReportSerializer(reports, many=True)
+            
+            # Get statistics
+            stats = {
+                'total_reports': PostReport.objects.count(),
+                'pending_reports': PostReport.objects.filter(is_resolved=False).count(),
+                'resolved_today': PostReport.objects.filter(
+                    is_resolved=True,
+                    resolved_at__date=timezone.now().date()
+                ).count(),
+                'dismissed_today': PostReport.objects.filter(
+                    is_resolved=True,
+                    resolved_at__date=timezone.now().date(),
+                    resolved_by__isnull=False
+                ).count(),
+            }
+            
+            return Response({
+                'reports': serializer.data,
+                'pagination': {
+                    'page': page,
+                    'page_size': page_size,
+                    'total_count': total_count,
+                    'total_pages': (total_count + page_size - 1) // page_size,
+                    'has_more': end < total_count
+                },
+                'stats': stats
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'An error occurred while fetching reports: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AdminReportActionView(APIView):
+    """Admin view to take action on post reports"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, report_id):
+        """Take action on a report: dismiss, warn user, or remove post"""
+        # Check if user is admin
+        if not hasattr(request.user, 'user_type') or request.user.user_type not in [1, 2]:
+            return Response(
+                {'error': 'Admin access required'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            report = PostReport.objects.select_related('post', 'post__user').get(id=report_id)
+            
+            if report.is_resolved:
+                return Response(
+                    {'error': 'This report has already been resolved'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            action = request.data.get('action')
+            if action not in ['dismiss', 'warn', 'remove']:
+                return Response(
+                    {'error': 'Invalid action. Must be one of: dismiss, warn, remove'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Mark report as resolved
+            report.is_resolved = True
+            report.resolved_by = request.user
+            report.resolved_at = timezone.now()
+            report.save()
+            
+            response_message = ''
+            
+            if action == 'dismiss':
+                response_message = 'Report dismissed successfully'
+                
+            elif action == 'warn':
+                # Here you could implement user warning system
+                # For now, just mark as resolved with warning
+                response_message = 'User warned and report resolved'
+                
+            elif action == 'remove':
+                # Remove the post
+                post = report.post
+                post.delete()
+                response_message = 'Post removed and report resolved'
+            
+            # Update cache version
+            cache.set('posts_cache_version', cache.get('posts_cache_version', 0) + 1)
+            
+            return Response({
+                'message': response_message,
+                'action': action,
+                'report_id': report_id
+            }, status=status.HTTP_200_OK)
+            
+        except PostReport.DoesNotExist:
+            return Response(
+                {'error': 'Report not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'An error occurred while processing the action: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
