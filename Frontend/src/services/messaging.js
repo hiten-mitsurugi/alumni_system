@@ -177,7 +177,7 @@ class MessagingService {
 
   // Utility functions
   getProfilePictureUrl(user) {
-    const BASE_URL = 'http://127.0.0.1:8000'
+    const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`;
     const pic = user?.profile_picture
     return pic
       ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)

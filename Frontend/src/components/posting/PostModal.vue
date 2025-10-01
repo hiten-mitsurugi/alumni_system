@@ -151,7 +151,7 @@
         </div>
 
         <!-- Right side - Post Details and Comments -->
-        <div :class="hasMedia ? 'w-full sm:w-[550px]' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full">
+  <div :class="hasMedia ? 'w-full sm:w-[550px]' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full max-w-xs mx-auto">
           <!-- Scrollable Content Area with Fixed Height -->
           <div class="overflow-y-auto" style="height: calc(100% - 70px);">
             <!-- Post Header -->
@@ -244,8 +244,8 @@
           </div>
 
           <!-- Fixed Comment Input at Bottom -->
-          <div class="h-16 sm:h-20 px-3 sm:px-6 py-2 sm:py-4 border-t border-gray-200 bg-white flex items-center">
-            <div class="flex space-x-2 sm:space-x-3 w-full">
+          <div class="h-16 sm:h-20 px-2 sm:px-6 py-2 sm:py-4 border-t border-gray-200 bg-white flex items-center">
+            <div class="flex space-x-2 sm:space-x-3 w-full max-w-xs mx-auto">
               <img
                 :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'"
                 alt="Your avatar"
@@ -316,7 +316,7 @@ import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
 import ReactionsModal from './ReactionsModal.vue'
 import EmojiPicker from './EmojiPicker.vue'
-import './PostModal.css'
+import '@/components/css/PostModal.css'
 
 // Props
 const props = defineProps({
@@ -523,18 +523,22 @@ const closeEmojiPicker = () => {
   showEmojiPicker.value = false
 }
 
+const getBackendBaseUrl = () => {
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  const hostname = window.location.hostname;
+  return `${protocol}//${hostname}:8000`;
+};
+
 const getProfilePictureUrl = (profilePicture) => {
-  if (!profilePicture) return '/default-avatar.png'
-  
+  if (!profilePicture) return '/default-avatar.png';
   // If already a full URL, return as is
   if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-    return profilePicture
+    return profilePicture;
   }
-  
-  // If relative path, prepend base URL
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
-  return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`
-}
+  // If relative path, prepend dynamic base URL
+  const BASE_URL = getBackendBaseUrl();
+  return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`;
+};
 
 const getMediaUrl = (url) => {
   if (!url) return '/default-placeholder.png'; // Fallback if null

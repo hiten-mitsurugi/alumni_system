@@ -73,10 +73,9 @@ const form = reactive({
   middle_name: '',
   last_name: '',
   birth_date: '',
-  school_id: '',
   program: '',
   year_graduated: '',
-  gender: ''
+  sex: ''
 });
 
 // Computed
@@ -94,7 +93,6 @@ const resetForm = () => {
     middle_name: '',
     last_name: '',
     birth_date: '',
-    school_id: '',
     program: '',
     year_graduated: '',
     gender: ''
@@ -109,10 +107,9 @@ const populateForm = (alumniData) => {
       middle_name: alumniData.middle_name || '',
       last_name: alumniData.last_name || '',
       birth_date: alumniData.birth_date || '',
-      school_id: alumniData.school_id || '',
       program: alumniData.program || '',
       year_graduated: alumniData.year_graduated?.toString() || '',
-      gender: alumniData.gender || ''
+    sex: alumniData.sex || ''
     });
   }
 };
@@ -126,12 +123,6 @@ const validateForm = () => {
   
   if (!form.last_name.trim()) {
     errors.value.last_name = 'Last name is required';
-  }
-  
-  if (!form.school_id.trim()) {
-    errors.value.school_id = 'School ID is required';
-  } else if (!/^\d{3}-\d{5}$/.test(form.school_id)) {
-    errors.value.school_id = 'School ID must be in format XXX-XXXXX (e.g., 221-01926)';
   }
   
   if (!form.program) {
@@ -151,8 +142,8 @@ const validateForm = () => {
     }
   }
   
-  if (!form.gender) {
-    errors.value.gender = 'Gender is required';
+  if (!form.sex) {
+    errors.value.sex = 'Gender is required';
   }
   
   return Object.keys(errors.value).length === 0;
@@ -171,9 +162,9 @@ const handleSubmit = async (event) => {
   
   try {
     const payload = {
-      ...form,
-      year_graduated: parseInt(form.year_graduated),
-      middle_name: form.middle_name || null
+  ...form,
+  year_graduated: parseInt(form.year_graduated),
+  middle_name: form.middle_name || null
     };
     
     if (isEditMode.value) {
@@ -311,22 +302,8 @@ watch(() => props.show, (newValue) => {
           </div>
         </div>
 
-        <!-- School ID and Program -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              School ID <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="form.school_id"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              :class="{ 'border-red-500': errors.school_id }"
-              placeholder="XXX-XXXXX (e.g., 221-01926)"
-            />
-            <p v-if="errors.school_id" class="text-red-500 text-sm mt-1">{{ errors.school_id }}</p>
-          </div>
-
+        <!-- Program -->
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Program <span class="text-red-500">*</span>
@@ -379,16 +356,16 @@ watch(() => props.show, (newValue) => {
               Gender <span class="text-red-500">*</span>
             </label>
             <select
-              v-model="form.gender"
+              v-model="form.sex"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              :class="{ 'border-red-500': errors.gender }"
+              :class="{ 'border-red-500': errors.sex }"
             >
               <option value="">Select Gender</option>
               <option v-for="option in genderOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
-            <p v-if="errors.gender" class="text-red-500 text-sm mt-1">{{ errors.gender }}</p>
+            <p v-if="errors.sex" class="text-red-500 text-sm mt-1">{{ errors.sex }}</p>
           </div>
         </div>
 

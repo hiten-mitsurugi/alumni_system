@@ -1,6 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
 import { ref } from 'vue';
+import LoginLoading from '../components/common/LoginLoading.vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import Navbar from '../components/Navbar.vue';
@@ -10,6 +11,7 @@ import backgroundImage from "@/assets/Background.png";
 const email = ref('');
 const password = ref('');
 const error = ref('');
+const loading = ref(false);
 const router = useRouter();
 const authStore = useAuthStore();
 
@@ -28,6 +30,7 @@ const login = async () => {
       'Password must be at least 8 characters, with 1 uppercase, 1 lowercase, 1 number, and 1 special character';
     return;
   }
+  loading.value = true;
   try {
     const response = await api.post('/login/', {
       email: email.value,
@@ -45,6 +48,8 @@ const login = async () => {
   } catch (err) {
     error.value = err.response?.data?.detail || 'Login failed. Please try again.';
     console.error('Login error:', error.value);
+  } finally {
+    loading.value = false;
   }
 };
 </script>
@@ -54,12 +59,10 @@ const login = async () => {
     class="min-h-screen bg-cover bg-center flex flex-col"
     :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
-    <!-- Navbar -->
     <Navbar />
     <div class="h-20"></div>
-
-    <!-- Main Content -->
-    <div class="flex flex-1 items-center justify-center px-6 md:px-16">
+    <LoginLoading v-if="loading" />
+    <div v-else class="flex flex-1 items-center justify-center px-6 md:px-16">
       <!-- Left Section -->
       <div class="hidden md:flex w-1/2 justify-center">
         <div class="flex flex-col items-center text-white ml-12 text-center">
@@ -71,7 +74,6 @@ const login = async () => {
           </div>
         </div>
       </div>
-
       <!-- Right Section (Login Form) -->
       <div class="w-full md:w-1/2 flex justify-center">
         <div class="bg-white bg-opacity-90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full">
@@ -81,7 +83,6 @@ const login = async () => {
             <img src="@/assets/ARO_logo-removebg-preview.png" alt="Logo 2" class="h-12" />
           </div>
           <h3 class="text-xl font-semibold text-center mb-6">Login</h3>
-
           <!-- Form Start -->
           <form @submit.prevent="login" class="space-y-4">
             <input

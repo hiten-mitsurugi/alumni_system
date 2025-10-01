@@ -33,7 +33,16 @@ const currentPostIndex = ref(0);
 let postsSocket = null;
 
 // Constants
-const BASE_URL = 'http://127.0.0.1:8000';
+// Dynamically determine backend base URL and WebSocket URL
+const getBackendBaseUrl = () => {
+  // Use window.location.hostname and protocol, but default to port 8000 for backend
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  const hostname = window.location.hostname;
+  // If running on localhost, fallback to 127.0.0.1
+  const host = (hostname === 'localhost' || hostname === '127.0.0.1') ? hostname : hostname;
+  return `${protocol}//${host}:8000`;
+};
+const BASE_URL = getBackendBaseUrl();
 const categories = [
   { value: 'all', label: 'All Posts', icon: '📋' },
   { value: 'discussion', label: 'Discussion', icon: '💬' },
@@ -82,7 +91,10 @@ const connectWebSocket = () => {
     return;
   }
   
-  const wsUrl = `ws://127.0.0.1:8000/ws/posts/feed/?token=${token}`;
+  // Use ws or wss depending on protocol
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsHost = window.location.hostname;
+  const wsUrl = `${wsProtocol}://${wsHost}:8000/ws/posts/feed/?token=${token}`;
   postsSocket = new WebSocket(wsUrl);
   
   postsSocket.onopen = () => {
@@ -664,7 +676,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-6xl mx-auto px-6 py-8 pt-48">
+  <div class="max-w-xs mx-auto px-2 py-8 pt-48">
       <!-- Create Post Section -->
       <PostCreateForm 
         :user-profile-picture="authStore.user.profile_picture"

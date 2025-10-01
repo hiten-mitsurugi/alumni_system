@@ -113,12 +113,6 @@ class Command(BaseCommand):
                         )
                         return
 
-                # Generate unique school_id for the account
-                school_id = f'ADM{user_type}{random.randint(1000, 9999)}'
-                
-                # Ensure school_id is unique
-                while User.objects.filter(school_id=school_id).exists():
-                    school_id = f'ADM{user_type}{random.randint(1000, 9999)}'
 
                 # Create the user account
                 user = User.objects.create_user(
@@ -128,14 +122,13 @@ class Command(BaseCommand):
                     first_name=account_type.replace(' ', ''),
                     last_name='User',
                     user_type=user_type,
-                    school_id=school_id,
                     is_approved=True,
                     is_active=True,
                     is_staff=is_staff,
                     is_superuser=is_superuser,
                     # Required fields with defaults
                     program='Administration',
-                    gender='prefer_not_to_say',
+                    sex='prefer_not_to_say',
                     birth_date=date(1990, 1, 1),
                     contact_number='+63-900-000-0000',
                     present_address='Administration Office',
@@ -153,25 +146,8 @@ class Command(BaseCommand):
                 from auth_app.models import Profile
                 profile = Profile.objects.create(
                     user=user,
-                    full_name=f'{user.first_name} {user.last_name}',
-                    email_address=user.email,
-                    school_id=user.school_id,
-                    mobile_number=user.contact_number,
-                    sex=user.gender,
-                    civil_status=user.civil_status,
-                    year_of_birth=user.birth_date,
-                    present_address=user.present_address,
-                    permanent_address=user.permanent_address,
-                    mothers_name=user.mothers_name,
-                    mothers_occupation=user.mothers_occupation,
-                    fathers_name=user.fathers_name,
-                    fathers_occupation=user.fathers_occupation,
-                    year_graduated=user.year_graduated,
-                    program=user.program,
-                    present_employment_status=user.employment_status,
-                    status='online',
                     bio=f'System generated {account_type} account',
-                    last_seen=timezone.now()
+                    present_employment_status=user.employment_status
                 )
 
                 self.stdout.write(
@@ -179,7 +155,6 @@ class Command(BaseCommand):
                         f'✅ Created {account_type} account:'
                         f'\n   � Email (for login): {email}'
                         f'\n   � Username: {username}'
-                        f'\n   🆔 School ID: {school_id}'
                         f'\n   🔑 Password: {password}'
                         f'\n   📋 Type: {account_type} (Level {user_type})'
                         f'\n   ✅ Status: Active & Approved'

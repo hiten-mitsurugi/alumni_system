@@ -183,11 +183,15 @@ const readMessageIds = new Set()
 
 // Safe profile picture helper
 const getProfilePictureUrl = (entity) => {
-  const BASE_URL = 'http://127.0.0.1:8000'
-  const pic = entity?.profile_picture || entity?.group_picture
+  // Use dynamic hostname and protocol for BASE_URL
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  const port = '8000'; // Adjust if your backend runs on a different port
+  const BASE_URL = `${protocol}//${hostname}:${port}`;
+  const pic = entity?.profile_picture || entity?.group_picture;
   return pic
     ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
-    : '/default-avatar.png'
+    : '/default-avatar.png';
 }
 
 // Computed property for avatar URL

@@ -35,7 +35,7 @@
           <div class="absolute -top-16 left-6">
             <div class="relative">
               <img 
-                :src="user?.profile_picture || '/default-avatar.png'" 
+                :src="profilePictureUrl" 
                 alt="Profile Picture"
                 class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
               />
@@ -250,6 +250,13 @@ const profileUserId = computed(() => {
   return route.params.userIdentifier || authStore.user?.id
 })
 
+const profilePictureUrl = computed(() => {
+  const pic = user.value?.profile_picture
+  return pic
+    ? (pic.startsWith('http') ? pic : `http://127.0.0.1:8000${pic}`)
+    : '/default-avatar.png'
+})
+
 // Methods
 const fetchProfile = async () => {
   try {
@@ -302,15 +309,32 @@ const fetchProfile = async () => {
     console.log('Final userId for API call:', userId)
     console.log('isOwnProfile after resolution:', isOwnProfile.value)
     
-    // Use ID-based API endpoint (reliable)
+    // Use ID-based API endpoint with fallback
     const endpoint = (userId === authStore.user?.id)
       ? '/enhanced-profile/' 
       : `/enhanced-profile/${userId}/`
     
     console.log('Fetching from endpoint:', endpoint)
     
-    const response = await api.get(endpoint)
-    const data = response.data
+    let data
+    try {
+      const response = await api.get(endpoint)
+      data = response.data
+    } catch (enhancedError) {
+      console.log('Enhanced profile failed, using basic user endpoint:', enhancedError.message)
+      // Fallback to basic user endpoint for current user
+      if (userId === authStore.user?.id) {
+        const response = await api.get('/user/')
+        data = response.data
+        // Add empty arrays for missing enhanced fields
+        data.education = []
+        data.work_histories = []
+        data.achievements = []
+        data.profile = data.profile || {}
+      } else {
+        throw enhancedError // Re-throw for other users since we can't fetch them with /user/
+      }
+    }
     
     console.log('Profile data received:', data.first_name, data.last_name)
     

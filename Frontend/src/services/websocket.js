@@ -6,11 +6,12 @@ const getWebSocketBaseURL = () => {
   if (import.meta.env.VITE_WS_BASE_URL) {
     return import.meta.env.VITE_WS_BASE_URL;
   }
-  
-  // Auto-detect based on current location (works with any IP)
-  const { protocol, hostname } = window.location;
-  const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${wsProtocol}//${hostname}:8000/ws`;
+
+  // Use window.location.hostname for dynamic local network access
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsHost = window.location.hostname;
+  const wsPort = 8000;
+  return `${wsProtocol}://${wsHost}:${wsPort}/ws`;
 };
 
 export class WebSocketService {

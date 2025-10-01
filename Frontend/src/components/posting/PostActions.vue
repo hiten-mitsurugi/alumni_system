@@ -22,8 +22,8 @@
             </svg>
             <!-- Show emoji when reaction is selected -->
             <span v-if="selectedReaction" :class="size === 'small' ? 'text-base sm:text-xl' : 'text-xl sm:text-2xl'">{{ currentReactionEmoji }}</span>
+            <span class="block sm:hidden text-xs mt-1">{{ selectedReaction ? currentReactionLabel : 'React' }}</span>
             <span class="hidden sm:inline">{{ selectedReaction ? currentReactionLabel : 'React' }}</span>
-            <span class="sm:hidden text-xs">React</span>
           </button>
           
           <!-- Reaction Picker -->
@@ -55,8 +55,8 @@
         <svg :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
-        <span class="hidden sm:inline">Comment</span>
-        <span class="sm:hidden text-xs">Comment</span>
+  <span class="block sm:hidden text-xs mt-1">Comment</span>
+  <span class="hidden sm:inline">Comment</span>
       </button>
       
       <!-- Repost -->
@@ -72,8 +72,8 @@
         <svg :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        <span class="hidden sm:inline">Repost</span>
-        <span class="sm:hidden text-xs">Repost</span>
+  <span class="block sm:hidden text-xs mt-1">Repost</span>
+  <span class="hidden sm:inline">Repost</span>
       </button>
       
       <!-- Copy Link -->
@@ -89,8 +89,8 @@
         <svg :class="size === 'small' ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
-        <span class="hidden sm:inline">Copy Link</span>
-        <span class="sm:hidden text-xs">Copy</span>
+  <span class="block sm:hidden text-xs mt-1">Copy Link</span>
+  <span class="hidden sm:inline">Copy Link</span>
       </button>
     </div>
   </div>

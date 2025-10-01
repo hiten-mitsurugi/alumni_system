@@ -52,7 +52,16 @@ const currentUser = computed(() => authStore.user);
 let postsSocket = null;
 
 // Constants
-const BASE_URL = 'http://127.0.0.1:8000';
+// Dynamically determine backend base URL and WebSocket URL
+const getBackendBaseUrl = () => {
+  // Use window.location.hostname and protocol, but default to port 8000 for backend
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  const hostname = window.location.hostname;
+  // If running on localhost, fallback to 127.0.0.1
+  const host = (hostname === 'localhost' || hostname === '127.0.0.1') ? hostname : hostname;
+  return `${protocol}//${host}:8000`;
+};
+const BASE_URL = getBackendBaseUrl();
 const categories = [
   { value: 'all', label: 'All Posts', icon: '📋' },
   { value: 'discussion', label: 'Discussion', icon: '💬' },
@@ -101,7 +110,10 @@ const connectWebSocket = () => {
     return;
   }
   
-  const wsUrl = `ws://127.0.0.1:8000/ws/posts/feed/?token=${token}`;
+  // Use ws or wss depending on protocol
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsHost = window.location.hostname;
+  const wsUrl = `${wsProtocol}://${wsHost}:8000/ws/posts/feed/?token=${token}`;
   postsSocket = new WebSocket(wsUrl);
   
   postsSocket.onopen = () => {
@@ -665,18 +677,9 @@ onUnmounted(() => {
     </div>
 
     <!-- Mobile Layout: Stacked for mobile/tablet -->
-    <div class="alumni-mobile-layout">
-      <div class="mobile-content-wrapper">
-        <!-- Mobile Profile Section -->
-        <div class="space-y-4">
-          <ProfileCard
-            @edit-profile="editProfile"
-            @view-profile="viewProfile"
-          />
-        </div>
-
-        <!-- Mobile Main Content -->
-        <div class="space-y-4 mt-6">
+    <div class="alumni-mobile-layout max-w-sm mx-auto px-2">
+      <div class="mobile-content-wrapper max-w-sm mx-auto px-2">
+  <div class="space-y-4 mt-0">
           <!-- Category Tabs -->
           <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             <div class="grid grid-cols-4 sm:grid-cols-7 border-b border-gray-100">
@@ -696,22 +699,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Create Post Button -->
-          <div class="bg-white border border-gray-200 rounded-lg p-4">
-            <button
-              @click="showCreateForm = true"
-              class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-left transition-colors flex items-center space-x-3"
-            >
-              <img 
-                :src="currentUser?.profile_picture || '/default-avatar.png'" 
-                :alt="currentUser?.full_name || 'User'" 
-                class="w-8 h-8 rounded-full object-cover"
-              >
-              <span class="text-gray-500">What's on your mind?</span>
-            </button>
-          </div>
-
-          <!-- Posts Feed -->
+          <!-- Posts Feed Only -->
           <div class="space-y-4">
             <div v-if="isLoading" class="flex justify-center py-8">
               <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -738,31 +726,6 @@ onUnmounted(() => {
                 @reaction-updated="handleReactionUpdated"
               />
             </template>
-          </div>
-        </div>
-
-        <!-- Mobile Suggested Connections -->
-        <div class="mt-6">
-          <SuggestedConnectionsWidget @connect="handleConnect" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Search Modal for Mobile -->
-    <div v-if="showMobileSearch" class="fixed inset-0 bg-black/50 z-50 flex items-start pt-20">
-      <div class="bg-white w-full mx-4 rounded-lg shadow-lg">
-        <div class="p-4">
-          <div class="relative">
-            <input 
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search alumni, posts..."
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              ref="mobileSearchInput"
-            >
-            <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
           </div>
         </div>
       </div>

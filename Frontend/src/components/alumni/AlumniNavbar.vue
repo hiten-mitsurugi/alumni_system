@@ -1,8 +1,19 @@
 <template>
   <div class="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b border-gray-200">
-    <!-- Left Section: Logo and Search -->
+    <LogoutLoading v-if="loggingOut" />
+    <!-- Left Section: Logo, Menu Button, and Search -->
     <div class="flex items-center gap-4 flex-1 ml-4">
-      <img src="@/assets/logo3.png" alt="Alumni System Logo" class="h-8 w-auto" />
+      <!-- Mobile Menu Button -->
+      <button
+        class="lg:hidden p-2 mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        @click="$emit('openSidebar')"
+        aria-label="Open menu"
+      >
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <img src="@/assets/logo3-removebg-preview.png" alt="Alumni System Logo" class="h-10 w-auto" />
 
       <!-- Search Bar -->
       <div v-if="isHomePage" class="hidden md:flex w-72">
@@ -89,13 +100,16 @@
 import { ref, computed, onMounted, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import LogoutLoading from '../common/LogoutLoading.vue'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-const BASE_URL = 'http://127.0.0.1:8000'
+const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`;
+
 
 const dropdownOpen = ref(false)
+const loggingOut = ref(false)
 
 // Inject search functionality from parent (AlumniHome)
 const injectedSearchQuery = inject('searchQuery', ref(''))
@@ -140,6 +154,7 @@ onMounted(async () => {
 
 // Logout function
 async function handleLogout() {
+  loggingOut.value = true;
   console.log('AlumniNavbar: Starting logout process');
   await authStore.logoutWithAPI();
   console.log('AlumniNavbar: Backend logout completed, waiting briefly for status broadcast');
@@ -149,6 +164,7 @@ async function handleLogout() {
 
   console.log('AlumniNavbar: Redirecting to login');
   router.push('/login');
+  loggingOut.value = false;
 }
 
 // Click outside to close dropdown

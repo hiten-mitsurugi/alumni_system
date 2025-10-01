@@ -236,7 +236,17 @@ class MessagingBaseMixin:
             # Create mock request for URL building with user context
             from django.http import HttpRequest
             mock_request = HttpRequest()
-            mock_request.META = {'HTTP_HOST': '127.0.0.1:8000', 'wsgi.url_scheme': 'http'}
+            # Use dynamic host for media URLs
+            import os
+            host = os.environ.get('SERVER_HOST')
+            if not host:
+                # Try to get from ASGI scope headers if available
+                try:
+                    host = dict(self.scope.get('headers', [])).get(b'host', b'').decode() or 'localhost:8000'
+                except Exception:
+                    host = 'localhost:8000'
+            scheme = 'https' if os.environ.get('SERVER_HTTPS', '0') == '1' else 'http'
+            mock_request.META = {'HTTP_HOST': host, 'wsgi.url_scheme': scheme}
             
             # Create a proper user object with is_authenticated attribute
             mock_user = self.user

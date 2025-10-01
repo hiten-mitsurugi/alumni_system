@@ -14,12 +14,12 @@
           <span class="font-medium">{{ formatTimeAgo(post.created_at) }}</span>
           <span class="text-slate-400">•</span>
           <span
-            class="capitalize font-medium bg-slate-100 px-3 py-1 rounded-full cursor-pointer hover:bg-slate-200 transition-colors">
+            class="capitalize font-medium cursor-pointer hover:bg-slate-200 transition-colors">
             {{categories.find(c => c.value === post.content_category)?.icon || '📝'}}
             {{ post.content_category }}
           </span>
           <span v-if="post.post_type === 'shared'"
-            class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+            class=" text-slate-700 px-1 py-1 rounded-full font-medium">
             🔄 Shared
           </span>
         </div>
@@ -29,7 +29,7 @@
     <!-- Post Menu -->
     <div class="relative">
       <button class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-colors">
-        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
         </svg>
       </button>

@@ -364,7 +364,10 @@ const debugError = console.error; // Always log errors
 
 // === Helper to always return correct avatar URL for user/group (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
- const BASE_URL = 'http://127.0.0.1:8000'
+ let BASE_URL = 'http://127.0.0.1:8000';
+ if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+   BASE_URL = `http://${window.location.hostname}:8000`;
+ }
  
  // Handle different entity types
  let pic = null;
@@ -386,7 +389,7 @@ const getProfilePictureUrl = (entity) => {
  
  return pic
    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
-   : '/default-avatar.png'
+   : '/default-avatar.png';
 };
 
 // === COMPUTED ===
@@ -1489,8 +1492,11 @@ function setupWebSockets() {
  getValidToken().then(token => {
  if (!token) return (isAuthenticated.value = false);
  
- // Set up private messaging WebSocket
- privateWs.value = new WebSocket(`ws://localhost:8000/ws/private/?token=${token}`);
+ // Use dynamic protocol and hostname for WebSocket URLs
+ const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+ const wsHost = window.location.hostname;
+ const wsPort = '8000'; // Change if your backend runs on a different port
+ privateWs.value = new WebSocket(`${wsProtocol}://${wsHost}:${wsPort}/ws/private/?token=${token}`);
 
  privateWs.value.onopen = () => {
  console.log('Messaging.vue: Private WS connected');
@@ -1568,7 +1574,10 @@ function setupWebSockets() {
 
 function setupNotificationWebSocket(token) {
  console.log('🔔 Setting up notification WebSocket...');
- notificationWs.value = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${token}`);
+ const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+ const wsHost = window.location.hostname;
+ const wsPort = '8000';
+ notificationWs.value = new WebSocket(`${wsProtocol}://${wsHost}:${wsPort}/ws/notifications/?token=${token}`);
  
  notificationWs.value.onopen = () => {
  console.log('🔔 Messaging.vue: Notification WS connected successfully!');
@@ -1642,7 +1651,10 @@ function setupGroupWebSocket(conv) {
  }
  
  console.log('Messaging.vue: Setting up group WebSocket for group:', conv.group.id);
- groupWs.value = new WebSocket(`ws://localhost:8000/ws/group/${conv.group.id}/?token=${token}`);
+ const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+ const wsHost = window.location.hostname;
+ const wsPort = '8000';
+ groupWs.value = new WebSocket(`${wsProtocol}://${wsHost}:${wsPort}/ws/group/${conv.group.id}/?token=${token}`);
  
  groupWs.value.onopen = () => {
  console.log('Messaging.vue: Group WS connected');
