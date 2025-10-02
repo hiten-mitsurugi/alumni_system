@@ -2,7 +2,7 @@
   <div
     class="bg-white rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg border border-green-100 mb-4 md:mb-6 overflow-hidden">
     <div class="bg-gradient-to-r from-green-700 to-green-700 px-3 md:px-4 lg:px-6 py-3 md:py-4">
-      <h2 class="text-base md:text-lg font-bold text-white flex items-center">
+      <h2 class="text-base md:text-lg font-bold text-green-700 flex items-center">
         <svg class="w-5 h-5 md:w-6 md:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -10,7 +10,7 @@
         <span class="hidden sm:inline">Share Your Thoughts</span>
         <span class="sm:hidden">Share</span>
       </h2>
-      <p class="text-green-100 text-xs md:text-sm mt-1 hidden md:block">Connect with your fellow alumni and share what's
+      <p class="text-green-700 text-xs md:text-sm mt-1 hidden md:block">Connect with your fellow alumni and share what's
         on your mind</p>
     </div>
 
