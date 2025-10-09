@@ -23,8 +23,33 @@ export const getReasonBadgeClass = (reason) => {
   return classes[reason] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
 }
 
+export const getReasonColor = (reason) => {
+  const colors = {
+    spam: 'text-red-600 dark:text-red-400',
+    harassment: 'text-orange-600 dark:text-orange-400',
+    hate_speech: 'text-red-600 dark:text-red-400',
+    inappropriate_content: 'text-yellow-600 dark:text-yellow-400',
+    misinformation: 'text-purple-600 dark:text-purple-400',
+    other: 'text-gray-600 dark:text-gray-400'
+  }
+  return colors[reason] || 'text-gray-600 dark:text-gray-400'
+}
+
 // Date formatting
 export const formatDate = (dateString) => {
+  if (!dateString) return ''
+  
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+export const formatTimeAgo = (dateString) => {
   if (!dateString) return ''
   
   const date = new Date(dateString)

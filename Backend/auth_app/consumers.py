@@ -28,23 +28,33 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             logger.info(f"WebSocket connecting authenticated user: {user.username} (ID: {user.id})")
             
             # Set user online when WebSocket connects (for real-time status)
-            await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
-            logger.info(f"Set user {user.id} online via WebSocket connect")
+            try:
+                await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
+                logger.info(f"Set user {user.id} online via WebSocket connect")
+            except Exception as e:
+                logger.warning(f"Could not set user {user.id} online (Redis unavailable): {e}")
             
-            # Join global groups
-            await self.channel_layer.group_add('admin_notifications', self.channel_name)
-            await self.channel_layer.group_add('status_updates', self.channel_name)
-            await self.channel_layer.group_add('user_management', self.channel_name)
-            
-            # Join user-specific group for personal notifications
-            await self.channel_layer.group_add(f'user_{user.id}', self.channel_name)
+            # Join global groups (with Redis fallback handling)
+            try:
+                await self.channel_layer.group_add('admin_notifications', self.channel_name)
+                await self.channel_layer.group_add('status_updates', self.channel_name)
+                await self.channel_layer.group_add('user_management', self.channel_name)
+                
+                # Join user-specific group for personal notifications
+                await self.channel_layer.group_add(f'user_{user.id}', self.channel_name)
+                logger.info(f"Added user {user.id} to WebSocket groups")
+            except Exception as e:
+                logger.warning(f"Could not add user {user.id} to groups (using fallback): {e}")
             
             await self.accept()
             
             # Start heartbeat to keep user online
-            self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
-            
-            logger.info(f"WebSocket connection accepted for user {user.username} with heartbeat")
+            try:
+                self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
+                logger.info(f"WebSocket connection accepted for user {user.username} with heartbeat")
+            except Exception as e:
+                logger.warning(f"Could not start heartbeat for user {user.id}: {e}")
+                logger.info(f"WebSocket connection accepted for user {user.username} without heartbeat")
             
         except Exception as e:
             logger.error(f"WebSocket connect error for user {self.scope['user']}: {str(e)}")
@@ -64,7 +74,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 await database_sync_to_async(UserStatusCache.set_user_offline)(user.id)
                 logger.info(f"Set user {user.id} offline via WebSocket disconnect")
             except Exception as e:
-                logger.error(f"Error setting user {user.id} offline: {e}")
+                logger.warning(f"Could not set user {user.id} offline (Redis unavailable): {e}")
             
             # Leave all groups
             await self.channel_layer.group_discard('admin_notifications', self.channel_name)
@@ -82,8 +92,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 if not isinstance(self.scope['user'], AnonymousUser):
                     user = self.scope['user']
                     # Refresh user activity to keep them online
-                    await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
-                    logger.debug(f"Heartbeat: refreshed online status for user {user.id}")
+                    try:
+                        await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
+                        logger.debug(f"Heartbeat: refreshed online status for user {user.id}")
+                    except Exception as e:
+                        logger.debug(f"Heartbeat: could not update status for user {user.id} (Redis unavailable): {e}")
         except asyncio.CancelledError:
             logger.debug("Heartbeat cancelled")
         except Exception as e:
