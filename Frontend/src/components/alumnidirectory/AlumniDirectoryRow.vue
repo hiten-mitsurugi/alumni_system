@@ -74,7 +74,7 @@ const handleDeleteClick = () => {
 const confirmDelete = async () => {
   deleting.value = true;
   try {
-    await axios.delete(`${BASE_URL}/api/alumni-directory/${props.alumni.id}/`, {
+    await axios.delete(`${BASE_URL}/api/auth/alumni-directory/${props.alumni.id}/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
     emit('delete');

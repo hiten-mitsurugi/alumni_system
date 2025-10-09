@@ -1,8 +1,11 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick, provide } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import axios from 'axios';
+
+// Import dedicated CSS file
+import '@/components/css/AlumniHome.css';
 
 // Import posting components
 import PostCreateForm from '@/components/posting/PostCreateForm.vue';
@@ -49,7 +52,16 @@ const currentUser = computed(() => authStore.user);
 let postsSocket = null;
 
 // Constants
-const BASE_URL = 'http://127.0.0.1:8000';
+// Dynamically determine backend base URL and WebSocket URL
+const getBackendBaseUrl = () => {
+  // Use window.location.hostname and protocol, but default to port 8000 for backend
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  const hostname = window.location.hostname;
+  // If running on localhost, fallback to 127.0.0.1
+  const host = (hostname === 'localhost' || hostname === '127.0.0.1') ? hostname : hostname;
+  return `${protocol}//${host}:8000`;
+};
+const BASE_URL = getBackendBaseUrl();
 const categories = [
   { value: 'all', label: 'All Posts', icon: '📋' },
   { value: 'discussion', label: 'Discussion', icon: '💬' },
@@ -98,7 +110,10 @@ const connectWebSocket = () => {
     return;
   }
   
-  const wsUrl = `ws://127.0.0.1:8000/ws/posts/feed/?token=${token}`;
+  // Use ws or wss depending on protocol
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsHost = window.location.hostname;
+  const wsUrl = `${wsProtocol}://${wsHost}:8000/ws/posts/feed/?token=${token}`;
   postsSocket = new WebSocket(wsUrl);
   
   postsSocket.onopen = () => {
@@ -493,6 +508,15 @@ const dismissNotification = (notification) => {
   }
 };
 
+// Mobile search toggle
+const toggleMobileSearch = () => {
+  showMobileSearch.value = !showMobileSearch.value;
+};
+
+// Provide search functionality to child components (like navbar)
+provide('searchQuery', searchQuery)
+provide('toggleMobileSearch', toggleMobileSearch)
+
 // Lifecycle
 onMounted(() => {
   console.log('🚀 AlumniHome component mounted, initializing...');
@@ -509,66 +533,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-        <div class="flex items-center justify-between h-14 md:h-16">
-          <!-- Left section -->
-          <div class="flex items-center space-x-2 sm:space-x-4 flex-1">
-            <h1 class="text-base sm:text-lg md:text-xl font-bold text-gray-900">Home</h1>
-          </div>
-          
-          <!-- Search (desktop only) -->
-          <div class="hidden md:flex flex-1 max-w-md mx-8">
-            <div class="relative w-full">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search alumni, posts..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-              <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-          
-          <!-- Right section -->
-          <div class="flex items-center space-x-1 sm:space-x-3 flex-1 justify-end">
-            <button
-              @click="showMobileSearch = !showMobileSearch"
-              class="md:hidden p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-            <button
-              @click="showCreateForm = !showCreateForm"
-              class="md:hidden p-1.5 sm:p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-            >
-              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-            
-            <!-- Notifications -->
-            <button class="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5-5-5 5h5zm0 0v5" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="relative min-h-screen">
-      <!-- Left Sidebar: Profile Card (Fixed) -->
-      <aside class="hidden lg:block fixed left-32 top-36 w-96 h-[calc(100vh-10rem)] overflow-y-auto z-10">
-        <div class="p-4">
+  <div class="alumni-home-container min-h-screen bg-amber-50">
+    <!-- Responsive Grid Layout -->
+    <div class="alumni-home-grid">
+      <!-- Left Sidebar: Profile Card -->
+      <aside class="alumni-sidebar alumni-sidebar-left">
+        <div class="sidebar-content">
           <ProfileCard
             @edit-profile="editProfile"
             @view-profile="viewProfile"
@@ -576,25 +546,25 @@ onUnmounted(() => {
         </div>
       </aside>
 
-      <!-- Center Column: Main Feed (Scrollable) - Desktop Only -->
-      <main class="hidden lg:block lg:ml-[28rem] lg:mr-[26rem]">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 py-4 md:py-6">
+      <!-- Center Column: Main Feed -->
+      <main class="alumni-main-content">
+        <div class="main-content-wrapper">
           <div class="space-y-4 md:space-y-6">
             <!-- Category Tabs -->
             <div class="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div class="flex overflow-x-auto scrollbar-hide border-b border-gray-100">
+              <div class="grid grid-cols-7 border-b border-gray-100">
                 <button
                   v-for="category in categories"
                   :key="category.value"
                   @click="selectedCategory = category.value; activeTab = category.value"
                   :class="[
-                    'flex items-center space-x-2 px-3 md:px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 flex-shrink-0',
+                    'flex items-center justify-center px-2 py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 text-center',
                     selectedCategory === category.value
                       ? 'text-blue-600 border-blue-600 bg-blue-50'
                       : 'text-gray-600 border-transparent hover:text-blue-600 hover:bg-blue-50'
                   ]"
                 >
-                  <span>{{ category.label }}</span>
+                  <span class="truncate">{{ category.label }}</span>
                 </button>
               </div>
             </div>
@@ -698,88 +668,65 @@ onUnmounted(() => {
         </div>
       </main>
 
-      <!-- Right Sidebar: Suggested Connections (Fixed) -->
-      <aside class="hidden lg:block fixed right-6 top-36 w-96 h-[calc(100vh-10rem)] overflow-y-auto z-10">
-        <div class="p-4">
+      <!-- Right Sidebar: Suggested Connections -->
+      <aside class="alumni-sidebar alumni-sidebar-right">
+        <div class="sidebar-content">
           <SuggestedConnectionsWidget @connect="handleConnect" />
         </div>
       </aside>
+    </div>
 
-      <!-- Mobile Layout: Stacked for mobile/tablet -->
-      <div class="lg:hidden">
-        <div class="max-w-full mx-auto px-2 sm:px-4 py-4 md:py-6 space-y-4 md:space-y-6">
+    <!-- Mobile Layout: Stacked for mobile/tablet -->
+    <div class="alumni-mobile-layout max-w-sm mx-auto px-2">
+      <div class="mobile-content-wrapper max-w-sm mx-auto px-2">
+  <div class="space-y-4 mt-0">
           <!-- Category Tabs -->
-          <div class="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="flex overflow-x-auto scrollbar-hide border-b border-gray-100">
+          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="grid grid-cols-4 sm:grid-cols-7 border-b border-gray-100">
               <button
                 v-for="category in categories"
                 :key="category.value"
                 @click="selectedCategory = category.value; activeTab = category.value"
                 :class="[
-                  'flex items-center space-x-2 px-3 md:px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 flex-shrink-0',
+                  'flex items-center justify-center px-1 py-3 text-xs font-medium transition-colors border-b-2 text-center',
                   selectedCategory === category.value
                     ? 'text-blue-600 border-blue-600 bg-blue-50'
                     : 'text-gray-600 border-transparent hover:text-blue-600 hover:bg-blue-50'
                 ]"
               >
-                <span>{{ category.label }}</span>
+                <span class="truncate">{{ category.label }}</span>
               </button>
             </div>
           </div>
 
-          <!-- Suggested Connections Widget - Mobile -->
-          <div class="block">
-            <SuggestedConnectionsWidget @connect="handleConnect" />
+          <!-- Posts Feed Only -->
+          <div class="space-y-4">
+            <div v-if="isLoading" class="flex justify-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+            
+            <div v-else-if="filteredPosts.length === 0" class="text-center py-8 text-gray-500">
+              <p>No posts to show yet.</p>
+              <p class="text-sm mt-2">Be the first to share something!</p>
+            </div>
+            
+            <template v-else>
+              <PostCard
+                v-for="post in filteredPosts"
+                :key="post.id"
+                :post="post"
+                :current-user-id="currentUser?.id"
+                :categories="categories"
+                :selected-reaction="selectedReaction[post.id]"
+                @react="(reactionType) => reactToPost(post.id, reactionType)"
+                @comment="() => { fetchCommentsForPost(post.id); showComments[post.id] = !showComments[post.id]; }"
+                @share="sharePost"
+                @copy-link="copyPostLink"
+                @open-modal="openPostModal"
+                @reaction-updated="handleReactionUpdated"
+              />
+            </template>
           </div>
-
-          <!-- Desktop Post Create (hidden on mobile, shown on tablet) -->
-          <div class="hidden md:block lg:hidden">
-            <PostCreateForm
-              :user-profile-picture="currentUser?.profile_picture"
-              :categories="categories"
-              :is-posting="isPosting"
-              @create-post="handleCreatePost"
-              ref="postCreateForm"
-            />
-          </div>
-
-          <!-- Posts Feed -->
-          <div class="space-y-4 md:space-y-6">
-            <PostCard
-              v-for="post in filteredPosts"
-              :key="post.id"
-              :post="post"
-              :categories="categories"
-              :selected-reaction="selectedReaction[post.id]"
-              :comments="comments[post.id] || post.recent_comments || []"
-              :user-profile-picture="currentUser?.profile_picture"
-              :current-user-id="currentUser?.id"
-              @react-to-post="reactToPost"
-              @add-comment="addComment"
-              @share-post="sharePost"
-              @copy-link="copyPostLink"
-              @open-modal="openPostModal"
-              @reaction-updated="handleReactionUpdated"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mobile Search Modal -->
-    <div v-if="showMobileSearch" class="md:hidden fixed inset-0 bg-black/50 z-50" @click="showMobileSearch = false">
-      <div class="bg-white m-4 rounded-xl p-4" @click.stop>
-        <div class="relative">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search alumni, posts..."
-            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            ref="mobileSearchInput"
-          >
-          <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
         </div>
       </div>
     </div>
@@ -826,210 +773,37 @@ onUnmounted(() => {
       @navigate="navigateToPost"
       @reaction-updated="handleReactionUpdated"
     />
+
+    <!-- Post Modal -->
+    <PostModal
+      v-if="showModal && selectedPost"
+      :is-open="showModal"
+      :post="selectedPost"
+      :comments="comments[selectedPost.id] || []"
+      :current-index="currentPostIndex"
+      :total-posts="filteredPosts.length"
+      :user-profile-picture="currentUser?.profile_picture"
+      :categories="categories"
+      :selected-reaction="selectedReaction[selectedPost.id]"
+      :current-user-id="currentUser?.id"
+      @close="closePostModal"
+      @react-to-post="reactToPost"
+      @add-comment="addComment"
+      @share-post="sharePost"
+      @copy-link="copyPostLink"
+      @load-comments="fetchCommentsForPost"
+      @navigate="navigateToPost"
+      @reaction-updated="handleReactionUpdated"
+    />
+
+    <!-- Notifications -->
+    <div v-if="notifications.length > 0" class="fixed top-20 right-4 z-50 space-y-2">
+      <NotificationToast
+        v-for="notif in notifications"
+        :key="notif.id"
+        :notification="notif"
+        @dismiss="dismissNotification"
+      />
+    </div>
   </div>
 </template>
-
-<style scoped>
-/* Hide scrollbar for category tabs */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Custom scrollbar for sidebar */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 4px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 2px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 2px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Smooth transitions */
-.transition-colors {
-  transition: all 0.2s ease;
-}
-
-/* Mobile optimizations */
-@media (max-width: 1024px) {
-  .lg\:flex-row {
-    flex-direction: column;
-  }
-  
-  .lg\:max-w-2xl {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Compact spacing on mobile */
-  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.75rem;
-  }
-  
-  .space-y-2 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.5rem;
-  }
-  
-  /* Ensure full width usage on mobile */
-  .max-w-7xl {
-    max-width: 100%;
-  }
-  
-  /* Mobile container adjustments */
-  .px-2 {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  
-  .py-2 {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-  
-  /* Touch-friendly buttons */
-  button {
-    min-height: 40px;
-    min-width: 40px;
-  }
-  
-  /* Compact text */
-  .text-lg {
-    font-size: 1rem;
-    line-height: 1.5rem;
-  }
-  
-  .text-xl {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
-  }
-  
-  /* Main feed adjustments for mobile */
-  main {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  /* Category tabs mobile optimization */
-  .flex.overflow-x-auto button {
-    min-width: auto;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  
-  /* Hide category labels on very small screens, show only icons */
-  @media (max-width: 480px) {
-    .hidden.sm\\:inline {
-      display: none !important;
-    }
-    
-    .space-x-1 {
-      gap: 0.25rem;
-    }
-  }
-  
-  /* Modal adjustments */
-  .fixed.inset-0 .max-w-md {
-    max-width: calc(100vw - 2rem);
-    margin: 1rem;
-  }
-}
-
-/* Ensure proper stacking */
-.sticky {
-  position: -webkit-sticky;
-  position: sticky;
-}
-
-/* Prevent horizontal overflow */
-* {
-  box-sizing: border-box;
-}
-
-.min-h-screen {
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Post card hover effects */
-@media (hover: hover) {
-  .hover\:bg-gray-50:hover {
-    background-color: #f9fafb;
-  }
-  
-  .hover\:bg-gray-200:hover {
-    background-color: #e5e7eb;
-  }
-}
-
-/* Loading states */
-.loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-/* Compact create post button */
-.bg-gray-100 {
-  background-color: #f3f4f6;
-}
-
-.bg-gray-100:hover {
-  background-color: #e5e7eb;
-}
-
-/* Sidebar styles - Updated widths for better layout */
-.lg\:w-80 {
-  width: 20rem;
-  max-width: 20rem;
-}
-
-.lg\:w-64 {
-  width: 16rem;
-  max-width: 16rem;
-}
-
-.lg\:max-w-xl {
-  max-width: 36rem;
-}
-
-/* Legacy width classes */
-.lg\:w-72 {
-  width: 18rem;
-  max-width: 18rem;
-}
-
-.w-80 {
-  width: 20rem;
-  max-width: 20rem;
-}
-
-/* Animation for modal */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.fixed.inset-0.bg-black\/50 > div {
-  animation: fadeIn 0.2s ease-out;
-}
-</style>

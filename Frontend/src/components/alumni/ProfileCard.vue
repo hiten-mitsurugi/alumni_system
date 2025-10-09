@@ -118,9 +118,15 @@ const user = computed(() => {
   const lastName = userData.value.last_name || ''
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ')
 
+  // Construct profile picture URL like in navbar
+  const pic = userData.value.profile_picture
+  const profilePictureUrl = pic
+    ? (pic.startsWith('http') ? pic : `http://127.0.0.1:8000${pic}`)
+    : '/default-avatar.png'
+
   return {
     full_name: fullName || 'Alumni Member',
-    profile_picture: userData.value.profile_picture || '/default-avatar.png',
+    profile_picture: profilePictureUrl,
     cover_photo: profileData.value?.cover_photo || null,
     title: profileData.value?.headline || profileData.value?.present_occupation || 'Alumni Member',
     location: profileData.value?.location || profileData.value?.present_address || 'Location not specified',
@@ -134,16 +140,23 @@ const fetchUserData = async () => {
   try {
     loading.value = true
     
-    // Fetch current user's enhanced profile
-    const response = await api.get('/enhanced-profile/')
-    const data = response.data
-    
-    userData.value = data
-    profileData.value = data.profile
+    // Try enhanced profile first, fallback to basic user endpoint
+    try {
+      const response = await api.get('/enhanced-profile/')
+      const data = response.data
+      userData.value = data
+      profileData.value = data.profile
+    } catch (enhancedError) {
+      console.log('Enhanced profile failed, using basic user endpoint:', enhancedError.message)
+      // Fallback to basic user endpoint that works
+      const response = await api.get('/user/')
+      userData.value = response.data
+      profileData.value = response.data.profile || null
+    }
     
   } catch (error) {
     console.error('Error fetching user data:', error)
-    // Fallback to auth store data
+    // Final fallback to auth store data
     userData.value = authStore.user
     profileData.value = null
   } finally {

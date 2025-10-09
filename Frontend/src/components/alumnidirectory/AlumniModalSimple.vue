@@ -61,10 +61,9 @@ const programs = [
   'BS in Social Work'
 ];
 
-const genderOptions = [
+const sexOptions = [
   { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'prefer_not_to_say', label: 'Prefer not to say' }
+  { value: 'female', label: 'Female' }
 ];
 
 // Form data
@@ -73,10 +72,9 @@ const form = reactive({
   middle_name: '',
   last_name: '',
   birth_date: '',
-  school_id: '',
   program: '',
   year_graduated: '',
-  gender: ''
+  sex: ''
 });
 
 // Computed
@@ -94,10 +92,9 @@ const resetForm = () => {
     middle_name: '',
     last_name: '',
     birth_date: '',
-    school_id: '',
     program: '',
     year_graduated: '',
-    gender: ''
+    sex: ''
   });
   errors.value = {};
 };
@@ -109,10 +106,9 @@ const populateForm = (alumniData) => {
       middle_name: alumniData.middle_name || '',
       last_name: alumniData.last_name || '',
       birth_date: alumniData.birth_date || '',
-      school_id: alumniData.school_id || '',
       program: alumniData.program || '',
       year_graduated: alumniData.year_graduated?.toString() || '',
-      gender: alumniData.gender || ''
+    sex: alumniData.sex || ''
     });
   }
 };
@@ -126,12 +122,6 @@ const validateForm = () => {
   
   if (!form.last_name.trim()) {
     errors.value.last_name = 'Last name is required';
-  }
-  
-  if (!form.school_id.trim()) {
-    errors.value.school_id = 'School ID is required';
-  } else if (!/^\d{3}-\d{5}$/.test(form.school_id)) {
-    errors.value.school_id = 'School ID must be in format XXX-XXXXX (e.g., 221-01926)';
   }
   
   if (!form.program) {
@@ -151,8 +141,8 @@ const validateForm = () => {
     }
   }
   
-  if (!form.gender) {
-    errors.value.gender = 'Gender is required';
+  if (!form.sex) {
+    errors.value.sex = 'Sex is required';
   }
   
   return Object.keys(errors.value).length === 0;
@@ -171,18 +161,18 @@ const handleSubmit = async (event) => {
   
   try {
     const payload = {
-      ...form,
-      year_graduated: parseInt(form.year_graduated),
-      middle_name: form.middle_name || null
+  ...form,
+  year_graduated: parseInt(form.year_graduated),
+  middle_name: form.middle_name || null
     };
     
     if (isEditMode.value) {
-      await axios.put(`${BASE_URL}/api/alumni-directory/${props.alumni.id}/`, payload, {
+      await axios.put(`${BASE_URL}/api/auth/alumni-directory/${props.alumni.id}/`, payload, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
       console.log('✅ Alumni updated successfully');
     } else {
-      await axios.post(`${BASE_URL}/api/alumni-directory/`, payload, {
+      await axios.post(`${BASE_URL}/api/auth/alumni-directory/`, payload, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
       console.log('✅ Alumni created successfully');
@@ -238,11 +228,11 @@ watch(() => props.show, (newValue) => {
 
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click="handleBackdropClick">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
+  <div class="alumni-directory-modal bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-scrollable" @click.stop>
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">{{ modalTitle }}</h2>
+          <h2 class="text-2xl font-semibold" style="color: #16a34a;">{{ modalTitle }}</h2>
           <p class="text-gray-600 mt-1">{{ isEditMode ? 'Update alumni information' : 'Add a new alumni to the directory' }}</p>
         </div>
         <button
@@ -311,22 +301,8 @@ watch(() => props.show, (newValue) => {
           </div>
         </div>
 
-        <!-- School ID and Program -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              School ID <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="form.school_id"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              :class="{ 'border-red-500': errors.school_id }"
-              placeholder="XXX-XXXXX (e.g., 221-01926)"
-            />
-            <p v-if="errors.school_id" class="text-red-500 text-sm mt-1">{{ errors.school_id }}</p>
-          </div>
-
+        <!-- Program -->
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Program <span class="text-red-500">*</span>
@@ -376,19 +352,19 @@ watch(() => props.show, (newValue) => {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Gender <span class="text-red-500">*</span>
+              Sex <span class="text-red-500">*</span>
             </label>
             <select
-              v-model="form.gender"
+              v-model="form.sex"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              :class="{ 'border-red-500': errors.gender }"
+              :class="{ 'border-red-500': errors.sex }"
             >
-              <option value="">Select Gender</option>
-              <option v-for="option in genderOptions" :key="option.value" :value="option.value">
+              <option value="">Select Sex</option>
+              <option v-for="option in sexOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
-            <p v-if="errors.gender" class="text-red-500 text-sm mt-1">{{ errors.gender }}</p>
+            <p v-if="errors.sex" class="text-red-500 text-sm mt-1">{{ errors.sex }}</p>
           </div>
         </div>
 
@@ -404,7 +380,7 @@ watch(() => props.show, (newValue) => {
           <button
             type="submit"
             :disabled="loading"
-            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center space-x-2 font-bold"
           >
             <div v-if="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             <span>{{ loading ? 'Saving...' : (isEditMode ? 'Update Alumni' : 'Create Alumni') }}</span>
@@ -416,13 +392,153 @@ watch(() => props.show, (newValue) => {
 </template>
 
 <style scoped>
-.animate-spin {
-  animation: spin 1s linear infinite;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* =================================================================
+   PROFESSIONAL ALUMNI DIRECTORY MODAL STYLING
+   ================================================================= */
+
+.alumni-directory-modal {
+  font-family: 'Poppins', sans-serif !important;
+  background: #ffffff;
+  color: #065f46;
 }
 
+.alumni-directory-modal * {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+/* Header styling */
+.alumni-directory-modal h1,
+.alumni-directory-modal h2,
+.alumni-directory-modal h3,
+.alumni-directory-modal h4 {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 700;
+  color: #059669 !important;
+}
+
+.alumni-directory-modal .text-gray-900 {
+  color: #059669 !important;
+}
+
+.alumni-directory-modal .text-gray-600,
+.alumni-directory-modal .text-gray-700 {
+  color: #065f46 !important;
+  font-weight: 400;
+}
+
+/* Form styling */
+.alumni-directory-modal label {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600;
+  color: #065f46 !important;
+  margin-bottom: 8px;
+}
+
+.alumni-directory-modal input,
+.alumni-directory-modal select {
+  font-family: 'Poppins', sans-serif !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #065f46 !important;
+  padding: 12px 16px !important;
+  font-weight: 400;
+  transition: all 0.3s ease;
+}
+
+.alumni-directory-modal input:focus,
+.alumni-directory-modal select:focus {
+  outline: none !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1) !important;
+  background: #f8fafc !important;
+}
+
+.alumni-directory-modal input::placeholder {
+  color: #6b7280 !important;
+  font-weight: 400;
+}
+
+/* Button styling */
+.alumni-directory-modal button {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600;
+  border-radius: 12px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none !important;
+  cursor: pointer;
+}
+
+/* Primary submit button */
+.alumni-directory-modal .bg-blue-600 {
+  background: #059669 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.alumni-directory-modal .bg-blue-600:hover,
+.alumni-directory-modal .hover\:bg-blue-700:hover {
+  background: #047857 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
+}
+
+/* Cancel button */
+.alumni-directory-modal .bg-gray-100 {
+  background: #f8fafc !important;
+  color: #065f46 !important;
+  border: 2px solid #e2e8f0 !important;
+}
+
+.alumni-directory-modal .bg-gray-100:hover,
+.alumni-directory-modal .hover\:bg-gray-200:hover {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 2px solid #059669 !important;
+}
+
+/* Error styling */
+.alumni-directory-modal .border-red-500 {
+  border-color: #ef4444 !important;
+}
+
+.alumni-directory-modal .text-red-500,
+.alumni-directory-modal .text-red-800 {
+  color: #dc2626 !important;
+}
+
+.alumni-directory-modal .bg-red-50 {
+  background: #fef2f2 !important;
+}
+
+/* Animations */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
+
+.alumni-directory-modal .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Disabled state */
+.alumni-directory-modal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Smooth transitions */
+.alumni-directory-modal .transition-colors {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
 </style>
+
+/* Ensure modal content is always scrollable if too tall */
+.modal-scrollable {
+  max-height: 90vh;
+  overflow-y: auto;
+}

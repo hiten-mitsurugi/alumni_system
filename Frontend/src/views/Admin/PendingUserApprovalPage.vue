@@ -24,7 +24,7 @@ const paginatedUsers = computed(() => {
 
 const fetchPendingUsers = async () => {
   try {
-    const res = await api.get('/pending-alumni/');
+  const res = await api.get('/auth/pending-alumni/');
     pendingUsers.value = Array.isArray(res.data) ? res.data : [];
   } catch (error) {
     console.error('Failed to fetch pending users:', error);
@@ -50,8 +50,9 @@ const approveUser = async () => {
   const userId = selectedUser.value.id;
   
   try {
-    console.log('Attempting to approve user:', userId);
-    const response = await api.post(`/approve-user/${userId}/`);
+  console.log('Attempting to approve user:', userId);
+  // Backend mounts auth_app under /api/auth/, our api client prefixes /api
+  const response = await api.post(`/auth/approve-user/${userId}/`);
     console.log('Approval response:', response.data);
     console.log('Response status:', response.status);
     
@@ -101,7 +102,7 @@ const rejectUser = async () => {
   }
   
   try {
-    const response = await api.post(`/reject-user/${selectedUser.value.id}/`);
+  const response = await api.post(`/auth/reject-user/${selectedUser.value.id}/`);
     pendingUsers.value = pendingUsers.value.filter(u => u.id !== selectedUser.value.id);
     closeModal();
     

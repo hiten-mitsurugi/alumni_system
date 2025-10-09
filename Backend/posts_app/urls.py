@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
     PostFeedView, PostCreateView, PostDetailView, PostReactionView, 
-    CommentCreateView, SharePostView, PostApprovalView, SavePostView
+    CommentCreateView, SharePostView, PostApprovalView, SavePostView,
+    PostReportView, AdminReportListView, AdminReportActionView
 )
 
 urlpatterns = [
@@ -27,4 +28,11 @@ urlpatterns = [
     # Admin post approval
     path('posts/pending/', PostApprovalView.as_view(), name='post-approval-list'),
     path('posts/<int:post_id>/approve/', PostApprovalView.as_view(), name='post-approve'),
+    
+    # Post reporting
+    path('posts/<int:post_id>/report/', PostReportView.as_view(), name='post-report'),
+    
+    # Admin report management
+    path('posts/reports/', AdminReportListView.as_view(), name='admin-report-list'),
+    path('posts/reports/<int:report_id>/action/', AdminReportActionView.as_view(), name='admin-report-action'),
 ]

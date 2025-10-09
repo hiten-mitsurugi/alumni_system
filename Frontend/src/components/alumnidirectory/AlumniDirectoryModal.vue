@@ -76,7 +76,7 @@ const form = reactive({
   school_id: '',
   program: '',
   year_graduated: '',
-  gender: ''
+  sex: ''
 });
 
 // Computed
@@ -122,8 +122,8 @@ const validateForm = () => {
     }
   }
   
-  if (!form.gender) {
-    errors.value.gender = 'Gender is required';
+  if (!form.sex) {
+    errors.value.sex = 'Sex is required';
   }
   
   return Object.keys(errors.value).length === 0;
@@ -139,7 +139,7 @@ const resetForm = () => {
     school_id: '',
     program: '',
     year_graduated: '',
-    gender: ''
+    sex: ''
   });
   errors.value = {};
 };
@@ -154,7 +154,7 @@ const populateForm = (alumniData) => {
       school_id: alumniData.school_id || '',
       program: alumniData.program || '',
       year_graduated: alumniData.year_graduated?.toString() || '',
-      gender: alumniData.gender || ''
+      sex: alumniData.sex || ''
     });
   }
 };
@@ -394,7 +394,7 @@ watch(() => props.alumni, (newValue) => {
             </div>
           </div>
 
-          <!-- Birth Date, Year Graduated, and Gender -->
+          <!-- Birth Date, Year Graduated, and Sex -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Birth Date -->
             <div>
@@ -429,23 +429,23 @@ watch(() => props.alumni, (newValue) => {
               <p v-if="errors.year_graduated" class="text-red-500 text-sm mt-1">{{ errors.year_graduated }}</p>
             </div>
 
-            <!-- Gender -->
+            <!-- Sex -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Gender <span class="text-red-500">*</span>
+                Sex <span class="text-red-500">*</span>
               </label>
               <select
-                v-model="form.gender"
+                v-model="form.sex"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': errors.gender }"
+                :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': errors.sex }"
                 :disabled="loading"
               >
-                <option value="">Select Gender</option>
+                <option value="">Select Sex</option>
                 <option v-for="option in genderOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
               </select>
-              <p v-if="errors.gender" class="text-red-500 text-sm mt-1">{{ errors.gender }}</p>
+              <p v-if="errors.sex" class="text-red-500 text-sm mt-1">{{ errors.sex }}</p>
             </div>
           </div>
 

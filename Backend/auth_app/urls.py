@@ -7,7 +7,7 @@ from .views import (
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
     ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView,
     AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView, DebugUsersView, ClearCacheView,
-    CheckEmailExistsView,
+    CheckEmailExistsView, AdminAnalyticsView,
     # LinkedIn-style views
     EnhancedProfileView, FollowUserView, UserConnectionsView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
@@ -38,6 +38,7 @@ urlpatterns = [
     path('check-alumni-directory/', CheckAlumniDirectoryView.as_view(), name='check_alumni_directory'),
     path('test-status-broadcast/', TestStatusBroadcastView.as_view(), name='test_status_broadcast'),
     path('debug-users/', DebugUsersView.as_view(), name='debug_users'),
+    path('admin/analytics/', AdminAnalyticsView.as_view(), name='admin_analytics'),
     path('clear-cache/', ClearCacheView.as_view(), name='clear_cache'),
     path('check-email/', CheckEmailExistsView.as_view(), name='check_email'),
     

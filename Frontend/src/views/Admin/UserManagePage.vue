@@ -47,7 +47,7 @@ const changePage = (page) => {
 const fetchApprovedUsers = async () => {
   try {
     const params = { ...filters.value };
-    const res = await api.get('/approved-users/', { params });
+    const res = await api.get('auth/approved-users/', { params });
     approvedUsers.value = Array.isArray(res.data) ? res.data : [];
     currentPage.value = 1;
   } catch (error) {
@@ -223,6 +223,7 @@ onUnmounted(() => {
     <!-- Enhanced Table with Integrated Filters -->
     <ApprovedUsersTable
       :users="paginatedUsers"
+      :all-users="approvedUsers"
       :search="filters.search"
       @view-user="openViewModal"
       @delete-user="deleteUser"

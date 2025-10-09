@@ -100,13 +100,7 @@ class Command(BaseCommand):
                 user_type = 1 if make_superuser else 2
                 type_name = 'Super Admin' if make_superuser else 'Admin'
 
-                # Generate unique school_id
-                import random
-                school_id = f'ADM{user_type}{random.randint(1000, 9999)}'
-                while User.objects.filter(school_id=school_id).exists():
-                    school_id = f'ADM{user_type}{random.randint(1000, 9999)}'
-
-                # Create user
+                # Create user (school_id removed)
                 user = User.objects.create_user(
                     username=username,
                     email=f'{username}@alumni.system',
@@ -114,14 +108,13 @@ class Command(BaseCommand):
                     first_name=username.title(),
                     last_name='Administrator',
                     user_type=user_type,
-                    school_id=school_id,
                     program='Administration',
                     is_approved=True,
                     is_active=True,
                     is_staff=True,
                     is_superuser=make_superuser,
                     # Required fields
-                    gender='prefer_not_to_say',
+                    sex='prefer_not_to_say',
                     birth_date='1990-01-01',
                     contact_number='+63-900-000-0000',
                     present_address='Administration Office',
@@ -150,7 +143,6 @@ class Command(BaseCommand):
                         f'✅ Created new {type_name} account:\n'
                         f'   👤 Username: {username}\n'
                         f'   📧 Email: {user.email}\n'
-                        f'   🆔 School ID: {school_id}\n'
                         f'   🔑 Password: {password}\n'
                         f'   📋 Type: {type_name} (Level {user_type})\n'
                         f'   ✅ Status: Active & Approved\n'

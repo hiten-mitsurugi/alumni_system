@@ -59,18 +59,22 @@
                         <option value="">All</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
-                        <option value="prefer_not_to_say">Prefer not to say</option>
                       </select>
                     </div>
 
-                    <!-- Year Graduated Filter -->
+                    <!-- Year Graduated Filter (number input) -->
                     <div>
                       <label class="text-sm font-medium text-gray-700 mb-1 block">Year Graduated</label>
-                      <select v-model="internalFilters.year_graduated" @change="applyFilters"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
-                        <option value="">All</option>
-                        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-                      </select>
+                      <input
+                        v-model="internalFilters.year_graduated"
+                        @input="applyFilters"
+                        type="number"
+                        min="1900"
+                        max="2099"
+                        step="1"
+                        placeholder="e.g. 2022"
+                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500"
+                      />
                     </div>
 
                     <!-- Program Filter -->
@@ -85,7 +89,7 @@
 
                     <!-- Status Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-100 mb-1 block">Account Status</label>
+                      <label class="text-sm font-medium text-gray-700 mb-1 block">Account Status</label>
                       <select v-model="internalFilters.status" @change="applyFilters"
                         class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
                         <option value="">All</option>
@@ -248,7 +252,12 @@ import api from '@/services/api';
 
 const props = defineProps({
   users: Array,
-  search: String
+  search: String,
+  // optional: the full list of approved users so filters can be populated from entire dataset
+  allUsers: {
+    type: Array,
+    default: null
+  }
 });
 
 const emit = defineEmits([
@@ -282,11 +291,16 @@ const internalFilters = ref({
   year_graduated: '',
   program: '',
   status: '',
-  sex: ''
+});
+const programs = computed(() => {
+  // Use `allUsers` when provided (full dataset), otherwise fall back to current users prop
+  const source = Array.isArray(props.allUsers) ? props.allUsers : (props.users || []);
+  const allPrograms = source.map(u => u.program).filter(Boolean);
+  return Array.from(new Set(allPrograms)).sort();
 });
 
 // Data for filter dropdowns
-const programs = ref([]);
+// (programs is now a computed property, see above)
 const years = ref([]);
 
 // Computed properties
@@ -421,17 +435,6 @@ const bulkDeleteUsers = async () => {
   }
 };
 
-// Fetch programs and years for filter dropdowns
-const fetchProgramsAndYears = async () => {
-  try {
-    const res = await api.get('/approved-users/');
-    const users = res.data;
-    programs.value = [...new Set(users.map(u => u.program))].filter(Boolean);
-    years.value = [...new Set(users.map(u => u.year_graduated))].sort((a, b) => b - a);
-  } catch (error) {
-    console.error('Failed to fetch programs and years:', error);
-  }
-};
 
 // WebSocket listener for real-time status updates
 const handleStatusUpdate = (data) => {
@@ -458,8 +461,7 @@ onMounted(() => {
   // Listen for status updates via WebSocket
   websocketService.addListener(handleStatusUpdate);
 
-  // Fetch filter data
-  fetchProgramsAndYears();
+  // Filter programs are computed from the passed users/allUsers props
 
   // Initialize search from props
   if (props.search) {

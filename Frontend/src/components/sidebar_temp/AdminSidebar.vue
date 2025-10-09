@@ -1,8 +1,10 @@
 <script setup>
-import { computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth'; // ✅ Use alias
-import { useMessagingNotificationStore } from '@/stores/messagingNotifications';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth' // ✅ Use alias
+import { useMessagingNotificationStore } from '@/stores/messagingNotifications'
+import { settingsService } from '@/services/settingsService'
+import { useThemeStore } from '@/stores/theme'
 
 import {
   LogOut as LogOutIcon,
@@ -14,15 +16,18 @@ import {
   ShieldCheck as ShieldCheckIcon,
   UserCheck as UserCheckIcon,
   Settings as SettingsIcon,
-  MessageCircle as MessageCircleIcon
-} from 'lucide-vue-next';
+  MessageCircle as MessageCircleIcon,
+  AlertTriangle as AlertTriangleIcon,
+  Camera as CameraIcon
+} from 'lucide-vue-next'
 
-const router = useRouter();
-const route = useRoute();
-const authStore = useAuthStore();
-const messagingNotificationStore = useMessagingNotificationStore();
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+const messagingNotificationStore = useMessagingNotificationStore()
+const themeStore = useThemeStore()
 
-const BASE_URL = 'http://127.0.0.1:8000';
+const BASE_URL = 'http://127.0.0.1:8000'
 
 onMounted(async () => {
   if (!authStore.user && authStore.token) {
@@ -57,6 +62,23 @@ onMounted(async () => {
   }
 });
 
+// Submenu state for Settings: show when Settings clicked or when route is a settings route
+const settingsOpen = ref(route.path.startsWith('/admin/settings'))
+
+watch(() => route.path, (p) => {
+  if (p.startsWith('/admin/settings')) settingsOpen.value = true
+})
+
+const toggleSettings = (e) => {
+  // prevent the outer link default if passed an event
+  if (e && e.preventDefault) e.preventDefault()
+  settingsOpen.value = !settingsOpen.value
+  if (settingsOpen.value) {
+    // navigate to base settings page if opening
+    router.push('/admin/settings').catch(() => {})
+  }
+}
+
 const logout = async () => {
   // Cleanup messaging notifications on logout
   messagingNotificationStore.cleanup();
@@ -89,138 +111,184 @@ const messagingBadgeCount = computed(() => {
 });
 
 const isActive = (path) => route.path.startsWith(path);
+
+const handleProfilePictureUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file
+  if (file.size > 5 * 1024 * 1024) {
+    alert('File size must be less than 5MB');
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file');
+    return;
+  }
+
+  try {
+    const result = await settingsService.uploadProfilePicture(file);
+    
+    // Update the user's profile picture in auth store immediately
+    if (result.profile_picture && authStore.user) {
+      authStore.user.profile_picture = result.profile_picture;
+      authStore.setUser(authStore.user);
+    }
+    
+    // Clear the file input
+    event.target.value = '';
+    
+    console.log('Profile picture updated successfully');
+  } catch (error) {
+    console.error('Failed to upload profile picture:', error);
+    alert('Failed to upload profile picture: ' + (error.message || 'Unknown error'));
+  }
+};
 </script>
 
 <template>
-  <aside class="bg-white text-gray-800 w-[350px] min-h-screen p-4 flex flex-col">
+  <aside :class="['w-full sm:w-[220px] md:w-[240px] lg:w-[260px] min-h-screen max-h-screen overflow-y-auto p-2 sm:p-3 flex flex-col', themeStore.isAdminDark() ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800']">
     <!-- Profile Section -->
-    <div class="flex flex-col items-center mb-6" v-if="user && user.first_name">
-      <img :src="profilePicture" alt="Profile Picture"
-        class="w-24 h-24 rounded-full border-2 border-white object-cover mb-2" />
-      <h2 class="text-xl font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
-      <p class="text-base text-gray-400">{{ userTypeLabel }}</p>
+    <div class="flex flex-col items-center mb-3 sm:mb-4" v-if="user && user.first_name">
+      <div class="relative">
+        <img :src="profilePicture" alt="Profile Picture"
+          class="w-12 sm:w-16 md:w-18 h-12 sm:h-16 md:h-18 rounded-full border-2 border-white object-cover mb-1" />
+        <label for="profilePictureUpload"
+               class="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full hover:bg-blue-700 transition-colors cursor-pointer">
+          <CameraIcon class="w-3 h-3" />
+        </label>
+        <input type="file"
+               id="profilePictureUpload"
+               accept="image/*"
+               @change="handleProfilePictureUpload"
+               class="hidden">
+      </div>
+      <h2 :class="['text-sm sm:text-base font-semibold text-center leading-tight', themeStore.isAdminDark() ? 'text-gray-100' : 'text-gray-900']">{{ user.first_name }} {{ user.last_name }}</h2>
+      <p :class="['text-xs sm:text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">{{ userTypeLabel }}</p>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-grow">
-      <ul class="space-y-3">
+    <nav class="flex-grow overflow-y-auto">
+  <ul class="space-y-1 sm:space-y-2">
         <li>
           <router-link
             to="/admin"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin') && route.path === '/admin' 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
-            <LayoutDashboardIcon class="w-6 h-6" /> <span>Dashboard</span>
+            <LayoutDashboardIcon class="w-4 h-4" /> <span>Dashboard</span>
           </router-link>
         </li>
-         <li>
+                  <li>
           <router-link
             to="/admin/notification"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/notification') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
-            <BellIcon class="w-6 h-6" /> <span>Notification</span>
+            <BellIcon class="w-4 h-4" /> <span>Notification</span>
           </router-link>
         </li>
          <li>
           <router-link
             to="/admin/contents"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/contents') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
-            <FileTextIcon class="w-6 h-6" /> <span>Contents</span>
+            <FileTextIcon class="w-4 h-4" /> <span>Contents</span>
           </router-link>
         </li>
          <li>
           <router-link
             to="/admin/messaging"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg relative"
+            class="flex items-center gap-2 p-2 rounded transition text-sm relative"
             :class="isActive('/admin/messaging') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
-            <MessageCircleIcon class="w-6 h-6" /> 
-            <span>Messaging</span>
+            <MessageCircleIcon class="w-4 h-4" />
+    <span>Messaging</span>
             <!-- Badge for unread messages -->
-            <div 
-              v-if="messagingBadgeCount" 
-              class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-sm min-w-[20px] text-center"
-            >
+    <span v-if="messagingBadgeCount" 
+      :class="['absolute top-0.5 right-0.5 text-xs rounded-full h-4 w-4 flex items-center justify-center', themeStore.isAdminDark() ? 'bg-red-500 text-white' : 'bg-red-500 text-white']">
               {{ messagingBadgeCount }}
-            </div>
+            </span>
           </router-link>
         </li>
-        <li>
+        <!-- <li>
           <router-link
-            to="/admin/post-approvals"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
-            :class="isActive('/admin/post-approvals') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+            to="/admin/survey"
+            class="flex items-center gap-2 p-2 rounded transition text-sm"
+            :class="isActive('/admin/survey') 
+              ? 'font-semibold text-green-600 bg-green-100' 
+              : 'hover:text-gray-600 hover:bg-gray-100'"
           >
-            <ShieldCheckIcon class="w-6 h-6" /> <span>Post Approvals</span>
+            <ClipboardListIcon class="w-4 h-4" /> <span>Survey</span>
           </router-link>
-        </li>
-           <li>
-          <router-link
-            to="/admin/pending-user-approval"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
-            :class="isActive('/admin/pending-user-approval') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
-          >
-            <UserCheckIcon class="w-6 h-6" /> <span>Pending User Approval</span>
-          </router-link>
-        </li>
+        </li> -->
+        
         <li>
           <router-link
             to="/admin/user-management"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/user-management') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
-            <UsersIcon class="w-6 h-6" /> <span>User Management</span>
+            <UsersIcon class="w-4 h-4" /> <span>Users</span>
           </router-link>
         </li>
-       
         <li>
           <router-link
-            to="/admin/survey-management"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
-            :class="isActive('/admin/survey-management') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+            to="/admin/pending-user-approval"
+            class="flex items-center gap-2 p-2 rounded transition text-sm"
+            :class="isActive('/admin/pending-approvals') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
-            <ClipboardListIcon class="w-6 h-6" /> <span>Survey Management</span>
+            <UserCheckIcon class="w-4 h-4" /> <span>Pending</span>
           </router-link>
         </li>
-       
         <li>
           <router-link
-            to="/admin/settings"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
-            :class="isActive('/admin/settings') 
-              ? 'font-semibold text-green-600 scale-105 bg-green-100' 
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'"
+            to="/admin/post-reports"
+            class="flex items-center gap-2 p-2 rounded transition text-sm"
+            :class="isActive('/admin/post-reports') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
-            <SettingsIcon class="w-6 h-6" /> <span>Settings</span>
+            <AlertTriangleIcon class="w-4 h-4" /> <span>Reports</span>
           </router-link>
+        </li>
+        <li>
+    <button @click="toggleSettings"
+      class="flex items-center gap-2 w-full text-left p-2 rounded transition text-sm"
+      :class="isActive('/admin/settings') ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
+            <SettingsIcon class="w-4 h-4" />
+            <span>Settings</span>
+          </button>
+
+          <!-- Submenu shown when settingsOpen is true -->
+          <ul v-if="settingsOpen" class="pl-6 mt-1 space-y-1">
+            <li><router-link :to="{ name: 'AdminSettings', params: { section: 'profile' } }" :class="['block text-sm py-1 rounded px-2', themeStore.isAdminDark() ? 'hover:bg-gray-800/50' : 'hover:bg-gray-100']">Profile</router-link></li>
+            <li><router-link :to="{ name: 'AdminSettings', params: { section: 'account' } }" :class="['block text-sm py-1 rounded px-2', themeStore.isAdminDark() ? 'hover:bg-gray-800/50' : 'hover:bg-gray-100']">Account & Security</router-link></li>
+            <li><router-link :to="{ name: 'AdminSettings', params: { section: 'appearance' } }" :class="['block text-sm py-1 rounded px-2', themeStore.isAdminDark() ? 'hover:bg-gray-800/50' : 'hover:bg-gray-100']">Appearance</router-link></li>
+          </ul>
         </li>
       </ul>
     </nav>
 
     <!-- Logout at the bottom -->
-    <div class="border-t border-gray-200 pt-4 mt-4">
+    <div :class="['border-t pt-2 mt-2 flex-shrink-0', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
       <button @click="logout"
-        class="flex items-center gap-3 w-full text-left p-3 rounded transition transform text-lg hover:text-red-600 hover:scale-105 hover:bg-red-200">
-        <LogOutIcon class="w-6 h-6" /> <span>Logout</span>
+        :class="['flex items-center gap-2 w-full text-left p-2 rounded transition text-sm', themeStore.isAdminDark() ? 'hover:text-red-400 hover:bg-red-800/40' : 'hover:text-red-600 hover:bg-red-100']">
+        <LogOutIcon class="w-4 h-4" /> <span>Logout</span>
       </button>
     </div>
   </aside>

@@ -12,8 +12,40 @@ import {
   ActivitySquare as MonitoringIcon,
   BarChart3 as AnalyticsIcon,
   UserCheck2 as ApprovalIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Camera as CameraIcon
 } from 'lucide-vue-next';
+
+import { settingsService } from '@/services/settingsService';
+const handleProfilePictureUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file
+  if (file.size > 5 * 1024 * 1024) {
+    alert('File size must be less than 5MB');
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file');
+    return;
+  }
+
+  try {
+    const result = await settingsService.uploadProfilePicture(file);
+    // Update the user's profile picture in auth store immediately
+    if (result.profile_picture && authStore.user) {
+      authStore.user.profile_picture = result.profile_picture;
+      authStore.setUser(authStore.user);
+    }
+    event.target.value = '';
+    console.log('Profile picture updated successfully');
+  } catch (error) {
+    console.error('Failed to upload profile picture:', error);
+    alert('Failed to upload profile picture: ' + (error.message || 'Unknown error'));
+  }
+};
 
 const router = useRouter();
 const route = useRoute();
@@ -60,105 +92,116 @@ const isActive = (path) => route.path.startsWith(path);
 </script>
 
 <template>
-  <aside class="bg-white text-gray-800 w-[350px] min-h-screen p-4 flex flex-col">
+  <aside class="bg-white text-green-600 w-full sm:w-[220px] md:w-[240px] lg:w-[260px] min-h-screen max-h-screen overflow-y-auto p-2 sm:p-3 flex flex-col font-['Poppins']">
     <!-- Profile Section -->
-    <div class="flex flex-col items-center mb-6" v-if="user && user.first_name">
-      <img :src="profilePicture" alt="Profile Picture"
-        class="w-24 h-24 rounded-full border-2 border-white object-cover mb-2" />
-      <h2 class="text-xl font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
-      <p class="text-base text-gray-400">{{ userTypeLabel }}</p>
+    <div class="flex flex-col items-center mb-3 sm:mb-4" v-if="user && user.first_name">
+      <div class="relative">
+        <img :src="profilePicture" alt="Profile Picture"
+          class="w-12 sm:w-16 md:w-18 h-12 sm:h-16 md:h-18 rounded-full border-2 border-green-600 object-cover mb-1" />
+        <label for="profilePictureUploadSuperAdmin"
+               class="absolute bottom-0 right-0 bg-green-600 text-white p-1 rounded-full hover:bg-green-700 transition-colors cursor-pointer">
+          <CameraIcon class="w-3 h-3" />
+        </label>
+        <input type="file"
+               id="profilePictureUploadSuperAdmin"
+               accept="image/*"
+               @change="handleProfilePictureUpload"
+               class="hidden">
+      </div>
+      <h2 class="text-sm sm:text-base font-semibold text-center leading-tight text-green-600 font-['Poppins']">{{ user.first_name }} {{ user.last_name }}</h2>
+      <p class="text-xs sm:text-sm text-green-400 font-['Poppins']">{{ userTypeLabel }}</p>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-grow">
-      <ul class="space-y-3">
+  <nav class="flex-grow overflow-y-auto font-['Poppins']">
+      <ul class="space-y-1 sm:space-y-2">
         <li>
           <router-link to="/super-admin"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin') && route.path === '/super-admin'
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <DashboardIcon class="w-6 h-6" /> <span>Dashboard</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <DashboardIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Dashboard</span>
           </router-link>
         </li>
 
         <li>
           <router-link to="/super-admin/user-management"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin/user-management')
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <UserManagementIcon class="w-6 h-6" /> <span>User Management</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <UserManagementIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">User Management</span>
           </router-link>
         </li>
 
         <li>
           <router-link to="/super-admin/survey-management"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin/survey-management')
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <SurveyIcon class="w-6 h-6" /> <span>Survey Management</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <SurveyIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Survey Management</span>
           </router-link>
         </li>
 
         <li>
           <router-link to="/super-admin/alumni-directory"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin/alumni-directory')
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <DirectoryIcon class="w-6 h-6" /> <span>Alumni Directory</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <DirectoryIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Alumni Directory</span>
           </router-link>
         </li>
 
         <li>
           <router-link to="/super-admin/system-monitoring"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin/system-monitoring')
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <MonitoringIcon class="w-6 h-6" /> <span>System Monitoring</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <MonitoringIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">System Monitoring</span>
           </router-link>
         </li>
 
         <li>
           <router-link to="/super-admin/analytic-dashboard"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin/analytic-dashboard')
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <AnalyticsIcon class="w-6 h-6" /> <span>Analytic Dashboard</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <AnalyticsIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Analytic Dashboard</span>
           </router-link>
         </li>
 
         <li>
           <router-link to="/super-admin/pending-user-approval"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin/pending-user-approval')
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <ApprovalIcon class="w-6 h-6" /> <span>Pending User Approval</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <ApprovalIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Pending User Approval</span>
           </router-link>
         </li>
 
         <li>
           <router-link to="/super-admin/settings"
-            class="flex items-center gap-3 p-3 rounded transition transform text-lg"
+            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
             :class="isActive('/super-admin/settings')
-              ? 'font-semibold text-green-600 scale-105 bg-green-100'
-              : 'hover:text-gray-600 hover:scale-105 hover:bg-gray-100'">
-            <SettingsIcon class="w-6 h-6" /> <span>Settings</span>
+              ? 'font-semibold text-green-600 bg-green-100'
+              : 'hover:text-gray-600 hover:bg-gray-100'">
+            <SettingsIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Settings</span>
           </router-link>
         </li>
       </ul>
     </nav>
 
     <!-- Logout at the bottom -->
-    <div class="border-t border-gray-200 pt-4 mt-4">
+    <div class="border-t border-gray-200 pt-2 mt-2 flex-shrink-0">
       <button @click="logout"
-        class="flex items-center gap-3 w-full text-left p-3 rounded transition transform text-lg hover:text-red-600 hover:scale-105 hover:bg-red-200">
-        <LogOutIcon class="w-6 h-6" /> <span>Logout</span>
+        class="flex items-center gap-2 w-full text-left p-2 rounded transition text-sm font-['Poppins'] hover:text-red-600 hover:bg-red-100">
+        <LogOutIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Logout</span>
       </button>
     </div>
   </aside>

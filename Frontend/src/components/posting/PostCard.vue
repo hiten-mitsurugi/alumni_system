@@ -1,19 +1,19 @@
 <template>
   <div
-    class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 overflow-hidden mb-4 w-full mx-auto">
+    class="bg-white rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg border border-slate-100 hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full mx-auto">
     <!-- Post Header -->
     <PostHeader :post="post" :categories="categories" />
 
     <!-- Post Content -->
-    <div class="px-4 md:px-6 cursor-pointer" @click="openPostModal">
-      <h2 v-if="post.title" class="text-base md:text-lg font-semibold text-slate-900 mb-2 leading-snug">{{ post.title }}</h2>
+    <div class="px-3 md:px-4 lg:px-6 cursor-pointer" @click="openPostModal">
+      <h2 v-if="post.title" class="text-sm md:text-base lg:text-lg font-semibold text-slate-900 mb-2 leading-snug">{{ post.title }}</h2>
       <div class="text-sm md:text-base text-slate-800 whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed">{{ post.content }}</div>
 
       <!-- Shared Post Display -->
-      <div v-if="post.shared_post" class="border border-slate-200 rounded-lg p-3 mb-3 md:mb-4 bg-slate-50">
+      <div v-if="post.shared_post" class="border border-slate-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4 bg-slate-50">
         <div class="flex items-center space-x-2 mb-2">
           <img :src="post.shared_post.user?.profile_picture || '/default-avatar.png'" alt="Profile"
-            class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border border-slate-300" />
+            class="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border border-slate-300" />
           <span class="text-xs md:text-sm font-medium text-slate-700">
             {{ post.shared_post.user?.first_name }} {{ post.shared_post.user?.last_name }}
           </span>
@@ -36,9 +36,9 @@
     </div>
 
     <!-- Engagement Stats & Reaction Summary -->
-    <div v-if="hasEngagement" class="px-4 md:px-6 py-2 border-t border-slate-100 hover-isolation">
+    <div v-if="hasEngagement" class="px-3 md:px-4 lg:px-6 py-2 border-t border-slate-100 hover-isolation">
       <div class="flex items-center justify-between text-xs md:text-sm text-slate-600" @mouseenter.stop @mouseover.stop>
-        <div class="flex items-center space-x-2 md:space-x-3" @mouseenter.stop @mouseover.stop>
+        <div class="flex items-center space-x-1 md:space-x-2 lg:space-x-3" @mouseenter.stop @mouseover.stop>
           <!-- Facebook-style Reaction Summary -->
           <ReactionSummary
             :reactions-summary="post.reactions_summary"
@@ -59,7 +59,7 @@
           </span>
         </div>
         
-        <div class="flex items-center space-x-2 md:space-x-3">
+        <div class="flex items-center space-x-1 md:space-x-2 lg:space-x-3">
           <button v-if="post.comments_count > 0" @click="openPostModal"
             class="font-medium text-green-600 hover:text-green-800 transition-colors text-xs">
             💬 {{ post.comments_count }}
@@ -79,13 +79,13 @@
       @copy-link="$emit('copy-link', post.id)" />
 
     <!-- Quick Comment Preview (if comments exist) -->
-    <div v-if="previewComments.length > 0" class="px-4 md:px-6 pb-2">
+    <div v-if="previewComments.length > 0" class="px-3 md:px-4 lg:px-6 pb-2">
       <div class="space-y-2">
         <div v-for="comment in previewComments.slice(0, 2)" :key="comment.id"
           class="flex space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
           @click="openPostModal">
           <img :src="comment.user.profile_picture || '/default-avatar.png'" :alt="comment.user.full_name"
-            class="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover flex-shrink-0" />
+            class="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full object-cover flex-shrink-0" />
           <div class="flex-1 min-w-0">
             <div class="bg-gray-100 rounded-lg px-2 py-1">
               <p class="font-medium text-xs text-gray-900">
@@ -114,10 +114,10 @@
     </div>
 
     <!-- Quick Comment Input -->
-    <div class="px-4 md:px-6 pb-3 md:pb-4">
+    <div class="px-3 md:px-4 lg:px-6 pb-3 md:pb-4">
       <div class="flex space-x-2 items-center">
         <img :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'" alt="Your avatar"
-          class="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover flex-shrink-0" />
+          class="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full object-cover flex-shrink-0" />
         <button @click="openPostModal"
           class="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-2 text-left text-gray-600 transition-colors text-xs md:text-sm">
           Write a comment...
@@ -137,6 +137,7 @@
 </template>
 
 <script setup>
+import '../css/PostCard.css'
 import { ref, computed } from 'vue'
 import PostHeader from './PostHeader.vue'
 import MediaDisplay from './MediaDisplay.vue'
@@ -228,193 +229,21 @@ const formatTimeAgo = (dateString) => {
   return date.toLocaleDateString()
 }
 
+const getBackendBaseUrl = () => {
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  const hostname = window.location.hostname;
+  return `${protocol}//${hostname}:8000`;
+};
+
 const getProfilePictureUrl = (profilePicture) => {
-  if (!profilePicture) return null
-  
+  if (!profilePicture) return null;
   // If already a full URL, return as is
   if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-    return profilePicture
+    return profilePicture;
   }
-  
-  // If relative path, prepend base URL
-  const BASE_URL = 'http://127.0.0.1:8000'
-  return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`
-}
+  // If relative path, prepend dynamic base URL
+  const BASE_URL = getBackendBaseUrl();
+  return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`;
+};
 </script>
 
-<style scoped>
-/* Hover isolation for engagement section */
-.hover-isolation {
-  isolation: isolate;
-  position: relative;
-}
-
-.hover-isolation:hover {
-  background-color: transparent !important;
-}
-
-.hover-isolation * {
-  pointer-events: auto;
-}
-
-/* Enhanced card shadows - mobile friendly */
-.shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.shadow-xl {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Smooth transitions for all interactive elements */
-.transition-all {
-  transition: all 0.2s ease;
-}
-
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  /* Compact spacing on mobile */
-  .space-x-2 > :not([hidden]) ~ :not([hidden]) {
-    margin-left: 0.5rem;
-  }
-  
-  .space-x-3 > :not([hidden]) ~ :not([hidden]) {
-    margin-left: 0.75rem;
-  }
-  
-  .space-y-2 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.5rem;
-  }
-  
-  /* Touch-friendly buttons */
-  button {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* Compact text sizes */
-  .text-lg {
-    font-size: 1rem;
-    line-height: 1.5rem;
-  }
-  
-  .text-xl {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
-  }
-  
-  /* Reduce padding on mobile */
-  .px-4 {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .py-3 {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-  }
-  
-  /* Better readability on mobile */
-  .leading-snug {
-    line-height: 1.375;
-  }
-  
-  .leading-relaxed {
-    line-height: 1.625;
-  }
-}
-
-/* Desktop hover effects */
-@media (hover: hover) {
-  .hover\:shadow-xl:hover {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-  
-  .hover\:bg-gray-50:hover {
-    background-color: #f9fafb;
-  }
-  
-  .hover\:bg-gray-200:hover {
-    background-color: #e5e7eb;
-  }
-}
-
-/* Line clamping for comment previews */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Prevent horizontal overflow */
-* {
-  box-sizing: border-box;
-}
-
-/* Better focus states for accessibility */
-button:focus, 
-.cursor-pointer:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* Smooth color transitions */
-.transition-colors {
-  transition: color 0.2s ease;
-}
-
-/* Avatar border optimization */
-.rounded-full {
-  border-radius: 50%;
-}
-
-/* Card margin optimization */
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-/* Gradient backgrounds - if used */
-.bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--tw-gradient-stops));
-}
-
-/* Flexible layouts */
-.flex-shrink-0 {
-  flex-shrink: 0;
-}
-
-.flex-1 {
-  flex: 1 1 0%;
-}
-
-.min-w-0 {
-  min-width: 0px;
-}
-
-/* Enhanced spacing */
-.space-x-2 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 0;
-  margin-right: calc(0.5rem * var(--tw-space-x-reverse));
-  margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
-}
-
-.space-x-3 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 0;
-  margin-right: calc(0.75rem * var(--tw-space-x-reverse));
-  margin-left: calc(0.75rem * calc(1 - var(--tw-space-x-reverse)));
-}
-
-.space-y-2 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
-}
-
-.space-y-3 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
-}
-</style>

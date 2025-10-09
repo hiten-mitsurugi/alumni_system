@@ -162,20 +162,7 @@ class Command(BaseCommand):
                         )
                         return
 
-                # Generate unique school_id
-                if user_type <= 2:  # Admin accounts
-                    school_id = f'ADM{user_type}{random.randint(1000, 9999)}'
-                else:  # Alumni accounts
-                    school_id = f'ALM{random.randint(10000, 99999)}'
-                
-                # Ensure school_id is unique
-                while User.objects.filter(school_id=school_id).exists():
-                    if user_type <= 2:
-                        school_id = f'ADM{user_type}{random.randint(1000, 9999)}'
-                    else:
-                        school_id = f'ALM{random.randint(10000, 99999)}'
-
-                # Create the user account
+                # Create the user account (school_id removed)
                 user = User.objects.create_user(
                     username=username,
                     email=account_data['email'],
@@ -183,14 +170,13 @@ class Command(BaseCommand):
                     first_name=account_data['first_name'],
                     last_name=account_data['last_name'],
                     user_type=user_type,
-                    school_id=school_id,
                     program=account_data['program'],
                     is_approved=True,
                     is_active=True,
                     is_staff=account_data.get('is_staff', user_type <= 2),
                     is_superuser=account_data.get('is_superuser', False),
                     # Default values for required fields
-                    gender='prefer_not_to_say',
+                    sex='prefer_not_to_say',
                     birth_date=date(1995, 1, 1),
                     contact_number=f'+63-9{random.randint(100000000, 999999999)}',
                     present_address='Sample Address',
@@ -220,7 +206,6 @@ class Command(BaseCommand):
                     self.style.SUCCESS(
                         f'{type_emoji} Created {account_type}: {username}'
                         f'\n   📧 {account_data["email"]}'
-                        f'\n   🆔 {school_id}'
                         f'\n   🔑 {password}'
                         f'\n'
                     )

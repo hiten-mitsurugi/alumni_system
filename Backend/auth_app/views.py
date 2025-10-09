@@ -1720,3 +1720,144 @@ class UserByNameView(APIView):
                 {'error': 'Error resolving user name'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class AdminAnalyticsView(APIView):
+    """
+    Provide comprehensive analytics data for the admin dashboard
+    """
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def get(self, request):
+        try:
+            from datetime import timedelta
+            from django.utils import timezone
+            from django.db.models import Count
+            
+            # Try to import posts app models
+            try:
+                from posts_app.models import Post, PostReport
+                posts_available = True
+            except ImportError:
+                posts_available = False
+                logger.warning("Posts app not available for analytics")
+            
+            # Get current date
+            today = timezone.now().date()
+            week_ago = today - timedelta(days=7)
+            
+            # User analytics
+            total_users = CustomUser.objects.count()
+            active_users = CustomUser.objects.filter(is_active=True).count()
+            pending_approvals = CustomUser.objects.filter(
+                user_type=3, 
+                is_approved=False
+            ).count()
+            
+            # Recent registrations (last 7 days)
+            # Count only approved alumni registered in the last 7 days
+            recent_registrations = CustomUser.objects.filter(
+                date_joined__date__gte=week_ago,
+                user_type=3,
+                is_approved=True
+            ).count()
+            
+            # Online users (users active in last 15 minutes)
+            fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
+            online_users = CustomUser.objects.filter(
+                last_login__gte=fifteen_minutes_ago
+            ).count()
+            
+            # Initialize default post analytics
+            posts_analytics = {
+                'total': 0,
+                'pending': 0,
+                'approved': 0,
+                'declined': 0,
+                'reported': 0,
+                'weekly_posts': 0,
+                'approval_rate': 0,
+                'by_status': []
+            }
+            
+            reports_analytics = {
+                'pending': 0,
+                'total': 0,
+                'resolved_today': 0
+            }
+            
+            # Post analytics (if posts app is available)
+            if posts_available:
+                try:
+                    total_posts = Post.objects.count()
+                    pending_posts = Post.objects.filter(status='pending').count()
+                    approved_posts = Post.objects.filter(status='approved').count()
+                    declined_posts = Post.objects.filter(status='declined').count()
+                    
+                    # Reported posts analytics
+                    reported_posts = PostReport.objects.filter(is_resolved=False).count()
+                    
+                    # Posts by status breakdown
+                    posts_by_status = Post.objects.values('status').annotate(
+                        count=Count('id')
+                    )
+                    
+                    # Weekly activity
+                    weekly_posts = Post.objects.filter(
+                        created_at__date__gte=week_ago
+                    ).count()
+                    
+                    # Approval rate
+                    total_reviewed = approved_posts + declined_posts
+                    approval_rate = (approved_posts / total_reviewed * 100) if total_reviewed > 0 else 0
+                    
+                    posts_analytics.update({
+                        'total': total_posts,
+                        'pending': pending_posts,
+                        'approved': approved_posts,
+                        'declined': declined_posts,
+                        'reported': reported_posts,
+                        'weekly_posts': weekly_posts,
+                        'approval_rate': round(approval_rate, 2),
+                        'by_status': list(posts_by_status)
+                    })
+                    
+                    reports_analytics.update({
+                        'pending': reported_posts,
+                        'total': PostReport.objects.count(),
+                        'resolved_today': PostReport.objects.filter(
+                            is_resolved=True,
+                            resolved_at__date=today
+                        ).count()
+                    })
+                    
+                except Exception as e:
+                    logger.warning(f"Posts analytics failed: {str(e)}")
+            
+            analytics_data = {
+                'users': {
+                    'total': total_users,
+                    'active': active_users,
+                    'pending_approvals': pending_approvals,
+                    'recent_registrations': recent_registrations,
+                    'online_now': online_users,
+                    'activity_rate': round((active_users / total_users * 100), 2) if total_users > 0 else 0
+                },
+                'posts': posts_analytics,
+                'reports': reports_analytics,
+                'summary': {
+                    'pending_actions': reports_analytics['pending'] + pending_approvals,
+                    'total_content': posts_analytics['total'],
+                    'user_engagement': round((online_users / active_users * 100), 2) if active_users > 0 else 0
+                },
+                'last_updated': timezone.now().isoformat()
+            }
+            
+            return Response(analytics_data)
+            
+        except Exception as e:
+            logger.error(f"Analytics data fetch failed: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch analytics data'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

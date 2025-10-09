@@ -323,7 +323,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="alumni-directory-container">
     <div class="bg-white rounded-lg shadow-lg overflow-hidden relative">
       <!-- Header -->
       <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
@@ -335,7 +335,7 @@ onMounted(() => {
           <div class="flex space-x-3">
             <button
               @click="openImportModal"
-              class="bg-white  text-gr-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-300 transition-colors duration-200 flex items-center space-x-2"
+              class="bg-white  text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-300 transition-colors duration-200 flex items-center space-x-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -397,7 +397,7 @@ onMounted(() => {
               >
                 <div
                   v-if="showFilterDropdown"
-                  class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                  class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 filter-dropdown-scrollable"
                   @click.stop
                 >
                   <div class="p-4 space-y-4">
@@ -540,7 +540,7 @@ onMounted(() => {
               </th>
               <th 
                 @click="sortTable('last_name')"
-                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
               >
                 <div class="flex items-center space-x-1">
                   <span>Full Name</span>
@@ -551,7 +551,7 @@ onMounted(() => {
               </th>
               <th 
                 @click="sortTable('program')"
-                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
               >
                 <div class="flex items-center space-x-1">
                   <span>Program</span>
@@ -562,7 +562,7 @@ onMounted(() => {
               </th>
               <th 
                 @click="sortTable('year_graduated')"
-                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-800"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
               >
                 <div class="flex items-center space-x-1">
                   <span>Year Graduated</span>
@@ -583,7 +583,7 @@ onMounted(() => {
             <tr
               v-for="person in paginatedAlumni"
               :key="person.id"
-              class="hover:bg-green-200 transition-colors duration-150"
+              class="transition-colors duration-150"
             >
               <!-- Row Checkbox -->
               <td class="px-6 py-4" @click.stop>
@@ -597,7 +597,7 @@ onMounted(() => {
 
               <!-- Full Name -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900 cursor-pointer hover:text-green-600 hover:underline transition-colors">
+                <div class="text-sm font-medium text-gray-900">
                   {{ `${person.first_name} ${person.middle_name || ''} ${person.last_name}`.replace(/\s+/g, ' ').trim() }}
                 </div>
               </td>
@@ -626,7 +626,7 @@ onMounted(() => {
                 <span
                   class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
                   :class="{
-                    'bg-blue-100 text-blue-800': person.sex === 'male',
+                    'bg-green-100 text-green-600': person.sex === 'male',
                     'bg-pink-100 text-pink-800': person.sex === 'female',
                     'bg-gray-100 text-gray-800': person.sex === 'prefer_not_to_say'
                   }"
@@ -736,7 +736,7 @@ onMounted(() => {
       <!-- Loading overlay -->
       <div v-if="loading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
         <div class="flex items-center space-x-3">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
           <span class="text-gray-600">Loading alumni directory...</span>
         </div>
       </div>
@@ -755,27 +755,17 @@ onMounted(() => {
 
     <!-- Import Modal -->
     <div v-if="showImportModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center p-6 border-b border-gray-200">
-          <h3 class="text-xl font-semibold text-gray-800">Import Alumni Data</h3>
-          <button
-            @click="closeImportModal"
-            class="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="p-6">
-          <AlumniFileImport @import-completed="fetchAlumni(); closeImportModal();" />
-        </div>
-      </div>
+      <AlumniFileImport @import-completed="fetchAlumni(); closeImportModal();" />
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Ensure filter dropdown is always visible and scrollable if too tall */
+.filter-dropdown-scrollable {
+  max-height: 60vh;
+  overflow-y: auto;
+}
 /* Line clamp utility for long program names */
 .line-clamp-2 {
   display: -webkit-box;
@@ -813,9 +803,9 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-/* Table hover effects */
-tbody tr:hover {
-  background-color: #dcfce7; /* green-200 equivalent */
+/* Alumni Directory Professional Styling */
+.alumni-directory-container {
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Sort icons */

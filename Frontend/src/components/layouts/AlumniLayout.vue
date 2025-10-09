@@ -1,23 +1,24 @@
 <template>
-  <div class="flex h-screen bg-gray-100 relative transition-colors duration-200">
+  <div class="flex h-screen bg-amber-50 relative transition-colors duration-200">
     <!-- Transparent overlay when sidebar is expanded on mobile -->
     <div 
-      v-if="sidebarExpanded" 
+      v-if="sidebarExpanded && isMobile"
       @click="sidebarExpanded = false"
       class="fixed inset-0 bg-black/20 z-40 lg:hidden"
     ></div>
-    
-    <!-- Sidebar with explicit z-index -->
+
+    <!-- Sidebar: Only show on desktop or when expanded on mobile -->
     <AlumniSidebar 
+      v-if="!isMobile || sidebarExpanded"
       :isExpanded="sidebarExpanded" 
       @toggle="sidebarExpanded = !sidebarExpanded"
       class="fixed lg:relative z-50"
     />
-    
-    <!-- Main content area - static ml-20 on mobile, no shift when expanded -->
-    <div class="flex-1 flex flex-col ml-20 lg:ml-0">
-      <AlumniNavbar />
-      <main class="p-4 overflow-auto flex-1 bg-gray-100 transition-colors duration-200">
+
+    <!-- Main content area: no margin when sidebar is hidden on mobile -->
+    <div :class="['flex-1 flex flex-col', (!isMobile || sidebarExpanded) ? 'ml-20 lg:ml-0' : 'ml-0']">
+      <AlumniNavbar @openSidebar="sidebarExpanded = true" />
+      <main class="p-4 overflow-auto flex-1 bg-amber-50 transition-colors duration-200">
         <router-view />
       </main>
     </div>
@@ -25,11 +26,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AlumniSidebar from '@/components/alumni/AlumniSidebar.vue'
 import AlumniNavbar from '@/components/alumni/AlumniNavbar.vue'
 
 const sidebarExpanded = ref(false)
+
+const isMobile = ref(false)
+function checkMobile() {
+  isMobile.value = window.innerWidth < 1024;
+}
+onMounted(() => {
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+});
 </script>
 
 <style scoped>

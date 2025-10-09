@@ -5,7 +5,7 @@
     @click.self="closeModal"
   >
     <div
-      class="bg-white rounded-lg sm:rounded-2xl shadow-2xl w-full h-full sm:max-w-[70vw] sm:w-full sm:max-h-[95vh] overflow-hidden flex flex-col"
+      class="bg-white rounded-lg sm:rounded-2xl shadow-2xl w-full h-full sm:max-w-[70vw] sm:w-full sm:max-h-[95vh] overflow-hidden flex flex-col post-modal"
       @click.stop
     >
       <!-- Mobile-only Media (above header) -->
@@ -90,7 +90,7 @@
         <!-- Desktop-only Left side - Media (if exists) -->
         <div
           v-if="hasMedia"
-          class="hidden sm:flex flex-1 bg-gray-900 flex items-center justify-center min-h-0 sm:min-h-0"
+          class="hidden sm:flex basis-2/3 bg-gray-900 items-center justify-center min-h-0"
         >
           <div class="relative w-full h-full flex items-center justify-center p-4">
             <!-- Image Display -->
@@ -150,12 +150,12 @@
           </div>
         </div>
 
-        <!-- Right side - Post Details and Comments -->
-        <div :class="hasMedia ? 'w-full sm:w-[550px]' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full">
-          <!-- Scrollable Content Area with Fixed Height -->
-          <div class="overflow-y-auto" style="height: calc(100% - 70px);">
+  <!-- Right side - Post Details and Comments -->
+  <div :class="hasMedia ? 'basis-1/3 w-full' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full">
+    <!-- Scrollable Content Area with Fixed Height -->
+    <div class="overflow-y-auto p-0" style="height: calc(100% - 70px);">
             <!-- Post Header -->
-            <div class="p-2 sm:p-3 md:p-6 border-b border-gray-200">
+            <div class="p-4 border-b border-gray-200">
               <PostHeader
                 :post="post"
                 :categories="categories"
@@ -165,7 +165,7 @@
             </div>
 
             <!-- Post Content -->
-            <div class="p-2 sm:p-3 md:p-6 pb-2 sm:pb-4 md:pb-8 border-b border-gray-200">
+            <div class="p-4 pb-2 border-b border-gray-200">
               <h3 v-if="post.title" class="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                 {{ post.title }}
               </h3>
@@ -175,7 +175,7 @@
             </div>
 
             <!-- Engagement Summary -->
-            <div v-if="hasEngagement" class="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 hover-isolation" @mouseenter.stop @mouseover.stop>
+            <div v-if="hasEngagement" class="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-200 hover-isolation" @mouseenter.stop @mouseover.stop>
               <ReactionSummary
                 :reactions-summary="post.reactions_summary"
                 :likes-count="post.likes_count"
@@ -186,7 +186,7 @@
             </div>
 
             <!-- Post Actions -->
-            <div class="px-3 sm:px-6 py-3 sm:py-5 border-b border-gray-200 bg-gray-50">
+            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
               <PostActions
                 :post-id="post.id"
                 :selected-reaction="selectedReaction"
@@ -206,7 +206,7 @@
             </div>
 
             <!-- Comments List -->
-            <div class="px-3 sm:px-6 py-2 sm:py-3 space-y-2 sm:space-y-4 bg-gray-50">
+            <div class="px-4 py-3 space-y-3 bg-gray-50">
               <div v-if="comments.length === 0" class="text-center text-gray-500 py-4 sm:py-8">
                 <svg class="mx-auto h-6 w-6 sm:h-12 sm:w-12 text-gray-400 mb-2 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -244,8 +244,8 @@
           </div>
 
           <!-- Fixed Comment Input at Bottom -->
-          <div class="h-16 sm:h-20 px-3 sm:px-6 py-2 sm:py-4 border-t border-gray-200 bg-white flex items-center">
-            <div class="flex space-x-2 sm:space-x-3 w-full">
+          <div class="h-16 sm:h-20 px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-200 bg-white flex items-center">
+            <div class="flex space-x-2 sm:space-x-3 w-full items-center">
               <img
                 :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'"
                 alt="Your avatar"
@@ -284,7 +284,7 @@
                   <button
                     @click="addComment"
                     :disabled="!newComment.trim()"
-                    class="px-2 sm:px-6 py-1.5 sm:py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -316,7 +316,7 @@ import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
 import ReactionsModal from './ReactionsModal.vue'
 import EmojiPicker from './EmojiPicker.vue'
-import './PostModal.css'
+import '@/components/css/PostModal.css'
 
 // Props
 const props = defineProps({
@@ -523,18 +523,22 @@ const closeEmojiPicker = () => {
   showEmojiPicker.value = false
 }
 
+const getBackendBaseUrl = () => {
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  const hostname = window.location.hostname;
+  return `${protocol}//${hostname}:8000`;
+};
+
 const getProfilePictureUrl = (profilePicture) => {
-  if (!profilePicture) return '/default-avatar.png'
-  
+  if (!profilePicture) return '/default-avatar.png';
   // If already a full URL, return as is
   if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-    return profilePicture
+    return profilePicture;
   }
-  
-  // If relative path, prepend base URL
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
-  return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`
-}
+  // If relative path, prepend dynamic base URL
+  const BASE_URL = getBackendBaseUrl();
+  return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`;
+};
 
 const getMediaUrl = (url) => {
   if (!url) return '/default-placeholder.png'; // Fallback if null
