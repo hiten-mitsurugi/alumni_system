@@ -9,7 +9,7 @@ const profile = ref(null);
 
 const fetchProfile = async () => {
   try {
-    const response = await api.get('/profile/');
+    const response = await api.get('/auth/profile/');
     profile.value = response.data;
   } catch (err) {
     console.error('Failed to fetch profile:', err);
@@ -25,7 +25,7 @@ const uploadProfilePicture = async (event) => {
   const formData = new FormData();
   formData.append('profile_picture', file);
   try {
-    await api.post('/upload-profile-picture/', formData, {
+    await api.post('/auth/upload-profile-picture/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     fetchProfile();

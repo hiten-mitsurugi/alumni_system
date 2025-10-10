@@ -140,7 +140,7 @@ const fetchSuggestions = async (page = 1) => {
       loadingMore.value = true
     }
     
-    const response = await api.get(`/suggested-connections/?page=${page}`)
+    const response = await api.get(`/auth/suggested-connections/?page=${page}`)
     const data = response.data
     
     if (page === 1) {
@@ -173,7 +173,7 @@ const connect = async (person) => {
   try {
     person.connecting = true
     
-    await api.post(`/follow/${person.id}/`)
+    await api.post(`/auth/follow/${person.id}/`)
     
     // Remove from suggestions after successful connection
     suggestions.value = suggestions.value.filter(p => p.id !== person.id)

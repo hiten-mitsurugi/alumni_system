@@ -53,6 +53,12 @@ defineProps(['isExpanded'])
 // Computed property for messaging badge count
 const messagingBadgeCount = computed(() => {
   const count = messagingNotificationStore.totalUnreadCount
+  console.log('🔧 AlumniSidebar: Badge count computed:', { 
+    messages: messagingNotificationStore.unreadMessages,
+    requests: messagingNotificationStore.unreadMessageRequests,
+    total: count,
+    display: count > 0 ? count.toString() : null
+  })
   return count > 0 ? count.toString() : null
 })
 

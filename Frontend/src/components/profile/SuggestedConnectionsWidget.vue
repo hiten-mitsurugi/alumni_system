@@ -93,7 +93,7 @@ const suggestions = ref([])
 const fetchSuggestions = async () => {
   try {
     loading.value = true
-    const response = await api.get('/suggested-connections/')
+    const response = await api.get('/auth/suggested-connections/')
     suggestions.value = response.data.results || response.data || []
   } catch (error) {
     console.error('Error fetching suggestions:', error)
@@ -122,7 +122,7 @@ const connect = async (person) => {
     person.connecting = true
     
     // Try the follow endpoint
-    await api.post(`/follow/${person.id}/`)
+    await api.post(`/auth/follow/${person.id}/`)
     
     // Remove from suggestions after successful connection
     suggestions.value = suggestions.value.filter(p => p.id !== person.id)

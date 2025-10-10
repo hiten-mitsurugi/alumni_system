@@ -255,24 +255,31 @@ class PostReactionView(APIView):
     
     def post(self, request, post_id):
         """Add or update reaction to a post"""
-        print(f"DEBUG: Received reaction request - post_id: {post_id}")
-        print(f"DEBUG: Request data: {request.data}")
-        print(f"DEBUG: Request user: {request.user}")
-        
-        reaction_type = request.data.get('reaction_type')
-        print(f"DEBUG: Extracted reaction_type: '{reaction_type}'")
-        print(f"DEBUG: Available reaction types: {list(dict(Reaction.REACTION_TYPES).keys())}")
-        
-        if not reaction_type:
+        try:
+            print(f"DEBUG: Received reaction request - post_id: {post_id}")
+            print(f"DEBUG: Request data: {request.data}")
+            print(f"DEBUG: Request user: {request.user}")
+            
+            reaction_type = request.data.get('reaction_type')
+            print(f"DEBUG: Extracted reaction_type: '{reaction_type}'")
+            print(f"DEBUG: Available reaction types: {list(dict(Reaction.REACTION_TYPES).keys())}")
+            
+            if not reaction_type:
+                return Response(
+                    {'error': 'reaction_type is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if reaction_type not in dict(Reaction.REACTION_TYPES).keys():
+                return Response(
+                    {'error': f'Invalid reaction type: {reaction_type}. Valid types: {list(dict(Reaction.REACTION_TYPES).keys())}'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            print(f"DEBUG: Error in initial validation: {e}")
             return Response(
-                {'error': 'reaction_type is required'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        if reaction_type not in dict(Reaction.REACTION_TYPES).keys():
-            return Response(
-                {'error': f'Invalid reaction type: {reaction_type}. Valid types: {list(dict(Reaction.REACTION_TYPES).keys())}'}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': f'Validation error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
         try:
@@ -322,9 +329,18 @@ class PostReactionView(APIView):
             })
             
         except Post.DoesNotExist:
+            print(f"DEBUG: Post {post_id} not found")
             return Response(
                 {'error': 'Post not found'}, 
                 status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"DEBUG: Unexpected error in post reaction: {e}")
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {'error': f'Internal server error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
     def delete(self, request, post_id):

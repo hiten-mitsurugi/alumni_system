@@ -273,14 +273,14 @@ const fetchProfile = async () => {
       console.log('userIdentifier is username, resolving:', userIdentifier)
       try {
         // For now, let's find the user by username in the suggested connections or use a direct lookup
-        const response = await api.get(`/alumni/by-name/${userIdentifier}/`)
+        const response = await api.get(`/auth/alumni/by-name/${userIdentifier}/`)
         userId = response.data.id
         console.log('Resolved username to ID:', userId)
       } catch (error) {
         console.error('Error resolving username:', error)
         // Fallback: try to get the user by username directly
         try {
-          const usersResponse = await api.get('/users/')
+          const usersResponse = await api.get('/auth/users/')
           const user = usersResponse.data.find(u => u.username === userIdentifier)
           if (user) {
             userId = user.id
@@ -309,7 +309,7 @@ const fetchProfile = async () => {
     
     console.log('Fetching from endpoint:', endpoint)
     
-    const response = await api.get(endpoint)
+    const response = await api.get(`/auth${endpoint}`)
     const data = response.data
     
     console.log('Profile data received:', data.first_name, data.last_name)
@@ -345,10 +345,10 @@ const toggleFollow = async () => {
     followLoading.value = true
     
     if (isFollowing.value) {
-      await api.delete(`/follow/${profileUserId.value}/`)
+      await api.delete(`/auth/follow/${profileUserId.value}/`)
       isFollowing.value = false
     } else {
-      await api.post(`/follow/${profileUserId.value}/`)
+      await api.post(`/auth/follow/${profileUserId.value}/`)
       isFollowing.value = true
     }
     
@@ -389,7 +389,7 @@ const editProfilePicture = () => {
       formData.append('profile_picture', file)
       
       try {
-        await api.patch('/enhanced-profile/', formData, {
+        await api.patch('/auth/enhanced-profile/', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         await fetchProfile()
@@ -403,7 +403,7 @@ const editProfilePicture = () => {
 
 const updateProfile = async (profileData) => {
   try {
-    await api.patch('/enhanced-profile/', profileData)
+    await api.patch('/auth/enhanced-profile/', profileData)
     await fetchProfile()
     showEditModal.value = false
   } catch (error) {
@@ -416,7 +416,7 @@ const updateCoverPhoto = async (file) => {
     const formData = new FormData()
     formData.append('cover_photo', file)
     
-    await api.patch('/enhanced-profile/', formData, {
+    await api.patch('/auth/enhanced-profile/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     await fetchProfile()

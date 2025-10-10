@@ -16,7 +16,11 @@ class UserBasicSerializer(serializers.ModelSerializer):
         if obj.profile_picture:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.profile_picture.url)
+                try:
+                    return request.build_absolute_uri(obj.profile_picture.url)
+                except (KeyError, AttributeError):
+                    # Fallback for ASGI servers like Daphne
+                    return f"http://localhost:8000{obj.profile_picture.url}"
         return None
     
     def get_full_name(self, obj):
@@ -40,14 +44,22 @@ class PostMediaSerializer(serializers.ModelSerializer):
         if obj.file:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.file.url)
+                try:
+                    return request.build_absolute_uri(obj.file.url)
+                except (KeyError, AttributeError):
+                    # Fallback for ASGI servers like Daphne
+                    return f"http://localhost:8000{obj.file.url}"
         return None
     
     def get_thumbnail_url(self, obj):
         if obj.thumbnail:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.thumbnail.url)
+                try:
+                    return request.build_absolute_uri(obj.thumbnail.url)
+                except (KeyError, AttributeError):
+                    # Fallback for ASGI servers like Daphne
+                    return f"http://localhost:8000{obj.thumbnail.url}"
         return None
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -221,7 +233,11 @@ class PostSerializer(serializers.ModelSerializer):
         if obj.image:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.image.url)
+                try:
+                    return request.build_absolute_uri(obj.image.url)
+                except (KeyError, AttributeError):
+                    # Fallback for ASGI servers like Daphne
+                    return f"http://localhost:8000{obj.image.url}"
         return None
     
     def get_reactions_summary(self, obj):

@@ -48,8 +48,8 @@ export const useAuthStore = defineStore('auth', {
       try {
         // Call backend logout API to set status to offline and broadcast
         if (this.refreshToken) {
-          console.log('AUTH STORE DEBUG: Making POST request to /logout/');
-          const response = await api.post('/logout/', {
+          console.log('AUTH STORE DEBUG: Making POST request to /auth/logout/');
+          const response = await api.post('/auth/logout/', {
             refresh: this.refreshToken
           });
           console.log('AUTH STORE DEBUG: Backend logout response:', response.status, response.data);
@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) return;
 
       try {
-        const response = await api.get('/user/');
+        const response = await api.get('/auth/user/');
         this.setUser(response.data);
       } catch (error) {
         const response = error.response;
@@ -85,7 +85,7 @@ export const useAuthStore = defineStore('auth', {
           const refreshed = await this.tryRefreshToken();
           if (refreshed) {
             try {
-              const retry = await api.get('/user/');
+              const retry = await api.get('/auth/user/');
               this.setUser(retry.data);
             } catch (err) {
               this.logout();
@@ -116,7 +116,7 @@ export const useAuthStore = defineStore('auth', {
         this.isRefreshing = true;
         console.log('Attempting to refresh token...');
         
-        const response = await api.post('/token/refresh/', {
+        const response = await api.post('/auth/token/refresh/', {
           refresh: this.refreshToken,
         });
 

@@ -47,7 +47,7 @@ export function useNetworking() {
     try {
       loading.value.connections = true;
       
-      const response = await api.get('/connections/', {
+      const response = await api.get('/auth/connections/', {
         params: { type: 'all' }
       });
       
@@ -128,7 +128,7 @@ export function useNetworking() {
     try {
       loading.value.suggestions = true;
       
-      const response = await api.get('/suggested-connections/');
+      const response = await api.get('/auth/suggested-connections/');
       
       suggestions.value = (response.data || []).map(suggestion => 
         formatUserData(suggestion, {

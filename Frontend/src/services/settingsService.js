@@ -78,7 +78,7 @@ class SettingsService {
       const formData = new FormData()
       formData.append('profile_picture', file)
 
-      const response = await apiClient.post(`${this.baseURL}/settings/profile-picture/`, formData, {
+      const response = await apiClient.patch(`${this.baseURL}/enhanced-profile/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

@@ -1420,15 +1420,14 @@ class GroupChatConsumer(MessagingBaseMixin, AsyncWebsocketConsumer):
         try:
             @database_sync_to_async
             def _create_group_bump():
-                # Get the original message - must be sender's own message in this group
+                # Get the original message - any message in this group can be bumped
                 try:
                     original_message = Message.objects.get(
                         id=original_message_id,
-                        sender=self.user,
                         group_id=self.group_id
                     )
                 except Message.DoesNotExist:
-                    raise ValueError("Original message not found or not owned by sender")
+                    raise ValueError("Original message not found in this group")
                 
                 # Create bump message
                 message = Message.objects.create(

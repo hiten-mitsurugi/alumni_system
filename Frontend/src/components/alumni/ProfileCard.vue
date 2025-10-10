@@ -140,18 +140,28 @@ const fetchUserData = async () => {
   try {
     loading.value = true
     
-    // Try enhanced profile first, fallback to basic user endpoint
-    try {
-      const response = await api.get('/enhanced-profile/')
-      const data = response.data
-      userData.value = data
-      profileData.value = data.profile
-    } catch (enhancedError) {
-      console.log('Enhanced profile failed, using basic user endpoint:', enhancedError.message)
-      // Fallback to basic user endpoint that works
-      const response = await api.get('/user/')
-      userData.value = response.data
-      profileData.value = response.data.profile || null
+    // Use auth store data directly for consistency and real-time updates
+    userData.value = authStore.user
+    profileData.value = authStore.user?.profile || null
+    
+    // If no user in store, try to fetch it
+    if (!userData.value) {
+      try {
+        const response = await api.get('/auth/enhanced-profile/')
+        const data = response.data
+        userData.value = data
+        profileData.value = data.profile
+        // Update auth store with fresh data
+        authStore.setUser(data)
+      } catch (enhancedError) {
+        console.log('Enhanced profile failed, using basic user endpoint:', enhancedError.message)
+        // Fallback to basic user endpoint that works
+        const response = await api.get('/auth/user/')
+        userData.value = response.data
+        profileData.value = response.data.profile || null
+        // Update auth store with fresh data
+        authStore.setUser(response.data)
+      }
     }
     
   } catch (error) {

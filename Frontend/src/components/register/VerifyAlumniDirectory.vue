@@ -37,7 +37,7 @@ const checkDirectory = async () => {
     return;
   }
   try {
-    const response = await api.post('/check-alumni-directory/', {
+    const response = await api.post('/auth/check-alumni-directory/', {
       first_name: localForm.first_name,
       middle_name: localForm.middle_name,
       last_name: localForm.last_name,

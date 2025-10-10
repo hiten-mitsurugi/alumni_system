@@ -47,7 +47,7 @@ const changePage = (page) => {
 const fetchApprovedUsers = async () => {
   try {
     const params = { ...filters.value };
-    const res = await api.get('auth/approved-users/', { params });
+    const res = await api.get('/auth/approved-users/', { params });
     approvedUsers.value = Array.isArray(res.data) ? res.data : [];
     currentPage.value = 1;
   } catch (error) {
@@ -88,7 +88,7 @@ const deleteUser = async (user) => {
   if (confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}? This action cannot be undone.`)) {
     try {
       // Use the proper delete endpoint for approved users (UserViewSet DELETE method)
-      await api.delete(`/users/${user.id}/`);
+      await api.delete(`/auth/users/${user.id}/`);
       approvedUsers.value = approvedUsers.value.filter(u => u.id !== user.id);
       alert('User deleted successfully');
     } catch (error) {
@@ -101,7 +101,7 @@ const deleteUser = async (user) => {
 const blockUser = async (user) => {
   if (confirm(`Are you sure you want to block ${user.first_name} ${user.last_name}? They will not be able to login.`)) {
     try {
-      await api.post(`/block-user/${user.id}/`);
+      await api.post(`/auth/block-user/${user.id}/`);
       fetchApprovedUsers();
       alert('User blocked successfully');
     } catch (error) {
@@ -114,7 +114,7 @@ const blockUser = async (user) => {
 const unblockUser = async (user) => {
   if (confirm(`Are you sure you want to unblock ${user.first_name} ${user.last_name}? They will be able to login again.`)) {
     try {
-      await api.post(`/unblock-user/${user.id}/`);
+      await api.post(`/auth/unblock-user/${user.id}/`);
       fetchApprovedUsers();
       alert('User unblocked successfully');
     } catch (error) {

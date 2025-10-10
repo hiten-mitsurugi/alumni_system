@@ -133,7 +133,7 @@ const checkEmailExists = async (email) => {
 
   try {
     // Use the correct endpoint path - auth_app.urls is included at 'api/' so the endpoint is 'api/check-email/'
-    const response = await api.get(`/check-email/?email=${encodeURIComponent(email)}`);
+    const response = await api.get(`/auth/check-email/?email=${encodeURIComponent(email)}`);
     
     if (response.data.exists) {
       emailExists.value = true;

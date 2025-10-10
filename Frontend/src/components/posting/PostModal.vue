@@ -178,10 +178,8 @@
             <div v-if="hasEngagement" class="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-200 hover-isolation" @mouseenter.stop @mouseover.stop>
               <ReactionSummary
                 :reactions-summary="post.reactions_summary"
-                :likes-count="post.likes_count"
-                :comments-count="post.comments_count"
-                :shares-count="post.shares_count"
-                @click="openReactionsModal"
+                :post-id="post.id"
+                @open-reactions-modal="openReactionsModal"
               />
             </div>
 

@@ -28,21 +28,32 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
     error.value = null
     
     try {
+      console.log('📊 Messaging Notification Store: Fetching unread counts...')
       const response = await api.get('/message/unread-counts/')
       const data = response.data
       
-      unreadMessages.value = data.unread_messages || 0
-      unreadMessageRequests.value = data.unread_message_requests || 0
+      // Update values with proper fallbacks
+      const newUnreadMessages = parseInt(data.unread_messages || 0)
+      const newUnreadRequests = parseInt(data.unread_message_requests || 0)
+      
+      unreadMessages.value = newUnreadMessages
+      unreadMessageRequests.value = newUnreadRequests
       
       console.log('📊 Messaging Notification Store: Fetched unread counts:', {
         messages: unreadMessages.value,
         requests: unreadMessageRequests.value,
-        total: totalUnreadCount.value
+        total: totalUnreadCount.value,
+        rawData: data
       })
       
     } catch (err) {
       console.error('❌ Failed to fetch messaging unread counts:', err)
+      console.error('❌ Error details:', err.response?.data || err.message)
       error.value = err.message
+      
+      // Set to zero on error to prevent showing stale counts
+      unreadMessages.value = 0
+      unreadMessageRequests.value = 0
     } finally {
       isLoading.value = false
     }
@@ -118,6 +129,11 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
         } else if (type === 'all') {
           clearAllCounts()
         }
+      } else if (action === 'refresh') {
+        // New action to force refresh from server
+        console.log('🔔 Messaging Notification: Refresh action received, fetching latest counts...')
+        fetchUnreadCounts()
+        return // Don't do delayed refresh if we just refreshed
       }
       
       console.log('🔔 Current counts after update:', { 
@@ -126,11 +142,11 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
         total: totalUnreadCount.value
       })
       
-      // 🔧 ENHANCEMENT: Trigger a delayed refresh to ensure consistency
+      // 🔧 ENHANCEMENT: Immediate refresh for consistency (no delay)
       setTimeout(async () => {
-        console.log('🔄 Delayed refresh after notification update...')
+        console.log('🔄 Quick refresh after notification update...')
         await fetchUnreadCounts()
-      }, 2000)
+      }, 100) // Minimal delay for better performance
       
     } else if (data.type === 'status_update') {
       // Ignore status updates - these are handled by App.vue and other components
@@ -151,8 +167,8 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
       if (!socket || socket.readyState !== WebSocket.OPEN) {
         console.log('🌐 Messaging Notification: Main WebSocket not ready, connecting...')
         await websocketService.connect('notifications')
-        // Wait a bit for connection to establish
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Wait briefly for connection to establish
+        await new Promise(resolve => setTimeout(resolve, 200))
       }
       
       // Add our listener to the existing connection
@@ -167,7 +183,7 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
           console.log('🔄 Auto-refreshing notification counts...')
           await fetchUnreadCounts()
         }
-      }, 30000) // Refresh every 30 seconds as backup
+      }, 10000) // Refresh every 10 seconds for faster updates
       
     } catch (error) {
       console.error('❌ Failed to add messaging notification listener:', error)
@@ -176,21 +192,42 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
 
   // Initialize store
   async function initialize() {
-    if (isInitialized.value) return
+    if (isInitialized.value) {
+      console.log('✅ Messaging notification store already initialized')
+      return
+    }
 
     const authStore = useAuthStore()
-    if (!authStore.user) {
+    if (!authStore.user || !authStore.token) {
       console.log('⚠️ User not authenticated, skipping messaging notification store initialization')
       return
     }
 
+    console.log('🚀 Initializing messaging notification store for user:', authStore.user.id)
+
     try {
+      // First fetch the counts
       await fetchUnreadCounts()
+      
+      // Then initialize WebSocket
       await initializeWebSocket()
+      
+      // Mark as initialized
       isInitialized.value = true
-      console.log('✅ Messaging notification store initialized')
+      console.log('✅ Messaging notification store initialized successfully')
+      
+      // Force an immediate refresh to ensure we have latest data
+      setTimeout(async () => {
+        console.log('🔄 Initial refresh after store initialization...')
+        await fetchUnreadCounts()
+      }, 100)
+      
     } catch (error) {
       console.error('❌ Failed to initialize messaging notification store:', error)
+      // Reset state on failure
+      isInitialized.value = false
+      unreadMessages.value = 0
+      unreadMessageRequests.value = 0
     }
   }
 

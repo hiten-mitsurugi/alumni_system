@@ -128,7 +128,7 @@ const requiredFields = [
       }
     }
 
-    await api.post('/create-user/', formData, {
+    await api.post('auth/create-user/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 

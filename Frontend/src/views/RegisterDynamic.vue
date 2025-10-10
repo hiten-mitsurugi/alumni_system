@@ -294,7 +294,7 @@ const submitForm = async () => {
   console.log("Full form object:", form.value);
 
   try {
-    const response = await api.post('/register/', formData, {
+    const response = await api.post('/auth/register/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     success.value = '✅ Registration successful! Please wait for approval.';

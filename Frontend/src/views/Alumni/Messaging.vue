@@ -86,10 +86,12 @@
  @click="selectConversation(conversation)"
  @mouseenter="prefetchMessages(conversation)"
  :class="[
- 'relative flex items-center p-3 md:p-4 cursor-pointer border-b border-gray-100/60 transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50 hover:to-white conversation-item panel-transition touch-manipulation group',
+ 'relative flex items-center p-3 md:p-4 cursor-pointer border-b border-gray-100/60 transition-all duration-200 conversation-item panel-transition touch-manipulation group',
  selectedConversation?.id === conversation.id 
- ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-r-4 border-green-500 shadow-sm' 
- : (conversation.unreadCount > 0 ? 'bg-gradient-to-r from-green-50/30 to-white' : 'hover:shadow-sm')
+ ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-r-4 border-blue-500 shadow-sm' 
+ : conversation.unreadCount > 0 
+   ? 'bg-gradient-to-r from-green-50 to-emerald-50/80 hover:from-green-100 hover:to-emerald-100 shadow-sm border-l-4 border-green-400' 
+   : 'bg-white hover:bg-gradient-to-r hover:from-slate-50 hover:to-white hover:shadow-sm'
  ]"
  style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
  
@@ -118,7 +120,12 @@
  </div>
  <div class="flex-1 min-w-0">
  <div class="flex items-center justify-between mb-1">
- <h3 :class="['text-gray-900 truncate text-base md:text-lg leading-tight', conversation.unreadCount > 0 ? 'font-bold' : 'font-semibold']">{{ conversation.type === 'private' ?
+ <h3 :class="[
+   'truncate text-base md:text-lg leading-tight', 
+   conversation.unreadCount > 0 
+     ? 'font-bold text-gray-900' 
+     : 'font-semibold text-gray-800'
+ ]">{{ conversation.type === 'private' ?
  `${conversation.mate.first_name} ${conversation.mate.last_name}` : conversation.group?.name || 'Unnamed Group' }}</h3>
  <div class="flex items-center gap-2">
  <!-- Block status indicators -->
@@ -143,8 +150,14 @@
  </div>
  </div>
  <div class="flex items-center justify-between">
- <p class="text-sm text-gray-600 truncate pr-2 leading-relaxed"
- :class="{ 'italic text-gray-400': conversation.isBlockedByMe || conversation.isBlockedByThem }">
+ <p :class="[
+   'text-sm truncate pr-2 leading-relaxed',
+   conversation.isBlockedByMe || conversation.isBlockedByThem 
+     ? 'italic text-gray-400' 
+     : conversation.unreadCount > 0 
+       ? 'font-medium text-gray-700' 
+       : 'text-gray-600'
+ ]">
  {{ conversation.isBlockedByMe ? 'Messages blocked' : 
  conversation.isBlockedByThem ? 'You are blocked by this user' : 
  conversation.lastMessage }}
@@ -404,7 +417,7 @@ const filteredConversations = computed(() => {
 async function validateToken() {
  if (!authStore.token) return (isAuthenticated.value = false);
  try {
- await api.get('/user/');
+ await api.get('/auth/user/');
  return (isAuthenticated.value = true);
  } catch (error) {
  // Only treat 401 errors as authentication issues
@@ -449,7 +462,7 @@ const getValidToken = async () => authStore.token || await refreshToken();
 
 // === FETCH DATA ===
 const fetchCurrentUser = async () => {
- try { currentUser.value = (await api.get('/user/')).data; } catch (e) { console.error('User fetch error', e); }
+ try { currentUser.value = (await api.get('/auth/user/')).data; } catch (e) { console.error('User fetch error', e); }
 };
 
 const fetchConversations = async () => {

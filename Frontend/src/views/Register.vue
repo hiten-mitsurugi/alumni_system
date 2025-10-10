@@ -321,7 +321,7 @@ const submitForm = async () => {
   formData.append('feedback_recommendations', JSON.stringify(form.value.feedback_recommendations || {}));
 
   try {
-    await api.post('/register/', formData, {
+    await api.post('/auth/register/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     success.value = '✅ Registration successful! Please wait for approval.';

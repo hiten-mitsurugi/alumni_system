@@ -12,6 +12,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/message/', include('messaging_app.urls')),
     path('api/auth/', include('auth_app.urls')),
+    path('api/', include('auth_app.urls')),  # Add direct API routes for backward compatibility
     path('api/posts/', include('posts_app.urls')),
     path('api/survey/', include('survey_app.urls')),  # NEW - Dynamic Survey System
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

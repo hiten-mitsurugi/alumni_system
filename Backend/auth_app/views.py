@@ -32,6 +32,8 @@ from django.urls import reverse
 import logging
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets
+import os
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -1236,6 +1238,21 @@ class EnhancedProfileView(APIView):
             if field in request.data:
                 profile_data[field] = request.data[field]
         
+        # Handle profile picture upload (store on user model) - save with unique filename
+        if 'profile_picture' in request.FILES:
+            try:
+                pic = request.FILES['profile_picture']
+                # Ensure extension preserved
+                ext = os.path.splitext(pic.name)[1] or ''
+                new_name = f"profile_{user.id}_{uuid.uuid4().hex}{ext}"
+                # Save directly to user.profile_picture field
+                user.profile_picture.save(new_name, pic, save=True)
+                user.save()
+                # Log upload
+                logger.info(f"Saved new profile picture for user {user.id}: {user.profile_picture.name}")
+            except Exception as e:
+                logger.error(f"Failed to save profile picture for user {user.id}: {str(e)}")
+
         # Handle cover photo upload
         if 'cover_photo' in request.FILES:
             profile_data['cover_photo'] = request.FILES['cover_photo']
@@ -1244,11 +1261,12 @@ class EnhancedProfileView(APIView):
         for field, value in profile_data.items():
             setattr(profile, field, value)
         profile.save()
-        
-        # Clear cache
-        cache_key = f"user_profile_{user.id}"
-        cache.delete(cache_key)
-        
+
+        # Clear cache keys related to this user so updated URLs are returned
+        cache.delete(f"user_profile_{user.id}")
+        cache.delete(f"user_detail_{user.id}")
+        cache.delete("approved_alumni_list")
+
         # Return updated profile
         from .serializers import EnhancedUserDetailSerializer
         serializer = EnhancedUserDetailSerializer(user, context={'request': request})

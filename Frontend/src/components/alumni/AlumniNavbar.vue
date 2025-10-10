@@ -167,13 +167,16 @@ defineEmits(['toggleNotification', 'toggleMobileSearch', 'update:searchQuery'])
 // Check if we're on the home page to show search
 const isHomePage = computed(() => route.name === 'AlumniHome')
 
-// Compute profile picture URL
+// Compute profile picture URL with cache-busting
 const profilePictureUrl = computed(() => {
   const user = authStore.user
   const pic = user?.profile_picture
-  return pic
-    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
-    : '/default-avatar.png'
+  if (!pic) return '/default-avatar.png'
+  
+  const baseUrl = pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
+  // Add cache-busting parameter to force refresh when profile picture changes
+  const cacheBuster = `?t=${Date.now()}`
+  return `${baseUrl}${cacheBuster}`
 })
 
 // Initialize component

@@ -296,7 +296,7 @@ const uploadFile = async () => {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
     
-    const response = await api.post('alumni-directory/import/', formData, {
+    const response = await api.post('/auth/alumni-directory/import/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${authStore.token}`

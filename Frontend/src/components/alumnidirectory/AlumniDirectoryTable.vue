@@ -152,7 +152,7 @@ const paginationInfo = computed(() => {
 const fetchAlumni = async () => {
   loading.value = true;
   try {
-    const response = await axios.get(`${BASE_URL}/api/alumni-directory/`, {
+    const response = await axios.get(`${BASE_URL}/api/auth/alumni-directory/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
     alumni.value = response.data;
@@ -259,7 +259,7 @@ const bulkDeleteAlumni = async () => {
   if (confirm(`Are you sure you want to delete ${selectedAlumniIds.value.length} selected alumni? This action cannot be undone.`)) {
     try {
       for (const alumniId of selectedAlumniIds.value) {
-        await axios.delete(`${BASE_URL}/api/alumni-directory/${alumniId}/`, {
+        await axios.delete(`${BASE_URL}/api/auth/alumni-directory/${alumniId}/`, {
           headers: { Authorization: `Bearer ${authStore.token}` }
         });
       }

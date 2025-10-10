@@ -34,7 +34,12 @@ class UserSerializer(serializers.ModelSerializer):
     def get_profile_picture(self, obj):
         if obj.profile_picture:
             request = self.context.get('request')
-            return request.build_absolute_uri(obj.profile_picture.url) if request else obj.profile_picture.url
+            if request:
+                try:
+                    return request.build_absolute_uri(obj.profile_picture.url)
+                except (KeyError, AttributeError):
+                    return f"http://localhost:8000{obj.profile_picture.url}"
+            return obj.profile_picture.url
         return None
 
 
@@ -53,7 +58,12 @@ class UserSearchSerializer(serializers.ModelSerializer):
     def get_profile_picture(self, obj):
         if obj.profile_picture:
             request = self.context.get('request')
-            return request.build_absolute_uri(obj.profile_picture.url) if request else obj.profile_picture.url
+            if request:
+                try:
+                    return request.build_absolute_uri(obj.profile_picture.url)
+                except (KeyError, AttributeError):
+                    return f"http://localhost:8000{obj.profile_picture.url}"
+            return obj.profile_picture.url
         return None
     
     def get_is_blocked_by_me(self, obj):
@@ -90,7 +100,10 @@ class AttachmentSerializer(serializers.ModelSerializer):
         if obj.file:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.file.url)
+                try:
+                    return request.build_absolute_uri(obj.file.url)
+                except (KeyError, AttributeError):
+                    return f"http://localhost:8000{obj.file.url}"
             else:
                 return obj.file.url
         return None
@@ -257,7 +270,12 @@ class MessageSerializer(serializers.ModelSerializer):
     def get_profile_picture_url(self, user):
         if user.profile_picture:
             request = self.context.get('request')
-            return request.build_absolute_uri(user.profile_picture.url) if request else user.profile_picture.url
+            if request:
+                try:
+                    return request.build_absolute_uri(user.profile_picture.url)
+                except (KeyError, AttributeError):
+                    return f"http://localhost:8000{user.profile_picture.url}"
+            return user.profile_picture.url
         return None
 
     def to_representation(self, instance):
@@ -295,7 +313,12 @@ class GroupChatSerializer(serializers.ModelSerializer):
     def get_group_picture(self, obj):
         if obj.group_picture:
             request = self.context.get('request')
-            return request.build_absolute_uri(obj.group_picture.url) if request else obj.group_picture.url
+            if request:
+                try:
+                    return request.build_absolute_uri(obj.group_picture.url)
+                except (KeyError, AttributeError):
+                    return f"http://localhost:8000{obj.group_picture.url}"
+            return obj.group_picture.url
         return None
         
     def get_member_count(self, obj):

@@ -1,39 +1,25 @@
 # 🎓 Alumni Management System
 
-A full-stack alumni management system using Django for the backend and Vue.js for the frontend.
+A **full-stack alumni management system** built with **Django (Backend)** and **Vue.js (Frontend)**.
 
-To set up and run this project, just follow the steps below — everything is here in one place.
+This guide provides a complete setup process for both backend and frontend environments.
 
-```
+---
 
-cd Frontend
-npm install
-npm install @vitejs/plugin-vue@5.2.4 axios@1.9.0 globals@16.2.0 lucide-vue-next@0.514.0 pinia-plugin-persistedstate@4.3.0 pinia@3.0.3 vite-plugin-vue-devtools@7.7.6 vite@6.3.5 vue-router@4.5.1 vue@3.5.16
-npm install lodash
-npm install tailwindcss @tailwindcss/vite
-npm run build
-npm run dev -- --host 0.0.0.0
+## 🚀 Project Setup
 
-
-```
-
-Open a new terminal and run the backend:
-
-```
+### ⚙️ Frontend Setup  Backend Setup (Django)
 
 cd Backend
 python -m venv env
-source env/Scripts/activate
+source env/Scripts/activate  # On Windows PowerShell use: env\Scripts\activate
 pip install django
 pip install -r requirements.txt
 
 
-```
-make a db in your postgres example "alumni_syste"
-configure backend in .env
-example: 
+CREATE DATABASE alumni_system;
 # Django Settings
-SECRET_KEY=***"in your settings.py"**
+SECRET_KEY=your_secret_key_here
 DEBUG=True
 
 # Database Settings
@@ -44,57 +30,44 @@ DB_HOST=localhost
 DB_PORT=5432
 
 # Redis Settings
-export REDIS_URL=redis://:foobared@127.0.0.1:6379/0
-export REDIS_HOST=127.0.0.1
-export REDIS_PORT=6379
-export REDIS_PASSWORD=foobared
-export REDIS_USE_SSL=False
+REDIS_URL=redis://:foobared@127.0.0.1:6379/0
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=foobared
+REDIS_USE_SSL=False
 
 # Email Settings
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=**youremail**
-EMAIL_HOST_PASSWORD=**yourapppassowrd Go to https://myaccount.google.com/security***
-DEFAULT_FROM_EMAIL=**youremail**
+EMAIL_HOST_USER=youremail@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password
+DEFAULT_FROM_EMAIL=youremail@gmail.com
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS=http://localhost:8000,http://localhost:8080,http://localhost:5173
 
-
-```
-
-python mange.py makemigrations
-python mange.py migrate
-python mange.py create_admin_accounts
-
-```
-
-in postgres:
-insert this for the Alumni Directory:
-INSERT INTO auth_app_alumnidirectory 
-(first_name, middle_name, last_name, birth_date, school_id, program, year_graduated, gender)
-VALUES 
-('Roman', 'Rico', 'Osorio', '1989-04-08', '221-01926', 'BS in Information Technology', 2026, 'male');
-
-
-```
+python manage.py makemigrations
+python manage.py migrate
 
 daphne -b 0.0.0.0 -p 8000 alumni_system.asgi:application
 
-```
+
+### ⚙️ Frontend Setup (Vue.js + Vite + TailwindCSS)
+
+```bash
+cd Frontend
+npm install
+npm install @vitejs/plugin-vue@5.2.4 axios@1.9.0 globals@16.2.0 lucide-vue-next@0.514.0 pinia-plugin-persistedstate@4.3.0 pinia@3.0.3 vite-plugin-vue-devtools@7.7.6 vite@6.3.5 vue-router@4.5.1 vue@3.5.16
+npm install lodash
+npm install tailwindcss @tailwindcss/vite
+npm run build
+npm run dev
+npm run dev -- --host 0.0.0.0
 
 
 
-Frontend will run at:  
-`http://localhost:5173`
+or you can directly run 
 
-Backend will run at:  
-`http://127.0.0.1:8000`
-
-
-
-
-
-
-
+if you are still starting from scratch: setup_and_run_full.bat
+if dependencies and directly run the files: run_servers_only.bat
