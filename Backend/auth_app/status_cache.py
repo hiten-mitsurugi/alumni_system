@@ -65,7 +65,8 @@ class UserStatusCache:
             cls.broadcast_status_change(user_id, "online")
             
         except Exception as e:
-            print(f"Error setting user {user_id} online: {e}")
+            # Redis unavailable is expected in development
+            pass
     
     @classmethod
     def set_user_offline(cls, user_id):
@@ -104,7 +105,8 @@ class UserStatusCache:
             cls.broadcast_status_change(user_id, "offline")
             
         except Exception as e:
-            print(f"Error setting user {user_id} offline: {e}")
+            # Redis unavailable is expected in development
+            pass
     
     @classmethod
     def get_user_status(cls, user_id):

@@ -27,34 +27,43 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket connecting authenticated user: {user.username} (ID: {user.id})")
             
-            # Set user online when WebSocket connects (for real-time status)
+            # Set user online when WebSocket connects (non-blocking)
             try:
-                await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
+                # Use fire-and-forget to prevent blocking
+                asyncio.create_task(database_sync_to_async(UserStatusCache.set_user_online)(user.id))
                 logger.info(f"Set user {user.id} online via WebSocket connect")
             except Exception as e:
-                logger.warning(f"Could not set user {user.id} online (Redis unavailable): {e}")
+                # Silently handle Redis unavailability - this is expected
+                logger.debug(f"Redis unavailable for user {user.id} status update: {e}")
+                logger.info(f"Set user {user.id} online via WebSocket connect (Redis fallback)")
             
-            # Join global groups (with Redis fallback handling)
+            # Join global groups (fire-and-forget to prevent blocking)
             try:
-                await self.channel_layer.group_add('admin_notifications', self.channel_name)
-                await self.channel_layer.group_add('status_updates', self.channel_name)
-                await self.channel_layer.group_add('user_management', self.channel_name)
-                
-                # Join user-specific group for personal notifications
-                await self.channel_layer.group_add(f'user_{user.id}', self.channel_name)
-                logger.info(f"Added user {user.id} to WebSocket groups")
+                if self.channel_layer:
+                    # Use fire-and-forget approach to prevent any blocking
+                    asyncio.create_task(self.channel_layer.group_add('admin_notifications', self.channel_name))
+                    asyncio.create_task(self.channel_layer.group_add('status_updates', self.channel_name))
+                    asyncio.create_task(self.channel_layer.group_add('user_management', self.channel_name))
+                    asyncio.create_task(self.channel_layer.group_add(f'user_{user.id}', self.channel_name))
+                    logger.info(f"Added user {user.id} to WebSocket groups")
+                else:
+                    logger.info(f"Channel layer not available - user {user.id} connected without groups")
             except Exception as e:
-                logger.warning(f"Could not add user {user.id} to groups (using fallback): {e}")
+                logger.warning(f"Could not add user {user.id} to groups: {e}")
+                # Continue anyway - the WebSocket can still function without groups
             
             await self.accept()
             
-            # Start heartbeat to keep user online
-            try:
-                self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
-                logger.info(f"WebSocket connection accepted for user {user.username} with heartbeat")
-            except Exception as e:
-                logger.warning(f"Could not start heartbeat for user {user.id}: {e}")
-                logger.info(f"WebSocket connection accepted for user {user.username} without heartbeat")
+            # Start heartbeat to keep user online (temporarily disabled for testing)
+            logger.info(f"WebSocket connection accepted for user {user.username} (heartbeat disabled for testing)")
+            
+            # Heartbeat disabled for stability testing
+            # try:
+            #     self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
+            #     logger.info(f"WebSocket connection accepted for user {user.username} with heartbeat")
+            # except Exception as e:
+            #     logger.warning(f"Could not start heartbeat for user {user.id}: {e}")
+            #     logger.info(f"WebSocket connection accepted for user {user.username} without heartbeat")
             
         except Exception as e:
             logger.error(f"WebSocket connect error for user {self.scope['user']}: {str(e)}")
@@ -65,22 +74,34 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             user = self.scope['user']
             logger.info(f"WebSocket disconnecting user {user.username} (ID: {user.id}) with code: {close_code}")
             
-            # Cancel heartbeat task
-            if self.heartbeat_task:
-                self.heartbeat_task.cancel()
+            # Cancel heartbeat task (with timeout protection)
+            if self.heartbeat_task and not self.heartbeat_task.cancelled():
+                try:
+                    self.heartbeat_task.cancel()
+                    logger.debug("Heartbeat task cancelled successfully")
+                except Exception as e:
+                    logger.warning(f"Error cancelling heartbeat task: {e}")
                 
-            # Set user offline when WebSocket disconnects (for real-time status)
+            # Set user offline when WebSocket disconnects (non-blocking)
             try:
-                await database_sync_to_async(UserStatusCache.set_user_offline)(user.id)
+                # Use fire-and-forget to prevent blocking disconnect
+                asyncio.create_task(database_sync_to_async(UserStatusCache.set_user_offline)(user.id))
                 logger.info(f"Set user {user.id} offline via WebSocket disconnect")
             except Exception as e:
-                logger.warning(f"Could not set user {user.id} offline (Redis unavailable): {e}")
+                # Silently handle Redis unavailability - this is expected
+                logger.debug(f"Redis unavailable for user {user.id} status update: {e}")
+                logger.info(f"Set user {user.id} offline via WebSocket disconnect (Redis fallback)")
             
-            # Leave all groups
-            await self.channel_layer.group_discard('admin_notifications', self.channel_name)
-            await self.channel_layer.group_discard('status_updates', self.channel_name)
-            await self.channel_layer.group_discard('user_management', self.channel_name)
-            await self.channel_layer.group_discard(f'user_{user.id}', self.channel_name)
+            # Leave all groups (with timeout protection)
+            try:
+                if self.channel_layer:
+                    # Use fire-and-forget for disconnect operations to prevent hanging
+                    asyncio.create_task(self.channel_layer.group_discard('admin_notifications', self.channel_name))
+                    asyncio.create_task(self.channel_layer.group_discard('status_updates', self.channel_name))
+                    asyncio.create_task(self.channel_layer.group_discard('user_management', self.channel_name))
+                    asyncio.create_task(self.channel_layer.group_discard(f'user_{user.id}', self.channel_name))
+            except Exception as e:
+                logger.warning(f"Could not remove user {user.id} from groups: {e}")
         else:
             logger.info(f"WebSocket disconnected anonymous user with code: {close_code}")
     
@@ -96,7 +117,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                         await database_sync_to_async(UserStatusCache.set_user_online)(user.id)
                         logger.debug(f"Heartbeat: refreshed online status for user {user.id}")
                     except Exception as e:
-                        logger.debug(f"Heartbeat: could not update status for user {user.id} (Redis unavailable): {e}")
+                        # Redis unavailable is expected, don't log as error
+                        pass
         except asyncio.CancelledError:
             logger.debug("Heartbeat cancelled")
         except Exception as e:

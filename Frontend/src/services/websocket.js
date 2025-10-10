@@ -18,7 +18,7 @@ export class WebSocketService {
     this.sockets = new Map();
     this.listeners = new Map();
     this.reconnectAttempts = new Map();
-    this.maxReconnectAttempts = 5;
+    this.maxReconnectAttempts = 3;
     this.heartbeatIntervals = new Map(); // Store heartbeat intervals
     this.heartbeatInterval = 30000; // Send heartbeat every 30 seconds
   }
@@ -97,7 +97,8 @@ export class WebSocketService {
       this.reconnectAttempts.delete(endpoint);
       
       // Start heartbeat to keep connection alive and status accurate
-      this.startHeartbeat(endpoint);
+      // Temporarily disabled to test connection stability
+      // this.startHeartbeat(endpoint);
     };
 
     socket.onmessage = (event) => {
@@ -146,7 +147,10 @@ export class WebSocketService {
       // Only reconnect on unexpected disconnections (not authentication errors)
       if (event.code === 1006) { // Network disconnection
         console.log(`Network disconnection detected on ${endpoint}, attempting to reconnect...`);
-        this.reconnect(endpoint);
+        // Add delay before reconnecting to prevent rapid reconnection loops
+        setTimeout(() => {
+          this.reconnect(endpoint);
+        }, 2000);
       } else {
         console.log(`WebSocket closed with code ${event.code}, not reconnecting`);
         this.reconnectAttempts.delete(endpoint);

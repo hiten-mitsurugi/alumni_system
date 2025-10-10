@@ -141,9 +141,21 @@ REDIS_PORT = config('REDIS_PORT', default='6379')
 REDIS_PASSWORD = config('REDIS_PASSWORD', default='')
 REDIS_URL = config('REDIS_URL', default=f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0')
 
+# Test Redis connectivity function
+def test_redis_connection():
+    """Test if Redis is available"""
+    try:
+        import redis
+        r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD if REDIS_PASSWORD else None, db=0)
+        r.ping()
+        return True
+    except Exception as e:
+        print(f"Redis not available: {e}")
+        return False
+
 # === Caching ===
-# Use dummy cache if Redis is not available
-try:
+# Configure caching based on Redis availability
+if test_redis_connection():
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
@@ -153,7 +165,7 @@ try:
             }
         }
     }
-except:
+else:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
@@ -161,8 +173,9 @@ except:
     }
 
 # === Channels ===
-# Use in-memory channel layer if Redis is not available  
-try:
+# Configure channel layers based on Redis availability
+if test_redis_connection():
+    print("✅ Redis is available - using Redis channel layer")
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -174,7 +187,8 @@ try:
             },
         },
     }
-except:
+else:
+    print("⚠️  Redis not available - using in-memory channel layer")
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels.layers.InMemoryChannelLayer'
