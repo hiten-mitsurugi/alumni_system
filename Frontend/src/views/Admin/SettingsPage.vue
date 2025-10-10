@@ -8,9 +8,6 @@ import ProfileSettingsSection from '@/components/admin/ProfileSettingsSection.vu
 import AccountSecuritySection from '@/components/admin/AccountSecuritySection.vue'
 import AppearanceSection from '@/components/admin/AppearanceSection.vue'
 import {
-  User as UserIcon,
-  Shield as ShieldIcon,
-  Palette as PaletteIcon,
   Check as CheckIcon
 } from 'lucide-vue-next'
 
@@ -44,13 +41,6 @@ onMounted(() => {
   initializeProfile()
 })
 
-// Sections configuration
-const sections = [
-  { id: 'profile', label: 'Profile', icon: UserIcon },
-  { id: 'account', label: 'Account & Security', icon: ShieldIcon },
-  { id: 'appearance', label: 'Appearance', icon: PaletteIcon }
-]
-
 // Event handlers
 const handleProfileSaved = (result) => {
   console.log('Profile saved:', result)
@@ -82,33 +72,35 @@ const handleAccountSaved = (result) => {
       </p>
     </div>
 
-    <div class="flex gap-8">
-      <!-- Main Content (settings panels) - controlled by route param -->
-      <div class="flex-1 max-w-4xl relative z-10">
-        <div class="rounded-xl shadow-sm border transition-colors duration-200"
-             :class="themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
+    <!-- Main Content - Show content based on route -->
+    <div class="max-w-4xl relative z-10">
+      <div class="rounded-xl shadow-sm border transition-colors duration-200"
+           :class="themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
 
-          <!-- Render the appropriate section based on the route param -->
-          <ProfileSettingsSection 
-            v-if="activeSection === 'profile' && user"
-            :user="user"
-            :isLoading="isLoading"
-            :getProfilePictureUrl="getProfilePictureUrl"
-            :showSuccessMessage="showSuccessMessage"
-            :showErrorMessage="showErrorMessage"
-            @profile-saved="handleProfileSaved"
-          />
+        <!-- Render the appropriate section based on the route param -->
+        <ProfileSettingsSection 
+          v-if="activeSection === 'profile' && user"
+          :user="user"
+          :isLoading="isLoading"
+          :getProfilePictureUrl="getProfilePictureUrl"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+          @profile-saved="handleProfileSaved"
+        />
 
-          <AccountSecuritySection 
-            v-if="activeSection === 'account'"
-            :isLoading="isLoading"
-            :showSuccessMessage="showSuccessMessage"
-            :showErrorMessage="showErrorMessage"
-            @account-saved="handleAccountSaved"
-          />
+        <AccountSecuritySection 
+          v-if="activeSection === 'account'"
+          :isLoading="isLoading"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+          @account-saved="handleAccountSaved"
+        />
 
-          <AppearanceSection v-if="activeSection === 'appearance'" />
-        </div>
+        <AppearanceSection 
+          v-if="activeSection === 'appearance'"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+        />
       </div>
     </div>
 

@@ -83,11 +83,48 @@
             Settings
           </router-link>
           <hr class="my-1 border-gray-200">
-          <button @click="handleLogout" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+          <button @click="confirmLogout" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout Confirmation Modal - Positioned like a notification -->
+    <div v-if="showLogoutConfirmation" class="fixed top-4 right-4 z-50 max-w-sm w-full p-4">
+      <!-- Modal without backdrop -->
+      <div class="bg-white/98 dark:bg-gray-800/98 rounded-xl shadow-2xl p-6 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 backdrop-blur-sm animate-fade-in">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mr-3">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Confirm Logout
+          </h3>
+        </div>
+        
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
+          Are you sure you want to logout? You will be redirected to the login page.
+        </p>
+        
+        <div class="flex space-x-3">
+          <button
+            @click="cancelLogout"
+            class="flex-1 px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-300 dark:border-gray-600"
+          >
+            Cancel
+          </button>
+          <button
+            @click="handleLogout"
+            class="flex-1 px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors border border-red-600"
+          >
             Logout
           </button>
         </div>
@@ -110,6 +147,7 @@ const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`
 
 const dropdownOpen = ref(false)
 const loggingOut = ref(false)
+const showLogoutConfirmation = ref(false)
 
 // Inject search functionality from parent (AlumniHome)
 const injectedSearchQuery = inject('searchQuery', ref(''))
@@ -152,8 +190,19 @@ onMounted(async () => {
   }
 })
 
+// Logout confirmation functions
+function confirmLogout() {
+  dropdownOpen.value = false; // Close dropdown when showing confirmation
+  showLogoutConfirmation.value = true;
+}
+
+function cancelLogout() {
+  showLogoutConfirmation.value = false;
+}
+
 // Logout function
 async function handleLogout() {
+  showLogoutConfirmation.value = false;
   loggingOut.value = true;
   console.log('AlumniNavbar: Starting logout process');
   await authStore.logoutWithAPI();

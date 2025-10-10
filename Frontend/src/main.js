@@ -4,8 +4,9 @@ import App from './App.vue';
 import router from './router';
 import './assets/main.css';
 import { useAuthStore } from './stores/auth';
+import { useThemeStore } from './stores/theme';
 
-// Clear any dark mode settings from localStorage
+// Clear any old dark mode settings from localStorage
 localStorage.removeItem('darkMode');
 
 // Remove dark class from document if it exists
@@ -19,8 +20,15 @@ app.use(router);
 
 app.mount('#app');
 
-// Initialize auth store after app is mounted
+// Initialize stores after app is mounted
 const auth = useAuthStore();
+const theme = useThemeStore();
+
+// Initialize theme store
+theme.initializeTheme();
+theme.initializeAdminTheme();
+
+// Initialize auth store
 if (auth.token) {
   auth.fetchUser();
 }

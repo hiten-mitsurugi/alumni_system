@@ -23,3 +23,98 @@ html, body {
   background-color: #f9fafb !important;
   color: #1f2937 !important;
 }
+
+/* Admin theme support */
+.admin-dark {
+  color-scheme: dark;
+}
+
+.admin-dark body {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+/* Accessibility features */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.high-contrast {
+  filter: contrast(150%);
+}
+
+.high-contrast button,
+.high-contrast input,
+.high-contrast select {
+  border-width: 2px !important;
+  border-color: currentColor !important;
+}
+
+.high-contrast .text-gray-500 {
+  color: #000000 !important;
+}
+
+.high-contrast .text-gray-400 {
+  color: #000000 !important;
+}
+
+.admin-dark.high-contrast .text-gray-500 {
+  color: #ffffff !important;
+}
+
+.admin-dark.high-contrast .text-gray-400 {
+  color: #ffffff !important;
+}
+
+/* Custom scrollbar for admin theme */
+.admin-dark ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.admin-dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 3px;
+}
+
+.admin-dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Theme transition animations */
+@keyframes theme-transition {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.theme-transition {
+  animation: theme-transition 0.2s ease-in-out;
+}
+
+/* Logout confirmation animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}

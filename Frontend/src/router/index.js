@@ -112,7 +112,7 @@ const routes = [
         component: () => import('../views/Admin/PendingUserApprovalPage.vue'),
       },
       {
-        path: 'settings',
+        path: 'settings/:section?',
         name: 'AdminSettings',
         component: () => import('../views/Admin/SettingsPage.vue'),
       },

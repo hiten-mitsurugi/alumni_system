@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth'; // ✅ Using alias
 
@@ -65,7 +65,19 @@ onMounted(async () => {
   }
 });
 
+// Logout confirmation state
+const showLogoutConfirmation = ref(false)
+
+const confirmLogout = () => {
+  showLogoutConfirmation.value = true
+}
+
+const cancelLogout = () => {
+  showLogoutConfirmation.value = false
+}
+
 const logout = async () => {
+  showLogoutConfirmation.value = false
   await authStore.logoutWithAPI();
   router.push('/login');
 };
@@ -199,10 +211,44 @@ const isActive = (path) => route.path.startsWith(path);
 
     <!-- Logout at the bottom -->
     <div class="border-t border-gray-200 pt-2 mt-2 flex-shrink-0">
-      <button @click="logout"
+      <button @click="confirmLogout"
         class="flex items-center gap-2 w-full text-left p-2 rounded transition text-sm font-['Poppins'] hover:text-red-600 hover:bg-red-100">
         <LogOutIcon class="w-4 h-4 text-green-600" /> <span class="text-green-600">Logout</span>
       </button>
+    </div>
+
+    <!-- Logout Confirmation Modal - Positioned like a notification -->
+    <div v-if="showLogoutConfirmation" class="fixed top-4 right-4 z-50 max-w-sm w-full p-4">
+      <!-- Modal without backdrop -->
+      <div class="bg-white/98 rounded-xl shadow-2xl p-6 text-gray-900 border border-gray-300 backdrop-blur-sm animate-fade-in">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+            <LogOutIcon class="w-5 h-5 text-red-600" />
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900">
+            Confirm Logout
+          </h3>
+        </div>
+        
+        <p class="text-sm text-gray-600 mb-6">
+          Are you sure you want to logout? You will be redirected to the login page.
+        </p>
+        
+        <div class="flex space-x-3">
+          <button
+            @click="cancelLogout"
+            class="flex-1 px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors border border-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            @click="logout"
+            class="flex-1 px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors border border-red-600"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
   </aside>
 </template>

@@ -79,7 +79,19 @@ const toggleSettings = (e) => {
   }
 }
 
+// Logout confirmation state
+const showLogoutConfirmation = ref(false)
+
+const confirmLogout = () => {
+  showLogoutConfirmation.value = true
+}
+
+const cancelLogout = () => {
+  showLogoutConfirmation.value = false
+}
+
 const logout = async () => {
+  showLogoutConfirmation.value = false
   // Cleanup messaging notifications on logout
   messagingNotificationStore.cleanup();
   await authStore.logoutWithAPI();
@@ -286,10 +298,44 @@ const handleProfilePictureUpload = async (event) => {
 
     <!-- Logout at the bottom -->
     <div :class="['border-t pt-2 mt-2 flex-shrink-0', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
-      <button @click="logout"
+      <button @click="confirmLogout"
         :class="['flex items-center gap-2 w-full text-left p-2 rounded transition text-sm', themeStore.isAdminDark() ? 'hover:text-red-400 hover:bg-red-800/40' : 'hover:text-red-600 hover:bg-red-100']">
         <LogOutIcon class="w-4 h-4" /> <span>Logout</span>
       </button>
+    </div>
+
+    <!-- Logout Confirmation Modal - Positioned like a notification -->
+    <div v-if="showLogoutConfirmation" class="fixed top-4 right-4 z-50 max-w-sm w-full p-4">
+      <!-- Modal without backdrop -->
+      <div :class="['rounded-xl shadow-2xl p-6 border backdrop-blur-sm animate-fade-in', themeStore.isAdminDark() ? 'bg-gray-800/98 text-white border-gray-600' : 'bg-white/98 text-gray-900 border-gray-300']">
+        <div class="flex items-center mb-4">
+          <div :class="['flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-3', themeStore.isAdminDark() ? 'bg-red-900/40' : 'bg-red-100']">
+            <LogOutIcon :class="['w-5 h-5', themeStore.isAdminDark() ? 'text-red-400' : 'text-red-600']" />
+          </div>
+          <h3 :class="['text-lg font-semibold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
+            Confirm Logout
+          </h3>
+        </div>
+        
+        <p :class="['text-sm mb-6', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600']">
+          Are you sure you want to logout? You will be redirected to the login page.
+        </p>
+        
+        <div class="flex space-x-3">
+          <button
+            @click="cancelLogout"
+            :class="['flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors border', themeStore.isAdminDark() ? 'bg-gray-700/80 text-gray-300 hover:bg-gray-600 border-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-300']"
+          >
+            Cancel
+          </button>
+          <button
+            @click="logout"
+            class="flex-1 px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors border border-red-600"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
   </aside>
 </template>

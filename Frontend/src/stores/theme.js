@@ -43,23 +43,35 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   // Admin-scoped theme (admin-only UI)
-  // values: 'light' | 'dark' | 'auto'
+  // values: 'light' | 'dark' | 'auto' | 'system'
   const adminThemeMode = ref('auto')
+
+  // Time-based switching for auto mode
+  const isNightTime = () => {
+    const now = new Date()
+    const hour = now.getHours()
+    // Night mode from 6 PM (18:00) to 6 AM (06:00)
+    return hour >= 18 || hour < 6
+  }
 
   const isAdminDark = () => {
     if (adminThemeMode.value === 'dark') return true
     if (adminThemeMode.value === 'light') return false
-    // auto -> follow system preference
-    try {
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    } catch (e) {
-      return false
+    if (adminThemeMode.value === 'system') {
+      // System mode: follow OS preference
+      try {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      } catch (e) {
+        return false
+      }
     }
+    // auto mode: time-based switching (6pm-6am = dark, 6am-6pm = light)
+    return isNightTime()
   }
 
   const setAdminTheme = (mode) => {
     if (!mode) return
-    if (['light', 'dark', 'auto'].indexOf(mode) === -1) return
+    if (['light', 'dark', 'auto', 'system'].indexOf(mode) === -1) return
     adminThemeMode.value = mode
     try { localStorage.setItem('adminTheme', mode) } catch (e) {}
   }
@@ -67,13 +79,38 @@ export const useThemeStore = defineStore('theme', () => {
   const initializeAdminTheme = () => {
     try {
       const saved = localStorage.getItem('adminTheme')
-      if (saved === 'light' || saved === 'dark' || saved === 'auto') adminThemeMode.value = saved
-      else adminThemeMode.value = 'auto'
+      if (saved === 'light' || saved === 'dark' || saved === 'auto' || saved === 'system') {
+        adminThemeMode.value = saved
+      } else {
+        adminThemeMode.value = 'auto'
+      }
     } catch (e) {
       adminThemeMode.value = 'auto'
     }
     // ensure the admin class is applied immediately after initialization
     applyAdminClass()
+  }
+
+  // Auto-update timer for time-based switching
+  let timeUpdateInterval = null
+
+  const startTimeBasedUpdates = () => {
+    // Only start if using auto mode
+    if (adminThemeMode.value === 'auto') {
+      // Check every minute for time changes
+      timeUpdateInterval = setInterval(() => {
+        if (adminThemeMode.value === 'auto') {
+          applyAdminClass()
+        }
+      }, 60000) // 1 minute
+    }
+  }
+
+  const stopTimeBasedUpdates = () => {
+    if (timeUpdateInterval) {
+      clearInterval(timeUpdateInterval)
+      timeUpdateInterval = null
+    }
   }
 
   // apply or remove the admin-dark class on the root element so Tailwind's dark variants scoped to .admin-dark work
@@ -92,9 +129,17 @@ export const useThemeStore = defineStore('theme', () => {
   try {
     // lazy import: watch may be used safely
     const { watch: watchAdmin } = require('vue')
-    watchAdmin && watchAdmin(adminThemeMode, () => {
+    watchAdmin && watchAdmin(adminThemeMode, (newMode) => {
       applyAdminClass()
-      try { localStorage.setItem('adminTheme', adminThemeMode.value) } catch (e) {}
+      try { 
+        localStorage.setItem('adminTheme', newMode) 
+        
+        // Start/stop time-based updates based on mode
+        stopTimeBasedUpdates()
+        if (newMode === 'auto') {
+          startTimeBasedUpdates()
+        }
+      } catch (e) {}
     })
   } catch (e) {
     // fallback: do nothing
@@ -115,6 +160,9 @@ export const useThemeStore = defineStore('theme', () => {
     adminThemeMode,
     isAdminDark,
     setAdminTheme,
-    initializeAdminTheme
+    initializeAdminTheme,
+    startTimeBasedUpdates,
+    stopTimeBasedUpdates,
+    isNightTime
   }
 })
