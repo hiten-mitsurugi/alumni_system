@@ -8,34 +8,33 @@ import json
 from .models import (
     CustomUser, Skill, WorkHistory, AlumniDirectory, SkillsRelevance,
     CurriculumRelevance, PerceptionFurtherStudies, FeedbackRecommendations, Profile,
-    Following, Achievement, Education
+    Following, Achievement, Education, Address
 )
 
-class AddressSerializer(serializers.Serializer):
-    """Serializer for structured address data"""
-    address_type = serializers.ChoiceField(choices=[('philippines', 'Philippines'), ('international', 'International')], required=False, default='philippines')
-    # Philippines fields
-    region_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
-    region_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    province_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
-    province_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    city_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
-    city_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    barangay = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    street_address = serializers.CharField(max_length=255, required=False, allow_blank=True)
-    postal_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
-    # International fields
-    country = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    full_address = serializers.CharField(required=False, allow_blank=True)
+class AddressSerializer(serializers.ModelSerializer):
+    """Serializer for the Address model"""
+    class Meta:
+        model = Address  # Need to import Address model
+        exclude = ['user', 'id', 'created_at', 'updated_at', 'normalized_text']
 
 class JSONField(serializers.Field):
     def to_internal_value(self, data):
         if not data:
             return {}
-        try:
-            return json.loads(data)
-        except json.JSONDecodeError:
-            raise serializers.ValidationError("Invalid JSON format")
+        
+        # If data is already a dict/object, return it as-is
+        if isinstance(data, dict):
+            return data
+            
+        # If data is a string, try to parse it as JSON
+        if isinstance(data, str):
+            try:
+                return json.loads(data)
+            except json.JSONDecodeError:
+                raise serializers.ValidationError("Invalid JSON format")
+        
+        # For other types, try to convert to dict
+        return dict(data) if data else {}
 
 class AlumniDirectoryCheckSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=True)
@@ -141,20 +140,19 @@ class RegisterSerializer(serializers.ModelSerializer):
     survey_responses = JSONField(required=False)  # New field for dynamic survey responses
     alumni_exists = serializers.BooleanField(write_only=True)
     
-    # Structured address fields
-    present_address_data = AddressSerializer(required=False, write_only=True)
-    permanent_address_data = AddressSerializer(required=False, write_only=True)
+    # Address fields using the new Address model
+    present_address_data = JSONField(required=False)
+    permanent_address_data = JSONField(required=False)
 
     class Meta:
         model = CustomUser
         fields = [
             'first_name', 'middle_name', 'last_name', 'email', 'password', 'confirm_password',
-            'government_id', 'program', 'present_address', 'permanent_address',
-            'profile_picture', 'contact_number', 'sex', 'birth_date', 'year_graduated',
-            'employment_status', 'civil_status', 'alumni_exists', 'mothers_name', 'mothers_occupation',
-            'fathers_name', 'fathers_occupation', 'work_histories', 'skills_relevance',
-            'curriculum_relevance', 'perception_further_studies', 'feedback_recommendations',
-            'survey_responses', 'present_address_data', 'permanent_address_data'
+            'government_id', 'program', 'profile_picture', 'contact_number', 'sex', 'birth_date', 
+            'year_graduated', 'employment_status', 'civil_status', 'alumni_exists', 'mothers_name', 
+            'mothers_occupation', 'fathers_name', 'fathers_occupation', 'work_histories', 
+            'skills_relevance', 'curriculum_relevance', 'perception_further_studies', 
+            'feedback_recommendations', 'survey_responses', 'present_address_data', 'permanent_address_data'
         ]
 
     def validate_email(self, value):
@@ -181,7 +179,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         curriculum_data = validated_data.pop('curriculum_relevance', {})
         perception_data = validated_data.pop('perception_further_studies', {})
         feedback_data = validated_data.pop('feedback_recommendations', {})
-        survey_responses_data = validated_data.pop('survey_responses', [])  # New field
+        survey_responses_data = validated_data.pop('survey_responses', [])
         present_address_data = validated_data.pop('present_address_data', {})
         permanent_address_data = validated_data.pop('permanent_address_data', {})
         validated_data.pop('confirm_password')
@@ -190,43 +188,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         if not validated_data.get('middle_name'):
             validated_data['middle_name'] = ''
 
-        # Prepare structured address fields for CustomUser
-        address_fields = {}
-        
-        # Handle present address data
-        if present_address_data:
-            address_fields.update({
-                'present_address_type': present_address_data.get('address_type', 'philippines'),
-                'present_region_code': present_address_data.get('region_code', ''),
-                'present_region_name': present_address_data.get('region_name', ''),
-                'present_province_code': present_address_data.get('province_code', ''),
-                'present_province_name': present_address_data.get('province_name', ''),
-                'present_city_code': present_address_data.get('city_code', ''),
-                'present_city_name': present_address_data.get('city_name', ''),
-                'present_barangay': present_address_data.get('barangay', ''),
-                'present_street_address': present_address_data.get('street_address', ''),
-                'present_postal_code': present_address_data.get('postal_code', ''),
-                'present_country': present_address_data.get('country', ''),
-                'present_full_address': present_address_data.get('full_address', ''),
-            })
-        
-        # Handle permanent address data
-        if permanent_address_data:
-            address_fields.update({
-                'permanent_address_type': permanent_address_data.get('address_type', 'philippines'),
-                'permanent_region_code': permanent_address_data.get('region_code', ''),
-                'permanent_region_name': permanent_address_data.get('region_name', ''),
-                'permanent_province_code': permanent_address_data.get('province_code', ''),
-                'permanent_province_name': permanent_address_data.get('province_name', ''),
-                'permanent_city_code': permanent_address_data.get('city_code', ''),
-                'permanent_city_name': permanent_address_data.get('city_name', ''),
-                'permanent_barangay': permanent_address_data.get('barangay', ''),
-                'permanent_street_address': permanent_address_data.get('street_address', ''),
-                'permanent_postal_code': permanent_address_data.get('postal_code', ''),
-                'permanent_country': permanent_address_data.get('country', ''),
-                'permanent_full_address': permanent_address_data.get('full_address', ''),
-            })
-
+        # Create user without address fields (they no longer exist on CustomUser)
         user = CustomUser.objects.create_user(
             username=validated_data['email'],
             email=validated_data['email'],
@@ -236,8 +198,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             government_id=validated_data['government_id'],
             program=validated_data['program'],
-            present_address=validated_data.get('present_address', ''),  # Legacy field
-            permanent_address=validated_data.get('permanent_address', ''),  # Legacy field
             profile_picture=validated_data['profile_picture'],
             contact_number=validated_data['contact_number'],
             sex=validated_data['sex'],
@@ -250,9 +210,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             fathers_name=validated_data['fathers_name'],
             fathers_occupation=validated_data['fathers_occupation'],
             user_type=3,
-            is_approved=False,
-            **address_fields  # Add structured address fields
+            is_approved=False
         )
+
+        # Create Address objects using the new Address model
+        if present_address_data:
+            Address.objects.create(
+                user=user,
+                address_category='present',
+                **present_address_data
+            )
+        
+        if permanent_address_data:
+            Address.objects.create(
+                user=user,
+                address_category='permanent',
+                **permanent_address_data
+            )
 
         # Handle work histories if provided (backward compatibility)
         for wh_data in work_histories_data:
@@ -301,9 +275,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             'first_name', 'middle_name', 'last_name', 'email', 'password',
-            'government_id', 'program', 'present_address', 'permanent_address',
-            'profile_picture', 'contact_number', 'sex', 'user_type', 'is_approved',
-            'birth_date', 'year_graduated', 'employment_status', 'civil_status'
+            'government_id', 'program', 'profile_picture', 'contact_number', 'sex', 
+            'user_type', 'is_approved', 'birth_date', 'year_graduated', 'employment_status', 
+            'civil_status'
         ]
 
     def validate_email(self, value):
@@ -336,8 +310,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             government_id=validated_data.get('government_id'),
             program=validated_data.get('program', ''),
-            present_address=validated_data['present_address'],
-            permanent_address=validated_data['permanent_address'],
             profile_picture=validated_data.get('profile_picture'),
             contact_number=validated_data.get('contact_number', ''),
             sex=validated_data.get('sex', ''),
@@ -471,35 +443,39 @@ class FollowingSerializer(serializers.ModelSerializer):
     
     def get_follower_info(self, obj):
         """Get detailed follower information"""
+        # Get present address from Address model
+        present_address = obj.follower.get_formatted_present_address()
+        
         return {
             'id': obj.follower.id,
             'first_name': obj.follower.first_name,
             'last_name': obj.follower.last_name,
             'username': obj.follower.username,
             'profile_picture': obj.follower.profile_picture.url if obj.follower.profile_picture else None,
-            'present_address': obj.follower.present_address,
+            'present_address': present_address,
             'profile': {
                 'headline': obj.follower.profile.headline if hasattr(obj.follower, 'profile') else '',
                 'present_occupation': obj.follower.profile.present_occupation if hasattr(obj.follower, 'profile') else '',
                 'location': obj.follower.profile.location if hasattr(obj.follower, 'profile') else '',
-                'present_address': obj.follower.profile.present_address if hasattr(obj.follower, 'profile') else '',
             }
         }
     
     def get_following_info(self, obj):
         """Get detailed following information"""
+        # Get present address from Address model
+        present_address = obj.following.get_formatted_present_address()
+        
         return {
             'id': obj.following.id,
             'first_name': obj.following.first_name,
             'last_name': obj.following.last_name,
             'username': obj.following.username,
             'profile_picture': obj.following.profile_picture.url if obj.following.profile_picture else None,
-            'present_address': obj.following.present_address,
+            'present_address': present_address,
             'profile': {
                 'headline': obj.following.profile.headline if hasattr(obj.following, 'profile') else '',
                 'present_occupation': obj.following.profile.present_occupation if hasattr(obj.following, 'profile') else '',
                 'location': obj.following.profile.location if hasattr(obj.following, 'profile') else '',
-                'present_address': obj.following.profile.present_address if hasattr(obj.following, 'profile') else '',
             }
         }
 

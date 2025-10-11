@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from auth_app.models import CustomUser
+from django.conf import settings
 import uuid
 
 class PostCategory(models.Model):
@@ -28,7 +28,7 @@ class Post(models.Model):
     )
     
     # Keep existing ID structure to avoid migration issues
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='posts')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
     title = models.CharField(max_length=200, blank=True)  # Optional for Facebook-style posts
     content = models.TextField()
     content_category = models.CharField(max_length=20, choices=CONTENT_CATEGORIES)
@@ -92,7 +92,7 @@ class PostMedia(models.Model):
         ordering = ['order', 'created_at']
 
 class Comment(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
     content = models.TextField()
     parent = models.ForeignKey('self', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
@@ -123,7 +123,7 @@ class Reaction(models.Model):
         ('sad', '😢'),
     )
     
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reactions')
     reaction_type = models.CharField(max_length=20, choices=REACTION_TYPES)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()  # Keep as integer for compatibility
@@ -143,7 +143,7 @@ class Reaction(models.Model):
 class PostView(models.Model):
     """Track post views for analytics"""
     post = models.ForeignKey(Post, related_name='views', on_delete=models.CASCADE)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     viewed_at = models.DateTimeField(auto_now_add=True)
@@ -163,17 +163,17 @@ class PostReport(models.Model):
     )
     
     post = models.ForeignKey(Post, related_name='reports', on_delete=models.CASCADE)
-    reporter = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     reason = models.CharField(max_length=50, choices=REPORT_REASONS)
     description = models.TextField(blank=True)
     is_resolved = models.BooleanField(default=False)
-    resolved_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_reports')
+    resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_reports')
     created_at = models.DateTimeField(auto_now_add=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
 
 class SavedPost(models.Model):
     """Allow users to save posts for later"""
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='saved_posts')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_posts')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='saved_by')
     created_at = models.DateTimeField(auto_now_add=True)
 

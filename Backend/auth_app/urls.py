@@ -11,7 +11,10 @@ from .views import (
     # LinkedIn-style views
     EnhancedProfileView, FollowUserView, UserConnectionsView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
-    SuggestedConnectionsView, UserByNameView, InvitationAcceptView, InvitationRejectView
+    SuggestedConnectionsView, UserByNameView, InvitationAcceptView, InvitationRejectView,
+    # Additional views for comprehensive model coverage (temporarily commented out)
+    # AddressListCreateView, AddressDetailView, SkillsRelevanceView, CurriculumRelevanceView,
+    # PerceptionStudiesView, FeedbackView
 )
 
 router = DefaultRouter()
@@ -78,4 +81,14 @@ urlpatterns = [
     
     # JWT token refresh endpoint for frontend
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    # Address endpoints (temporarily commented out)
+    # path('addresses/', AddressListCreateView.as_view(), name='address_list_create'),
+    # path('addresses/<int:pk>/', AddressDetailView.as_view(), name='address_detail'),
+    
+    # Survey and questionnaire endpoints (temporarily commented out)
+    # path('skills-relevance/', SkillsRelevanceView.as_view(), name='skills_relevance'),
+    # path('curriculum-relevance/', CurriculumRelevanceView.as_view(), name='curriculum_relevance'),
+    # path('perception-studies/', PerceptionStudiesView.as_view(), name='perception_studies'),
+    # path('feedback/', FeedbackView.as_view(), name='feedback'),
 ]

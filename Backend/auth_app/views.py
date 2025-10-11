@@ -1,121 +1,36 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.exceptions import PermissionDenied
-from django.contrib.auth import authenticate
-from django.core.mail import send_mail
-from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
-from .email_templates.approval_email import get_approval_email_template, get_rejection_email_template
-from django.core.cache import cache
-from django.db.models import Q
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.db import transaction
-from django.utils import timezone
-import pandas as pd
-import io
-from datetime import datetime
-from .models import CustomUser, Skill, WorkHistory, AlumniDirectory, Profile
-from .status_cache import set_user_online, set_user_offline, get_user_status
-from .serializers import (
-    RegisterSerializer, UserDetailSerializer, UserCreateSerializer,
-    SkillSerializer, WorkHistorySerializer, AlumniDirectoryCheckSerializer,
-    ProfileSerializer, UserSearchSerializer, AlumniDirectorySerializer
-)
-from .permissions import IsAdminOrSuperAdmin
-from .utils import generate_token, confirm_token
-from django.urls import reverse
-import logging
-from django.contrib.auth import get_user_model
-from rest_framework import viewsets
-import os
-import uuid
+# Import all views from the modular views package# Import all views from the modular views package# Import all views from the modular views package# Import all views from the modular views package
 
-logger = logging.getLogger(__name__)
+# This maintains backward compatibility while organizing code into modules
 
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
+# This maintains backward compatibility while organizing code into modules
 
-    def post(self, request):
-        import json
-        
-        # Add detailed logging for debugging
-        logger.info("=== REGISTRATION ATTEMPT ===")
-        logger.info(f"Request data keys: {list(request.data.keys())}")
-        logger.info(f"Alumni exists value: {request.data.get('alumni_exists')}")
-        logger.info(f"Survey responses: {request.data.get('survey_responses')}")
-        logger.info(f"Email: {request.data.get('email')}")
-        logger.info(f"Employment status: {request.data.get('employment_status')}")
-        logger.info(f"Gender: {request.data.get('gender')}")
-        logger.info(f"Civil status: {request.data.get('civil_status')}")
-        
-        # Parse JSON fields from FormData
-        data = request.data.copy()
-        
-        # Parse address data if present
-        if 'present_address_data' in data and isinstance(data['present_address_data'], str):
-            try:
-                data['present_address_data'] = json.loads(data['present_address_data'])
-                logger.info(f"Parsed present_address_data: {data['present_address_data']}")
-            except json.JSONDecodeError:
-                logger.error("Failed to parse present_address_data JSON")
-                
-        if 'permanent_address_data' in data and isinstance(data['permanent_address_data'], str):
-            try:
-                data['permanent_address_data'] = json.loads(data['permanent_address_data'])
-                logger.info(f"Parsed permanent_address_data: {data['permanent_address_data']}")
-            except json.JSONDecodeError:
-                logger.error("Failed to parse permanent_address_data JSON")
-        
-        serializer = RegisterSerializer(data=data)
+from .views.authentication import *
 
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    user = serializer.save()
-                    logger.info(f"User created successfully: {user.email}")
+from .views.user_management import *# This maintains backward compatibility while organizing code into modules# This maintains backward compatibility while organizing code into modules
 
-                    try:
-                        channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.group_send)(
-                            'admin_notifications',
-                            {
-                                'type': 'send_notification',
-                                'message': {
-                                    'type': 'new_user',
-                                    'user_id': user.id,
-                                    'email': user.email,
-                                    'first_name': user.first_name,
-                                    'last_name': user.last_name
-                                }
-                            }
-                        )
-                    except Exception as ws_error:
-                        logger.error(f"WebSocket notification failed in RegisterView: {str(ws_error)}")
+from .views.profile_social import *
 
-                return Response(
-                    {'message': 'User registered successfully, pending approval.'},
-                    status=status.HTTP_201_CREATED
-                )
+from .views.skills_work import *from .views.authentication import *
 
-            except Exception as db_error:
-                logger.error(f"Database error during registration: {str(db_error)}")
-                return Response(
-                    {'error': 'An error occurred while processing your registration.'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
+from .views.alumni_directory import *
 
-        # Log validation errors for debugging
-        logger.error("=== REGISTRATION VALIDATION FAILED ===")
-        logger.error(f"Serializer errors: {serializer.errors}")
-        for field, errors in serializer.errors.items():
-            logger.error(f"Field '{field}': {errors}")
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from .views.admin_utilities import *from .views.user_management import *
+
+from .views.profile_social import *
+
+from .views.skills_work import *from .views.authentication import *from .views.authentication import *
+
+from .views.alumni_directory import *
+
+from .views.admin_utilities import *from .views.user_management import *from .views.user_management import *
+
+from .views.profile_social import *from .views.profile_social import *
+
+from .views.skills_work import *from .views.skills_work import *
+
+from .views.alumni_directory import *from .views.alumni_directory import *
+
+from .views.admin_utilities import *from .views.admin_utilities import *
 
 class ApproveUserView(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
@@ -1879,3 +1794,159 @@ class AdminAnalyticsView(APIView):
                 {'error': 'Failed to fetch analytics data'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+# Additional Views for comprehensive model coverage (temporarily commented out due to serializer issues)
+
+# # Address Views
+# class AddressListCreateView(ListCreateAPIView):
+#     """List and create addresses for the authenticated user"""
+#     serializer_class = AddressDetailSerializer
+#     permission_classes = [IsAuthenticated]
+    
+#     def get_queryset(self):
+#         return Address.objects.filter(user=self.request.user)
+    
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
+
+
+# class AddressDetailView(RetrieveUpdateDestroyAPIView):
+#     """Retrieve, update, or delete a specific address"""
+#     serializer_class = AddressDetailSerializer
+#     permission_classes = [IsAuthenticated]
+    
+#     def get_queryset(self):
+#         return Address.objects.filter(user=self.request.user)
+
+
+# # Skills Relevance Views
+# class SkillsRelevanceView(APIView):
+#     """Get or create/update skills relevance for the authenticated user"""
+#     permission_classes = [IsAuthenticated]
+    
+#     def get(self, request):
+#         try:
+#             skills_relevance = SkillsRelevance.objects.get(user=request.user)
+#             serializer = SkillsRelevanceDetailSerializer(skills_relevance)
+#             return Response(serializer.data)
+#         except SkillsRelevance.DoesNotExist:
+#             return Response({'detail': 'Skills relevance not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+#     def post(self, request):
+#         skills_relevance, created = SkillsRelevance.objects.get_or_create(user=request.user)
+#         serializer = SkillsRelevanceDetailSerializer(skills_relevance, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#     def put(self, request):
+#         try:
+#             skills_relevance = SkillsRelevance.objects.get(user=request.user)
+#             serializer = SkillsRelevanceDetailSerializer(skills_relevance, data=request.data)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         except SkillsRelevance.DoesNotExist:
+#             return Response({'detail': 'Skills relevance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# # Curriculum Relevance Views
+# class CurriculumRelevanceView(APIView):
+#     """Get or create/update curriculum relevance for the authenticated user"""
+#     permission_classes = [IsAuthenticated]
+    
+#     def get(self, request):
+#         try:
+#             curriculum_relevance = CurriculumRelevance.objects.get(user=request.user)
+#             serializer = CurriculumRelevanceDetailSerializer(curriculum_relevance)
+#             return Response(serializer.data)
+#         except CurriculumRelevance.DoesNotExist:
+#             return Response({'detail': 'Curriculum relevance not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+#     def post(self, request):
+#         curriculum_relevance, created = CurriculumRelevance.objects.get_or_create(user=request.user)
+#         serializer = CurriculumRelevanceDetailSerializer(curriculum_relevance, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#     def put(self, request):
+#         try:
+#             curriculum_relevance = CurriculumRelevance.objects.get(user=request.user)
+#             serializer = CurriculumRelevanceDetailSerializer(curriculum_relevance, data=request.data)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         except CurriculumRelevance.DoesNotExist:
+#             return Response({'detail': 'Curriculum relevance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# # Perception Further Studies Views
+# class PerceptionStudiesView(APIView):
+#     """Get or create/update perception further studies for the authenticated user"""
+#     permission_classes = [IsAuthenticated]
+    
+#     def get(self, request):
+#         try:
+#             perception_studies = PerceptionFurtherStudies.objects.get(user=request.user)
+#             serializer = PerceptionFurtherStudiesDetailSerializer(perception_studies)
+#             return Response(serializer.data)
+#         except PerceptionFurtherStudies.DoesNotExist:
+#             return Response({'detail': 'Perception further studies not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+#     def post(self, request):
+#         perception_studies, created = PerceptionFurtherStudies.objects.get_or_create(user=request.user)
+#         serializer = PerceptionFurtherStudiesDetailSerializer(perception_studies, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#     def put(self, request):
+#         try:
+#             perception_studies = PerceptionFurtherStudies.objects.get(user=request.user)
+#             serializer = PerceptionFurtherStudiesDetailSerializer(perception_studies, data=request.data)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         except PerceptionFurtherStudies.DoesNotExist:
+#             return Response({'detail': 'Perception further studies not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# # Feedback Recommendations Views
+# class FeedbackView(APIView):
+#     """Get or create/update feedback recommendations for the authenticated user"""
+#     permission_classes = [IsAuthenticated]
+    
+#     def get(self, request):
+#         try:
+#             feedback = FeedbackRecommendations.objects.get(user=request.user)
+#             serializer = FeedbackRecommendationsDetailSerializer(feedback)
+#             return Response(serializer.data)
+#         except FeedbackRecommendations.DoesNotExist:
+#             return Response({'detail': 'Feedback recommendations not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+#     def post(self, request):
+#         feedback, created = FeedbackRecommendations.objects.get_or_create(user=request.user)
+#         serializer = FeedbackRecommendationsDetailSerializer(feedback, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#     def put(self, request):
+#         try:
+#             feedback = FeedbackRecommendations.objects.get(user=request.user)
+#             serializer = FeedbackRecommendationsDetailSerializer(feedback, data=request.data)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         except FeedbackRecommendations.DoesNotExist:
+#             return Response({'detail': 'Feedback recommendations not found'}, status=status.HTTP_404_NOT_FOUND)
