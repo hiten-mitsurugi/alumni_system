@@ -133,7 +133,7 @@ class Command(BaseCommand):
                     is_superuser=is_superuser,
                     # Required fields with defaults
                     program='Administration',
-                    sex='prefer_not_to_say',
+                    gender='prefer_not_to_say',
                     birth_date=date(1990, 1, 1),
                     contact_number='+63-900-000-0000',
                     year_graduated=2020,
@@ -191,7 +191,7 @@ class Command(BaseCommand):
                     full_name=f'{user.first_name} {user.last_name}',
                     email_address=user.email,
                     mobile_number=user.contact_number,
-                    sex=user.sex,
+                    gender=user.gender,
                     civil_status=user.civil_status,
                     year_of_birth=user.birth_date,
                     mothers_name=user.mothers_name,

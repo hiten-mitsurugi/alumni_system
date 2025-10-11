@@ -148,7 +148,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             'first_name', 'middle_name', 'last_name', 'email', 'password', 'confirm_password',
-            'government_id', 'program', 'profile_picture', 'contact_number', 'sex', 'birth_date', 
+            'government_id', 'program', 'profile_picture', 'contact_number', 'sex', 'gender', 'birth_date', 
             'year_graduated', 'employment_status', 'civil_status', 'alumni_exists', 'mothers_name', 
             'mothers_occupation', 'fathers_name', 'fathers_occupation', 'work_histories', 
             'skills_relevance', 'curriculum_relevance', 'perception_further_studies', 
@@ -201,6 +201,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             profile_picture=validated_data['profile_picture'],
             contact_number=validated_data['contact_number'],
             sex=validated_data['sex'],
+            gender=validated_data.get('gender'),
             civil_status=validated_data['civil_status'],
             birth_date=validated_data['birth_date'],
             year_graduated=validated_data['year_graduated'],

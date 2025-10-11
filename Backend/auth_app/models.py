@@ -9,10 +9,16 @@ class CustomUser(AbstractUser):
         (2, 'Admin'),
         (3, 'Alumni'),
     )
+    SEX_CHOICES = (
+        ('male', 'Male'),
+        ('female', 'Female'),
+    )
     GENDER_CHOICES = (
         ('male', 'Male'),
         ('female', 'Female'),
+        ('non_binary', 'Non-binary'),
         ('prefer_not_to_say', 'Prefer not to say'),
+        ('other', 'Other'),
     )
     CIVIL_STATUS_CHOICES = (
         ('single', 'Single'),
@@ -29,7 +35,8 @@ class CustomUser(AbstractUser):
     )
 
     user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=3)
-    sex = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True, null=True)
+    sex = models.CharField(max_length=20, choices=SEX_CHOICES, blank=True, null=True)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True, null=True)
     civil_status = models.CharField(max_length=20, choices=CIVIL_STATUS_CHOICES, blank=True, null=True)
     employment_status = models.CharField(max_length=100, choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
     is_approved = models.BooleanField(default=False)
@@ -158,7 +165,7 @@ class AlumniDirectory(models.Model):
     birth_date = models.DateField()
     program = models.CharField(max_length=100)
     year_graduated = models.PositiveIntegerField()
-    sex = models.CharField(max_length=20, choices=CustomUser.GENDER_CHOICES)
+    sex = models.CharField(max_length=20, choices=CustomUser.SEX_CHOICES)
 
     class Meta:
         indexes = [
@@ -274,7 +281,7 @@ class Profile(models.Model):
     full_name = models.CharField(max_length=450, blank=True, null=True)
     email_address = models.EmailField(blank=True, null=True)
     mobile_number = models.CharField(max_length=20, blank=True, null=True)
-    sex = models.CharField(max_length=20, choices=CustomUser.GENDER_CHOICES, blank=True, null=True)
+    gender = models.CharField(max_length=20, choices=CustomUser.GENDER_CHOICES, blank=True, null=True)
     civil_status = models.CharField(max_length=20, choices=CustomUser.CIVIL_STATUS_CHOICES, blank=True, null=True)
     year_of_birth = models.DateField(blank=True, null=True)
     
