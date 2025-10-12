@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useThemeStore } from '@/stores/theme';
 import axios from 'axios';
 
 // Import posting components
@@ -14,6 +15,7 @@ import NotificationToast from '@/components/posting/NotificationToast.vue';
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const themeStore = useThemeStore();
 
 // State
 const posts = ref([]);
@@ -144,6 +146,10 @@ const handleWebSocketMessage = (data) => {
       console.log('🔔 Received new_comment WebSocket message:', data);
       addNewComment(data);
       break;
+    case 'post_deleted':
+      console.log('🗑️ Received post_deleted WebSocket message:', data);
+      handlePostDeleted(data);
+      break;
   }
 };
 
@@ -159,8 +165,18 @@ const fetchPosts = async () => {
       }
     });
     
-    console.log('✅ Posts response:', response.data);
-    posts.value = response.data.results || response.data;
+    console.log('✅ Posts loaded successfully');
+    
+    // Handle both paginated and direct array responses
+    if (Array.isArray(response.data)) {
+      posts.value = response.data;
+    } else if (response.data.results && Array.isArray(response.data.results)) {
+      posts.value = response.data.results;
+    } else {
+      console.error('❌ Unexpected response format:', response.data);
+      posts.value = [];
+    }
+    
     console.log('📊 Loaded posts:', posts.value.length);
     
     // Initialize selectedReaction from backend user_reaction data
@@ -413,6 +429,95 @@ const handleReactionUpdated = async (postId) => {
   }
 };
 
+// Post management event handlers
+const handlePostDeleted = (data) => {
+  console.log('🗑️ Handling post deletion:', data);
+  
+  // Extract post ID from the data
+  const postId = data.postId || data.post_id;
+  
+  // Remove the post from the posts array
+  const postIndex = posts.value.findIndex(p => p.id === postId);
+  if (postIndex !== -1) {
+    const removedPost = posts.value.splice(postIndex, 1)[0];
+    console.log('✅ Post removed from feed:', removedPost.title || removedPost.content?.substring(0, 50));
+  } else {
+    console.log('⚠️ Post not found in current feed, may have been already removed');
+  }
+  
+  // Also remove from filtered posts if it exists
+  const filteredIndex = filteredPosts.value.findIndex(p => p.id === postId);
+  if (filteredIndex !== -1) {
+    console.log('✅ Post also removed from filtered view');
+  }
+  
+  // Close modal if the deleted post was open
+  if (selectedPost.value && selectedPost.value.id === postId) {
+    console.log('🔙 Closing modal for deleted post');
+    closePostModal();
+  }
+  
+  // Clear any cached data for this post
+  if (comments.value[postId]) {
+    delete comments.value[postId];
+    console.log('🧹 Cleared comments for deleted post');
+  }
+  
+  if (selectedReaction.value[postId]) {
+    delete selectedReaction.value[postId];
+    console.log('🧹 Cleared reactions for deleted post');
+  }
+  
+  // Show modern success notification
+  addNotification(data.message || 'Post deleted successfully! ✨ The content has been permanently removed from the community feed.', 'success');
+  
+  // Force a fresh fetch to ensure consistency (but don't wait for it)
+  setTimeout(() => {
+    console.log('🔄 Performing background refresh to ensure data consistency');
+    fetchPosts();
+  }, 1000);
+};
+
+const handlePostPinned = async (data) => {
+  console.log('📌 Handling post pin/unpin:', data);
+  
+  try {
+    // Refresh the specific post to get updated pin status
+    const response = await axios.get(`${BASE_URL}/api/posts/posts/${data.postId}/`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    });
+    
+    // Find and update the post in the posts array
+    const postIndex = posts.value.findIndex(p => p.id === data.postId);
+    if (postIndex !== -1) {
+      posts.value[postIndex] = response.data;
+      console.log('✅ Post pin status updated');
+    }
+    
+    // Also update selectedPost if it's the same post
+    if (selectedPost.value && selectedPost.value.id === data.postId) {
+      selectedPost.value = response.data;
+    }
+    
+    // Show success notification
+    addNotification(data.message || 'Post updated successfully', 'success');
+    
+    // Refresh the posts to show proper ordering (pinned posts first)
+    await fetchPosts();
+    
+  } catch (error) {
+    console.error('Failed to refresh post data after pin update:', error);
+    addNotification('Failed to update post. Please refresh the page.', 'error');
+  }
+};
+
+const handlePostReported = (data) => {
+  console.log('🚩 Handling post report:', data);
+  
+  // Show success notification
+  addNotification(data.message || 'Post reported successfully. Thank you for helping keep our community safe.', 'success');
+};
+
 // Utility Functions
 const addNotification = (message, type = 'info') => {
   notifications.value.unshift({
@@ -630,14 +735,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <div class="min-h-screen transition-colors duration-200" :class="themeStore.isAdminDark() ? 'bg-gray-900' : 'bg-gray-50'">
     <!-- Header -->
-    <div class="bg-white shadow-lg border-b-2 border-blue-100 fixed top-0 left-0 right-0 z-20 ml-[280px]">
-      <div class="w-full px-6 py-6">
+    <div :class="[
+      'shadow-sm border-b fixed top-0 left-0 right-0 z-20 ml-[280px]',
+      themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+    ]">
+      <div class="w-full px-6 py-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-4xl font-bold text-slate-800 mb-2">Alumni Community Hub</h1>
-            <p class="text-lg text-slate-600 font-medium">Connect, Share, and Stay Updated with Your Alumni Network</p>
+            <h1 :class="['text-2xl font-bold mb-1', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">Alumni Community Hub</h1>
+            <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">Connect, Share, and Stay Updated with Your Alumni Network</p>
           </div>
           
           <!-- Search -->
@@ -646,9 +754,14 @@ onUnmounted(() => {
               v-model="searchQuery"
               type="text"
               placeholder="Search posts, announcements, events..."
-              class="pl-16 pr-6 py-4 w-80 text-lg border-2 border-slate-300 rounded-2xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 shadow-lg"
+              :class="[
+                'pl-10 pr-4 py-2 w-80 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+                themeStore.isAdminDark() 
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              ]"
             />
-            <svg class="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg :class="['absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -664,13 +777,15 @@ onUnmounted(() => {
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-6xl mx-auto px-6 py-8 pt-48">
+    <div class="max-w-6xl mx-auto px-6 py-8 pt-32">
       <!-- Create Post Section -->
       <PostCreateForm 
         :user-profile-picture="authStore.user.profile_picture"
         :categories="categories"
         @create-post="createPost"
       />
+
+
 
       <!-- Posts Feed -->
       <div class="space-y-8">
@@ -685,28 +800,33 @@ onUnmounted(() => {
           :current-user-id="authStore.user.id"
           @react-to-post="reactToPost"
           @add-comment="addComment"
-          @share-post="sharePost"
           @copy-link="copyPostLink"
           @open-modal="openPostModal"
           @reaction-updated="handleReactionUpdated"
+          @deleted="handlePostDeleted"
+          @pinned="handlePostPinned"
+          @reported="handlePostReported"
         />
       </div>
       
       <!-- Empty State -->
-      <div v-if="filteredPosts.length === 0" class="text-center py-20">
-        <div class="bg-white rounded-3xl shadow-xl border-2 border-slate-100 p-12 max-w-lg mx-auto">
-          <svg class="mx-auto h-20 w-20 text-slate-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-if="filteredPosts.length === 0" class="text-center py-12">
+        <div :class="[
+          'rounded-lg shadow-sm border p-8 max-w-lg mx-auto',
+          themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        ]">
+          <svg :class="['mx-auto h-12 w-12 mb-4', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
           </svg>
-          <h3 class="text-2xl font-bold text-slate-800 mb-3">No Posts Found</h3>
-          <p class="text-lg text-slate-600 leading-relaxed">
+          <h3 :class="['text-lg font-semibold mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">No Posts Found</h3>
+          <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">
             {{ searchQuery ? 'Try adjusting your search terms or exploring different categories.' : 'Share the first post with your alumni community and get the conversation started!' }}
           </p>
-          <div v-if="!searchQuery" class="mt-6">
+          <div v-if="!searchQuery" class="mt-4">
             <button
-              class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-lg rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg transform hover:scale-105"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
             >
-              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
               Create Your First Post
@@ -737,7 +857,6 @@ onUnmounted(() => {
       @close="closePostModal"
       @react-to-post="reactToPost"
       @add-comment="addComment"
-      @share-post="sharePost"
       @copy-link="copyPostLink"
       @load-comments="fetchCommentsForPost"
       @navigate="navigateToPost"

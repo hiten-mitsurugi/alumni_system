@@ -1,13 +1,15 @@
 <template>
-  <div :class="size === 'small' ? 'px-2 sm:px-3 py-2 border-t border-slate-200 bg-slate-50' : 'px-4 py-3 border-t-2 border-slate-100 bg-slate-50'">
-  <div class="flex items-center gap-2 w-full">
+  <div :class="themeStore.isAdminDark() ? 
+    (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4') : 
+    (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4')">
+    <div class="flex items-center gap-4 w-full justify-center">
       <!-- Reactions -->
-      <div class="flex-1 flex justify-center">
-        <div class="relative group w-full flex justify-center">
+      <div class="flex justify-center">
+        <div class="relative group flex justify-center">
           <button
             @click="handleReaction('like')"
             :class="[
-              'action-btn transition-all duration-300 cursor-pointer relative z-10 w-full flex items-center justify-center',
+              'action-btn transition-all duration-300 cursor-pointer relative z-10 flex items-center justify-center',
               size === 'small' ? 'action-small' : 'action-regular',
               selectedReaction ? 'active-reaction' : 'action-neutral',
               'action-compact'
@@ -27,25 +29,27 @@
           </button>
 
           <!-- Reaction Picker (keeps same behavior) -->
-          <div :class="size === 'small' ? 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 delay-300 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 flex space-x-2 z-30' : 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 delay-300 bg-white border-2 border-slate-200 rounded-3xl shadow-2xl p-4 flex space-x-3 z-30'">
+          <div :class="themeStore.isAdminDark() ? 
+            (size === 'small' ? 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 delay-300 bg-gray-800 border border-gray-700 rounded-2xl shadow-xl p-3 flex space-x-2 z-30' : 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 delay-300 bg-gray-800 border-2 border-gray-700 rounded-3xl shadow-2xl p-4 flex space-x-3 z-30') :
+            (size === 'small' ? 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 delay-300 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 flex space-x-2 z-30' : 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 delay-300 bg-white border-2 border-slate-200 rounded-3xl shadow-2xl p-4 flex space-x-3 z-30')">"
             <button
               v-for="reaction in reactionTypes"
               :key="reaction.type"
               @click="handleReaction(reaction.type)"
               :class="['flex items-center justify-center rounded-md transition-all duration-150', size === 'small' ? 'w-8 h-8 text-base' : 'w-9 h-9 text-lg']"
-              title="reaction.label"
+              :title="reaction.label"
             >
-              <span :class="size === 'small' ? 'text-base' : 'text-lg'" class="filter drop-shadow-sm">{{ reaction.emoji }}</span>
+              <span :class="size === 'small' ? 'text-base filter drop-shadow-sm' : 'text-lg filter drop-shadow-sm'">{{ reaction.emoji }}</span>
             </button>
           </div>
         </div>
       </div>
       
       <!-- Comment -->
-      <div class="flex-1 flex justify-center">
+      <div class="flex justify-center">
         <button
           @click="handleCommentClick"
-          class="action-btn action-neutral action-compact w-full"
+          class="action-btn action-neutral action-compact"
           aria-label="Comment"
         >
           <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,26 +60,13 @@
         </button>
       </div>
       
-      <!-- Repost -->
-      <div class="flex-1 flex justify-center">
-        <button
-          @click="$emit('share-post')"
-          class="action-btn action-neutral action-compact w-full"
-          aria-label="Repost"
-        >
-          <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span class="action-tooltip">Repost</span>
-          <span class="action-label sm:hidden">Repost</span>
-        </button>
-      </div>
+
       
       <!-- Copy Link -->
-      <div class="flex-1 flex justify-center">
+      <div class="flex justify-center">
         <button
           @click="$emit('copy-link')"
-          class="action-btn action-neutral action-compact w-full"
+          class="action-btn action-neutral action-compact"
           aria-label="Copy link"
         >
           <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +82,10 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
 
 // Props
 const props = defineProps({
@@ -110,7 +105,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['react-to-post', 'comment-clicked', 'share-post', 'copy-link'])
+const emit = defineEmits(['react-to-post', 'comment-clicked', 'copy-link'])
 
 // Reaction types - LinkedIn style
 const reactionTypes = [
@@ -147,31 +142,35 @@ const currentReactionLabel = computed(() => {
 </script>
 
 <style scoped>
-/* Unified action button styles to keep sizes consistent across PostActions */
+/* Modern action button styles with circular design */
 .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 0.5rem;
+  border-radius: 9999px; /* Full rounded for modern pill shape */
+  border: none;
+  background: transparent;
+  transition: all 0.2s ease;
+  position: relative;
 }
 .action-regular {
-  padding: 0.375rem 0.6rem; /* visually similar to sm:px-3 py-1.5 */
-  font-weight: 600;
-  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 .action-small {
-  padding: 0.25rem 0.45rem;
+  padding: 0.375rem 0.75rem;
   font-weight: 500;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 .action-neutral {
-  color: #166534; /* green-700 */
+  color: #6b7280; /* gray-500 */
   background: transparent;
 }
 .action-compact {
-  padding: 0.35rem 0.6rem;
-  min-width: 2.25rem;
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -182,8 +181,9 @@ const currentReactionLabel = computed(() => {
 .action-icon {
   width: 1.25rem; /* 20px */
   height: 1.25rem; /* 20px */
-  color: #059669; /* green-600/darker for icons */
+  color: #6b7280; /* gray-500 for modern neutral icons */
   display: inline-block;
+  transition: all 0.2s ease;
 }
 
 /* Thicken SVG strokes inside action icons when possible */
@@ -194,33 +194,35 @@ const currentReactionLabel = computed(() => {
   stroke-width: 2.2 !important;
 }
 .action-label {
-  color: #16a34a; /* green-600 for text */
+  color: #6b7280; /* gray-500 for modern neutral text */
   font-size: 0.875rem;
   font-weight: 600;
 }
 
-/* Tooltip (desktop): show label on hover as a small tooltip above the icon */
+/* Tooltip (desktop): modern tooltip design */
 .action-tooltip {
   position: absolute;
-  top: -2.25rem;
+  top: -2.5rem;
   left: 50%;
-  transform: translateX(-50%) translateY(0.25rem);
-  background: #059669; /* darker green for tooltip */
+  transform: translateX(-50%) translateY(0.5rem);
+  background: rgba(17, 24, 39, 0.9); /* More modern dark background */
   color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* Show tooltip when its parent button is hovered (desktop) */
 button:hover .action-tooltip {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(-0.25rem);
 }
 
 /* Hide tooltip on small screens (use inline labels instead) */
@@ -242,25 +244,35 @@ button:hover .action-tooltip {
 
 /* Remove border visuals and keep only color and hover */
 .action-neutral {
-  color: #16a34a;
+  color: #6b7280;
   background: transparent;
   border: none;
 }
 
 .action-btn:hover {
-  background-color: rgba(16, 185, 129, 0.06);
-  /* avoid translate effect that causes jumping */
-  transform: none;
+  background-color: rgba(107, 114, 128, 0.1);
+  color: #374151;
+  border-radius: 9999px; /* Keep full rounded on hover */
+  transform: scale(1.05); /* Subtle scale instead of translate */
 }
 
-/* Hover: subtle rounded background */
-.action-btn:hover {
-  background-color: rgba(16, 185, 129, 0.06); /* green-300 at low opacity */
-  transform: translateY(-1px);
+.action-btn:hover .action-icon {
+  color: #374151;
+  transform: scale(1.1);
 }
+
+.action-btn:hover .action-label {
+  color: #374151;
+}
+
 .active-reaction {
-  background: linear-gradient(90deg,#3b82f6,#2563eb);
-  color: white !important;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6 !important;
+  border-radius: 9999px;
+}
+
+.active-reaction .action-icon {
+  color: #3b82f6 !important;
 }
 
 /* Smooth transitions for all interactive elements */
@@ -268,10 +280,7 @@ button:hover .action-tooltip {
   transition: all 0.3s ease;
 }
 
-/* Enhanced hover effects */
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
+/* Enhanced hover effects - modern subtle hover without jumping */
 
 /* Focus states for accessibility */
 button:focus {

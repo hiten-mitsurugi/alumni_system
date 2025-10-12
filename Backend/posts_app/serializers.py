@@ -219,7 +219,7 @@ class PostSerializer(serializers.ModelSerializer):
             'id', 'user', 'title', 'content', 'content_category', 'category',
             'post_type', 'shared_post', 'shared_text', 'image', 'image_url',
             'media_files', 'likes_count', 'comments_count', 'shares_count',
-            'is_approved', 'is_pinned', 'visibility', 'created_at', 'updated_at',
+            'is_approved', 'is_pinned', 'visibility', 'status', 'created_at', 'updated_at',
             'edited_at', 'is_edited', 'time_since', 'reactions_summary',
             'recent_comments', 'can_edit', 'can_delete', 'is_saved', 'engagement_stats'
         ]
@@ -372,7 +372,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             'title', 'content', 'content_category', 'post_type', 
-            'shared_post', 'shared_text', 'visibility', 'image', 'media_files'
+            'shared_post', 'shared_text', 'visibility', 'image', 'media_files', 'status'
         ]
     
     def create(self, validated_data):
@@ -417,7 +417,8 @@ class SavedPostSerializer(serializers.ModelSerializer):
 
 class PostReportSerializer(serializers.ModelSerializer):
     reporter = UserBasicSerializer(read_only=True)
+    post = PostSerializer(read_only=True)
     
     class Meta:
         model = PostReport
-        fields = ['id', 'reason', 'description', 'reporter', 'created_at', 'is_resolved']
+        fields = ['id', 'reason', 'description', 'reporter', 'post', 'created_at', 'is_resolved', 'resolved_at', 'resolved_by']

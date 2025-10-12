@@ -2,10 +2,11 @@
 export const getReasonLabel = (reason) => {
   const labels = {
     spam: 'Spam',
-    harassment: 'Harassment',
-    hate_speech: 'Hate Speech',
-    inappropriate_content: 'Inappropriate Content',
-    misinformation: 'Misinformation',
+    harassment: 'Harassment and Bullying',
+    inappropriate: 'Inappropriate Content',
+    false_information: 'False Information',
+    violence: 'Violence or Threats',
+    copyright: 'Copyright Infringement',
     other: 'Other'
   }
   return labels[reason] || 'Unknown'
@@ -15,9 +16,10 @@ export const getReasonBadgeClass = (reason) => {
   const classes = {
     spam: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
     harassment: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
-    hate_speech: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-    inappropriate_content: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-    misinformation: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+    inappropriate: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+    false_information: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+    violence: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+    copyright: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
     other: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   }
   return classes[reason] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
@@ -27,9 +29,10 @@ export const getReasonColor = (reason) => {
   const colors = {
     spam: 'text-red-600 dark:text-red-400',
     harassment: 'text-orange-600 dark:text-orange-400',
-    hate_speech: 'text-red-600 dark:text-red-400',
-    inappropriate_content: 'text-yellow-600 dark:text-yellow-400',
-    misinformation: 'text-purple-600 dark:text-purple-400',
+    inappropriate: 'text-yellow-600 dark:text-yellow-400',
+    false_information: 'text-purple-600 dark:text-purple-400',
+    violence: 'text-red-600 dark:text-red-400',
+    copyright: 'text-blue-600 dark:text-blue-400',
     other: 'text-gray-600 dark:text-gray-400'
   }
   return colors[reason] || 'text-gray-600 dark:text-gray-400'
@@ -102,11 +105,12 @@ export const getStatusColor = (status) => {
 // Priority levels based on reason
 export const getReportPriority = (reason) => {
   const priorities = {
-    hate_speech: 'high',
+    violence: 'high',
     harassment: 'high',
+    inappropriate: 'medium',
     spam: 'medium',
-    inappropriate_content: 'medium',
-    misinformation: 'medium',
+    false_information: 'medium',
+    copyright: 'low',
     other: 'low'
   }
   return priorities[reason] || 'low'

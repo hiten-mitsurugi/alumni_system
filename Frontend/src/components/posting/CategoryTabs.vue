@@ -1,23 +1,31 @@
 <template>
-  <div class="flex flex-wrap gap-3 mt-6 justify-center">
+  <div class="flex flex-wrap gap-2 mt-4 justify-start">
     <button
       v-for="category in categories"
       :key="category.value"
       @click="$emit('category-change', category.value)"
       :class="[
-        'flex items-center space-x-3 px-6 py-4 rounded-2xl text-lg font-semibold transition-all duration-300 whitespace-nowrap min-w-fit shadow-md',
+        'px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 whitespace-nowrap border-none',
         activeTab === category.value
-          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white transform scale-105 shadow-xl'
-          : 'bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:shadow-lg'
+          ? (themeStore.isAdminDark() 
+              ? 'bg-blue-500 text-white shadow-md' 
+              : 'bg-blue-600 text-white shadow-md')
+          : (themeStore.isAdminDark()
+              ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-blue-700')
       ]"
     >
-      <span class="text-2xl">{{ category.icon }}</span>
       <span>{{ category.label }}</span>
     </button>
   </div>
 </template>
 
 <script setup>
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
+
 // Props
 const props = defineProps({
   categories: {

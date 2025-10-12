@@ -56,23 +56,36 @@
       </div>
     </div>
 
-    <!-- Reports Card -->
-    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
+    <!-- Reports Card (Clickable) -->
+    <router-link 
+      to="/admin/reports" 
+      :class="[
+        'rounded-lg shadow-sm border p-6 block transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer',
+        themeStore.isAdminDark() 
+          ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
+          : 'bg-white border-gray-200 hover:bg-gray-50'
+      ]"
+    >
       <div class="flex items-center">
         <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-red-900' : 'bg-red-100']">
           <AlertTriangle :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-red-400' : 'text-red-600']" />
         </div>
-        <div class="ml-4">
+        <div class="ml-4 flex-1">
           <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Reported Posts</p>
-          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
-            {{ formatNumber(analytics.reportedPosts) }}
-          </p>
+          <div class="flex items-center justify-between">
+            <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
+              {{ formatNumber(analytics.reportedPosts) }}
+            </p>
+            <svg :class="['w-4 h-4 opacity-50', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
           <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             Need attention
           </p>
         </div>
       </div>
-    </div>
+    </router-link>
 
     <!-- Activity Rate Card -->
     <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">

@@ -1,27 +1,33 @@
 <template>
   <div
-    class="bg-white rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg border border-slate-100 hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full mx-auto">
+    :class="themeStore.isAdminDark() ? 'bg-gray-700 border border-gray-600 text-gray-100 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full mx-auto' : 'bg-white border border-slate-100 text-slate-900 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full mx-auto'">
     <!-- Post Header -->
-    <PostHeader :post="post" :categories="categories" />
+    <PostHeader 
+      :post="post" 
+      :categories="categories" 
+      @deleted="handlePostDeleted"
+      @pinned="handlePostPinned"
+      @reported="handlePostReported"
+    />
 
     <!-- Post Content -->
-    <div class="px-3 md:px-4 lg:px-6 cursor-pointer" @click="openPostModal">
-      <h2 v-if="post.title" class="text-sm md:text-base lg:text-lg font-semibold text-slate-900 mb-2 leading-snug">{{ post.title }}</h2>
-      <div class="text-sm md:text-base text-slate-800 whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed">{{ post.content }}</div>
+    <div :class="themeStore.isAdminDark() ? 'px-3 md:px-4 lg:px-6 cursor-pointer' : 'px-3 md:px-4 lg:px-6 cursor-pointer'" @click="openPostModal">
+      <h2 v-if="post.title" :class="themeStore.isAdminDark() ? 'text-sm md:text-base lg:text-lg font-semibold text-gray-100 mb-2 leading-snug' : 'text-sm md:text-base lg:text-lg font-semibold text-slate-900 mb-2 leading-snug'">{{ post.title }}</h2>
+      <div :class="themeStore.isAdminDark() ? 'text-sm md:text-base text-gray-300 whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed' : 'text-sm md:text-base text-slate-800 whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed'">{{ post.content }}</div>
 
       <!-- Shared Post Display -->
-      <div v-if="post.shared_post" class="border border-slate-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4 bg-slate-50">
+      <div v-if="post.shared_post" :class="themeStore.isAdminDark() ? 'border border-gray-600 rounded-lg p-2 md:p-3 mb-3 md:mb-4 bg-gray-600' : 'border border-slate-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4 bg-slate-50'">
         <div class="flex items-center space-x-2 mb-2">
           <img :src="post.shared_post.user?.profile_picture || '/default-avatar.png'" alt="Profile"
-            class="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border border-slate-300" />
-          <span class="text-xs md:text-sm font-medium text-slate-700">
+            :class="themeStore.isAdminDark() ? 'w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border border-gray-700' : 'w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border border-slate-300'" />
+          <span :class="themeStore.isAdminDark() ? 'text-xs md:text-sm font-medium text-gray-200' : 'text-xs md:text-sm font-medium text-slate-700'">
             {{ post.shared_post.user?.first_name }} {{ post.shared_post.user?.last_name }}
           </span>
-          <span class="text-xs text-slate-500">{{ formatTimeAgo(post.shared_post.created_at) }}</span>
+          <span :class="themeStore.isAdminDark() ? 'text-xs text-gray-300' : 'text-xs text-slate-500'">{{ formatTimeAgo(post.shared_post.created_at) }}</span>
         </div>
-        <h3 v-if="post.shared_post.title" class="text-sm md:text-base font-semibold text-slate-900 mb-2">{{ post.shared_post.title }}
+        <h3 v-if="post.shared_post.title" :class="themeStore.isAdminDark() ? 'text-sm md:text-base font-semibold text-gray-100 mb-2' : 'text-sm md:text-base font-semibold text-slate-900 mb-2'">{{ post.shared_post.title }}
         </h3>
-        <p class="text-xs md:text-sm text-slate-700 leading-relaxed">{{ post.shared_post.content }}</p>
+        <p :class="themeStore.isAdminDark() ? 'text-xs md:text-sm text-gray-200 leading-relaxed' : 'text-xs md:text-sm text-slate-700 leading-relaxed'">{{ post.shared_post.content }}</p>
       </div>
 
       <!-- Media Files (Clickable to open modal) -->
@@ -36,8 +42,8 @@
     </div>
 
     <!-- Engagement Stats & Reaction Summary -->
-    <div v-if="hasEngagement" class="px-3 md:px-4 lg:px-6 py-2 border-t border-slate-100 hover-isolation">
-      <div class="flex items-center justify-between text-xs md:text-sm text-slate-600" @mouseenter.stop @mouseover.stop>
+    <div v-if="hasEngagement" :class="themeStore.isAdminDark() ? 'px-3 md:px-4 lg:px-6 py-2 border-t border-gray-600 hover-isolation' : 'px-3 md:px-4 lg:px-6 py-2 border-t border-slate-100 hover-isolation'">
+      <div :class="themeStore.isAdminDark() ? 'flex items-center justify-between text-xs md:text-sm text-gray-200' : 'flex items-center justify-between text-xs md:text-sm text-slate-600'" @mouseenter.stop @mouseover.stop>
         <div class="flex items-center space-x-1 md:space-x-2 lg:space-x-3" @mouseenter.stop @mouseover.stop>
           <!-- Facebook-style Reaction Summary -->
           <ReactionSummary
@@ -75,23 +81,22 @@
 
     <!-- Action Buttons -->
     <PostActions :post-id="post.id" :selected-reaction="selectedReaction" @react-to-post="handleReaction"
-      @comment-clicked="openPostModal" @share-post="$emit('share-post', post.id)"
-      @copy-link="$emit('copy-link', post.id)" />
+      @comment-clicked="openPostModal" @copy-link="$emit('copy-link', post.id)" />
 
     <!-- Quick Comment Preview (if comments exist) -->
-    <div v-if="previewComments.length > 0" class="px-3 md:px-4 lg:px-6 pb-2">
+    <div v-if="previewComments.length > 0" :class="themeStore.isAdminDark() ? 'px-3 md:px-4 lg:px-6 pb-2 bg-gray-700' : 'px-3 md:px-4 lg:px-6 pb-2 bg-white'">
       <div class="space-y-2">
         <div v-for="comment in previewComments.slice(0, 2)" :key="comment.id"
-          class="flex space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+          :class="themeStore.isAdminDark() ? 'flex space-x-2 cursor-pointer hover:bg-gray-600 rounded-lg p-2 -m-2 transition-colors' : 'flex space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors'"
           @click="openPostModal">
           <img :src="comment.user.profile_picture || '/default-avatar.png'" :alt="comment.user.full_name"
             class="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full object-cover flex-shrink-0" />
           <div class="flex-1 min-w-0">
-            <div class="bg-gray-100 rounded-lg px-2 py-1">
-              <p class="font-medium text-xs text-gray-900">
+            <div :class="themeStore.isAdminDark() ? 'bg-gray-600 rounded-lg px-2 py-1' : 'bg-gray-100 rounded-lg px-2 py-1'">
+              <p :class="themeStore.isAdminDark() ? 'font-medium text-xs text-gray-100' : 'font-medium text-xs text-gray-900'">
                 {{ comment.user.full_name }}
               </p>
-              <p class="text-gray-700 text-xs mt-1 line-clamp-2">
+              <p :class="themeStore.isAdminDark() ? 'text-gray-200 text-xs mt-1 line-clamp-2' : 'text-gray-700 text-xs mt-1 line-clamp-2'">
                 {{ comment.content }}
               </p>
             </div>
@@ -114,12 +119,12 @@
     </div>
 
     <!-- Quick Comment Input -->
-    <div class="px-3 md:px-4 lg:px-6 pb-3 md:pb-4">
+    <div :class="themeStore.isAdminDark() ? 'px-3 md:px-4 lg:px-6 pb-3 md:pb-4 bg-gray-700' : 'px-3 md:px-4 lg:px-6 pb-3 md:pb-4 bg-white'">
       <div class="flex space-x-2 items-center">
         <img :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'" alt="Your avatar"
           class="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full object-cover flex-shrink-0" />
         <button @click="openPostModal"
-          class="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-2 text-left text-gray-600 transition-colors text-xs md:text-sm">
+          :class="themeStore.isAdminDark() ? 'flex-1 bg-gray-600 hover:bg-gray-500 rounded-full px-3 py-2 text-left text-gray-200 transition-colors text-xs md:text-sm' : 'flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-2 text-left text-gray-600 transition-colors text-xs md:text-sm'">
           Write a comment...
         </button>
       </div>
@@ -137,7 +142,8 @@
 </template>
 
 <script setup>
-import '../css/PostCard.css'
+import { useThemeStore } from '@/stores/theme'
+const themeStore = useThemeStore()
 import { ref, computed } from 'vue'
 import PostHeader from './PostHeader.vue'
 import MediaDisplay from './MediaDisplay.vue'
@@ -174,7 +180,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['react-to-post', 'add-comment', 'share-post', 'copy-link', 'open-modal', 'reaction-updated'])
+const emit = defineEmits(['react-to-post', 'add-comment', 'copy-link', 'open-modal', 'reaction-updated', 'deleted', 'pinned', 'reported'])
 
 // Local state
 const showReactionsModal = ref(false)
@@ -245,5 +251,18 @@ const getProfilePictureUrl = (profilePicture) => {
   const BASE_URL = getBackendBaseUrl();
   return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`;
 };
+
+// Event handlers for PostMenu actions
+const handlePostDeleted = (data) => {
+  emit('deleted', data)
+}
+
+const handlePostPinned = (data) => {
+  emit('pinned', data)
+}
+
+const handlePostReported = (data) => {
+  emit('reported', data)
+}
 </script>
 

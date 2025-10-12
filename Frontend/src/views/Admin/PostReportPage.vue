@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useThemeStore } from '@/stores/theme'
 import { formatDate, formatTimeAgo, getReasonLabel, getReasonColor } from '@/utils/reportHelpers'
 import ReportActionModal from '@/components/admin/ReportActionModal.vue'
 import ReportStatsCards from '@/components/admin/ReportStatsCards.vue'
@@ -8,6 +9,9 @@ import ReportFilters from '@/components/admin/ReportFilters.vue'
 import ReportCard from '@/components/admin/ReportCard.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import NotificationToast from '@/components/common/NotificationToast.vue'
+
+// Stores
+const themeStore = useThemeStore()
 
 const {
   // State
@@ -93,12 +97,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
+  <div :class="['min-h-screen p-6', themeStore.isAdminDark() ? 'bg-gray-900' : 'bg-gray-50']">
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Post Reports</h1>
-        <p class="text-gray-600">Review and moderate reported content from users</p>
+        <h1 :class="['text-3xl font-bold mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">Post Reports</h1>
+        <p :class="themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600'">Review and moderate reported content from users</p>
 
         <!-- Stats Cards -->
         <ReportStatsCards
@@ -131,13 +135,14 @@ onMounted(() => {
 
         <div
           v-else-if="filteredReports.length === 0"
-          class="text-center py-12 bg-white rounded-lg shadow-sm border"
+          :class="['text-center py-12 rounded-lg shadow-sm border', 
+                   themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']"
         >
           <svg class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No reports found</h3>
-          <p class="text-gray-600">All reports have been resolved. Great job!</p>
+          <h3 :class="['text-lg font-medium mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">No reports found</h3>
+          <p :class="themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600'">All reports have been resolved. Great job!</p>
         </div>
 
         <ReportCard
@@ -157,7 +162,8 @@ onMounted(() => {
       >
         <button
           @click="loadMore"
-          class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          :class="['px-6 py-3 rounded-lg transition-colors', 
+                   themeStore.isAdminDark() ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200']"
         >
           Load More Reports
         </button>

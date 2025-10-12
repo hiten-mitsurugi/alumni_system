@@ -1,16 +1,16 @@
 <template>
   <div
-    class="bg-white rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg border border-gray-100 mb-4 md:mb-6 overflow-hidden">
-    <div class="bg-gradient-to-r from-green-700 to-green-700 px-3 md:px-4 lg:px-6 py-3 md:py-4">
-      <h2 class="text-base md:text-lg font-bold text-black flex items-center">
-        <svg class="w-5 h-5 md:w-6 md:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    :class="themeStore.isAdminDark() ? 'bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg mb-4 md:mb-6 overflow-hidden' : 'bg-white border border-gray-100 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg mb-4 md:mb-6 overflow-hidden'">
+    <div :class="themeStore.isAdminDark() ? 'bg-gray-800 border-b border-gray-700 px-3 md:px-4 lg:px-6 py-3 md:py-4' : 'bg-white border-b border-gray-100 px-3 md:px-4 lg:px-6 py-3 md:py-4'">
+      <h2 :class="themeStore.isAdminDark() ? 'text-base md:text-lg font-bold text-gray-100 flex items-center' : 'text-base md:text-lg font-bold text-gray-900 flex items-center'">
+        <svg :class="themeStore.isAdminDark() ? 'w-5 h-5 md:w-6 md:h-6 mr-2 text-gray-100' : 'w-5 h-5 md:w-6 md:h-6 mr-2 text-gray-900'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
         <span class="hidden sm:inline">Share Your Thoughts</span>
         <span class="sm:hidden">Share</span>
       </h2>
-      <p class="text-black text-xs md:text-sm mt-1 hidden md:block">Connect with your fellow alumni and share what's
+      <p :class="themeStore.isAdminDark() ? 'text-gray-300 text-xs md:text-sm mt-1 hidden md:block' : 'text-gray-600 text-xs md:text-sm mt-1 hidden md:block'">Connect with your fellow alumni and share what's
         on your mind</p>
     </div>
 
@@ -21,11 +21,11 @@
         <div class="flex-1 min-w-0">
           <!-- Title Input -->
           <input v-model="localTitle" type="text" placeholder="Add a title (optional)..."
-            class="w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-green-300 focus:border-green-500 shadow-sm" />
+            :class="themeStore.isAdminDark() ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'" />
 
           <!-- Content Textarea -->
           <textarea v-model="localContent" placeholder="What would you like to share?" rows="3"
-            class="w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-green-300 focus:border-green-500 shadow-sm"></textarea>
+            :class="themeStore.isAdminDark() ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'"></textarea>
 
           <!-- File Preview -->
           <div v-if="selectedFiles.length > 0" class="mt-3 md:mt-4">
@@ -143,6 +143,10 @@
 
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
 
 // Props
 const props = defineProps({
@@ -271,8 +275,8 @@ input:focus,
 textarea:focus,
 select:focus,
 button:focus {
-  
-  
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 /* Enhanced hover effects */

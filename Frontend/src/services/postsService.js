@@ -68,5 +68,18 @@ export const postsService = {
   async unsavePost(postId) {
     const response = await api.delete(`/posts/${postId}/save/`)
     return response.data
+  },
+
+  // Post management
+  async deletePost(postId) {
+    console.log('🗑️ Deleting post via API:', postId);
+    const response = await api.delete(`/posts/posts/${postId}/delete/`)
+    console.log('✅ Post delete response:', response.data);
+    return response.data
+  },
+
+  async pinPost(postId) {
+    const response = await api.post(`/posts/posts/${postId}/pin/`)
+    return response.data
   }
 }

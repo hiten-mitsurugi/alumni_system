@@ -206,6 +206,17 @@ class PostsConsumer(AsyncWebsocketConsumer):
             'message': f"Your post was {'approved' if event['approved'] else 'rejected'} by {event['admin_name']}"
         }))
     
+    async def post_deleted(self, event):
+        """Handle post deletion broadcasts"""
+        await self.send(text_data=json.dumps({
+            'type': 'post_deleted',
+            'post_id': event['post_id'],
+            'deleted_by_user_id': event['deleted_by_user_id'],
+            'deleted_by_name': event['deleted_by_name'],
+            'message': event['message'],
+            'timestamp': event['timestamp']
+        }))
+    
     async def notification(self, event):
         """Handle general notifications"""
         await self.send(text_data=json.dumps({
@@ -325,6 +336,17 @@ class PostDetailConsumer(AsyncWebsocketConsumer):
     async def new_comment(self, event):
         """Handle new comments"""
         await self.send(text_data=json.dumps(event))
+    
+    async def post_deleted(self, event):
+        """Handle post deletion"""
+        await self.send(text_data=json.dumps({
+            'type': 'post_deleted',
+            'post_id': event['post_id'],
+            'deleted_by_user_id': event['deleted_by_user_id'],
+            'deleted_by_name': event['deleted_by_name'],
+            'message': event['message'],
+            'timestamp': event['timestamp']
+        }))
     
     async def typing_indicator(self, event):
         """Handle typing indicators"""

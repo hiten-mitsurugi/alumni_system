@@ -1,25 +1,25 @@
 <template>
-  <div class="flex items-start justify-between p-6 pb-4">
+  <div :class="themeStore.isAdminDark() ? 'flex items-start justify-between p-6 pb-4 bg-gray-700' : 'flex items-start justify-between p-6 pb-4 bg-white'">
     <div class="flex items-start space-x-4">
       <img :src="post.user?.profile_picture || '/default-avatar.png'" alt="Profile"
-        class="w-16 h-16 rounded-full object-cover border-4 border-blue-200 shadow-lg" />
+        :class="themeStore.isAdminDark() ? 'w-16 h-16 rounded-full object-cover border-4 border-gray-600 shadow-lg' : 'w-16 h-16 rounded-full object-cover border-4 border-blue-200 shadow-lg'" />
       <div>
         <div class="flex items-center space-x-3">
-          <h3 class="text-lg font-bold text-slate-800">
+          <h3 :class="themeStore.isAdminDark() ? 'text-lg font-bold text-gray-100' : 'text-lg font-bold text-slate-800'">
             {{ post.user?.first_name }} {{ post.user?.last_name }}
           </h3>
 
         </div>
-        <div class="flex items-center space-x-3 text-md text-slate-600 mt-1">
+        <div :class="themeStore.isAdminDark() ? 'flex items-center space-x-3 text-md text-gray-400 mt-1' : 'flex items-center space-x-3 text-md text-slate-600 mt-1'">
           <span class="font-medium">{{ formatTimeAgo(post.created_at) }}</span>
-          <span class="text-slate-400">•</span>
+          <span :class="themeStore.isAdminDark() ? 'text-gray-500' : 'text-slate-400'">•</span>
           <span
-            class="capitalize font-medium cursor-pointer hover:bg-slate-200 transition-colors">
+            :class="themeStore.isAdminDark() ? 'capitalize font-medium cursor-pointer hover:bg-gray-600 transition-colors' : 'capitalize font-medium cursor-pointer hover:bg-slate-200 transition-colors'">
             {{categories.find(c => c.value === post.content_category)?.icon || '📝'}}
             {{ post.content_category }}
           </span>
           <span v-if="post.post_type === 'shared'"
-            class=" text-slate-700 px-1 py-1 rounded-full font-medium">
+            :class="themeStore.isAdminDark() ? 'text-gray-300 px-1 py-1 rounded-full font-medium' : 'text-slate-700 px-1 py-1 rounded-full font-medium'">
             🔄 Shared
           </span>
         </div>
@@ -27,17 +27,22 @@
     </div>
 
     <!-- Post Menu -->
-    <div class="relative">
-      <button class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-colors">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-        </svg>
-      </button>
-    </div>
+    <PostMenu 
+      :post="post" 
+      @deleted="handlePostDeleted"
+      @pinned="handlePostPinned"
+      @reported="handlePostReported"
+    />
   </div>
 </template>
 
 <script setup>
+import { useThemeStore } from '@/stores/theme'
+import PostMenu from './PostMenu.vue'
+
+// Theme store
+const themeStore = useThemeStore()
+
 // Props
 const props = defineProps({
   post: {
@@ -49,6 +54,9 @@ const props = defineProps({
     required: true
   }
 })
+
+// Emits
+const emit = defineEmits(['deleted', 'pinned', 'reported'])
 
 // Methods
 const formatTimeAgo = (dateString) => {
@@ -62,6 +70,19 @@ const formatTimeAgo = (dateString) => {
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
 
   return date.toLocaleDateString()
+}
+
+// Event handlers
+const handlePostDeleted = (data) => {
+  emit('deleted', data)
+}
+
+const handlePostPinned = (data) => {
+  emit('pinned', data)
+}
+
+const handlePostReported = (data) => {
+  emit('reported', data)
 }
 </script>
 

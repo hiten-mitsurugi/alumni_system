@@ -1,5 +1,9 @@
 <script setup>
+import { useThemeStore } from '@/stores/theme'
 import { formatDate, formatTimeAgo, getReasonLabel, getReasonColor } from '@/utils/reportHelpers'
+
+// Stores
+const themeStore = useThemeStore()
 
 const props = defineProps({
   report: {
@@ -20,20 +24,22 @@ const handleAction = (action) => {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+  <div :class="['rounded-lg shadow-sm border overflow-hidden', 
+                themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
     <!-- Report Card -->
     <div class="p-6">
       <!-- Report Info -->
       <div class="flex items-start justify-between mb-4">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div :class="['w-10 h-10 rounded-full flex items-center justify-center', 
+                        themeStore.isAdminDark() ? 'bg-red-900' : 'bg-red-100']">
+            <svg :class="['w-5 h-5', themeStore.isAdminDark() ? 'text-red-400' : 'text-red-600']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.865-.833-2.635 0L4.179 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
             </svg>
           </div>
           <div>
-            <p class="font-semibold text-gray-900">Report #{{ report.id }}</p>
-            <p class="text-sm text-gray-500">Reported {{ formatDate(report.created_at) }}</p>
+            <p :class="['font-semibold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">Report #{{ report.id }}</p>
+            <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Reported {{ formatDate(report.created_at) }}</p>
           </div>
         </div>
 
@@ -48,25 +54,27 @@ const handleAction = (action) => {
       </div>
 
       <!-- Reported Post -->
-      <div class="bg-gray-50 rounded-lg p-4 mb-4">
+      <div :class="['rounded-lg p-4 mb-4', themeStore.isAdminDark() ? 'bg-gray-700' : 'bg-gray-50']">
         <div class="flex items-start space-x-3 mb-3">
-          <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-            <span class="text-xs font-medium text-gray-700">
+          <div :class="['w-8 h-8 rounded-full flex items-center justify-center', 
+                        themeStore.isAdminDark() ? 'bg-gray-600' : 'bg-gray-300']">
+            <span :class="['text-xs font-medium', themeStore.isAdminDark() ? 'text-gray-200' : 'text-gray-700']">
               {{ report.post.user.first_name[0] }}{{ report.post.user.last_name[0] }}
             </span>
           </div>
           <div class="flex-1">
-            <p class="font-medium text-gray-900">{{ report.post.user.first_name }} {{ report.post.user.last_name }}</p>
-            <p class="text-sm text-gray-500">{{ formatDate(report.post.created_at) }}</p>
+            <p :class="['font-medium', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ report.post.user.first_name }} {{ report.post.user.last_name }}</p>
+            <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">{{ formatDate(report.post.created_at) }}</p>
           </div>
-          <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+          <span :class="['px-2 py-1 text-xs font-medium rounded-full', 
+                         themeStore.isAdminDark() ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800']">
             {{ report.post.content_category?.toUpperCase() }}
           </span>
         </div>
 
         <div>
-          <h4 v-if="report.post.title" class="font-semibold text-gray-900 mb-2">{{ report.post.title }}</h4>
-          <p class="text-gray-700 whitespace-pre-wrap">{{ report.post.content }}</p>
+          <h4 v-if="report.post.title" :class="['font-semibold mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ report.post.title }}</h4>
+          <p :class="['whitespace-pre-wrap', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">{{ report.post.content }}</p>
         </div>
 
         <div v-if="report.post.image" class="mt-3">

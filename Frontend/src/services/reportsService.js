@@ -12,14 +12,23 @@ export const reportsService = {
   async getReports(params = {}) {
     const authStore = useAuthStore()
     
-    // Note: posts_app.urls defines routes like 'posts/reports/' and this file is included under '/api/posts/',
-    // so the full path is '/api/posts/posts/reports/' (yes, double 'posts').
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/reports/`, {
-      headers: { Authorization: `Bearer ${authStore.token}` },
-      params
-    })
+    console.log('🔑 Auth token exists:', !!authStore.token)
+    console.log('👤 Current user:', authStore.user?.username, 'Type:', authStore.user?.user_type)
     
-    return response.data
+    try {
+      // Note: posts_app.urls defines routes like 'posts/reports/' and this file is included under '/api/posts/',
+      // so the full path is '/api/posts/posts/reports/' (yes, double 'posts').
+      const response = await axios.get(`${BASE_URL}/api/posts/posts/reports/`, {
+        headers: { Authorization: `Bearer ${authStore.token}` },
+        params
+      })
+      
+      console.log('✅ Reports API success:', response.status)
+      return response.data
+    } catch (error) {
+      console.error('❌ Reports API error:', error.response?.status, error.response?.data)
+      throw error
+    }
   },
 
   /**

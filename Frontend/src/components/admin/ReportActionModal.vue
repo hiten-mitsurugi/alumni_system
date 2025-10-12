@@ -1,5 +1,9 @@
 <script setup>
+import { useThemeStore } from '@/stores/theme'
 import { getReasonLabel } from '@/utils/reportHelpers'
+
+// Stores
+const themeStore = useThemeStore()
 
 const props = defineProps({
   report: {
@@ -33,7 +37,8 @@ const handleCancel = () => {
 
 <template>
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="handleCancel">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+    <div :class="['rounded-xl shadow-2xl max-w-md w-full mx-4 p-6', 
+                  themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white']">
       <div class="text-center">
         <div
           :class="[
@@ -70,11 +75,11 @@ const handleCancel = () => {
           </svg>
         </div>
 
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+        <h3 :class="['text-lg font-semibold mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
           {{ action === 'remove' ? 'Remove Post' : action === 'warn' ? 'Warn User' : 'Confirm Action' }}
         </h3>
 
-        <p class="text-gray-600 mb-6">
+        <p :class="['mb-6', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600']">
           <span v-if="action === 'remove'">
             This will permanently remove the reported post. The user will be notified of this action. Are you sure?
           </span>

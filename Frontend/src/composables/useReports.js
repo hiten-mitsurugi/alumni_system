@@ -88,12 +88,21 @@ export function useReports() {
       const response = await reportsService.getReports(params)
 
       console.log('📊 API Response:', response)
+      console.log('📊 Reports data:', response.reports)
+      console.log('📊 Stats data:', response.stats)
+      
+      if (!response.reports || !Array.isArray(response.reports)) {
+        console.error('❌ Invalid response format - reports should be an array:', response)
+      }
 
       if (page === 1) {
         reportedPosts.value = response.reports || []
       } else {
         reportedPosts.value = [...reportedPosts.value, ...(response.reports || [])]
       }
+      
+      console.log('📋 Updated reportedPosts.value:', reportedPosts.value.length, 'items')
+      console.log('📋 First report:', reportedPosts.value[0])
 
       // Update statistics from API response
       if (response.stats) {

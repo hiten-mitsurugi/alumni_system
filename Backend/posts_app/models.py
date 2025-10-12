@@ -50,6 +50,11 @@ class Post(models.Model):
     # Status and permissions
     is_approved = models.BooleanField(default=True)  # Auto-approve all posts
     is_pinned = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=[
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+        ('archived', 'Archived')
+    ], default='published')  # Add this field to fix database constraint
     visibility = models.CharField(max_length=20, choices=[
         ('public', 'Public'),
         ('alumni_only', 'Alumni Only'),
@@ -155,10 +160,11 @@ class PostReport(models.Model):
     """Allow users to report inappropriate posts"""
     REPORT_REASONS = (
         ('spam', 'Spam'),
-        ('harassment', 'Harassment'),
+        ('harassment', 'Harassment and Bullying'),
         ('inappropriate', 'Inappropriate Content'),
-        ('fake_news', 'Fake News'),
-        ('violence', 'Violence'),
+        ('false_information', 'False Information'),
+        ('violence', 'Violence or Threats'),
+        ('copyright', 'Copyright Infringement'),
         ('other', 'Other'),
     )
     

@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     PostFeedView, PostCreateView, PostDetailView, PostReactionView, 
     CommentCreateView, SharePostView, PostApprovalView, SavePostView,
-    PostReportView, AdminReportListView, AdminReportActionView
+    PostReportView, AdminReportListView, AdminReportActionView,
+    PostPinView, PostDeleteView
 )
 
 urlpatterns = [
@@ -35,4 +36,8 @@ urlpatterns = [
     # Admin report management
     path('posts/reports/', AdminReportListView.as_view(), name='admin-report-list'),
     path('posts/reports/<int:report_id>/action/', AdminReportActionView.as_view(), name='admin-report-action'),
+    
+    # Post management (pin/delete)
+    path('posts/<int:post_id>/pin/', PostPinView.as_view(), name='post-pin'),
+    path('posts/<int:post_id>/delete/', PostDeleteView.as_view(), name='post-delete'),
 ]

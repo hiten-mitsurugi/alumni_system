@@ -154,7 +154,16 @@ class AdminService {
       // Posts (try several possible keys)
       totalPosts: rawData.posts?.total || rawData.total_posts || rawData.summary?.total_content || 0,
       pendingPosts: rawData.posts?.pending || rawData.pending_posts || 0,
-      reportedPosts: rawData.posts?.reported || rawData.reports?.pending || rawData.reports?.total || 0,
+      reportedPosts: (() => {
+        const reported = rawData.posts?.reported || rawData.reports?.pending || rawData.reports?.total || 0;
+        console.log('Debug reportedPosts calculation:', {
+          'rawData.posts?.reported': rawData.posts?.reported,
+          'rawData.reports?.pending': rawData.reports?.pending,
+          'rawData.reports?.total': rawData.reports?.total,
+          'final reported value': reported
+        });
+        return reported;
+      })(),
       approvedPosts: rawData.posts?.approved || rawData.approved_posts || 0,
       declinedPosts: rawData.posts?.declined || rawData.declined_posts || 0,
       weeklyPosts: rawData.posts?.weekly_posts || rawData.weekly_posts || 0,
