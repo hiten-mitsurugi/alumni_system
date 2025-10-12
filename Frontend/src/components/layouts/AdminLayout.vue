@@ -11,7 +11,7 @@ const adminDark = computed(() => (themeStore.isAdminDark ? themeStore.isAdminDar
 </script>
 
 <template>
-  <div :class="['min-h-screen flex', adminDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900']">
+  <div :class="['min-h-screen flex', adminDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900']">
     <!-- Fixed sidebar -->
     <div class="fixed top-0 left-0 h-full z-40">
       <AdminSidebar />

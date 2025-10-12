@@ -3,10 +3,10 @@
     <!-- Dashboard Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 :class="['text-2xl font-bold mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
           Admin Dashboard
         </h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
+        <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">
           Welcome back! Here's what's happening with your alumni system.
         </p>
       </div>
@@ -14,7 +14,12 @@
         <button
           @click="refreshAllData"
           :disabled="analyticsLoading || dashboardLoading"
-          class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+          :class="[
+            'inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md disabled:opacity-50',
+            themeStore.isAdminDark() 
+              ? 'border-gray-600 text-gray-300 bg-gray-800 hover:bg-gray-700' 
+              : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+          ]"
         >
           <RefreshCw 
             class="w-4 h-4 mr-2" 
@@ -28,15 +33,20 @@
     <!-- Error Display -->
     <div 
       v-if="analyticsError || dashboardError" 
-      class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+      :class="[
+        'mb-6 p-4 border rounded-lg',
+        themeStore.isAdminDark() 
+          ? 'bg-red-900/20 border-red-800' 
+          : 'bg-red-50 border-red-200'
+      ]"
     >
       <div class="flex">
         <AlertCircle class="w-5 h-5 text-red-400 mr-2 mt-0.5" />
         <div>
-          <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+          <h3 :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-red-200' : 'text-red-800']">
             Dashboard Error
           </h3>
-          <div class="mt-1 text-sm text-red-700 dark:text-red-300">
+          <div :class="['mt-1 text-sm', themeStore.isAdminDark() ? 'text-red-300' : 'text-red-700']">
             <p v-if="analyticsError">Analytics: {{ analyticsError }}</p>
             <p v-if="dashboardError">Dashboard: {{ dashboardError }}</p>
           </div>

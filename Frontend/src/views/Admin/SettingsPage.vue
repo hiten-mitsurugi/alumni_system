@@ -32,6 +32,14 @@ const activeSection = computed(() => {
 
 const { profileForm, initializeProfile, user, getProfilePictureUrl } = useProfile()
 
+// Watch for route changes to ensure proper reactivity
+watch(() => route.params.section, (newSection, oldSection) => {
+  // Force a re-render if needed
+  if (newSection !== oldSection) {
+    // The computed activeSection will automatically update
+  }
+}, { immediate: true })
+
 // Helper functions for child components
 const showSuccessMessage = (title, message) => showSuccess(title, message)
 const showErrorMessage = (title, message) => showError(title, message)
@@ -53,7 +61,6 @@ const handleAccountSaved = (result) => {
 
 <template>
   <div class="min-h-screen transition-colors duration-200 relative z-10"
-    :class="themeStore.isAdminDark() ? 'bg-gray-900' : 'bg-gray-50'"
        style="margin-left: 0; padding: 24px; padding-left: 24px;">
 
     <!-- Header -->
@@ -75,11 +82,13 @@ const handleAccountSaved = (result) => {
     <!-- Main Content - Show content based on route -->
     <div class="max-w-4xl relative z-10">
       <div class="rounded-xl shadow-sm border transition-colors duration-200"
-           :class="themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
+           :class="themeStore.isAdminDark() ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'">
 
         <!-- Render the appropriate section based on the route param -->
         <ProfileSettingsSection 
-          v-if="activeSection === 'profile' && user"
+          v-show="activeSection === 'profile'"
+          v-if="user"
+          :key="`profile-${activeSection}`"
           :user="user"
           :isLoading="isLoading"
           :getProfilePictureUrl="getProfilePictureUrl"
@@ -89,7 +98,8 @@ const handleAccountSaved = (result) => {
         />
 
         <AccountSecuritySection 
-          v-if="activeSection === 'account'"
+          v-show="activeSection === 'account'"
+          :key="`account-${activeSection}`"
           :isLoading="isLoading"
           :showSuccessMessage="showSuccessMessage"
           :showErrorMessage="showErrorMessage"
@@ -97,9 +107,22 @@ const handleAccountSaved = (result) => {
         />
 
         <AppearanceSection 
-          v-if="activeSection === 'appearance'"
+          v-show="activeSection === 'appearance'"
+          :key="`appearance-${activeSection}`"
           :showSuccessMessage="showSuccessMessage"
           :showErrorMessage="showErrorMessage"
+        />
+
+        <!-- Fallback content when no section matches -->
+        <ProfileSettingsSection 
+          v-if="!['profile', 'account', 'appearance'].includes(activeSection) && user"
+          :key="`profile-fallback-${activeSection}`"
+          :user="user"
+          :isLoading="isLoading"
+          :getProfilePictureUrl="getProfilePictureUrl"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+          @profile-saved="handleProfileSaved"
         />
       </div>
     </div>

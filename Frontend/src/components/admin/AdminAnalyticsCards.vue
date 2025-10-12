@@ -3,17 +3,17 @@
     <!-- Analytics Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
     <!-- Total Users Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-          <Users class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-blue-900' : 'bg-blue-100']">
+          <Users :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Total Users</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ formatNumber(analytics.totalUsers) }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             {{ formatNumber(analytics.activeUsers) }} active
           </p>
         </div>
@@ -21,17 +21,17 @@
     </div>
 
     <!-- Pending Approvals Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-          <Clock class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-yellow-900' : 'bg-yellow-100']">
+          <Clock :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-yellow-400' : 'text-yellow-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Approvals</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Pending Approvals</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ formatNumber(analytics.pendingApprovals) }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             Alumni registrations
           </p>
         </div>
@@ -39,17 +39,17 @@
     </div>
 
     <!-- Total Posts Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-          <FileText class="w-6 h-6 text-green-600 dark:text-green-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-green-900' : 'bg-green-100']">
+          <FileText :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-green-400' : 'text-green-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Posts</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Total Posts</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ formatNumber(analytics.totalPosts) }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             {{ formatNumber(analytics.weeklyPosts) }} this week
           </p>
         </div>
@@ -57,17 +57,17 @@
     </div>
 
     <!-- Reports Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-          <AlertTriangle class="w-6 h-6 text-red-600 dark:text-red-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-red-900' : 'bg-red-100']">
+          <AlertTriangle :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-red-400' : 'text-red-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Reported Posts</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Reported Posts</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ formatNumber(analytics.reportedPosts) }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             Need attention
           </p>
         </div>
@@ -75,17 +75,17 @@
     </div>
 
     <!-- Activity Rate Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-          <Activity class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-purple-900' : 'bg-purple-100']">
+          <Activity :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-purple-400' : 'text-purple-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Activity Rate</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Activity Rate</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ activityRate }}%
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             {{ formatNumber(analytics.onlineUsers) }} online now
           </p>
         </div>
@@ -93,17 +93,17 @@
     </div>
 
     <!-- Recent Registrations Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-          <UserPlus class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-indigo-900' : 'bg-indigo-100']">
+          <UserPlus :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-indigo-400' : 'text-indigo-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">New Users</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">New Users</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ formatNumber(analytics.recentRegistrations) }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             This week
           </p>
         </div>
@@ -111,17 +111,17 @@
     </div>
 
     <!-- Post Status Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
-          <CheckCircle class="w-6 h-6 text-orange-600 dark:text-orange-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-orange-900' : 'bg-orange-100']">
+          <CheckCircle :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-orange-400' : 'text-orange-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Posts</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Pending Posts</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ formatNumber(analytics.pendingPosts) }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             Awaiting approval
           </p>
         </div>
@@ -129,17 +129,17 @@
     </div>
 
     <!-- Engagement Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="flex items-center">
-        <div class="p-2 bg-teal-100 dark:bg-teal-900 rounded-lg">
-          <TrendingUp class="w-6 h-6 text-teal-600 dark:text-teal-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-teal-900' : 'bg-teal-100']">
+          <TrendingUp :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-teal-400' : 'text-teal-600']" />
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">User Engagement</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">User Engagement</p>
+          <p :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             {{ formatNumber(analytics.userEngagement) }}%
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p :class="['text-xs mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
             Active participation
           </p>
         </div>
@@ -150,13 +150,13 @@
   <!-- Summary Stats Row -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <!-- Approval Rate -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="text-center">
-        <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+        <div :class="['text-3xl font-bold mb-2', themeStore.isAdminDark() ? 'text-green-400' : 'text-green-600']">
           {{ approvalRate }}%
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Post Approval Rate</p>
-        <div class="mt-2 text-xs text-gray-400">
+        <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">Post Approval Rate</p>
+        <div :class="['mt-2 text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
           {{ formatNumber(analytics.approvedPosts) }} approved, 
           {{ formatNumber(analytics.declinedPosts) }} declined
         </div>
@@ -164,34 +164,34 @@
     </div>
 
     <!-- System Health -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="text-center">
         <div class="text-3xl font-bold mb-2" :class="systemHealthColor">
           {{ systemHealthStatus }}
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">System Status</p>
-        <div class="mt-2 text-xs text-gray-400">
+        <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">System Status</p>
+        <div :class="['mt-2 text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
           {{ formatNumber(analytics.pendingActions) }} pending actions
         </div>
       </div>
     </div>
 
     <!-- Last Updated -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+    <div :class="['rounded-lg shadow-sm border p-6', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
       <div class="text-center">
-        <div class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+        <div :class="['text-sm font-medium mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
           Last Updated
         </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400">
+        <p :class="['text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
           {{ formatDateTime(lastUpdated) }}
         </p>
         <button 
           @click="$emit('refresh')" 
           :disabled="loading"
-          class="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+          :class="['mt-2 text-xs hover:underline disabled:opacity-50', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']"
         >
           <span v-if="loading">Refreshing...</span>
-          <span v-else>Refresh Now</span>
+          <span v-else">Refresh Now</span>
         </button>
       </div>
     </div>
@@ -205,6 +205,10 @@ import {
   Users, Clock, FileText, AlertTriangle, Activity, UserPlus, 
   CheckCircle, TrendingUp 
 } from 'lucide-vue-next'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
 
 // Props
 const props = defineProps({
@@ -259,12 +263,13 @@ const systemHealthStatus = computed(() => {
 
 const systemHealthColor = computed(() => {
   const status = systemHealthStatus.value
+  const isDark = themeStore.isAdminDark()
   switch (status) {
-    case 'Excellent': return 'text-green-600 dark:text-green-400'
-    case 'Good': return 'text-blue-600 dark:text-blue-400'
-    case 'Fair': return 'text-yellow-600 dark:text-yellow-400'
-    case 'Needs Attention': return 'text-red-600 dark:text-red-400'
-    default: return 'text-gray-600 dark:text-gray-400'
+    case 'Excellent': return isDark ? 'text-green-400' : 'text-green-600'
+    case 'Good': return isDark ? 'text-blue-400' : 'text-blue-600'
+    case 'Fair': return isDark ? 'text-yellow-400' : 'text-yellow-600'
+    case 'Needs Attention': return isDark ? 'text-red-400' : 'text-red-600'
+    default: return isDark ? 'text-gray-400' : 'text-gray-600'
   }
 })
 

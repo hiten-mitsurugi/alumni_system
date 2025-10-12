@@ -160,7 +160,7 @@ const handleProfilePictureUpload = async (event) => {
 </script>
 
 <template>
-  <aside :class="['w-full sm:w-[220px] md:w-[240px] lg:w-[260px] min-h-screen max-h-screen overflow-y-auto p-2 sm:p-3 flex flex-col', themeStore.isAdminDark() ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800']">
+  <aside :class="['w-full sm:w-[220px] md:w-[240px] lg:w-[260px] min-h-screen max-h-screen overflow-y-auto p-2 sm:p-3 flex flex-col border-r', themeStore.isAdminDark() ? 'bg-gray-900 text-gray-100 border-gray-700' : 'bg-white text-gray-800 border-gray-200']">
     <!-- Profile Section -->
     <div class="flex flex-col items-center mb-3 sm:mb-4" v-if="user && user.first_name">
       <div class="relative">

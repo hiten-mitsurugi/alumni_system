@@ -1,17 +1,17 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
+  <div :class="['rounded-lg shadow-sm border', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
     <!-- Header -->
-    <div class="p-6 border-b dark:border-gray-700">
+    <div :class="['p-6 border-b', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
       <div class="flex items-center space-x-3">
-        <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-          <Zap class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-blue-900' : 'bg-blue-100']">
+          <Zap :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']" />
         </div>
         <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 :class="['text-lg font-semibold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
             Quick Actions
           </h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            Shortcuts to common admin tasks
+          <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">
+            Common administrative tasks
           </p>
         </div>
       </div>
@@ -24,17 +24,32 @@
         <!-- User Management -->
         <router-link 
           to="/admin/user-management"
-          class="group block p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+          :class="[
+            'group block p-4 rounded-xl border-2 border-dashed transition-all duration-200',
+            themeStore.isAdminDark() 
+              ? 'border-gray-600 hover:border-blue-400 hover:bg-blue-900/20' 
+              : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
+          ]"
         >
           <div class="flex items-center space-x-3">
-            <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-              <Users class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div :class="[
+              'p-3 rounded-lg transition-colors',
+              themeStore.isAdminDark() 
+                ? 'bg-blue-900 group-hover:bg-blue-800' 
+                : 'bg-blue-100 group-hover:bg-blue-200'
+            ]">
+              <Users :class="['w-5 h-5', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']" />
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300">
+              <p :class="[
+                'text-sm font-semibold',
+                themeStore.isAdminDark() 
+                  ? 'text-white group-hover:text-blue-300' 
+                  : 'text-gray-900 group-hover:text-blue-700'
+              ]">
                 Manage Users
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p :class="['text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
                 User accounts & permissions
               </p>
             </div>
@@ -44,17 +59,32 @@
         <!-- Post Management -->
         <router-link 
           to="/admin/contents"
-          class="group block p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-green-500 dark:hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-200"
+          :class="[
+            'group block p-4 rounded-xl border-2 border-dashed transition-all duration-200',
+            themeStore.isAdminDark() 
+              ? 'border-gray-600 hover:border-green-400 hover:bg-green-900/20' 
+              : 'border-gray-300 hover:border-green-500 hover:bg-green-50'
+          ]"
         >
           <div class="flex items-center space-x-3">
-            <div class="p-3 bg-green-100 dark:bg-green-900 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
-              <FileText class="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div :class="[
+              'p-3 rounded-lg transition-colors',
+              themeStore.isAdminDark() 
+                ? 'bg-green-900 group-hover:bg-green-800' 
+                : 'bg-green-100 group-hover:bg-green-200'
+            ]">
+              <FileText :class="['w-5 h-5', themeStore.isAdminDark() ? 'text-green-400' : 'text-green-600']" />
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-300">
+              <p :class="[
+                'text-sm font-semibold',
+                themeStore.isAdminDark() 
+                  ? 'text-white group-hover:text-green-300' 
+                  : 'text-gray-900 group-hover:text-green-700'
+              ]">
                 Manage Posts
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p :class="['text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
                 Content moderation & approval
               </p>
             </div>
@@ -64,17 +94,32 @@
         <!-- Reports Management -->
         <router-link 
           to="/admin/post-reports"
-          class="group block p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-red-500 dark:hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+          :class="[
+            'group block p-4 rounded-xl border-2 border-dashed transition-all duration-200',
+            themeStore.isAdminDark() 
+              ? 'border-gray-600 hover:border-red-400 hover:bg-red-900/20' 
+              : 'border-gray-300 hover:border-red-500 hover:bg-red-50'
+          ]"
         >
           <div class="flex items-center space-x-3">
-            <div class="p-3 bg-red-100 dark:bg-red-900 rounded-lg group-hover:bg-red-200 dark:group-hover:bg-red-800 transition-colors">
-              <Shield class="w-5 h-5 text-red-600 dark:text-red-400" />
+            <div :class="[
+              'p-3 rounded-lg transition-colors',
+              themeStore.isAdminDark() 
+                ? 'bg-red-900 group-hover:bg-red-800' 
+                : 'bg-red-100 group-hover:bg-red-200'
+            ]">
+              <Shield :class="['w-5 h-5', themeStore.isAdminDark() ? 'text-red-400' : 'text-red-600']" />
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-red-700 dark:group-hover:text-red-300">
+              <p :class="[
+                'text-sm font-semibold',
+                themeStore.isAdminDark() 
+                  ? 'text-white group-hover:text-red-300' 
+                  : 'text-gray-900 group-hover:text-red-700'
+              ]">
                 View Reports
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p :class="['text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
                 Content reports & violations
               </p>
             </div>
@@ -85,17 +130,32 @@
         <button 
           @click="$emit('refresh-analytics')"
           :disabled="loading"
-          class="group block p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 disabled:opacity-50"
+          :class="[
+            'group block p-4 rounded-xl border-2 border-dashed transition-all duration-200 disabled:opacity-50',
+            themeStore.isAdminDark() 
+              ? 'border-gray-600 hover:border-purple-400 hover:bg-purple-900/20' 
+              : 'border-gray-300 hover:border-purple-500 hover:bg-purple-50'
+          ]"
         >
           <div class="flex items-center space-x-3">
-            <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800 transition-colors">
-              <RefreshCw class="w-5 h-5 text-purple-600 dark:text-purple-400" :class="{ 'animate-spin': loading }" />
+            <div :class="[
+              'p-3 rounded-lg transition-colors',
+              themeStore.isAdminDark() 
+                ? 'bg-purple-900 group-hover:bg-purple-800' 
+                : 'bg-purple-100 group-hover:bg-purple-200'
+            ]">
+              <RefreshCw :class="['w-5 h-5', themeStore.isAdminDark() ? 'text-purple-400' : 'text-purple-600', { 'animate-spin': loading }]" />
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300">
+              <p :class="[
+                'text-sm font-semibold',
+                themeStore.isAdminDark() 
+                  ? 'text-white group-hover:text-purple-300' 
+                  : 'text-gray-900 group-hover:text-purple-700'
+              ]">
                 Refresh Data
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p :class="['text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
                 Update dashboard analytics
               </p>
             </div>
@@ -104,17 +164,22 @@
       </div>
 
       <!-- System Status -->
-      <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+      <div :class="[
+        'mt-6 p-4 rounded-xl border',
+        themeStore.isAdminDark() 
+          ? 'bg-gray-900 border-gray-700' 
+          : 'bg-gray-50 border-gray-200'
+      ]">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
             <div class="flex-shrink-0">
               <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             </div>
             <div>
-              <p class="text-sm font-medium text-gray-900 dark:text-white">
+              <p :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
                 System Online
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p :class="['text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
                 Last updated: {{ formatDateTime(lastUpdated) }}
               </p>
             </div>
@@ -122,7 +187,12 @@
           <button 
             @click="$emit('refresh')"
             :disabled="loading"
-            class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50 transition-colors"
+            :class="[
+              'text-sm disabled:opacity-50 transition-colors',
+              themeStore.isAdminDark() 
+                ? 'text-blue-400 hover:text-blue-300' 
+                : 'text-blue-600 hover:text-blue-700'
+            ]"
             title="Refresh system status"
           >
             <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
@@ -137,6 +207,10 @@
 import { 
   Zap, Users, FileText, Shield, RefreshCw 
 } from 'lucide-vue-next'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
 
 // Props
 const props = defineProps({

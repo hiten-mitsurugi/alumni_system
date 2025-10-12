@@ -1,29 +1,32 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
+  <div :class="['rounded-lg shadow-sm border', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
     <!-- Header -->
-    <div class="p-6 border-b dark:border-gray-700">
+    <div :class="['p-6 border-b', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-            <Clock class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+          <div :class="['p-2 rounded-lg', themeStore.isAdminDark() ? 'bg-yellow-900' : 'bg-yellow-100']">
+            <Clock :class="['w-6 h-6', themeStore.isAdminDark() ? 'text-yellow-400' : 'text-yellow-600']" />
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 :class="['text-lg font-semibold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
               Pending User Approvals
             </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">
               Alumni registrations waiting for approval
             </p>
           </div>
         </div>
         <div class="flex items-center space-x-3">
-          <span class="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300 px-3 py-1 rounded-full text-sm font-medium">
+          <span :class="[
+            'px-3 py-1 rounded-full text-sm font-medium',
+            themeStore.isAdminDark() ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'
+          ]">
             {{ pendingUsers.length }} pending
           </span>
           <button 
             @click="$emit('refresh')"
             :disabled="loading"
-            class="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+            :class="['text-sm hover:underline disabled:opacity-50', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']"
           >
             <RefreshCw class="w-4 h-4 inline mr-1" :class="{ 'animate-spin': loading }" />
             Refresh
@@ -162,6 +165,10 @@ import { ref } from 'vue'
 import { 
   Clock, CheckCircle, User, Check, X, RefreshCw
 } from 'lucide-vue-next'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
 
 // Props
 const props = defineProps({

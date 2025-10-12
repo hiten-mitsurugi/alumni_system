@@ -155,16 +155,42 @@
                    : 'border-gray-300 hover:border-blue-300 dark:border-gray-600'">
 
               <!-- System Theme Preview -->
-              <div class="relative rounded-lg mb-3 border overflow-hidden bg-gradient-to-r from-white via-gray-100 to-gray-800" style="height: 80px;">
-                <div class="absolute inset-0 p-2">
+              <div class="relative rounded-lg mb-3 border overflow-hidden" style="height: 80px;">
+                <!-- Light section (left) -->
+                <div class="absolute left-0 top-0 bottom-0 w-1/2 bg-white border-r border-gray-300 p-2">
                   <div class="flex items-center gap-1 mb-2">
-                    <div class="w-2 h-2 bg-gradient-to-r from-yellow-400 to-blue-400 rounded-full"></div>
-                    <div class="w-8 h-1 bg-gradient-to-r from-gray-200 to-gray-600 rounded"></div>
+                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <div class="w-8 h-1 bg-gray-200 rounded"></div>
                   </div>
                   <div class="space-y-1">
-                    <div class="w-full h-1 bg-gradient-to-r from-gray-100 to-gray-700 rounded"></div>
-                    <div class="w-2/3 h-1 bg-gradient-to-r from-gray-100 to-gray-700 rounded"></div>
+                    <div class="w-full h-1 bg-gray-100 rounded"></div>
+                    <div class="w-2/3 h-1 bg-gray-100 rounded"></div>
                   </div>
+                  <!-- Sun icon overlay -->
+                  <div class="absolute bottom-1 right-1">
+                    <SunIcon class="w-3 h-3 text-yellow-500 opacity-70" />
+                  </div>
+                </div>
+                
+                <!-- Dark section (right) -->
+                <div class="absolute right-0 top-0 bottom-0 w-1/2 bg-gray-800 p-2">
+                  <div class="flex items-center gap-1 mb-2">
+                    <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <div class="w-8 h-1 bg-gray-600 rounded"></div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="w-full h-1 bg-gray-700 rounded"></div>
+                    <div class="w-2/3 h-1 bg-gray-700 rounded"></div>
+                  </div>
+                  <!-- Moon icon overlay -->
+                  <div class="absolute bottom-1 right-1">
+                    <MoonIcon class="w-3 h-3 text-blue-400 opacity-70" />
+                  </div>
+                </div>
+                
+                <!-- Center divider with system icon -->
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-indigo-100 dark:bg-indigo-900 rounded-full border-2 border-indigo-500 flex items-center justify-center">
+                  <MonitorIcon class="w-3 h-3 text-indigo-600" />
                 </div>
               </div>
 

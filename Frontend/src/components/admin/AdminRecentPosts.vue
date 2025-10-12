@@ -1,23 +1,23 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
+  <div :class="['rounded-lg shadow-sm border', themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
     <!-- Header -->
-    <div class="p-6 border-b dark:border-gray-700">
+    <div :class="['p-6 border-b', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+        <h3 :class="['text-lg font-medium', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
           Recent Posts
         </h3>
         <div class="flex items-center space-x-2">
           <button 
             @click="$emit('refresh')"
             :disabled="loading"
-            class="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+            :class="['text-sm hover:underline disabled:opacity-50', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']"
           >
             <RefreshCw class="w-4 h-4 inline mr-1" :class="{ 'animate-spin': loading }" />
             Refresh
           </button>
           <router-link 
             to="/admin/contents"
-            class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            :class="['text-sm hover:underline', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']"
           >
             View All
           </router-link>
@@ -30,10 +30,10 @@
       <div class="space-y-4">
         <div v-for="i in 3" :key="i" class="animate-pulse">
           <div class="flex items-center space-x-3">
-            <div class="h-10 w-10 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+            <div :class="['h-10 w-10 rounded-full', themeStore.isAdminDark() ? 'bg-gray-600' : 'bg-gray-300']"></div>
             <div class="flex-1 space-y-2">
-              <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-              <div class="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+              <div :class="['h-4 rounded w-3/4', themeStore.isAdminDark() ? 'bg-gray-600' : 'bg-gray-300']"></div>
+              <div :class="['h-3 rounded w-1/2', themeStore.isAdminDark() ? 'bg-gray-600' : 'bg-gray-300']"></div>
             </div>
           </div>
         </div>
@@ -43,21 +43,21 @@
     <!-- Error State -->
     <div v-else-if="error" class="p-6 text-center">
       <AlertCircle class="w-8 h-8 text-red-500 mx-auto mb-2" />
-      <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+      <p :class="['text-sm', themeStore.isAdminDark() ? 'text-red-400' : 'text-red-600']">{{ error }}</p>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="posts.length === 0" class="p-6 text-center">
       <FileText class="w-8 h-8 text-gray-400 mx-auto mb-2" />
-      <p class="text-sm text-gray-500 dark:text-gray-400">No recent posts found</p>
+      <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">No recent posts found</p>
     </div>
 
     <!-- Posts List -->
-    <div v-else class="divide-y dark:divide-gray-700 max-h-96 overflow-y-auto">
+    <div v-else :class="['divide-y max-h-96 overflow-y-auto', themeStore.isAdminDark() ? 'divide-gray-700' : 'divide-gray-200']">
       <div 
         v-for="post in posts" 
         :key="post.id"
-        class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        :class="['p-4 transition-colors', themeStore.isAdminDark() ? 'hover:bg-gray-700' : 'hover:bg-gray-50']"
       >
         <div class="flex items-start space-x-3">
           <!-- Author Avatar -->
@@ -70,9 +70,9 @@
             >
             <div 
               v-else
-              class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center"
+              :class="['w-10 h-10 rounded-full flex items-center justify-center', themeStore.isAdminDark() ? 'bg-gray-600' : 'bg-gray-300']"
             >
-              <User class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <User :class="['w-5 h-5', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']" />
             </div>
           </div>
 
@@ -81,10 +81,10 @@
             <!-- Post Header -->
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center space-x-2">
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">
+                  <span :class="['text-sm font-medium', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
                     {{ getAuthorName(post) }}
                   </span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">
+                <span :class="['text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
                   {{ formatRelativeTime(post.created_at) }}
                 </span>
               </div>
@@ -100,7 +100,7 @@
             </div>
 
             <!-- Post Content Preview -->
-            <p class="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-1">
+            <p :class="['text-sm mb-2 line-clamp-1', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">
               {{ post.content || 'No content available' }}
             </p>
 
@@ -115,7 +115,7 @@
 
             <!-- Post Metadata -->
             <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+              <div :class="['flex items-center space-x-4 text-xs', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
                 <span v-if="post.likes_count">
                   <Heart class="w-3 h-3 inline mr-1" />
                   {{ post.likes_count }} likes
@@ -135,7 +135,7 @@
                 <button
                   v-if="post.status === 'pending'"
                   @click="$emit('approve-post', post.id)"
-                  class="text-xs text-green-600 hover:text-green-700 dark:text-green-400"
+                  :class="['text-xs', themeStore.isAdminDark() ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700']"
                   title="Approve Post"
                 >
                   <Check class="w-4 h-4" />
@@ -143,21 +143,21 @@
                 <button
                   v-if="post.status === 'pending'"
                   @click="$emit('reject-post', post.id)"
-                  class="text-xs text-red-600 hover:text-red-700 dark:text-red-400"
+                  :class="['text-xs', themeStore.isAdminDark() ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700']"
                   title="Reject Post"
                 >
                   <X class="w-4 h-4" />
                 </button>
                 <button
                   @click="$emit('view-post', post)"
-                  class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  :class="['text-xs', themeStore.isAdminDark() ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700']"
                   title="View Details"
                 >
                   <Eye class="w-4 h-4" />
                 </button>
                 <button
                   @click="$emit('delete-post', post.id)"
-                  class="text-xs text-red-600 hover:text-red-700 dark:text-red-400"
+                  :class="['text-xs', themeStore.isAdminDark() ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700']"
                   title="Delete Post"
                 >
                   <Trash2 class="w-4 h-4" />
@@ -170,12 +170,12 @@
     </div>
 
     <!-- Footer -->
-    <div v-if="posts.length > 0" class="p-4 border-t dark:border-gray-700">
-      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+    <div v-if="posts.length > 0" :class="['p-4 border-t', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
+      <div :class="['flex items-center justify-between text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
         <span>Showing {{ posts.length }} recent posts</span>
         <router-link 
           to="/admin/contents"
-          class="text-blue-600 dark:text-blue-400 hover:underline"
+          :class="['hover:underline', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']"
         >
           Manage all posts →
         </router-link>
@@ -190,6 +190,10 @@ import {
   RefreshCw, AlertCircle, FileText, User, Heart, MessageCircle, 
   Tag, Check, X, Eye, Trash2 
 } from 'lucide-vue-next'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
 
 // Props
 const props = defineProps({
@@ -230,15 +234,16 @@ const getAuthorName = (post) => {
 }
 
 const getStatusClass = (status) => {
+  const isDark = themeStore.isAdminDark()
   switch (status) {
     case 'approved':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+      return isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
     case 'pending':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+      return isDark ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'
     case 'declined':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+      return isDark ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-800'
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+      return isDark ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-800'
   }
 }
 
