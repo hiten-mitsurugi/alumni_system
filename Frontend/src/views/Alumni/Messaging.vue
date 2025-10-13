@@ -1,21 +1,38 @@
 <template>
  <!-- 📱 RESPONSIVE: Simplified layout that works with AlumniLayout -->
- <div class="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl shadow-lg overflow-hidden border border-slate-200/60">
+ <div :class="[
+   'h-full flex rounded-xl shadow-lg overflow-hidden border',
+   themeStore.isAdminDark() 
+     ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' 
+     : 'bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200/60'
+ ]">
  
  <!--  DESKTOP / 📱 MOBILE: Conversations Panel -->
  <div :class="[
- 'border-r border-slate-300/60 flex flex-col bg-white/80 backdrop-blur-sm',
- // Simple responsive width - let the layout handle positioning
+ 'border-r flex flex-col backdrop-blur-sm',
  'w-full md:w-80 lg:w-96',
+ themeStore.isAdminDark() 
+   ? 'border-gray-700 bg-gray-800/90' 
+   : 'border-slate-300/60 bg-white/80',
  // Mobile responsive visibility
  { 
  'block': !isMobile || currentMobileView === 'list',
  'hidden': isMobile && currentMobileView !== 'list'
  }
  ]">
- <div class="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-b border-slate-200/60 shadow-sm">
+ <div :class="[
+   'p-4 md:p-6 backdrop-blur-sm border-b shadow-sm',
+   themeStore.isAdminDark() 
+     ? 'bg-gray-800/95 border-gray-700' 
+     : 'bg-white/90 border-slate-200/60'
+ ]">
  <div class="flex items-center justify-between mb-4">
- <h2 class="text-xl md:text-2xl font-bold text-slate-800 bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Messages</h2>
+ <h2 :class="[
+   'text-xl md:text-2xl font-bold',
+   themeStore.isAdminDark() 
+     ? 'text-gray-100' 
+     : 'text-slate-800'
+ ]">Messages</h2>
  <div class="flex gap-2">
  <button @click="showPendingMessages = true"
  :class="[
@@ -64,20 +81,44 @@
  </svg>
  <input ref="searchInput" v-model="searchQuery" @input="debouncedSearch" type="text"
  placeholder="Search conversations..."
- class="w-full pl-10 md:pl-12 pr-4 py-3 md:py-4 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:bg-white transition-all duration-200 text-sm md:text-base backdrop-blur-sm" />
+ :class="[
+   'w-full pl-10 md:pl-12 pr-4 py-3 md:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/60 transition-all duration-200 text-sm md:text-base backdrop-blur-sm',
+   themeStore.isAdminDark() 
+     ? 'bg-gray-700/80 border-gray-600 text-gray-100 placeholder-gray-400 focus:bg-gray-700' 
+     : 'bg-slate-50/80 border-slate-200/60 text-gray-900 placeholder-gray-500 focus:bg-white'
+ ]" />
  <div v-if="searchQuery && searchResults.length"
- class="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-xl shadow-xl z-10 max-h-80 md:max-h-96 overflow-y-auto">
+ :class="[
+   'absolute top-full left-0 right-0 mt-2 backdrop-blur-sm border rounded-xl shadow-xl z-10 max-h-80 md:max-h-96 overflow-y-auto',
+   themeStore.isAdminDark() 
+     ? 'bg-gray-800/95 border-gray-600' 
+     : 'bg-white/95 border-slate-200/60'
+ ]">
  <div v-for="result in searchResults" :key="result.id" @click="selectSearchResult(result)"
- class="flex items-center p-3 md:p-4 hover:bg-slate-50/80 cursor-pointer transition-all duration-200">
+ :class="[
+   'flex items-center p-3 md:p-4 cursor-pointer transition-all duration-200',
+   themeStore.isAdminDark() 
+     ? 'hover:bg-gray-700/80' 
+     : 'hover:bg-slate-50/80'
+ ]">
  <img :src="getProfilePictureUrl(result)" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-sm" />
 
  <div class="ml-3">
- <p class="font-semibold text-slate-800 text-sm md:text-base">{{ result.type === 'user' ? `${result.first_name}
+ <p :class="[
+   'font-semibold text-sm md:text-base',
+   themeStore.isAdminDark() ? 'text-gray-100' : 'text-slate-800'
+ ]">{{ result.type === 'user' ? `${result.first_name}
  ${result.last_name}` : result.name }}</p>
- <p class="text-xs md:text-sm text-slate-500">{{ result.type === 'user' ? result.username : 'Group' }}</p>
+ <p :class="[
+   'text-xs md:text-sm',
+   themeStore.isAdminDark() ? 'text-gray-400' : 'text-slate-500'
+ ]">{{ result.type === 'user' ? result.username : 'Group' }}</p>
  </div>
  </div>
- <div v-if="searchQuery && searchResults.length === 0" class="p-4 text-gray-500 text-center text-sm">No results found</div>
+ <div v-if="searchQuery && searchResults.length === 0" :class="[
+   'p-4 text-center text-sm',
+   themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+ ]">No results found</div>
  </div>
  </div>
  </div>
@@ -86,12 +127,19 @@
  @click="selectConversation(conversation)"
  @mouseenter="prefetchMessages(conversation)"
  :class="[
- 'relative flex items-center p-3 md:p-4 cursor-pointer border-b border-gray-100/60 transition-all duration-200 conversation-item panel-transition touch-manipulation group',
+ 'relative flex items-center p-3 md:p-4 cursor-pointer border-b transition-all duration-200 conversation-item panel-transition touch-manipulation group',
+ themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-100/60',
  selectedConversation?.id === conversation.id 
- ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-r-4 border-blue-500 shadow-sm' 
+ ? (themeStore.isAdminDark() 
+   ? 'bg-gradient-to-r from-blue-900/50 to-indigo-900/50 border-r-4 border-blue-400 shadow-sm' 
+   : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-r-4 border-blue-500 shadow-sm')
  : conversation.unreadCount > 0 
-   ? 'bg-gradient-to-r from-green-50 to-emerald-50/80 hover:from-green-100 hover:to-emerald-100 shadow-sm border-l-4 border-green-400' 
-   : 'bg-white hover:bg-gradient-to-r hover:from-slate-50 hover:to-white hover:shadow-sm'
+   ? (themeStore.isAdminDark() 
+     ? 'bg-gradient-to-r from-green-900/50 to-emerald-900/50 hover:from-green-800/50 hover:to-emerald-800/50 shadow-sm border-l-4 border-green-400' 
+     : 'bg-gradient-to-r from-green-50 to-emerald-50/80 hover:from-green-100 hover:to-emerald-100 shadow-sm border-l-4 border-green-400')
+   : (themeStore.isAdminDark() 
+     ? 'bg-gray-800/50 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/50 hover:shadow-sm' 
+     : 'bg-white hover:bg-gradient-to-r hover:from-slate-50 hover:to-white hover:shadow-sm')
  ]"
  style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
  
@@ -121,21 +169,27 @@
  <div class="flex-1 min-w-0">
  <div class="flex items-center justify-between mb-1">
  <h3 :class="[
-   'truncate text-base md:text-lg leading-tight', 
+   'truncate text-base md:text-lg leading-tight',
    conversation.unreadCount > 0 
-     ? 'font-bold text-gray-900' 
-     : 'font-semibold text-gray-800'
+     ? (themeStore.isAdminDark() ? 'font-bold text-gray-100' : 'font-bold text-gray-900')
+     : (themeStore.isAdminDark() ? 'font-semibold text-gray-200' : 'font-semibold text-gray-800')
  ]">{{ conversation.type === 'private' ?
  `${conversation.mate.first_name} ${conversation.mate.last_name}` : conversation.group?.name || 'Unnamed Group' }}</h3>
  <div class="flex items-center gap-2">
  <!-- Block status indicators -->
  <span v-if="conversation.isBlockedByMe" 
- class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium" 
+ :class="[
+   'text-xs px-2 py-1 rounded-full font-medium',
+   themeStore.isAdminDark() ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600'
+ ]"
  title="You have blocked this user">
  Blocked
  </span>
  <span v-else-if="conversation.isBlockedByThem" 
- class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-medium" 
+ :class="[
+   'text-xs px-2 py-1 rounded-full font-medium',
+   themeStore.isAdminDark() ? 'bg-orange-900/50 text-orange-400' : 'bg-orange-100 text-orange-600'
+ ]"
  title="This user has blocked you">
  Blocked you
  </span>
@@ -146,17 +200,20 @@
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
  d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
  </svg>
- <span class="text-xs text-gray-500 font-medium">{{ formatTimestamp(conversation.timestamp) }}</span>
+ <span :class="[
+   'text-xs font-medium',
+   themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+ ]">{{ formatTimestamp(conversation.timestamp) }}</span>
  </div>
  </div>
  <div class="flex items-center justify-between">
  <p :class="[
    'text-sm truncate pr-2 leading-relaxed',
    conversation.isBlockedByMe || conversation.isBlockedByThem 
-     ? 'italic text-gray-400' 
+     ? (themeStore.isAdminDark() ? 'italic text-gray-500' : 'italic text-gray-400')
      : conversation.unreadCount > 0 
-       ? 'font-medium text-gray-700' 
-       : 'text-gray-600'
+       ? (themeStore.isAdminDark() ? 'font-medium text-gray-300' : 'font-medium text-gray-700')
+       : (themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600')
  ]">
  {{ conversation.isBlockedByMe ? 'Messages blocked' : 
  conversation.isBlockedByThem ? 'You are blocked by this user' : 
@@ -165,7 +222,10 @@
  <div class="flex items-center gap-2">
  <div v-if="conversation.type === 'private' && !conversation.isBlockedByMe && !conversation.isBlockedByThem" class="flex flex-col items-end text-xs">
  <span :class="getStatusTextColor(conversation.mate)">{{ getStatusText(conversation.mate) }}</span>
- <span class="text-gray-400 mt-0.5">{{ formatLastSeen(conversation.mate) }}</span>
+ <span :class="[
+   'mt-0.5',
+   themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-400'
+ ]">{{ formatLastSeen(conversation.mate) }}</span>
  </div>
  <span v-if="conversation.unreadCount > 0 && !conversation.isBlockedByMe && !conversation.isBlockedByThem"
  class="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs rounded-full px-2.5 py-1 min-w-[28px] text-center font-semibold shadow-md">{{
@@ -175,17 +235,35 @@
  </div>
  </div>
  <div v-if="filteredConversations.length === 0 && !searchQuery" class="text-center py-12 px-4">
- <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg :class="[
+   'w-16 h-16 mx-auto mb-4',
+   themeStore.isAdminDark() ? 'text-gray-600' : 'text-gray-300'
+ ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
  </svg>
- <p class="text-gray-500">No conversations found</p>
- <div v-if="pendingMessages.length > 0" class="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
- <p class="text-orange-700 text-sm font-medium">
+ <p :class="[
+   themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+ ]">No conversations found</p>
+ <div v-if="pendingMessages.length > 0" :class="[
+   'mt-4 p-3 rounded-lg border',
+   themeStore.isAdminDark() 
+     ? 'bg-orange-900/30 border-orange-800' 
+     : 'bg-orange-50 border-orange-200'
+ ]">
+ <p :class="[
+   'text-sm font-medium',
+   themeStore.isAdminDark() ? 'text-orange-400' : 'text-orange-700'
+ ]">
  📬 You have {{ pendingMessages.length }} pending message {{ pendingMessages.length === 1 ? 'request' : 'requests' }}
  </p>
  <button @click="showPendingMessages = true" 
- class="mt-2 text-orange-600 hover:text-orange-700 text-sm underline">
+ :class="[
+   'mt-2 text-sm underline',
+   themeStore.isAdminDark() 
+     ? 'text-orange-400 hover:text-orange-300' 
+     : 'text-orange-600 hover:text-orange-700'
+ ]">
  View pending requests
  </button>
  </div>
@@ -222,7 +300,10 @@
  <!--  Chat Info Panel -->
  <div v-if="showChatInfo && selectedConversation" 
  :class="[
- 'w-80 border-l bg-white',
+ 'w-80 border-l',
+ themeStore.isAdminDark() 
+   ? 'bg-gray-800 border-gray-700' 
+   : 'bg-white border-gray-200',
  // Mobile responsive visibility
  { 
  'block': !isMobile || currentMobileView === 'chat-info',
@@ -272,6 +353,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, triggerRef } from 'vue
 import debounce from 'lodash/debounce';
 import { useAuthStore } from '@/stores/auth';
 import { useMessagingNotificationStore } from '@/stores/messagingNotifications';
+import { useThemeStore } from '@/stores/theme';
 import api from '../../services/api';
 import messagingService from '../../services/messaging';
 import ChatArea from '../../components/alumni/messaging/ChatArea.vue';
@@ -285,6 +367,7 @@ import ForwardModal from '../../components/alumni/messaging/ForwardModal.vue';
 // === STORES ===
 const authStore = useAuthStore();
 const messagingNotificationStore = useMessagingNotificationStore();
+const themeStore = useThemeStore();
 
 // === STATE ===
 const isAuthenticated = ref(false);
