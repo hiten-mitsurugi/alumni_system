@@ -57,21 +57,13 @@ export const useThemeStore = defineStore('theme', () => {
   const isAdminDark = () => {
     if (adminThemeMode.value === 'dark') return true
     if (adminThemeMode.value === 'light') return false
-    if (adminThemeMode.value === 'system') {
-      // System mode: follow OS preference
-      try {
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-      } catch (e) {
-        return false
-      }
-    }
     // auto mode: time-based switching (6pm-6am = dark, 6am-6pm = light)
     return isNightTime()
   }
 
   const setAdminTheme = (mode) => {
     if (!mode) return
-    if (['light', 'dark', 'auto', 'system'].indexOf(mode) === -1) return
+    if (['light', 'dark', 'auto'].indexOf(mode) === -1) return
     adminThemeMode.value = mode
     try { localStorage.setItem('adminTheme', mode) } catch (e) {}
   }
@@ -79,10 +71,12 @@ export const useThemeStore = defineStore('theme', () => {
   const initializeAdminTheme = () => {
     try {
       const saved = localStorage.getItem('adminTheme')
-      if (saved === 'light' || saved === 'dark' || saved === 'auto' || saved === 'system') {
+      if (saved === 'light' || saved === 'dark' || saved === 'auto') {
         adminThemeMode.value = saved
       } else {
+        // If saved was 'system' or any invalid value, default to 'auto'
         adminThemeMode.value = 'auto'
+        localStorage.setItem('adminTheme', 'auto') // Update localStorage to remove old 'system' setting
       }
     } catch (e) {
       adminThemeMode.value = 'auto'

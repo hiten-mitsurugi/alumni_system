@@ -18,7 +18,7 @@
          :class="themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600'">
         Choose how the admin interface appears. This setting only affects admin pages.
       </p>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <!-- Light Theme -->
       <div class="relative cursor-pointer group"
          @click="themeStore.setAdminTheme('light')">
@@ -145,67 +145,6 @@
               </div>
             </div>
           </div>
-
-        <!-- System Theme -->
-        <div class="relative cursor-pointer group"
-           @click="themeStore.setAdminTheme('system')">
-            <div class="p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg"
-                 :class="themeStore.adminThemeMode === 'system'
-                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
-                   : 'border-gray-300 hover:border-blue-300 dark:border-gray-600'">
-
-              <!-- System Theme Preview -->
-              <div class="relative rounded-lg mb-3 border overflow-hidden" style="height: 80px;">
-                <!-- Light section (left) -->
-                <div class="absolute left-0 top-0 bottom-0 w-1/2 bg-white border-r border-gray-300 p-2">
-                  <div class="flex items-center gap-1 mb-2">
-                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <div class="w-8 h-1 bg-gray-200 rounded"></div>
-                  </div>
-                  <div class="space-y-1">
-                    <div class="w-full h-1 bg-gray-100 rounded"></div>
-                    <div class="w-2/3 h-1 bg-gray-100 rounded"></div>
-                  </div>
-                  <!-- Sun icon overlay -->
-                  <div class="absolute bottom-1 right-1">
-                    <SunIcon class="w-3 h-3 text-yellow-500 opacity-70" />
-                  </div>
-                </div>
-                
-                <!-- Dark section (right) -->
-                <div class="absolute right-0 top-0 bottom-0 w-1/2 bg-gray-800 p-2">
-                  <div class="flex items-center gap-1 mb-2">
-                    <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <div class="w-8 h-1 bg-gray-600 rounded"></div>
-                  </div>
-                  <div class="space-y-1">
-                    <div class="w-full h-1 bg-gray-700 rounded"></div>
-                    <div class="w-2/3 h-1 bg-gray-700 rounded"></div>
-                  </div>
-                  <!-- Moon icon overlay -->
-                  <div class="absolute bottom-1 right-1">
-                    <MoonIcon class="w-3 h-3 text-blue-400 opacity-70" />
-                  </div>
-                </div>
-                
-                <!-- Center divider with system icon -->
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-indigo-100 dark:bg-indigo-900 rounded-full border-2 border-indigo-500 flex items-center justify-center">
-                  <MonitorIcon class="w-3 h-3 text-indigo-600" />
-                </div>
-              </div>
-
-              <div class="text-center">
-                <div class="flex items-center justify-center gap-2 mb-1">
-                  <MonitorIcon class="w-4 h-4 text-indigo-500" />
-                  <span class="font-semibold text-sm"
-                        :class="themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'">
-                     System Mode
-                  </span>
-                </div>
-                <div class="text-xs text-gray-500">Follows OS preference</div>
-              </div>
-            </div>
-          </div>
       </div>
 
       <!-- Current Status -->
@@ -289,8 +228,7 @@ import {
   Palette as PaletteIcon,
   Sun as SunIcon,
   Moon as MoonIcon,
-  Clock as ClockIcon,
-  Monitor as MonitorIcon
+  Clock as ClockIcon
 } from 'lucide-vue-next'
 
 const themeStore = useThemeStore()
@@ -348,8 +286,6 @@ const getThemeStatusText = () => {
     return 'Admin interface is set to always use light theme'
   } else if (mode === 'dark') {
     return 'Admin interface is set to always use dark theme'
-  } else if (mode === 'system') {
-    return `Following system preference (currently ${isCurrentlyDark ? 'dark' : 'light'})`
   } else if (mode === 'auto') {
     const currentHour = new Date().getHours()
     const isNight = themeStore.isNightTime()
