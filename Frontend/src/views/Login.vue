@@ -3,7 +3,6 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import Navbar from '../components/Navbar.vue';
 import api from '../services/api';
 import backgroundImage from "@/assets/Background.png";
 
@@ -54,10 +53,6 @@ const login = async () => {
     class="min-h-screen bg-cover bg-center flex flex-col"
     :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
-    <!-- Navbar -->
-    <Navbar />
-    <div class="h-20"></div>
-
     <!-- Main Content -->
     <div class="flex flex-1 items-center justify-center px-6 md:px-16">
       <!-- Left Section -->
