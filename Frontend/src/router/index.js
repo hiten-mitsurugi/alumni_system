@@ -92,11 +92,6 @@ const routes = [
         component: () => import('../views/Admin/SurveyManagementPage.vue'),
       },
       {
-        path: 'notification',
-        name: 'AdminNotification',
-        component: () => import('../views/Admin/NotificationPage.vue'),
-      },
-      {
         path: 'contents',
         name: 'AdminContents',
         component: () => import('../views/Admin/ContentPage.vue'),

@@ -11,7 +11,6 @@ import {
   LayoutDashboard as LayoutDashboardIcon,
   Users as UsersIcon,
   ClipboardList as ClipboardListIcon,
-  Bell as BellIcon,
   FileText as FileTextIcon,
   ShieldCheck as ShieldCheckIcon,
   UserCheck as UserCheckIcon,
@@ -192,17 +191,6 @@ const handleProfilePictureUpload = async (event) => {
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
             <LayoutDashboardIcon class="w-4 h-4" /> <span>Dashboard</span>
-          </router-link>
-        </li>
-                  <li>
-          <router-link
-            to="/admin/notification"
-            class="flex items-center gap-2 p-2 rounded transition text-sm"
-            :class="isActive('/admin/notification') 
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
-          >
-            <BellIcon class="w-4 h-4" /> <span>Notification</span>
           </router-link>
         </li>
          <li>
