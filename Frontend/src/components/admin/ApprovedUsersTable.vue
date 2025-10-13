@@ -1,17 +1,20 @@
 <template>
   <div>
-    <div class="bg-white rounded-xl shadow-lg">
+    <div :class="['rounded-xl shadow-lg', themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white']">
       <!-- Enhanced Header with Search, Filters, and Actions -->
-      <div class="p-6 border-b border-gray-200">
+      <div :class="['p-6 border-b', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
         <div class="flex items-center gap-4">
           <!-- Search Bar -->
           <div class="flex-1 max-w-md">
             <div class="relative">
               <input v-model="internalFilters.search" type="text"
                 placeholder="Search by firstname, last name or fullname..."
-                class="w-full pl-10 pr-4 py-3 border border-white rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                :class="['w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200', 
+                  themeStore.isAdminDark() 
+                    ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
+                    : 'border-white bg-white text-gray-900 placeholder-gray-500']"
                 @keyup.enter="applyFilters" @input="applyFilters" />
-              <SearchIcon class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+              <SearchIcon :class="['absolute left-3 top-3.5 h-5 w-5', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-400']" />
             </div>
           </div>
 
@@ -20,7 +23,10 @@
             <!-- Filter Button -->
             <div class="relative">
               <button @click="toggleFilterDropdown"
-                class="flex items-center gap-2 px-4 py-3 bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 rounded-lg shadow-sm transition-all duration-200 border border-gray-300 cursor-pointer">
+                :class="['flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border cursor-pointer', 
+                  themeStore.isAdminDark() 
+                    ? 'bg-gray-700 hover:bg-green-800 hover:text-green-300 hover:border-green-600 text-gray-300 border-gray-600' 
+                    : 'bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 border-gray-300']">
                 <FilterIcon class="w-5 h-5" />
                 <span>Filters</span>
                 <ChevronDownIcon
@@ -33,16 +39,25 @@
                 leave-active-class="transition duration-150 ease-in" leave-from-class="transform scale-100 opacity-100"
                 leave-to-class="transform scale-95 opacity-0">
                 <div v-if="showFilterDropdown"
-                  class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                  :class="['absolute right-0 top-full mt-2 w-80 rounded-lg shadow-xl border z-50', 
+                    themeStore.isAdminDark() 
+                      ? 'bg-gray-800 border-gray-700' 
+                      : 'bg-white border-gray-200']"
                   @click.stop>
                   <div class="p-4 space-y-4">
-                    <h3 class="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">Filter Options</h3>
+                    <h3 :class="['text-sm font-semibold border-b pb-2', 
+                      themeStore.isAdminDark() 
+                        ? 'text-gray-300 border-gray-700' 
+                        : 'text-gray-700 border-gray-200']">Filter Options</h3>
 
                     <!-- Employment Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Employment Status</label>
+                      <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Employment Status</label>
                       <select v-model="internalFilters.employment_status" @change="applyFilters"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white' 
+                            : 'border-gray-300 bg-white text-gray-900']">
                         <option value="">All</option>
                         <option value="employed_locally">Employed Locally</option>
                         <option value="employed_internationally">Employed Internationally</option>
@@ -53,9 +68,12 @@
 
                     <!-- Sex Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Sex</label>
+                      <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Sex</label>
                       <select v-model="internalFilters.sex" @change="applyFilters"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white' 
+                            : 'border-gray-300 bg-white text-gray-900']">
                         <option value="">All</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -64,7 +82,7 @@
 
                     <!-- Year Graduated Filter (number input) -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Year Graduated</label>
+                      <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Year Graduated</label>
                       <input
                         v-model="internalFilters.year_graduated"
                         @input="applyFilters"
@@ -73,15 +91,21 @@
                         max="2099"
                         step="1"
                         placeholder="e.g. 2022"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500"
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
+                            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500']"
                       />
                     </div>
 
                     <!-- Program Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Program</label>
+                      <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Program</label>
                       <select v-model="internalFilters.program" @change="applyFilters"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white' 
+                            : 'border-gray-300 bg-white text-gray-900']">
                         <option value="">All</option>
                         <option v-for="program in programs" :key="program" :value="program">{{ program }}</option>
                       </select>
@@ -89,9 +113,12 @@
 
                     <!-- Status Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Account Status</label>
+                      <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Account Status</label>
                       <select v-model="internalFilters.status" @change="applyFilters"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500">
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white' 
+                            : 'border-gray-300 bg-white text-gray-900']">
                         <option value="">All</option>
                         <option value="active">Active</option>
                         <option value="blocked">Blocked</option>
@@ -99,9 +126,12 @@
                     </div>
 
                     <!-- Clear Filters Button -->
-                    <div class="pt-2 border-t border-gray-200">
+                    <div :class="['pt-2 border-t', themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200']">
                       <button @click="clearFilters"
-                        class="w-full py-2 px-3 text-sm text-gray-600 hover:text-gray-100 hover:bg-gray-50 rounded-md transition-colors duration-200">
+                        :class="['w-full py-2 px-3 text-sm rounded-md transition-colors duration-200', 
+                          themeStore.isAdminDark() 
+                            ? 'text-gray-300 hover:text-gray-100 hover:bg-gray-700' 
+                            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50']">
                         Clear All Filters
                       </button>
                     </div>
@@ -249,6 +279,9 @@ import {
   getOnlineStatusText
 } from '@/utils/timeFormat';
 import api from '@/services/api';
+import { useThemeStore } from '@/stores/theme';
+
+const themeStore = useThemeStore();
 
 const props = defineProps({
   users: Array,

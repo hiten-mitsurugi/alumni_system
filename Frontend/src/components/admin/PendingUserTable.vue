@@ -1,5 +1,8 @@
 <script setup>
 import { watch } from 'vue';
+import { useThemeStore } from '@/stores/theme';
+
+const themeStore = useThemeStore();
 
 const props = defineProps({
   users: Array,
@@ -19,7 +22,7 @@ watch(() => props.paginatedUsers, (val) => {
   <div class="overflow-x-auto">
     <table
       v-if="users.length"
-      class="min-w-full bg-white rounded-xl shadow overflow-hidden"
+      :class="['min-w-full rounded-xl shadow overflow-hidden', themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white']"
     >
       <thead class="bg-green-700 text-white text-left text-sm uppercase">
         <tr>
@@ -38,9 +41,12 @@ watch(() => props.paginatedUsers, (val) => {
         <tr
           v-for="(user, index) in paginatedUsers"
           :key="user.id || index"
-          class="border-t hover:bg-gray-50"
+          :class="['border-t', 
+            themeStore.isAdminDark() 
+              ? 'border-gray-700 hover:bg-gray-700' 
+              : 'border-gray-200 hover:bg-gray-50']"
         >
-          <td class="p-4 font-mono text-sm text-gray-400">
+          <td :class="['p-4 font-mono text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-400']">
             {{ (currentPage - 1) * 7 + index + 1 }}
           </td>
           <td class="p-4">
@@ -50,12 +56,12 @@ watch(() => props.paginatedUsers, (val) => {
               class="w-10 h-10 rounded-full object-cover border"
             />
           </td>
-          <td class="p-4">{{ user.first_name }}</td>
-          <td class="p-4">{{ user.last_name }}</td>
-          <td class="p-4">{{ user.school_id }}</td>
-          <td class="p-4">{{ user.program }}</td>
-          <td class="p-4">{{ user.year_graduated }}</td>
-          <td class="p-4">{{ user.employment_status }}</td>
+          <td :class="['p-4', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.first_name }}</td>
+          <td :class="['p-4', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.last_name }}</td>
+          <td :class="['p-4', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.school_id }}</td>
+          <td :class="['p-4', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.program }}</td>
+          <td :class="['p-4', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.year_graduated }}</td>
+          <td :class="['p-4', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.employment_status }}</td>
           <td class="p-4">
             <button
               @click="emit('view-user', user)"
@@ -68,7 +74,7 @@ watch(() => props.paginatedUsers, (val) => {
       </tbody>
     </table>
 
-    <p v-else class="text-center py-10 text-gray-400">
+    <p :class="['text-center py-10', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-400']">
       No pending approvals found or still loading...
     </p>
 
@@ -77,7 +83,10 @@ watch(() => props.paginatedUsers, (val) => {
       <button
         @click="emit('change-page', currentPage - 1)"
         :disabled="currentPage === 1"
-        class="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-sm rounded disabled:opacity-50"
+        :class="['px-3 py-1 text-sm rounded disabled:opacity-50', 
+          themeStore.isAdminDark() 
+            ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+            : 'bg-gray-300 hover:bg-gray-400 text-gray-700']"
       >
         Previous
       </button>
@@ -89,8 +98,10 @@ watch(() => props.paginatedUsers, (val) => {
         :class="[ 'px-3 py-1 rounded text-sm',
           page === currentPage
             ? 'bg-green-700 text-white'
-            : 'bg-gray-200 hover:bg-gray-300'
-        ]"
+            : themeStore.isAdminDark() 
+              ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+        ]">
       >
         {{ page }}
       </button>
@@ -98,7 +109,10 @@ watch(() => props.paginatedUsers, (val) => {
       <button
         @click="emit('change-page', currentPage + 1)"
         :disabled="currentPage === totalPages"
-        class="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-sm rounded disabled:opacity-50"
+        :class="['px-3 py-1 text-sm rounded disabled:opacity-50', 
+          themeStore.isAdminDark() 
+            ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+            : 'bg-gray-300 hover:bg-gray-400 text-gray-700']"
       >
         Next
       </button>

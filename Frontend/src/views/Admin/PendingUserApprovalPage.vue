@@ -5,6 +5,9 @@ import PendingUserTable from '@/components/admin/PendingUserTable.vue';
 import PendingUserView from '@/components/admin/PendingUserView.vue';
 import NotificationToast from '@/components/admin/NotificationToast.vue';
 import { websocketService } from '@/services/websocket';
+import { useThemeStore } from '@/stores/theme';
+
+const themeStore = useThemeStore();
 
 const pendingUsers = ref([]);
 const selectedUser = ref(null);
@@ -166,8 +169,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen">
-    <h1 class="text-2xl font-bold mb-6">Pending User Approvals</h1>
+  <div :class="['p-6 min-h-screen', themeStore.isAdminDark() ? 'bg-gray-900' : 'bg-gray-100']">
+    <h1 :class="['text-2xl font-bold mb-6', themeStore.isAdminDark() ? 'text-white' : 'text-gray-800']">Pending User Approvals</h1>
 
     <PendingUserTable
       :users="pendingUsers"

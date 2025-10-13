@@ -5,6 +5,9 @@ import ApprovedUsersTable from '@/components/admin/ApprovedUsersTable.vue';
 import { websocketService } from '@/services/websocket';
 import CreateUserModal from '@/components/admin/CreateUserModal.vue';
 import ViewUserModal from '@/components/admin/ViewUserModal.vue';
+import { useThemeStore } from '@/stores/theme';
+
+const themeStore = useThemeStore();
 
 // Modal control
 const showViewModal = ref(false);
@@ -208,10 +211,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen">
+  <div :class="['p-6 min-h-screen', themeStore.isAdminDark() ? 'bg-gray-900' : 'bg-gray-100']">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-800">Approved Users</h1>
+      <h1 :class="['text-2xl font-bold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-800']">Approved Users</h1>
       <button
         @click="openCreateModal"
         class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200"
@@ -235,17 +238,23 @@ onUnmounted(() => {
     <!-- Pagination -->
     <div class="flex justify-center mt-6">
       <button
-        class="px-4 py-2 mx-1 bg-gray-300 hover:bg-gray-400 rounded disabled:opacity-50"
+        :class="['px-4 py-2 mx-1 rounded disabled:opacity-50 transition-colors', 
+          themeStore.isAdminDark() 
+            ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+            : 'bg-gray-300 hover:bg-gray-400 text-gray-700']"
         :disabled="currentPage === 1"
         @click="changePage(currentPage - 1)"
       >
         Prev
       </button>
-      <span class="px-4 py-2 font-medium text-gray-700">
+      <span :class="['px-4 py-2 font-medium', themeStore.isAdminDark() ? 'text-white' : 'text-gray-700']">
         {{ currentPage }} / {{ totalPages }}
       </span>
       <button
-        class="px-4 py-2 mx-1 bg-gray-300 hover:bg-gray-400 rounded disabled:opacity-50"
+        :class="['px-4 py-2 mx-1 rounded disabled:opacity-50 transition-colors', 
+          themeStore.isAdminDark() 
+            ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+            : 'bg-gray-300 hover:bg-gray-400 text-gray-700']"
         :disabled="currentPage === totalPages"
         @click="changePage(currentPage + 1)"
       >
