@@ -43,41 +43,64 @@ class SearchView(APIView):
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
+        logger.info(f"🔍 Search request from user {request.user.id} for query: '{query}'")
+        
         if not query:
             return Response({"users": [], "groups": []}, status=status.HTTP_200_OK)
 
-        # Get blocked users to mark them as blocked (but still show them in search)
-        blocked_user_ids = BlockedUser.objects.filter(user=request.user).values_list('blocked_user_id', flat=True)
-        blocked_by_user_ids = BlockedUser.objects.filter(blocked_user=request.user).values_list('user_id', flat=True)
+        try:
+            # Get blocked users to mark them as blocked (but still show them in search)
+            blocked_user_ids = BlockedUser.objects.filter(user=request.user).values_list('blocked_user_id', flat=True)
+            blocked_by_user_ids = BlockedUser.objects.filter(blocked_user=request.user).values_list('user_id', flat=True)
 
-        # ✅ Search users (show all users, don't exclude blocked ones)
-        users_qs = User.objects.filter(
-            Q(username__icontains=query) |
-            Q(first_name__icontains=query) |
-            Q(last_name__icontains=query)
-        ).exclude(
-            id=request.user.id  # Only exclude self
-        )
+            # ✅ Search users (show all users, don't exclude blocked ones)
+            users_qs = User.objects.filter(
+                Q(username__icontains=query) |
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query)
+            ).exclude(
+                id=request.user.id  # Only exclude self
+            )
 
-        # ✅ Apply optional filters if they exist
-        if hasattr(User, 'is_approved'):
-            users_qs = users_qs.filter(is_approved=True)
-        if hasattr(User, 'user_type'):
-            users_qs = users_qs.filter(user_type=3)
+            # ✅ Apply filters - ensure these attributes exist
+            users_qs = users_qs.filter(is_approved=True, user_type=3, is_active=True)
+            users = users_qs.distinct()
 
-        users = users_qs.distinct()
+            # ✅ Search groups
+            groups = GroupChat.objects.filter(name__icontains=query)
 
-        # ✅ Search groups
-        groups = GroupChat.objects.filter(name__icontains=query)
+            logger.info(f"🔍 Found {users.count()} users and {groups.count()} groups for query: '{query}'")
 
-        # ✅ Serialize using EXISTING serializers
-        user_serializer = UserSearchSerializer(users, many=True, context={"request": request})
-        group_serializer = GroupChatSerializer(groups, many=True)
+            # ✅ Serialize with error handling
+            try:
+                user_serializer = UserSearchSerializer(users, many=True, context={"request": request})
+                user_data = user_serializer.data
+            except Exception as e:
+                logger.error(f"🔍 User serialization error: {str(e)}")
+                user_data = []
 
-        return Response({
-            "users": user_serializer.data,
-            "groups": group_serializer.data
-        }, status=status.HTTP_200_OK)
+            try:
+                group_serializer = GroupChatSerializer(groups, many=True)
+                group_data = group_serializer.data
+            except Exception as e:
+                logger.error(f"🔍 Group serialization error: {str(e)}")
+                group_data = []
+
+            response_data = {
+                "users": user_data,
+                "groups": group_data
+            }
+            
+            logger.info(f"🔍 Returning {len(user_data)} users and {len(group_data)} groups")
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"🔍 Search error for query '{query}': {str(e)}")
+            return Response({
+                "users": [],
+                "groups": [],
+                "error": "Search temporarily unavailable"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         
         

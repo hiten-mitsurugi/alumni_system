@@ -626,7 +626,9 @@ const fetchAvailableMates = async () => {
 async function search() {
  if (!searchQuery.value) return (searchResults.value = []);
  try {
+ console.log('🔍 Searching for:', searchQuery.value);
  const { data } = await api.get(`/message/search/?q=${encodeURIComponent(searchQuery.value)}`);
+ console.log('🔍 Search response:', data);
  const users = (data.users || []).map(u => ({
  type: 'user',
  ...u,
@@ -634,7 +636,11 @@ async function search() {
  }));
  const groups = (data.groups || []).map(g => ({ type: 'group', ...g }));
  searchResults.value = [...users, ...groups];
- } catch (e) { searchResults.value = []; }
+ console.log('🔍 Search results:', searchResults.value);
+ } catch (e) { 
+ console.error('🔍 Search error:', e);
+ searchResults.value = []; 
+ }
 }
 const debouncedSearch = debounce(search, 300);
 

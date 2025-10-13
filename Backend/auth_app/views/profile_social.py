@@ -61,12 +61,12 @@ class EnhancedProfileView(APIView):
             # Current user's profile
             user = request.user
 
-        # Get or create profile
+        # Get or create profile  
         from auth_app.models import Profile
         profile, created = Profile.objects.get_or_create(user=user)
         
-        # Use basic serializer since EnhancedUserDetailSerializer might not exist
-        serializer = UserDetailSerializer(user, context={'request': request})
+        # Use enhanced serializer with all related data
+        serializer = EnhancedUserDetailSerializer(user, context={'request': request})
         return Response(serializer.data)
 
     def patch(self, request):
@@ -434,23 +434,32 @@ class SuggestedConnectionsView(APIView):
             exclude_ids.add(following_id)
         exclude_ids.add(user.id)
         
-        # Suggest alumni from same program or year
-        suggestions = CustomUser.objects.filter(
+        # Get base suggestions (all approved alumni except connected ones)
+        base_suggestions = CustomUser.objects.filter(
             user_type=3, 
             is_approved=True, 
             is_active=True
         ).exclude(id__in=exclude_ids)
         
-        # Prioritize by same program and year
-        if user.program:
-            suggestions = suggestions.filter(program=user.program)
-        if user.year_graduated:
-            suggestions = suggestions.filter(year_graduated=user.year_graduated)
+        # Prioritize suggestions: same program OR same year, then others
+        priority_suggestions = []
+        regular_suggestions = []
         
-        # Limit suggestions
-        suggestions = suggestions[:10]
+        for suggestion in base_suggestions:
+            # Priority 1: Same program OR same year
+            if ((user.program and suggestion.program == user.program) or 
+                (user.year_graduated and suggestion.year_graduated == user.year_graduated)):
+                priority_suggestions.append(suggestion)
+            else:
+                regular_suggestions.append(suggestion)
         
-        serializer = UserSearchSerializer(suggestions, many=True, context={'request': request})
+        # Combine prioritized suggestions first, then regular ones
+        final_suggestions = priority_suggestions + regular_suggestions
+        
+        # Limit to 10 suggestions
+        final_suggestions = final_suggestions[:10]
+        
+        serializer = UserSearchSerializer(final_suggestions, many=True, context={'request': request})
         return Response(serializer.data)
 
 

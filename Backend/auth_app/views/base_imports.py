@@ -36,7 +36,7 @@ from auth_app.serializers import (
     RegisterSerializer, UserDetailSerializer, UserCreateSerializer,
     SkillSerializer, WorkHistorySerializer, AlumniDirectoryCheckSerializer,
     ProfileSerializer, UserSearchSerializer, AlumniDirectorySerializer,
-    AddressSerializer
+    AddressSerializer, EnhancedUserDetailSerializer
 )
 from auth_app.permissions import IsAdminOrSuperAdmin
 from auth_app.utils import generate_token, confirm_token

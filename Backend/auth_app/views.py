@@ -10,27 +10,37 @@ from .views.user_management import *# This maintains backward compatibility whil
 
 from .views.profile_social import *
 
-from .views.skills_work import *from .views.authentication import *
+from .views.skills_work import *
+from .views.authentication import *
 
 from .views.alumni_directory import *
 
-from .views.admin_utilities import *from .views.user_management import *
+from .views.admin_utilities import *
+from .views.user_management import *
 
 from .views.profile_social import *
 
-from .views.skills_work import *from .views.authentication import *from .views.authentication import *
+from .views.skills_work import *
+from .views.authentication import *
+from .views.authentication import *
 
 from .views.alumni_directory import *
 
-from .views.admin_utilities import *from .views.user_management import *from .views.user_management import *
+from .views.admin_utilities import *
+from .views.user_management import *
+from .views.user_management import *
 
-from .views.profile_social import *from .views.profile_social import *
+from .views.profile_social import *
+from .views.profile_social import *
 
-from .views.skills_work import *from .views.skills_work import *
+from .views.skills_work import *
+from .views.skills_work import *
 
-from .views.alumni_directory import *from .views.alumni_directory import *
+from .views.alumni_directory import *
+from .views.alumni_directory import *
 
-from .views.admin_utilities import *from .views.admin_utilities import *
+from .views.admin_utilities import *
+from .views.admin_utilities import *
 
 class ApproveUserView(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
@@ -1109,22 +1119,28 @@ class EnhancedProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id=None, username=None):
-        # Handle different lookup methods
+        # Handle different lookup methods with proper prefetching
         if username:
             # Lookup by username
             try:
-                user = CustomUser.objects.get(username=username, is_approved=True, is_active=True)
+                user = CustomUser.objects.select_related('profile').prefetch_related(
+                    'education', 'work_histories', 'achievements'
+                ).get(username=username, is_approved=True, is_active=True)
             except CustomUser.DoesNotExist:
                 return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         elif user_id:
             # Lookup by ID (legacy support)
             try:
-                user = CustomUser.objects.get(id=user_id)
+                user = CustomUser.objects.select_related('profile').prefetch_related(
+                    'education', 'work_histories', 'achievements'
+                ).get(id=user_id)
             except CustomUser.DoesNotExist:
                 return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            # Current user's profile
-            user = request.user
+            # Current user's profile - need to refetch with prefetch
+            user = CustomUser.objects.select_related('profile').prefetch_related(
+                'education', 'work_histories', 'achievements'
+            ).get(id=request.user.id)
 
         # Get or create profile
         from .models import Profile
@@ -1132,8 +1148,44 @@ class EnhancedProfileView(APIView):
         
         # Use enhanced serializer with social features
         from .serializers import EnhancedUserDetailSerializer
-        serializer = EnhancedUserDetailSerializer(user, context={'request': request})
-        return Response(serializer.data)
+        
+        print(f"🚀 EnhancedProfileView: Creating serializer for user {user.id}")
+        
+        try:
+            serializer = EnhancedUserDetailSerializer(user, context={'request': request})
+            print(f"🚀 Serializer created successfully")
+            
+            serialized_data = serializer.data
+            print(f"🚀 Serialization completed")
+            print(f"🚀 Response keys: {list(serialized_data.keys())}")
+            
+            return Response(serialized_data)
+        except Exception as e:
+            print(f"❌ Error in serializer: {e}")
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=500)
+
+class DebugEducationView(APIView):
+    """Debug view to check education records directly"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        from .models import Education
+        education_records = Education.objects.filter(user=user)
+        
+        print(f"DEBUG: User {user.id} has {education_records.count()} education records in DB")
+        for edu in education_records:
+            print(f"  - ID: {edu.id}, Field: {edu.field_of_study}, Institution: {edu.institution}")
+        
+        from .serializers import EducationSerializer
+        serializer = EducationSerializer(education_records, many=True)
+        return Response({
+            'user_id': user.id,
+            'education_count': education_records.count(),
+            'education_records': serializer.data
+        })
 
     def patch(self, request):
         """Update current user's profile"""
@@ -1471,7 +1523,15 @@ class EducationListCreateView(ListCreateAPIView):
         return Education.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        print(f"DEBUG: Creating education record for user {self.request.user.id}")
+        print(f"DEBUG: Education data: {serializer.validated_data}")
+        education = serializer.save(user=self.request.user)
+        print(f"DEBUG: Created education record with ID: {education.id}")
+        
+        # Verify it was saved correctly
+        from .models import Education
+        count = Education.objects.filter(user=self.request.user).count()
+        print(f"DEBUG: User {self.request.user.id} now has {count} education records")
 
 
 class EducationDetailView(RetrieveUpdateDestroyAPIView):

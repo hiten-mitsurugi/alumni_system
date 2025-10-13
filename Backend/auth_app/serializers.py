@@ -8,7 +8,7 @@ import json
 from .models import (
     CustomUser, Skill, WorkHistory, AlumniDirectory, SkillsRelevance,
     CurriculumRelevance, PerceptionFurtherStudies, FeedbackRecommendations, Profile,
-    Following, Achievement, Education, Address
+    Following, Achievement, Education, Address, FieldPrivacySetting
 )
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -549,12 +549,55 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     profile = EnhancedProfileSerializer(read_only=True)
     work_histories = WorkHistorySerializer(many=True, read_only=True)
     achievements = AchievementSerializer(many=True, read_only=True)
-    education = EducationSerializer(many=True, read_only=True)
+    education = serializers.SerializerMethodField()
     real_time_status = serializers.SerializerMethodField()
+    
+    def get_education(self, obj):
+        """Explicitly get education records for the user"""
+        try:
+            from .models import Education
+            education_records = Education.objects.filter(user=obj)
+            print(f"🔍 DEBUG get_education: Found {education_records.count()} records for user {obj.id}")
+            
+            if education_records.exists():
+                for edu in education_records:
+                    print(f"  📚 {edu.field_of_study} at {edu.institution}")
+                
+                # Use the EducationSerializer defined in this file
+                serialized_data = EducationSerializer(education_records, many=True).data
+                print(f"🔍 Serialized education data: {serialized_data}")
+                return serialized_data
+            else:
+                print(f"🔍 No education records found for user {obj.id}")
+                return []
+        except Exception as e:
+            print(f"❌ Error in get_education: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
+    def to_representation(self, instance):
+        """Override to add debugging for education data"""
+        ret = super().to_representation(instance)
+        # Debug logging
+        print(f"=== SERIALIZER DEBUG for user {instance.id} ===")
+        print(f"Education queryset: {instance.education.all()}")
+        print(f"Education count: {instance.education.count()}")
+        if instance.education.exists():
+            for edu in instance.education.all():
+                print(f"  - {edu.field_of_study} at {edu.institution} ({edu.start_date} to {edu.end_date})")
+        print(f"Serialized education data: {ret.get('education', 'NO EDUCATION KEY')}")
+        return ret
     
     class Meta:
         model = CustomUser
-        fields = [field.name for field in CustomUser._meta.fields if field.name != 'password'] + [
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 'middle_name',
+            'user_type', 'sex', 'gender', 'civil_status', 'employment_status',
+            'is_approved', 'profile_picture', 'government_id', 'program',
+            'contact_number', 'birth_date', 'year_graduated', 'mothers_name',
+            'mothers_occupation', 'fathers_name', 'fathers_occupation',
+            'is_active', 'is_staff', 'is_superuser', 'last_login', 'date_joined',
             'profile', 'work_histories', 'achievements', 'education', 'real_time_status'
         ]
     
@@ -595,3 +638,28 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
                 'last_seen': None,
                 'is_online': False
             }
+
+
+class FieldPrivacySettingSerializer(serializers.ModelSerializer):
+    """Serializer for field privacy settings"""
+    class Meta:
+        model = FieldPrivacySetting
+        fields = ['field_name', 'visibility']
+        
+    def validate_visibility(self, value):
+        """Validate visibility choices"""
+        valid_choices = [choice[0] for choice in FieldPrivacySetting.VISIBILITY_CHOICES]
+        if value not in valid_choices:
+            raise serializers.ValidationError(f'"{value}" is not a valid visibility choice.')
+        return value
+
+
+class ProfileFieldUpdateSerializer(serializers.Serializer):
+    """Serializer for updating individual profile fields"""
+    field_name = serializers.CharField(max_length=100)
+    field_value = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    visibility = serializers.ChoiceField(
+        choices=FieldPrivacySetting.VISIBILITY_CHOICES, 
+        required=False,
+        default='alumni_only'
+    )

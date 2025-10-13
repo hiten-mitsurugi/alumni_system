@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-amber-50">
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center h-64">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
@@ -59,8 +59,18 @@
                   {{ user?.first_name }} {{ user?.middle_name }} {{ user?.last_name }}
                 </h1>
                 <p class="text-lg text-gray-600 mt-1">
-                  {{ profile?.headline || profile?.present_occupation || 'Alumni' }}
+                  {{ displayHeadline }}
                 </p>
+                
+                <!-- Education Info (derived from Education section) -->
+                <div v-if="displayEducationInfo" class="flex items-center text-gray-500 mt-2">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  {{ displayEducationInfo }}
+                </div>
+                
+                <!-- Location -->
                 <div class="flex items-center text-gray-500 mt-2">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -68,6 +78,8 @@
                   </svg>
                   {{ profile?.location || profile?.present_address || 'Location not specified' }}
                 </div>
+                
+                <!-- Connections -->
                 <div class="flex items-center text-gray-500 mt-1">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -125,9 +137,12 @@
           <!-- Education Section -->
           <ProfileEducationSection 
             :education="education" 
+            :profile="profile"
+            :user="user"
             :is-own-profile="isOwnProfile"
             @add="addEducation"
             @edit="editEducation"
+            @edit-profile="editProfile"
             @delete="deleteEducation"
           />
           
@@ -167,8 +182,6 @@
           <!-- Recent Activity (if own profile) -->
           <RecentActivityWidget v-if="isOwnProfile" />
           
-          <!-- Contact Info -->
-          <ContactInfoWidget :profile="profile" :user="user" />
         </div>
       </div>
     </div>
@@ -186,6 +199,38 @@
       v-if="showCoverModal"
       @close="showCoverModal = false"
       @save="updateCoverPhoto"
+    />
+
+    <!-- Education Modal -->
+    <EducationModal
+      v-if="showEducationModal"
+      :education="selectedEducation"
+      @close="closeEducationModal"
+      @save="saveEducation"
+    />
+
+    <!-- Experience Modal -->
+    <ExperienceModal
+      v-if="showExperienceModal"
+      :experience="selectedExperience"
+      @close="closeExperienceModal"
+      @save="saveExperience"
+    />
+
+    <!-- Skill Modal -->
+    <SkillModal
+      v-if="showSkillModal"
+      :skill="selectedSkill"
+      @close="closeSkillModal"
+      @save="saveSkill"
+    />
+
+    <!-- Achievement Modal -->
+    <AchievementModal
+      v-if="showAchievementModal"
+      :achievement="selectedAchievement"
+      @close="closeAchievementModal"
+      @save="saveAchievement"
     />
   </div>
 </template>
@@ -207,6 +252,10 @@ import RecentActivityWidget from '@/components/profile/RecentActivityWidget.vue'
 import ContactInfoWidget from '@/components/profile/ContactInfoWidget.vue'
 import EditProfileModal from '@/components/profile/EditProfileModal.vue'
 import CoverPhotoModal from '@/components/profile/CoverPhotoModal.vue'
+import EducationModal from '@/components/profile/EducationModal.vue'
+import ExperienceModal from '@/components/profile/ExperienceModal.vue'
+import SkillModal from '@/components/profile/SkillModal.vue'
+import AchievementModal from '@/components/profile/AchievementModal.vue'
 
 // Reactive data
 const route = useRoute()
@@ -217,6 +266,18 @@ const loading = ref(true)
 const followLoading = ref(false)
 const showEditModal = ref(false)
 const showCoverModal = ref(false)
+
+// Modal states for CRUD operations
+const showEducationModal = ref(false)
+const showExperienceModal = ref(false)
+const showSkillModal = ref(false)
+const showAchievementModal = ref(false)
+
+// Selected items for editing
+const selectedEducation = ref(null)
+const selectedExperience = ref(null)
+const selectedSkill = ref(null)
+const selectedAchievement = ref(null)
 
 const user = ref(null)
 const profile = ref(null)
@@ -248,6 +309,83 @@ const isOwnProfile = computed(() => {
 
 const profileUserId = computed(() => {
   return route.params.userIdentifier || authStore.user?.id
+})
+
+// Computed properties to derive profile info from detailed sections
+const currentEducation = computed(() => {
+  if (!education.value || education.value.length === 0) return null
+  
+  // Find current education (is_current = true) or most recent one
+  const current = education.value.find(edu => edu.is_current)
+  if (current) return current
+  
+  // If no current, get the most recent one by end_date or start_date
+  const sorted = [...education.value].sort((a, b) => {
+    const dateA = new Date(a.end_date || a.start_date || '1900-01-01')
+    const dateB = new Date(b.end_date || b.start_date || '1900-01-01')
+    return dateB - dateA
+  })
+  
+  return sorted[0]
+})
+
+const currentJob = computed(() => {
+  if (!workHistories.value || workHistories.value.length === 0) return null
+  
+  // Find current job (job_type = 'current_job') or most recent one
+  const current = workHistories.value.find(work => work.job_type === 'current_job')
+  if (current) return current
+  
+  // If no current job, get the most recent one by end_date or start_date
+  const sorted = [...workHistories.value].sort((a, b) => {
+    const dateA = new Date(a.end_date || a.start_date || '1900-01-01')
+    const dateB = new Date(b.end_date || b.start_date || '1900-01-01')
+    return dateB - dateA
+  })
+  
+  return sorted[0]
+})
+
+const displayHeadline = computed(() => {
+  // Priority: Profile headline > Current job title > Current education > Default
+  if (profile.value?.headline) {
+    return profile.value.headline
+  }
+  
+  if (currentJob.value) {
+    return `${currentJob.value.occupation} at ${currentJob.value.employing_agency}`
+  }
+  
+  if (currentEducation.value) {
+    const degree = currentEducation.value.degree_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Student'
+    const field = currentEducation.value.field_of_study ? ` in ${currentEducation.value.field_of_study}` : ''
+    return `${degree}${field}`
+  }
+  
+  return 'Alumni'
+})
+
+const displayEducationInfo = computed(() => {
+  if (currentEducation.value) {
+    const degree = currentEducation.value.degree_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''
+    const field = currentEducation.value.field_of_study || ''
+    const institution = currentEducation.value.institution || ''
+    
+    if (degree && field && institution) {
+      return `${degree} in ${field} from ${institution}`
+    } else if (degree && institution) {
+      return `${degree} from ${institution}`
+    } else if (institution) {
+      return institution
+    }
+  }
+  
+  // Fallback to user basic info if available
+  if (user.value?.program && user.value?.year_graduated) {
+    return `${user.value.program} (Class of ${user.value.year_graduated})`
+  }
+  
+  return null
 })
 
 // Methods
@@ -431,52 +569,211 @@ const editAbout = () => {
   showEditModal.value = true
 }
 
+// Education CRUD handlers
 const addEducation = () => {
-  // Implement add education
+  selectedEducation.value = null
+  showEducationModal.value = true
 }
 
 const editEducation = (education) => {
-  // Implement edit education
+  selectedEducation.value = education
+  showEducationModal.value = true
 }
 
-const deleteEducation = (educationId) => {
-  // Implement delete education
+const deleteEducation = async (educationId) => {
+  if (!confirm('Are you sure you want to delete this education record?')) {
+    return
+  }
+  
+  try {
+    await api.delete(`/auth/education/${educationId}/`)
+    await fetchProfile() // Refresh data
+  } catch (error) {
+    console.error('Error deleting education:', error)
+    alert('Failed to delete education record')
+  }
 }
 
+const closeEducationModal = () => {
+  showEducationModal.value = false
+  selectedEducation.value = null
+}
+
+const saveEducation = async (educationData) => {
+  try {
+    if (selectedEducation.value) {
+      // Update existing education
+      await api.put(`/auth/education/${selectedEducation.value.id}/`, educationData)
+    } else {
+      // Create new education
+      await api.post('/auth/education/', educationData)
+    }
+    
+    closeEducationModal()
+    await fetchProfile() // Refresh data
+  } catch (error) {
+    console.error('Error saving education:', error)
+    alert('Failed to save education record')
+  }
+}
+
+// Experience CRUD handlers
 const addExperience = () => {
-  // Implement add experience
+  selectedExperience.value = null
+  showExperienceModal.value = true
 }
 
 const editExperience = (experience) => {
-  // Implement edit experience
+  selectedExperience.value = experience
+  showExperienceModal.value = true
 }
 
-const deleteExperience = (experienceId) => {
-  // Implement delete experience
+const deleteExperience = async (experienceId) => {
+  if (!confirm('Are you sure you want to delete this work experience?')) {
+    return
+  }
+  
+  try {
+    await api.delete(`/auth/work-history/${experienceId}/`)
+    await fetchProfile() // Refresh data
+  } catch (error) {
+    console.error('Error deleting experience:', error)
+    alert('Failed to delete work experience')
+  }
 }
 
+const closeExperienceModal = () => {
+  showExperienceModal.value = false
+  selectedExperience.value = null
+}
+
+const saveExperience = async (experienceData) => {
+  try {
+    if (selectedExperience.value) {
+      // Update existing experience
+      await api.put(`/auth/work-history/${selectedExperience.value.id}/`, experienceData)
+    } else {
+      // Create new experience
+      await api.post('/auth/work-history/', experienceData)
+    }
+    
+    closeExperienceModal()
+    await fetchProfile() // Refresh data
+  } catch (error) {
+    console.error('Error saving experience:', error)
+    alert('Failed to save work experience')
+  }
+}
+
+// Skill CRUD handlers
 const addSkill = () => {
-  // Implement add skill
+  selectedSkill.value = null
+  showSkillModal.value = true
 }
 
 const editSkill = (skill) => {
-  // Implement edit skill
+  selectedSkill.value = skill
+  showSkillModal.value = true
 }
 
-const deleteSkill = (skillId) => {
-  // Implement delete skill
+const deleteSkill = async (skillId) => {
+  if (!confirm('Are you sure you want to remove this skill?')) {
+    return
+  }
+  
+  try {
+    // For skills, we need to remove it from work histories or implement a user-skill relationship
+    // Since skills are linked through work histories, we'll need to handle this differently
+    console.log('Skill deletion needs to be implemented based on your data model')
+    alert('Skill deletion functionality needs to be implemented')
+  } catch (error) {
+    console.error('Error deleting skill:', error)
+    alert('Failed to delete skill')
+  }
 }
 
+const closeSkillModal = () => {
+  showSkillModal.value = false
+  selectedSkill.value = null
+}
+
+const saveSkill = async (skillData) => {
+  try {
+    // Create the skill if it doesn't exist
+    await api.post('/auth/skills/', skillData)
+    
+    closeSkillModal()
+    await fetchProfile() // Refresh data
+  } catch (error) {
+    console.error('Error saving skill:', error)
+    alert('Failed to save skill')
+  }
+}
+
+// Achievement CRUD handlers
 const addAchievement = () => {
-  // Implement add achievement
+  selectedAchievement.value = null
+  showAchievementModal.value = true
 }
 
 const editAchievement = (achievement) => {
-  // Implement edit achievement
+  selectedAchievement.value = achievement
+  showAchievementModal.value = true
 }
 
-const deleteAchievement = (achievementId) => {
-  // Implement delete achievement
+const deleteAchievement = async (achievementId) => {
+  if (!confirm('Are you sure you want to delete this achievement?')) {
+    return
+  }
+  
+  try {
+    await api.delete(`/auth/achievements/${achievementId}/`)
+    await fetchProfile() // Refresh data
+  } catch (error) {
+    console.error('Error deleting achievement:', error)
+    alert('Failed to delete achievement')
+  }
+}
+
+const closeAchievementModal = () => {
+  showAchievementModal.value = false
+  selectedAchievement.value = null
+}
+
+const saveAchievement = async (achievementData) => {
+  try {
+    if (selectedAchievement.value) {
+      // Update existing achievement
+      const formData = new FormData()
+      Object.keys(achievementData).forEach(key => {
+        if (achievementData[key] !== null && achievementData[key] !== undefined) {
+          formData.append(key, achievementData[key])
+        }
+      })
+      
+      await api.put(`/auth/achievements/${selectedAchievement.value.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+    } else {
+      // Create new achievement
+      const formData = new FormData()
+      Object.keys(achievementData).forEach(key => {
+        if (achievementData[key] !== null && achievementData[key] !== undefined) {
+          formData.append(key, achievementData[key])
+        }
+      })
+      
+      await api.post('/auth/achievements/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+    }
+    
+    closeAchievementModal()
+    await fetchProfile() // Refresh data
+  } catch (error) {
+    console.error('Error saving achievement:', error)
+    alert('Failed to save achievement')
+  }
 }
 
 const handleConnect = (userId) => {

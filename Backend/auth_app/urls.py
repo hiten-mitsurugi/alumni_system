@@ -9,13 +9,19 @@ from .views import (
     AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView, DebugUsersView, ClearCacheView,
     CheckEmailExistsView, AdminAnalyticsView,
     # LinkedIn-style views
-    EnhancedProfileView, FollowUserView, UserConnectionsView, AchievementListCreateView,
+    FollowUserView, UserConnectionsView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
     SuggestedConnectionsView, UserByNameView, InvitationAcceptView, InvitationRejectView,
     # Additional views for comprehensive model coverage (temporarily commented out)
     # AddressListCreateView, AddressDetailView, SkillsRelevanceView, CurriculumRelevanceView,
     # PerceptionStudiesView, FeedbackView
 )
+
+# Import the working EnhancedProfileView from profile_social module
+from .views.profile_social import EnhancedProfileView
+
+# Import field privacy views
+from .views_field_privacy import ProfileFieldUpdateView, ProfileAboutDataView, UserAddressesView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -82,9 +88,13 @@ urlpatterns = [
     # JWT token refresh endpoint for frontend
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
-    # Address endpoints (temporarily commented out)
-    # path('addresses/', AddressListCreateView.as_view(), name='address_list_create'),
-    # path('addresses/<int:pk>/', AddressDetailView.as_view(), name='address_detail'),
+    # Field Privacy and Profile Update endpoints
+    path('profile/field-update/', ProfileFieldUpdateView.as_view(), name='profile_field_update'),
+    path('profile/about-data/', ProfileAboutDataView.as_view(), name='profile_about_data'),
+    path('profile/about-data/<int:user_id>/', ProfileAboutDataView.as_view(), name='profile_about_data_user'),
+    
+    # Address endpoints
+    path('profile/<int:user_id>/addresses/', UserAddressesView.as_view(), name='user_addresses'),
     
     # Survey and questionnaire endpoints (temporarily commented out)
     # path('skills-relevance/', SkillsRelevanceView.as_view(), name='skills_relevance'),

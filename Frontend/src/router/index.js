@@ -136,9 +136,9 @@ const routes = [
         component: () => import('../views/Alumni/MyProfile.vue'),
       },
       {
-        path: 'profile/:userIdentifier?',
+        path: 'profile/:userIdentifier',
         name: 'AlumniProfile',
-        component: () => import('../views/Alumni/MyProfile.vue'),
+        component: () => import('../views/Alumni/UserProfile.vue'),
       },
       {
         path: 'my-mates',
