@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-6 border-b">
@@ -19,6 +19,25 @@
       <!-- Modal Body -->
       <div class="p-6">
         <form @submit.prevent="handleSubmit" class="space-y-4">
+          <!-- Category (Required First) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Category *
+            </label>
+            <select
+              v-model="form.category"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="">Select category</option>
+              <option value="technical">Technical</option>
+              <option value="soft_skills">Soft Skills</option>
+              <option value="languages">Languages</option>
+              <option value="tools">Tools & Software</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
           <!-- Skill Name -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -30,49 +49,7 @@
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="Enter skill name"
-              list="skill-suggestions"
             />
-            <!-- Datalist for skill suggestions -->
-            <datalist id="skill-suggestions">
-              <option value="JavaScript"></option>
-              <option value="Python"></option>
-              <option value="Java"></option>
-              <option value="C++"></option>
-              <option value="SQL"></option>
-              <option value="HTML/CSS"></option>
-              <option value="React"></option>
-              <option value="Vue.js"></option>
-              <option value="Node.js"></option>
-              <option value="Django"></option>
-              <option value="Project Management"></option>
-              <option value="Data Analysis"></option>
-              <option value="Microsoft Office"></option>
-              <option value="Photoshop"></option>
-              <option value="Leadership"></option>
-              <option value="Communication"></option>
-              <option value="Problem Solving"></option>
-              <option value="Critical Thinking"></option>
-              <option value="Team Work"></option>
-              <option value="Time Management"></option>
-            </datalist>
-          </div>
-
-          <!-- Skill Category (Optional) -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <select
-              v-model="form.category"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="">Select category</option>
-              <option value="technical">Technical</option>
-              <option value="soft_skills">Soft Skills</option>
-              <option value="languages">Languages</option>
-              <option value="tools">Tools & Software</option>
-              <option value="other">Other</option>
-            </select>
           </div>
 
           <!-- Proficiency Level -->
@@ -167,8 +144,7 @@ const handleSubmit = async () => {
   try {
     const skillData = { ...form }
     
-    // Convert empty strings to null for optional fields
-    if (!skillData.category) skillData.category = null
+    // Convert empty strings to null for optional fields (category is now required)
     if (!skillData.proficiency) skillData.proficiency = null
     if (!skillData.description) skillData.description = null
     

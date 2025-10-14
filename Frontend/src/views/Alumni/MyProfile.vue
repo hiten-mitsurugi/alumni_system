@@ -466,13 +466,8 @@ const fetchProfile = async () => {
     workHistories.value = data.work_histories || []
     achievements.value = data.achievements || []
     
-    // Extract skills from work histories
-    skills.value = workHistories.value.reduce((acc, work) => {
-      if (work.skills) {
-        acc.push(...work.skills)
-      }
-      return acc
-    }, [])
+    // Load user skills separately
+    await loadUserSkills()
     
     // Set social data
     if (profile.value) {
@@ -483,6 +478,18 @@ const fetchProfile = async () => {
     console.error('Error fetching profile:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// Load user skills from the new UserSkill API
+const loadUserSkills = async () => {
+  try {
+    const endpoint = isOwnProfile.value ? '/user-skills/' : `/user-skills/user/${profileUserId.value}/`
+    const response = await api.get(`/auth${endpoint}`)
+    skills.value = response.data || []
+  } catch (error) {
+    console.error('Error loading user skills:', error)
+    skills.value = []
   }
 }
 
@@ -697,10 +704,9 @@ const deleteSkill = async (skillId) => {
   }
   
   try {
-    // For skills, we need to remove it from work histories or implement a user-skill relationship
-    // Since skills are linked through work histories, we'll need to handle this differently
-    console.log('Skill deletion needs to be implemented based on your data model')
-    alert('Skill deletion functionality needs to be implemented')
+    await api.delete(`/auth/user-skills/${skillId}/`)
+    await loadUserSkills() // Reload skills after deletion
+    alert('Skill removed successfully!')
   } catch (error) {
     console.error('Error deleting skill:', error)
     alert('Failed to delete skill')
@@ -714,11 +720,17 @@ const closeSkillModal = () => {
 
 const saveSkill = async (skillData) => {
   try {
-    // Create the skill if it doesn't exist
-    await api.post('/auth/skills/', skillData)
+    if (selectedSkill.value) {
+      // Update existing skill
+      await api.put(`/auth/user-skills/${selectedSkill.value.id}/`, skillData)
+    } else {
+      // Create new skill
+      await api.post('/auth/user-skills/', skillData)
+    }
     
     closeSkillModal()
-    await fetchProfile() // Refresh data
+    await loadUserSkills() // Refresh skills data
+    alert('Skill saved successfully!')
   } catch (error) {
     console.error('Error saving skill:', error)
     alert('Failed to save skill')
@@ -757,37 +769,82 @@ const closeAchievementModal = () => {
 
 const saveAchievement = async (achievementData) => {
   try {
-    if (selectedAchievement.value) {
-      // Update existing achievement
-      const formData = new FormData()
-      Object.keys(achievementData).forEach(key => {
-        if (achievementData[key] !== null && achievementData[key] !== undefined) {
-          formData.append(key, achievementData[key])
-        }
-      })
+    console.log('🔍 Raw achievementData received:', achievementData)
+    
+    const formData = new FormData()
+    
+    // Add all fields to FormData with proper handling
+    Object.keys(achievementData).forEach(key => {
+      const value = achievementData[key]
+      console.log(`🔍 Processing field: ${key} = ${value} (type: ${typeof value})`)
       
-      await api.put(`/auth/achievements/${selectedAchievement.value.id}/`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-    } else {
-      // Create new achievement
-      const formData = new FormData()
-      Object.keys(achievementData).forEach(key => {
-        if (achievementData[key] !== null && achievementData[key] !== undefined) {
-          formData.append(key, achievementData[key])
-        }
-      })
+      // Always add critical fields (type, url, is_featured) even if empty
+      const criticalFields = ['type', 'url', 'is_featured']
       
-      await api.post('/auth/achievements/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      if (value !== null && value !== undefined) {
+        // Handle file uploads
+        if (key === 'attachment' && value instanceof File) {
+          formData.append(key, value)
+          console.log(`📎 Added file: ${key} = ${value.name}`)
+        } 
+        // Handle other fields
+        else if (key !== 'attachment') {
+          const stringValue = String(value)
+          formData.append(key, stringValue)
+          console.log(`📝 Added field: ${key} = "${stringValue}"`)
+        }
+      } else {
+        // For critical fields, send empty string instead of skipping
+        if (criticalFields.includes(key)) {
+          formData.append(key, '')
+          console.log(`📝 Added empty critical field: ${key} = ""`)
+        } else {
+          console.log(`⚠️ Skipped null/undefined field: ${key}`)
+        }
+      }
+    })
+    
+    // Log all FormData entries
+    console.log('📤 FormData entries:')
+    for (let [key, value] of formData.entries()) {
+      console.log(`  ${key}: ${value}`)
     }
     
+    let response
+    if (selectedAchievement.value) {
+      // Update existing achievement
+      console.log(`🔄 Updating achievement ID: ${selectedAchievement.value.id}`)
+      response = await api.put(`/auth/achievements/${selectedAchievement.value.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      console.log('✅ Update API response:', response.data)
+    } else {
+      // Create new achievement  
+      console.log('🆕 Creating new achievement via API')
+      response = await api.post('/auth/achievements/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      console.log('✅ Create API response:', response.data)
+    }
+    
+    // Show success message
+    const action = selectedAchievement.value ? 'updated' : 'created'
+    console.log(`Achievement ${action} successfully:`, response.data)
+    
     closeAchievementModal()
-    await fetchProfile() // Refresh data
+    await fetchProfile() // Refresh data to show changes
+    
   } catch (error) {
     console.error('Error saving achievement:', error)
-    alert('Failed to save achievement')
+    
+    // More specific error handling
+    if (error.response?.status === 400) {
+      alert('Please check all fields and try again. Make sure required fields are filled.')
+    } else if (error.response?.status === 413) {
+      alert('File size too large. Please upload a smaller file.')
+    } else {
+      alert('Failed to save achievement. Please try again.')
+    }
   }
 }
 

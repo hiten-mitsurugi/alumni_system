@@ -14,61 +14,71 @@
       </button>
     </div>
 
-    <div v-if="achievements && achievements.length > 0" class="space-y-6">
+    <div v-if="achievements && achievements.length > 0" class="space-y-8">
       <!-- Featured Achievements First -->
-      <div v-if="featuredAchievements.length > 0" class="space-y-4">
-        <h3 class="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-          <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-          <span>Featured</span>
-        </h3>
+      <div v-if="featuredAchievements.length > 0" class="space-y-6">
+        <div class="flex items-center space-x-3">
+          <div class="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900">Featured Achievements</h3>
+          <div class="flex-1 h-px bg-gradient-to-r from-yellow-300 to-transparent"></div>
+        </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div 
+        <div class="space-y-6">
+          <AchievementCard 
             v-for="achievement in featuredAchievements" 
             :key="achievement.id"
-            class="border border-yellow-200 bg-yellow-50 rounded-lg p-4 hover:shadow-md transition-shadow"
-          >
-            <AchievementCard 
-              :achievement="achievement" 
-              :is-own-profile="isOwnProfile"
-              :is-featured="true"
-              @edit="$emit('edit', achievement)"
-              @delete="$emit('delete', achievement.id)"
-            />
-          </div>
+            :achievement="achievement" 
+            :is-own-profile="isOwnProfile"
+            :is-featured="true"
+            @edit="$emit('edit', achievement)"
+            @delete="$emit('delete', achievement.id)"
+          />
         </div>
       </div>
 
       <!-- Regular Achievements -->
-      <div v-if="regularAchievements.length > 0" class="space-y-4">
-        <h3 v-if="featuredAchievements.length > 0" class="text-lg font-semibold text-gray-900">
-          All Achievements
-        </h3>
+      <div v-if="regularAchievements.length > 0" class="space-y-6">
+        <div v-if="featuredAchievements.length > 0" class="flex items-center space-x-3">
+          <div class="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 16L3 21l5.25-1.875L12 21l3.75-1.875L21 21l-2-5 1-11H4l1 11zm7-11a2 2 0 100 4 2 2 0 000-4z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900">All Achievements</h3>
+          <div class="flex-1 h-px bg-gradient-to-r from-green-300 to-transparent"></div>
+        </div>
         
-        <div class="space-y-4">
-          <div 
+        <div class="space-y-6">
+          <AchievementCard 
             v-for="achievement in displayedAchievements" 
             :key="achievement.id"
-            class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-          >
-            <AchievementCard 
-              :achievement="achievement" 
-              :is-own-profile="isOwnProfile"
-              @edit="$emit('edit', achievement)"
-              @delete="$emit('delete', achievement.id)"
-            />
-          </div>
+            :achievement="achievement" 
+            :is-own-profile="isOwnProfile"
+            @edit="$emit('edit', achievement)"
+            @delete="$emit('delete', achievement.id)"
+          />
         </div>
 
         <!-- Show More/Less Button -->
-        <div v-if="regularAchievements.length > 5" class="text-center pt-4 border-t border-gray-200">
+        <div v-if="regularAchievements.length > 5" class="text-center pt-6">
           <button 
             @click="showAllAchievements = !showAllAchievements"
-            class="text-green-600 hover:text-green-700 font-medium"
+            class="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full hover:from-green-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            {{ showAllAchievements ? 'Show less' : `Show all ${regularAchievements.length} achievements` }}
+            <span>{{ showAllAchievements ? 'Show Less' : `Show All ${regularAchievements.length} Achievements` }}</span>
+            <svg 
+              class="w-4 h-4 transition-transform duration-300" 
+              :class="{ 'rotate-180': showAllAchievements }"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
           </button>
         </div>
       </div>
@@ -77,16 +87,22 @@
     <!-- Empty state -->
     <div v-else-if="isOwnProfile" class="text-gray-500 text-center py-8">
       <div class="mb-4">
-        <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-        </svg>
+        <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+          <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
       </div>
-      <p class="mb-3">Add your achievements to showcase your accomplishments and recognition.</p>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No achievements yet</h3>
+      <p class="mb-4">Showcase your accomplishments, certifications, awards, and recognition.</p>
       <button 
         @click="$emit('add')"
-        class="text-green-600 hover:text-green-700 font-medium"
+        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
       >
-        Add Achievement
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Add Your First Achievement
       </button>
     </div>
 

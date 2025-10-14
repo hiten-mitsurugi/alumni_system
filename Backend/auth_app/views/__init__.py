@@ -15,7 +15,8 @@ try:
         ProfileSearchView, SuggestedConnectionsView, UserByNameView
     )
     from .skills_work import (
-        SkillListCreateView, WorkHistoryListCreateView, WorkHistoryDetailView,
+        SkillListCreateView, UserSkillListCreateView, UserSkillDetailView, 
+        WorkHistoryListCreateView, WorkHistoryDetailView,
         AchievementListCreateView, AchievementDetailView, EducationListCreateView,
         EducationDetailView
     )
@@ -62,7 +63,8 @@ __all__ = [
     'ProfileSearchView', 'SuggestedConnectionsView', 'UserByNameView',
     
     # Skills & Work
-    'SkillListCreateView', 'WorkHistoryListCreateView', 'WorkHistoryDetailView',
+    'SkillListCreateView', 'UserSkillListCreateView', 'UserSkillDetailView',
+    'WorkHistoryListCreateView', 'WorkHistoryDetailView',
     'AchievementListCreateView', 'AchievementDetailView', 'EducationListCreateView',
     'EducationDetailView',
     

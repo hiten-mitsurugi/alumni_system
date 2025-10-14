@@ -189,6 +189,37 @@ class Skill(models.Model):
     def __str__(self):
         return self.name
 
+class UserSkill(models.Model):
+    CATEGORY_CHOICES = (
+        ('technical', 'Technical'),
+        ('soft_skills', 'Soft Skills'),
+        ('languages', 'Languages'),
+        ('tools', 'Tools & Software'),
+        ('other', 'Other'),
+    )
+    
+    PROFICIENCY_CHOICES = (
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Intermediate'),
+        ('advanced', 'Advanced'),
+        ('expert', 'Expert'),
+    )
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='user_skills')
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    proficiency = models.CharField(max_length=20, choices=PROFICIENCY_CHOICES, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['user', 'name', 'category']
+        ordering = ['category', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.category}) - {self.user.username}"
+
 class WorkHistory(models.Model):
     CLASSIFICATION_CHOICES = (
         ('government', 'Government'),

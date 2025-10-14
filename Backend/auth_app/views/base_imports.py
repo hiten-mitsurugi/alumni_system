@@ -1,7 +1,7 @@
 # Common imports shared across all view modules
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, serializers
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -29,14 +29,14 @@ import uuid
 from auth_app.models import (
     CustomUser, Skill, WorkHistory, AlumniDirectory, Profile, Address, 
     SkillsRelevance, CurriculumRelevance, PerceptionFurtherStudies, 
-    FeedbackRecommendations
+    FeedbackRecommendations, UserSkill
 )
 from auth_app.status_cache import set_user_online, set_user_offline, get_user_status
 from auth_app.serializers import (
     RegisterSerializer, UserDetailSerializer, UserCreateSerializer,
     SkillSerializer, WorkHistorySerializer, AlumniDirectoryCheckSerializer,
     ProfileSerializer, UserSearchSerializer, AlumniDirectorySerializer,
-    AddressSerializer, EnhancedUserDetailSerializer
+    AddressSerializer, EnhancedUserDetailSerializer, UserSkillSerializer
 )
 from auth_app.permissions import IsAdminOrSuperAdmin
 from auth_app.utils import generate_token, confirm_token

@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     LoginView, RegisterView, UserCreateView, ApproveUserView, ApprovedAlumniListView, RejectUserView,
-    ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView,
+    ConfirmTokenView, UserDetailView, LogoutView, SkillListCreateView, UserSkillListCreateView, UserSkillDetailView,
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
     ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView,
     AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView, DebugUsersView, ClearCacheView,
@@ -39,6 +39,8 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('approved-users/', ApprovedAlumniListView.as_view(), name='approved-users'),
     path('skills/', SkillListCreateView.as_view(), name='skills'),
+    path('user-skills/', UserSkillListCreateView.as_view(), name='user_skills_list_create'),
+    path('user-skills/<int:pk>/', UserSkillDetailView.as_view(), name='user_skill_detail'),
     path('work-history/', WorkHistoryListCreateView.as_view(), name='work_history_list_create'),
     path('work-history/<int:pk>/', WorkHistoryDetailView.as_view(), name='work_history_detail'),
     path('block-user/<int:user_id>/', BlockUserView.as_view(), name='block_user'),

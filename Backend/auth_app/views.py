@@ -553,6 +553,23 @@ class SkillListCreateView(ListCreateAPIView):
         cache.set(cache_key, queryset, timeout=3600)
         return queryset
 
+class UserSkillListCreateView(ListCreateAPIView):
+    serializer_class = UserSkillSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return UserSkill.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class UserSkillDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = UserSkillSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return UserSkill.objects.filter(user=self.request.user)
+
 class WorkHistoryListCreateView(ListCreateAPIView):
     serializer_class = WorkHistorySerializer
     permission_classes = [IsAuthenticated]
@@ -1479,8 +1496,16 @@ class AchievementListCreateView(ListCreateAPIView):
     """List and create achievements for authenticated user"""
     permission_classes = [IsAuthenticated]
     
+    def post(self, request, *args, **kwargs):
+        print(f"🚨 AchievementListCreateView.post() called!")
+        print(f"🚨 Request path: {request.path}")
+        print(f"🚨 Request method: {request.method}")
+        print(f"🚨 Request user: {request.user}")
+        return super().post(request, *args, **kwargs)
+    
     def get_serializer_class(self):
         from .serializers import AchievementSerializer
+        print(f"🚨 AchievementListCreateView.get_serializer_class() called - returning AchievementSerializer")
         return AchievementSerializer
     
     def get_queryset(self):
@@ -1491,7 +1516,24 @@ class AchievementListCreateView(ListCreateAPIView):
         return Achievement.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        print(f"🔍 DEBUG: Creating achievement for user {self.request.user.id}")
+        print(f"🔍 DEBUG: Request.POST: {dict(self.request.POST)}")
+        print(f"🔍 DEBUG: Request.FILES: {dict(self.request.FILES)}")
+        print(f"🔍 DEBUG: Request.data: {self.request.data}")
+        print(f"🔍 DEBUG: Request content_type: {self.request.content_type}")
+        print(f"🔍 DEBUG: Serializer validated_data: {serializer.validated_data}")
+        
+        # Check if critical fields are in validated_data
+        critical_fields = ['type', 'url', 'attachment']
+        for field in critical_fields:
+            if field in serializer.validated_data:
+                print(f"✅ DEBUG: {field} found in validated_data: {serializer.validated_data[field]}")
+            else:
+                print(f"❌ DEBUG: {field} MISSING from validated_data!")
+        
+        achievement = serializer.save(user=self.request.user)
+        print(f"✅ DEBUG: Created achievement: {achievement.__dict__}")
+        return achievement
 
 
 class AchievementDetailView(RetrieveUpdateDestroyAPIView):

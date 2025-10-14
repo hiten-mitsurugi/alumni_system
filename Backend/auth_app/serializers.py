@@ -6,7 +6,7 @@ import re
 import json
 
 from .models import (
-    CustomUser, Skill, WorkHistory, AlumniDirectory, SkillsRelevance,
+    CustomUser, Skill, UserSkill, WorkHistory, AlumniDirectory, SkillsRelevance,
     CurriculumRelevance, PerceptionFurtherStudies, FeedbackRecommendations, Profile,
     Following, Achievement, Education, Address, FieldPrivacySetting
 )
@@ -99,6 +99,11 @@ class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ['id', 'name']
+
+class UserSkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSkill
+        exclude = ['user']
 
 class WorkHistorySerializer(serializers.ModelSerializer):
     skills = SkillSerializer(many=True, required=False)
@@ -486,6 +491,28 @@ class AchievementSerializer(serializers.ModelSerializer):
         model = Achievement
         fields = '__all__'
         read_only_fields = ['user', 'created_at', 'updated_at']
+    
+    def to_internal_value(self, data):
+        print(f"🔍 AchievementSerializer.to_internal_value() received data: {data}")
+        print(f"🔍 AchievementSerializer.to_internal_value() data type: {type(data)}")
+        
+        # Log each field individually
+        for field_name in ['title', 'type', 'url', 'attachment', 'organization', 'description', 'is_featured']:
+            if field_name in data:
+                field_value = data[field_name]
+                print(f"🔍 Field '{field_name}': {field_value} (type: {type(field_value)})")
+            else:
+                print(f"❌ Field '{field_name}': MISSING from input data!")
+        
+        result = super().to_internal_value(data)
+        print(f"✅ AchievementSerializer.to_internal_value() result: {result}")
+        return result
+        
+    def create(self, validated_data):
+        print(f"🔍 AchievementSerializer.create() validated_data: {validated_data}")
+        achievement = super().create(validated_data)
+        print(f"✅ AchievementSerializer.create() created: {achievement.__dict__}")
+        return achievement
 
 
 class EducationSerializer(serializers.ModelSerializer):
