@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg p-6">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">About</h2>
+      <h2 class="text-2xl font-bold text-gray-900">Contact Information</h2>
       <div v-if="isOwnProfile" class="flex items-center gap-2">
       </div>
     </div>
@@ -9,108 +9,83 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-8">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-      <span class="ml-3 text-gray-600">Loading profile data...</span>
+      <span class="ml-3 text-gray-600">Loading contact information...</span>
     </div>
 
-    <!-- About Information List -->
+    <!-- Contact Information List -->
     <div v-else class="space-y-0">
-      <!-- Professional Headline -->
+      <!-- Contact Numbers -->
       <AboutItem
-        v-if="fieldData['headline']"
-        icon="briefcase"
-        :field-data="fieldData['headline']"
-        :field-name="'headline'"
-        :field-label="'Professional Headline'"
-        :is-own-profile="isOwnProfile"
-        @update-field="updateField"
-        @toggle-visibility="toggleVisibility"
-      />
-
-      <!-- Bio -->
-      <AboutItem
-        v-if="fieldData['bio']"
-        icon="document-text"
-        :field-data="fieldData['bio']"
-        :field-name="'bio'"
-        :field-label="'Bio'"
-        :is-own-profile="isOwnProfile"
-        :is-text-area="true"
-        @update-field="updateField"
-        @toggle-visibility="toggleVisibility"
-      />
-
-      <!-- Location -->
-      <AboutItem
-        v-if="fieldData['location']"
-        icon="map-pin"
-        :field-data="fieldData['location']"
-        :field-name="'location'"
-        :field-label="'Location'"
-        :is-own-profile="isOwnProfile"
-        @update-field="updateField"
-        @toggle-visibility="toggleVisibility"
-      />
-
-      <!-- Addresses -->
-      <AboutItem
-        v-if="fieldData['present_address']"
-        icon="home"
-        :field-data="fieldData['present_address']"
-        :field-name="'present_address'"
-        :field-label="'Present Address'"
+        v-if="fieldData['contact_number']"
+        icon="phone"
+        :field-data="fieldData['contact_number']"
+        :field-name="'contact_number'"
+        :field-label="'Contact Number'"
         :is-own-profile="isOwnProfile"
         @update-field="updateField"
         @toggle-visibility="toggleVisibility"
       />
 
       <AboutItem
-        v-if="fieldData['permanent_address']"
-        icon="building-office"
-        :field-data="fieldData['permanent_address']"
-        :field-name="'permanent_address'"
-        :field-label="'Permanent Address'"
+        v-if="fieldData['mobile_number']"
+        icon="device-phone-mobile"
+        :field-data="fieldData['mobile_number']"
+        :field-name="'mobile_number'"
+        :field-label="'Mobile Number'"
         :is-own-profile="isOwnProfile"
         @update-field="updateField"
         @toggle-visibility="toggleVisibility"
       />
 
-      <!-- Birth Date -->
+      <!-- Social Media Links -->
       <AboutItem
-        v-if="fieldData['birth_date']"
-        icon="cake"
-        :field-data="fieldData['birth_date']"
-        :field-name="'birth_date'"
-        :field-label="'Birthday'"
+        v-if="fieldData['linkedin_url']"
+        icon="linkedin"
+        :field-data="fieldData['linkedin_url']"
+        :field-name="'linkedin_url'"
+        :field-label="'LinkedIn'"
         :is-own-profile="isOwnProfile"
+        :is-url="true"
         @update-field="updateField"
         @toggle-visibility="toggleVisibility"
       />
 
-      <!-- Gender -->
       <AboutItem
-        v-if="fieldData['gender']"
-        icon="user"
-        :field-data="fieldData['gender']"
-        :field-name="'gender'"
-        :field-label="'Gender'"
+        v-if="fieldData['facebook_url']"
+        icon="facebook"
+        :field-data="fieldData['facebook_url']"
+        :field-name="'facebook_url'"
+        :field-label="'Facebook'"
         :is-own-profile="isOwnProfile"
+        :is-url="true"
         @update-field="updateField"
         @toggle-visibility="toggleVisibility"
       />
 
-      <!-- Civil Status -->
       <AboutItem
-        v-if="fieldData['civil_status']"
-        icon="heart"
-        :field-data="fieldData['civil_status']"
-        :field-name="'civil_status'"
-        :field-label="'Civil Status'"
+        v-if="fieldData['instagram_url']"
+        icon="instagram"
+        :field-data="fieldData['instagram_url']"
+        :field-name="'instagram_url'"
+        :field-label="'Instagram'"
         :is-own-profile="isOwnProfile"
+        :is-url="true"
         @update-field="updateField"
         @toggle-visibility="toggleVisibility"
       />
 
-      <!-- Website -->
+      <AboutItem
+        v-if="fieldData['twitter_url']"
+        icon="twitter"
+        :field-data="fieldData['twitter_url']"
+        :field-name="'twitter_url'"
+        :field-label="'Twitter'"
+        :is-own-profile="isOwnProfile"
+        :is-url="true"
+        @update-field="updateField"
+        @toggle-visibility="toggleVisibility"
+      />
+
       <AboutItem
         v-if="fieldData['website_url']"
         icon="globe-alt"
@@ -124,19 +99,19 @@
       />
 
       <!-- Empty state for own profile -->
-      <div v-if="isOwnProfile && !hasAboutInfo" class="text-gray-500 text-center py-8">
+      <div v-if="isOwnProfile && !hasContactInfo" class="text-gray-500 text-center py-8">
         <div class="mb-4">
           <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
         </div>
-        <p class="mb-3">Tell people about yourself by adding your bio and personal information.</p>
+        <p class="mb-3">Add your contact information to help people connect with you.</p>
         <p class="text-sm text-gray-400">Click on any field above to add information.</p>
       </div>
 
       <!-- Empty state for visitors -->
-      <div v-else-if="!hasAboutInfo" class="text-gray-500 text-center py-4">
-        <p>No about information available.</p>
+      <div v-else-if="!hasContactInfo" class="text-gray-500 text-center py-4">
+        <p>No contact information available.</p>
       </div>
     </div>
 
@@ -152,7 +127,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { PlusIcon } from '@heroicons/vue/24/outline'
 import api from '../../services/api'
 import AboutItem from './AboutItem.vue'
 
@@ -168,24 +142,21 @@ const emit = defineEmits(['profile-updated'])
 const loading = ref(true)
 const error = ref(null)
 const fieldData = ref({})
-const showAddFieldModal = ref(false)
 
-// About fields only (contact fields moved to separate component)
-const aboutFields = [
-  'headline', 
-  'bio', 
-  'location', 
-  'present_address', 
-  'permanent_address', 
-  'birth_date', 
-  'gender', 
-  'civil_status', 
+// Contact fields
+const contactFields = [
+  'contact_number', 
+  'mobile_number', 
+  'linkedin_url', 
+  'facebook_url', 
+  'instagram_url', 
+  'twitter_url', 
   'website_url'
 ]
 
 // Computed
-const hasAboutInfo = computed(() => {
-  return aboutFields.some(field => fieldData.value[field]?.value)
+const hasContactInfo = computed(() => {
+  return contactFields.some(field => fieldData.value[field]?.value)
 })
 
 // Methods
@@ -201,10 +172,10 @@ async function fetchProfileData() {
     const response = await api.get(url)
     fieldData.value = response.data.field_data
     
-    console.log('Profile data loaded:', response.data)
+    console.log('Contact info loaded:', response.data)
   } catch (err) {
-    console.error('Error fetching profile data:', err)
-    error.value = 'Failed to load profile data. Please try again.'
+    console.error('Error fetching contact data:', err)
+    error.value = 'Failed to load contact information. Please try again.'
   } finally {
     loading.value = false
   }
@@ -223,11 +194,11 @@ async function updateField(fieldName, newValue) {
       fieldData.value[fieldName].value = newValue
     }
     
-    console.log('Field updated:', response.data)
+    console.log('Contact field updated:', response.data)
     emit('profile-updated')
   } catch (err) {
-    console.error('Error updating field:', err)
-    alert('Failed to update field. Please try again.')
+    console.error('Error updating contact field:', err)
+    alert('Failed to update contact field. Please try again.')
   }
 }
 
@@ -243,9 +214,9 @@ async function toggleVisibility(fieldName, newVisibility) {
       fieldData.value[fieldName].visibility = newVisibility
     }
     
-    console.log('Visibility updated:', response.data)
+    console.log('Contact visibility updated:', response.data)
   } catch (err) {
-    console.error('Error updating visibility:', err)
+    console.error('Error updating contact visibility:', err)
     alert('Failed to update privacy setting. Please try again.')
   }
 }
@@ -257,11 +228,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.line-clamp-4 {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+/* Contact section specific styles if needed */
 </style>

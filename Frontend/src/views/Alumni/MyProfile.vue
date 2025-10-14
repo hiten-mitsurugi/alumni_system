@@ -131,7 +131,14 @@
           <ProfileAboutSection 
             :profile="profile" 
             :is-own-profile="isOwnProfile"
-            @edit="editAbout"
+            @profile-updated="fetchProfile"
+          />
+          
+          <!-- Contact Information Section -->
+          <ProfileContactSection 
+            :profile="profile" 
+            :is-own-profile="isOwnProfile"
+            @profile-updated="fetchProfile"
           />
           
           <!-- Education Section -->
@@ -243,6 +250,7 @@ import api from '@/services/api'
 
 // Component imports
 import ProfileAboutSection from '@/components/profile/ProfileAboutSection.vue'
+import ProfileContactSection from '@/components/profile/ProfileContactSection.vue'
 import ProfileEducationSection from '@/components/profile/ProfileEducationSection.vue'
 import ProfileExperienceSection from '@/components/profile/ProfileExperienceSection.vue'
 import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
