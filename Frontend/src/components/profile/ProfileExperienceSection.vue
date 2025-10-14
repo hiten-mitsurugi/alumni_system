@@ -27,23 +27,23 @@
         <div class="flex items-start justify-between">
           <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-900">
-              {{ work.position || work.job_title }}
+              {{ work.occupation }}
             </h3>
             <p class="text-gray-700 font-medium">
-              {{ work.company || work.company_name }}
+              {{ work.employing_agency }}
             </p>
             <p class="text-sm text-gray-500 mt-1">
               {{ formatWorkDuration(work) }}
             </p>
             
-            <!-- Employment Type -->
-            <p v-if="work.employment_type" class="text-sm text-gray-600 mt-1">
-              {{ formatEmploymentType(work.employment_type) }}
+            <!-- Classification -->
+            <p v-if="work.classification" class="text-sm text-gray-600 mt-1">
+              {{ formatClassification(work.classification) }}
             </p>
             
-            <!-- Location -->
-            <p v-if="work.location" class="text-sm text-gray-600 mt-1">
-              📍 {{ work.location }}
+            <!-- Length of Service -->
+            <p v-if="work.length_of_service" class="text-sm text-gray-600 mt-1">
+              Duration: {{ work.length_of_service }}
             </p>
             
             <!-- Description -->
@@ -172,7 +172,7 @@ const formatWorkDuration = (work) => {
   
   const startDate = work.start_date || work.from_date
   const endDate = work.end_date || work.to_date
-  const isCurrent = work.is_current || work.currently_working
+  const isCurrent = work.is_current_job || work.currently_working
   
   if (!startDate) return 'Date not specified'
   
@@ -182,14 +182,13 @@ const formatWorkDuration = (work) => {
   return `${start} - ${end}`
 }
 
-const formatEmploymentType = (type) => {
+const formatClassification = (type) => {
   const typeMap = {
-    'full_time': 'Full-time',
-    'part_time': 'Part-time',
-    'contract': 'Contract',
-    'internship': 'Internship',
+    'government': 'Government',
+    'private': 'Private',
+    'ngo': 'NGO',
     'freelance': 'Freelance',
-    'volunteer': 'Volunteer'
+    'business_owner': 'Business Owner'
   }
   return typeMap[type] || type
 }

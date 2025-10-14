@@ -190,7 +190,6 @@ class Skill(models.Model):
         return self.name
 
 class WorkHistory(models.Model):
-    EMPLOYMENT_STATUS_CHOICES = CustomUser.EMPLOYMENT_STATUS_CHOICES
     CLASSIFICATION_CHOICES = (
         ('government', 'Government'),
         ('private', 'Private'),
@@ -198,40 +197,22 @@ class WorkHistory(models.Model):
         ('freelance', 'Freelance'),
         ('business_owner', 'Business Owner'),
     )
-    INCOME_CHOICES = (
-        ('less_than_15000', 'Less than P15,000'),
-        ('15000_to_29999', 'P15,000 - P29,999'),
-        ('30000_to_49999', 'P30,000 - P49,999'),
-        ('50000_and_above', 'P50,000 and above'),
-        ('prefer_not_to_say', 'Prefer not to say'),
-    )
-    RELEVANCE_CHOICES = (
-        ('yes', 'Yes'),
-        ('no', 'No'),
-        ('somewhat', 'Somewhat'),
-    )
-    JOB_TYPE_CHOICES = (
-        ('first_job', 'First Job'),
-        ('current_job', 'Current Job'),
-    )
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='work_histories')
-    job_type = models.CharField(max_length=20, choices=JOB_TYPE_CHOICES)
-    employment_status = models.CharField(max_length=50, choices=EMPLOYMENT_STATUS_CHOICES)
-    classification = models.CharField(max_length=50, choices=CLASSIFICATION_CHOICES)
+    # Core fields
     occupation = models.CharField(max_length=255)
     employing_agency = models.CharField(max_length=255)
-    how_got_job = models.CharField(max_length=100)
-    monthly_income = models.CharField(max_length=50, choices=INCOME_CHOICES)
-    is_breadwinner = models.BooleanField()
-    length_of_service = models.CharField(max_length=50)
-    college_education_relevant = models.CharField(max_length=10, choices=RELEVANCE_CHOICES)
+    classification = models.CharField(max_length=50, choices=CLASSIFICATION_CHOICES)
+    length_of_service = models.CharField(max_length=50, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    is_current_job = models.BooleanField(default=False)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     skills = models.ManyToManyField(Skill, related_name='work_histories', blank=True)
 
     def __str__(self):
-        return f"{self.occupation} at {self.employing_agency} ({self.job_type})"
+        current_status = "Current" if self.is_current_job else "Previous"
+        return f"{self.occupation} at {self.employing_agency} ({current_status})"
 
 class SkillsRelevance(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='skills_relevance')
@@ -369,9 +350,10 @@ class Profile(models.Model):
         self.fathers_occupation = self.user.fathers_occupation
         self.year_graduated = self.user.year_graduated
         self.program = self.user.program
-        current_job = self.user.work_histories.filter(job_type='current_job').first()
+        current_job = self.user.work_histories.filter(is_current_job=True).first()
         if current_job:
-            self.present_employment_status = current_job.employment_status
+            # Map to existing profile fields for compatibility
+            self.present_employment_status = current_job.classification  # Use classification instead of removed employment_status
             self.employment_classification = current_job.classification
             self.present_occupation = current_job.occupation
             self.employing_agency = current_job.employing_agency
