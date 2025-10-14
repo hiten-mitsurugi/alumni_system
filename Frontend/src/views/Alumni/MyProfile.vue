@@ -601,19 +601,26 @@ const closeEducationModal = () => {
 
 const saveEducation = async (educationData) => {
   try {
+    console.log('🔍 Saving education data:', educationData)
+    console.log('🔍 API endpoint:', selectedEducation.value ? `/auth/education/${selectedEducation.value.id}/` : '/auth/education/')
+    
     if (selectedEducation.value) {
       // Update existing education
-      await api.put(`/auth/education/${selectedEducation.value.id}/`, educationData)
+      const response = await api.put(`/auth/education/${selectedEducation.value.id}/`, educationData)
+      console.log('✅ Update response:', response.data)
     } else {
       // Create new education
-      await api.post('/auth/education/', educationData)
+      const response = await api.post('/auth/education/', educationData)
+      console.log('✅ Create response:', response.data)
     }
     
     closeEducationModal()
     await fetchProfile() // Refresh data
   } catch (error) {
-    console.error('Error saving education:', error)
-    alert('Failed to save education record')
+    console.error('❌ Error saving education:', error)
+    console.error('❌ Error details:', error.response?.data)
+    console.error('❌ Error status:', error.response?.status)
+    alert('Failed to save education record: ' + (error.response?.data?.detail || error.message))
   }
 }
 

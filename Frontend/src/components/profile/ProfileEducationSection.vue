@@ -60,7 +60,7 @@
                 </svg>
               </div>
               <div>
-                <p class="font-medium text-gray-900">{{ edu.field_of_study || 'Field not specified' }}</p>
+                <p class="font-medium text-gray-900">{{ formatDegreeTitle(edu) }}</p>
                 <p class="text-sm text-gray-500">{{ edu.institution || 'Institution not specified' }} • {{ formatDateRange(edu.start_date, edu.end_date, edu.is_current) }}</p>
               </div>
             </div>
@@ -108,20 +108,42 @@ const props = defineProps({
 
 const emit = defineEmits(['add', 'edit', 'edit-profile', 'delete'])
 
-// Debug logging
+// Debug logging - remove duplicate logs
 console.log('ProfileEducationSection - Education prop:', props.education)
 console.log('ProfileEducationSection - User prop:', props.user)
-console.log('ProfileEducationSection - User program:', props.user?.program)
-console.log('ProfileEducationSection - User year_graduated:', props.user?.year_graduated)
-console.log('ProfileEducationSection - User prop:', props.user)
-console.log('ProfileEducationSection - User program:', props.user?.program)
-console.log('ProfileEducationSection - User year_graduated:', props.user?.year_graduated)
+if (props.user) {
+  console.log('ProfileEducationSection - User program:', props.user.program)
+  console.log('ProfileEducationSection - User year_graduated:', props.user.year_graduated)
+  console.log('ProfileEducationSection - User keys:', Object.keys(props.user))
+} else {
+  console.log('ProfileEducationSection - User prop is null/undefined')
+}
 
 // Watch for changes in education prop
 import { watch } from 'vue'
 watch(() => props.education, (newEducation) => {
   console.log('Education prop changed:', newEducation)
 }, { deep: true })
+
+// Utility function to format degree title
+const formatDegreeTitle = (edu) => {
+  const degreeTypeLabels = {
+    'high_school': 'High School',
+    'vocational': 'Vocational',
+    'associate': 'Associate Degree',
+    'bachelor': 'Bachelor\'s Degree',
+    'master': 'Master\'s Degree',
+    'doctoral': 'Doctoral Degree',
+    'certificate': 'Certificate',
+    'diploma': 'Diploma',
+    'other': 'Other'
+  }
+  
+  const degreeLabel = degreeTypeLabels[edu.degree_type] || edu.degree_type || 'Degree'
+  const fieldOfStudy = edu.field_of_study || 'Field not specified'
+  
+  return `${degreeLabel} - ${fieldOfStudy}`
+}
 
 // Utility function to format date range
 const formatDateRange = (startDate, endDate, isCurrent) => {

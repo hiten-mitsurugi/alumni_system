@@ -506,6 +506,7 @@ class Education(models.Model):
     """Model for educational background"""
     DEGREE_TYPES = [
         ('high_school', 'High School'),
+        ('vocational', 'Vocational'),
         ('associate', 'Associate Degree'),
         ('bachelor', 'Bachelor\'s Degree'),
         ('master', 'Master\'s Degree'),

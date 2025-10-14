@@ -107,7 +107,7 @@
                   v-model="form.end_year"
                   type="number"
                   min="1950"
-                  :max="currentYear + 5"
+                  :max="currentYear + 30"
                   :disabled="form.is_current"
                   placeholder="Year"
                   class="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
@@ -209,7 +209,6 @@ if (props.education) {
   
   // Set other fields
   form.institution = props.education.institution || ''
-  // Handle reverse mapping: if backend has "other", check if it should display as "vocational"
   form.degree_type = props.education.degree_type || ''
   form.field_of_study = props.education.field_of_study || ''
   form.is_current = props.education.is_current || false
@@ -226,8 +225,10 @@ watch(() => form.is_current, (newValue) => {
 const handleSubmit = async () => {
   loading.value = true
   try {
+    console.log('📝 EducationModal - Form data before processing:', form)
+    
     let degreeType = form.degree_type;
-    if (degreeType === 'vocational') degreeType = 'other';
+    
     const educationData = {
       institution: form.institution,
       degree_type: degreeType,
@@ -251,9 +252,11 @@ const handleSubmit = async () => {
       educationData.end_date = null
     }
     
+    console.log('📤 EducationModal - Final data being sent:', educationData)
+    
     emit('save', educationData)
   } catch (error) {
-    console.error('Error saving education:', error)
+    console.error('❌ EducationModal - Error processing form:', error)
   } finally {
     loading.value = false
   }

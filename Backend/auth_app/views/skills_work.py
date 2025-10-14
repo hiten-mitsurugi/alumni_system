@@ -120,7 +120,7 @@ class EducationListCreateView(ListCreateAPIView):
         class EducationSerializer(serializers.ModelSerializer):
             class Meta:
                 model = Education
-                fields = ['id', 'institution', 'degree', 'field_of_study', 'start_date', 'end_date', 'grade', 'user']
+                fields = ['id', 'institution', 'degree_type', 'field_of_study', 'start_date', 'end_date', 'is_current', 'description', 'user']
                 read_only_fields = ['user']
                 
         return EducationSerializer
@@ -150,7 +150,7 @@ class EducationDetailView(RetrieveUpdateDestroyAPIView):
         class EducationSerializer(serializers.ModelSerializer):
             class Meta:
                 model = Education
-                fields = ['id', 'institution', 'degree', 'field_of_study', 'start_date', 'end_date', 'grade', 'user']
+                fields = ['id', 'institution', 'degree_type', 'field_of_study', 'start_date', 'end_date', 'is_current', 'description', 'user']
                 read_only_fields = ['user']
                 
         return EducationSerializer
