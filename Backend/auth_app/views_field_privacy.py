@@ -13,9 +13,24 @@ class ProfileFieldUpdateView(APIView):
     def get(self, request):
         """Get all field privacy settings for the user"""
         from .models import FieldPrivacySetting
-        settings = FieldPrivacySetting.objects.filter(user=request.user)
-        serializer = FieldPrivacySettingSerializer(settings, many=True)
-        return Response(serializer.data)
+        
+        # Check if requesting privacy settings for another user
+        user_id = request.query_params.get('user_id')
+        if user_id:
+            try:
+                from .models import CustomUser
+                target_user = CustomUser.objects.get(id=user_id)
+                # Only return privacy settings - not allowing modification
+                settings = FieldPrivacySetting.objects.filter(user=target_user)
+                serializer = FieldPrivacySettingSerializer(settings, many=True)
+                return Response(serializer.data)
+            except CustomUser.DoesNotExist:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Return own privacy settings
+            settings = FieldPrivacySetting.objects.filter(user=request.user)
+            serializer = FieldPrivacySettingSerializer(settings, many=True)
+            return Response(serializer.data)
     
     def post(self, request):
         """Update a profile field value and/or its privacy setting"""
@@ -27,7 +42,7 @@ class ProfileFieldUpdateView(APIView):
         
         field_name = serializer.validated_data['field_name']
         field_value = serializer.validated_data.get('field_value')
-        visibility = serializer.validated_data.get('visibility', 'alumni_only')
+        visibility = serializer.validated_data.get('visibility', 'connections_only')
         
         try:
             # Update field privacy setting
@@ -223,13 +238,10 @@ class ProfileAboutDataView(APIView):
     
     def _is_field_visible(self, visibility, viewer_user, target_user):
         """Check if a field should be visible based on privacy settings"""
-        if visibility == 'public':
+        if visibility == 'everyone':
             return True
-        elif visibility == 'private':
+        elif visibility == 'only_me':
             return False
-        elif visibility == 'alumni_only':
-            # Check if viewer is an approved alumni
-            return viewer_user.is_approved and viewer_user.user_type == 3
         elif visibility == 'connections_only':
             # Check if viewer is connected to target user
             from .models import Following
@@ -285,13 +297,10 @@ class UserAddressesView(APIView):
     
     def _is_field_visible(self, visibility, viewer_user, target_user):
         """Check if a field should be visible based on privacy settings"""
-        if visibility == 'public':
+        if visibility == 'everyone':
             return True
-        elif visibility == 'private':
+        elif visibility == 'only_me':
             return False
-        elif visibility == 'alumni_only':
-            # Check if viewer is an approved alumni
-            return viewer_user.is_approved and viewer_user.user_type == 3
         elif visibility == 'connections_only':
             # Check if viewer is connected to target user
             from .models import Following

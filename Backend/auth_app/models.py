@@ -340,12 +340,11 @@ class Profile(models.Model):
     profile_visibility = models.CharField(
         max_length=20, 
         choices=[
-            ('public', 'Public'),
-            ('alumni_only', 'Alumni Only'),
-            ('connections_only', 'Connections Only'),
-            ('private', 'Private')
+            ('public', 'For Everyone'),
+            ('connections_only', 'For Connections'),
+            ('private', 'Only for Me')
         ],
-        default='alumni_only'
+        default='connections_only'
     )
     allow_contact = models.BooleanField(default=True)
     allow_messaging = models.BooleanField(default=True)
@@ -555,15 +554,14 @@ class Education(models.Model):
 class FieldPrivacySetting(models.Model):
     """Model to handle per-field privacy settings for user profiles"""
     VISIBILITY_CHOICES = [
-        ('public', 'Public - Visible to everyone'),
-        ('alumni_only', 'Alumni Only - Visible to verified alumni'),
-        ('connections_only', 'Connections Only - Visible to your connections'),
-        ('private', 'Private - Only visible to you'),
+        ('everyone', 'For Everyone'),
+        ('connections_only', 'For Connections'),
+        ('only_me', 'Only for Me'),
     ]
     
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='field_privacy_settings')
     field_name = models.CharField(max_length=100)  # e.g., 'first_name', 'email', 'contact_number'
-    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='alumni_only')
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='connections_only')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -584,7 +582,7 @@ class FieldPrivacySetting(models.Model):
             setting = cls.objects.get(user=user, field_name=field_name)
             return setting.visibility
         except cls.DoesNotExist:
-            return 'alumni_only'  # Default visibility
+            return 'connections_only'  # Default visibility
     
     @classmethod
     def set_user_field_visibility(cls, user, field_name, visibility):

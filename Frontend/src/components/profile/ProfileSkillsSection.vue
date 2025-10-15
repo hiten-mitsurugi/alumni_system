@@ -1,18 +1,12 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-bold text-gray-900">Skills</h2>
-      <button 
-        v-if="isOwnProfile" 
-        @click="$emit('add')"
-        class="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-        </svg>
-        <span>Add</span>
-      </button>
-    </div>
+    <SectionPrivacyControl 
+      title="Skills"
+      :is-own-profile="isOwnProfile"
+      :section-visibility="sectionVisibility"
+      @add="$emit('add')"
+      @visibility-changed="handleVisibilityChange"
+    />
 
     <!-- Skills organized by category -->
     <div v-if="categorizedSkills && Object.keys(categorizedSkills).length > 0" class="space-y-0">
@@ -41,8 +35,50 @@
               </div>
             </div>
             
-            <!-- Edit/Delete buttons for own profile -->
+            <!-- Edit/Privacy/Delete buttons for own profile -->
             <div v-if="isOwnProfile" class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <!-- Privacy indicator -->
+              <div class="relative">
+                <button 
+                  @click="toggleSkillVisibilityMenu(skill.id)"
+                  :class="getSkillVisibilityButtonClass(skill)"
+                  class="p-1 rounded transition-colors"
+                  :title="`Privacy: ${getSkillVisibilityDisplay(skill)}`"
+                >
+                  <EyeIcon v-if="(skill?.visibility || 'connections_only') === 'everyone'" class="w-4 h-4" />
+                  <LockClosedIcon v-else-if="(skill?.visibility || 'connections_only') === 'only_me'" class="w-4 h-4" />
+                  <ShieldCheckIcon v-else class="w-4 h-4" />
+                </button>
+                
+                <!-- Privacy Menu -->
+                <div 
+                  v-if="showSkillVisibilityMenu === skill.id" 
+                  class="absolute right-0 top-8 z-10 w-48 bg-white border border-gray-200 rounded-lg shadow-lg"
+                  @click.stop
+                >
+                  <div class="p-2">
+                    <div class="text-xs font-medium text-gray-500 mb-2">Who can see this?</div>
+                    <button
+                      v-for="option in visibilityOptions"
+                      :key="option.value"
+                      @click="changeSkillVisibility(skill.id, option.value)"
+                      :class="[
+                        'w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left',
+                        skill?.visibility === option.value 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'hover:bg-gray-50 text-gray-700'
+                      ]"
+                    >
+                      <component :is="option.icon" class="w-4 h-4 mr-2" />
+                      <div>
+                        <div class="font-medium">{{ option.label }}</div>
+                        <div class="text-xs text-gray-500">{{ option.description }}</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
               <button 
                 @click="$emit('edit', skill)"
                 class="p-1 text-gray-500 hover:text-green-600 rounded transition-colors"
@@ -91,13 +127,81 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { 
+  EyeIcon,
+  UsersIcon, 
+  LockClosedIcon,
+  ShieldCheckIcon
+} from '@heroicons/vue/24/outline'
+import SectionPrivacyControl from './SectionPrivacyControl.vue'
 
 const props = defineProps({
   skills: Array,
-  isOwnProfile: Boolean
+  isOwnProfile: Boolean,
+  sectionVisibility: {
+    type: String,
+    default: 'connections_only'
+  }
 })
 
-const emit = defineEmits(['add', 'edit', 'delete'])
+const emit = defineEmits(['add', 'edit', 'delete', 'section-visibility-changed', 'skill-visibility-changed'])
+
+// Privacy state
+const showSkillVisibilityMenu = ref(null)
+
+// Privacy options
+const visibilityOptions = [
+  {
+    value: 'everyone',
+    label: 'For Everyone',
+    description: 'Anyone can see this',
+    icon: EyeIcon
+  },
+  {
+    value: 'connections_only',
+    label: 'For Connections',
+    description: 'Only your connections',
+    icon: UsersIcon
+  },
+  {
+    value: 'only_me',
+    label: 'Only for Me',
+    description: 'Only you can see this',
+    icon: LockClosedIcon
+  }
+]
+
+// Handle section visibility changes
+function handleVisibilityChange(newVisibility) {
+  emit('section-visibility-changed', 'skills', newVisibility)
+}
+
+// Skill privacy methods
+function toggleSkillVisibilityMenu(skillId) {
+  showSkillVisibilityMenu.value = showSkillVisibilityMenu.value === skillId ? null : skillId
+}
+
+function changeSkillVisibility(skillId, newVisibility) {
+  console.log('🚀 ProfileSkillsSection: changeSkillVisibility called', { skillId, newVisibility })
+  emit('skill-visibility-changed', skillId, newVisibility)
+  console.log('📡 Emitted skill-visibility-changed event')
+  showSkillVisibilityMenu.value = null
+}
+
+function getSkillVisibilityDisplay(skill) {
+  const option = visibilityOptions.find(opt => opt.value === skill?.visibility)
+  return option?.label || 'For Connections'
+}
+
+function getSkillVisibilityButtonClass(skill) {
+  const visibility = skill?.visibility || 'connections_only'
+  const classes = {
+    everyone: 'text-green-600 hover:text-green-700 hover:bg-green-50',
+    connections_only: 'text-blue-600 hover:text-blue-700 hover:bg-blue-50',
+    only_me: 'text-red-600 hover:text-red-700 hover:bg-red-50'
+  }
+  return classes[visibility] || classes.connections_only
+}
 
 // Debug: Log skills data received by the component
 console.log('ProfileSkillsSection - Received skills prop:', props.skills)

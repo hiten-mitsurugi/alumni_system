@@ -4,10 +4,9 @@ from .models import CustomUser
 class FieldPrivacySetting(models.Model):
     """Model to handle per-field privacy settings for user profiles"""
     VISIBILITY_CHOICES = [
-        ('public', 'Public - Visible to everyone'),
-        ('alumni_only', 'Alumni Only - Visible to verified alumni'),
-        ('connections_only', 'Connections Only - Visible to your connections'),
-        ('private', 'Private - Only visible to you'),
+        ('public', 'For Everyone'),
+        ('connections_only', 'For Connections'),
+        ('private', 'Only for Me'),
     ]
     
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='field_privacy_settings')
@@ -33,7 +32,7 @@ class FieldPrivacySetting(models.Model):
             setting = cls.objects.get(user=user, field_name=field_name)
             return setting.visibility
         except cls.DoesNotExist:
-            return 'alumni_only'  # Default visibility
+            return 'connections_only'  # Default visibility
     
     @classmethod
     def set_user_field_visibility(cls, user, field_name, visibility):

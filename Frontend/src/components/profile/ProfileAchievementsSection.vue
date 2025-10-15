@@ -1,18 +1,12 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-bold text-gray-900">Achievements</h2>
-      <button 
-        v-if="isOwnProfile" 
-        @click="$emit('add')"
-        class="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-        </svg>
-        <span>Add</span>
-      </button>
-    </div>
+    <SectionPrivacyControl 
+      title="Achievements"
+      :is-own-profile="isOwnProfile"
+      :section-visibility="sectionVisibility"
+      @add="$emit('add')"
+      @visibility-changed="handleVisibilityChange"
+    />
 
     <div v-if="achievements && achievements.length > 0" class="space-y-8">
       <!-- Featured Achievements First -->
@@ -36,6 +30,7 @@
             :is-featured="true"
             @edit="$emit('edit', achievement)"
             @delete="$emit('delete', achievement.id)"
+            @toggle-visibility="handleAchievementVisibilityChange"
           />
         </div>
       </div>
@@ -60,6 +55,7 @@
             :is-own-profile="isOwnProfile"
             @edit="$emit('edit', achievement)"
             @delete="$emit('delete', achievement.id)"
+            @toggle-visibility="handleAchievementVisibilityChange"
           />
         </div>
 
@@ -115,13 +111,29 @@
 <script setup>
 import { ref, computed } from 'vue'
 import AchievementCard from './AchievementCard.vue'
+import SectionPrivacyControl from './SectionPrivacyControl.vue'
 
 const props = defineProps({
   achievements: Array,
-  isOwnProfile: Boolean
+  isOwnProfile: Boolean,
+  sectionVisibility: {
+    type: String,
+    default: 'connections_only'
+  }
 })
 
-const emit = defineEmits(['add', 'edit', 'delete'])
+const emit = defineEmits(['add', 'edit', 'delete', 'section-visibility-changed', 'toggle-visibility'])
+
+// Handle section visibility changes
+function handleVisibilityChange(newVisibility) {
+  emit('section-visibility-changed', 'achievements', newVisibility)
+}
+
+// Handle individual achievement visibility changes
+function handleAchievementVisibilityChange(achievementId, newVisibility) {
+  console.log('🎯 ProfileAchievementsSection: forwarding visibility change', { achievementId, newVisibility })
+  emit('toggle-visibility', achievementId, newVisibility)
+}
 
 const showAllAchievements = ref(false)
 

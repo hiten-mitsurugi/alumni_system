@@ -86,17 +86,7 @@
         @toggle-visibility="toggleVisibility"
       />
 
-      <AboutItem
-        v-if="fieldData['website_url']"
-        icon="globe-alt"
-        :field-data="fieldData['website_url']"
-        :field-name="'website_url'"
-        :field-label="'Website'"
-        :is-own-profile="isOwnProfile"
-        :is-url="true"
-        @update-field="updateField"
-        @toggle-visibility="toggleVisibility"
-      />
+
 
       <!-- Empty state for own profile -->
       <div v-if="isOwnProfile && !hasContactInfo" class="text-gray-500 text-center py-8">
@@ -150,8 +140,7 @@ const contactFields = [
   'linkedin_url', 
   'facebook_url', 
   'instagram_url', 
-  'twitter_url', 
-  'website_url'
+  'twitter_url'
 ]
 
 // Computed
@@ -170,7 +159,15 @@ async function fetchProfileData() {
       : '/auth/profile/about-data/'
     
     const response = await api.get(url)
-    fieldData.value = response.data.field_data
+    
+    // Filter fields based on visibility - only show fields that are visible
+    const filteredFieldData = {}
+    for (const [fieldName, fieldInfo] of Object.entries(response.data.field_data)) {
+      if (fieldInfo.is_visible) {
+        filteredFieldData[fieldName] = fieldInfo
+      }
+    }
+    fieldData.value = filteredFieldData
     
     console.log('Contact info loaded:', response.data)
   } catch (err) {

@@ -118,16 +118,48 @@
         </div>
 
         <!-- Edit/Privacy controls for own profile -->
-        <div v-if="isOwnProfile && displayValue" class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div v-if="isOwnProfile" class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <!-- Privacy indicator -->
-          <button 
-            @click="toggleVisibilityMenu"
-            :class="visibilityButtonClass"
-            class="p-1 rounded transition-colors"
-            :title="`Privacy: ${visibilityDisplay}`"
-          >
-            <component :is="visibilityIcon" class="w-4 h-4" />
-          </button>
+          <div class="relative">
+            <button 
+              @click="toggleVisibilityMenu"
+              :class="visibilityButtonClass"
+              class="p-1 rounded transition-colors"
+              :title="`Privacy: ${visibilityDisplay}`"
+            >
+              <EyeIcon v-if="(fieldData?.visibility || 'connections_only') === 'everyone'" class="w-4 h-4" />
+              <LockClosedIcon v-else-if="(fieldData?.visibility || 'connections_only') === 'only_me'" class="w-4 h-4" />
+              <ShieldCheckIcon v-else class="w-4 h-4" />
+            </button>
+            
+            <!-- Privacy Menu - positioned relative to the privacy button -->
+            <div 
+              v-if="showVisibilityMenu" 
+              class="absolute right-0 top-8 z-10 w-48 bg-white border border-gray-200 rounded-lg shadow-lg"
+              @click.stop
+            >
+              <div class="p-2">
+                <div class="text-xs font-medium text-gray-500 mb-2">Who can see this?</div>
+                <button
+                  v-for="option in visibilityOptions"
+                  :key="option.value"
+                  @click="changeVisibility(option.value)"
+                  :class="[
+                    'w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left',
+                    fieldData?.visibility === option.value 
+                      ? 'bg-blue-50 text-blue-700' 
+                      : 'hover:bg-gray-50 text-gray-700'
+                  ]"
+                >
+                  <component :is="option.icon" class="w-4 h-4 mr-2" />
+                  <div>
+                    <div class="font-medium">{{ option.label }}</div>
+                    <div class="text-xs text-gray-500">{{ option.description }}</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
           
           <!-- Edit button -->
           <button 
@@ -136,34 +168,6 @@
             title="Edit"
           >
             <PencilIcon class="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      <!-- Privacy Menu -->
-      <div 
-        v-if="showVisibilityMenu" 
-        class="absolute z-10 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg"
-        @click.stop
-      >
-        <div class="p-2">
-          <div class="text-xs font-medium text-gray-500 mb-2">Who can see this?</div>
-          <button
-            v-for="option in visibilityOptions"
-            :key="option.value"
-            @click="changeVisibility(option.value)"
-            :class="[
-              'w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left',
-              fieldData?.visibility === option.value 
-                ? 'bg-blue-50 text-blue-700' 
-                : 'hover:bg-gray-50 text-gray-700'
-            ]"
-          >
-            <component :is="option.icon" class="w-4 h-4 mr-2" />
-            <div>
-              <div class="font-medium">{{ option.label }}</div>
-              <div class="text-xs text-gray-500">{{ option.description }}</div>
-            </div>
           </button>
         </div>
       </div>
@@ -179,6 +183,8 @@ import {
   UserGroupIcon, 
   UsersIcon, 
   LockClosedIcon,
+  EyeIcon,
+  ShieldCheckIcon,
   PlusIcon,
   // Content icons
   DocumentTextIcon,
@@ -264,26 +270,20 @@ const iconMap = {
 // Privacy options
 const visibilityOptions = [
   {
-    value: 'public',
-    label: 'Public',
+    value: 'everyone',
+    label: 'For Everyone',
     description: 'Anyone can see this',
-    icon: GlobeAltIcon
-  },
-  {
-    value: 'alumni_only',
-    label: 'Alumni Only',
-    description: 'Only verified alumni',
-    icon: UserGroupIcon
+    icon: EyeIcon
   },
   {
     value: 'connections_only',
-    label: 'Connections Only',
+    label: 'For Connections',
     description: 'Only your connections',
     icon: UsersIcon
   },
   {
-    value: 'private',
-    label: 'Private',
+    value: 'only_me',
+    label: 'Only for Me',
     description: 'Only you can see this',
     icon: LockClosedIcon
   }
@@ -330,23 +330,22 @@ const inputType = computed(() => {
 
 const visibilityDisplay = computed(() => {
   const option = visibilityOptions.find(opt => opt.value === props.fieldData?.visibility)
-  return option?.label || 'Alumni Only'
+  return option?.label || 'For Connections'
 })
 
 const visibilityIcon = computed(() => {
   const option = visibilityOptions.find(opt => opt.value === props.fieldData?.visibility)
-  return option?.icon || UserGroupIcon
+  return option?.icon || UsersIcon
 })
 
 const visibilityButtonClass = computed(() => {
-  const visibility = props.fieldData?.visibility || 'alumni_only'
+  const visibility = props.fieldData?.visibility || 'connections_only'
   const classes = {
-    public: 'text-green-600 hover:text-green-700 hover:bg-green-50',
-    alumni_only: 'text-blue-600 hover:text-blue-700 hover:bg-blue-50',
-    connections_only: 'text-purple-600 hover:text-purple-700 hover:bg-purple-50',
-    private: 'text-gray-600 hover:text-gray-700 hover:bg-gray-50'
+    everyone: 'text-green-600 hover:text-green-700 hover:bg-green-50',
+    connections_only: 'text-blue-600 hover:text-blue-700 hover:bg-blue-50',
+    only_me: 'text-red-600 hover:text-red-700 hover:bg-red-50'
   }
-  return classes[visibility] || classes.alumni_only
+  return classes[visibility] || classes.connections_only
 })
 
 // Methods

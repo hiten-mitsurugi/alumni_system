@@ -199,9 +199,20 @@ async function fetchProfileData() {
       : '/auth/profile/about-data/'
     
     const response = await api.get(url)
-    fieldData.value = response.data.field_data
+    
+    // Filter field data to only include visible fields
+    const filteredFieldData = {}
+    for (const [fieldName, fieldInfo] of Object.entries(response.data.field_data)) {
+      // Only include fields that are visible (for own profile, show all; for others, check is_visible)
+      if (props.isOwnProfile || fieldInfo.is_visible) {
+        filteredFieldData[fieldName] = fieldInfo
+      }
+    }
+    
+    fieldData.value = filteredFieldData
     
     console.log('Profile data loaded:', response.data)
+    console.log('Filtered field data:', filteredFieldData)
   } catch (err) {
     console.error('Error fetching profile data:', err)
     error.value = 'Failed to load profile data. Please try again.'

@@ -180,6 +180,85 @@ const isConnecting = ref(false)
 // Get user identifier from route
 const userIdentifier = computed(() => route.params.userIdentifier)
 
+// Add refresh function for privacy changes
+const refreshProfileData = async () => {
+  console.log('🔄 Refreshing UserProfile data...')
+  await fetchUserProfile()
+}
+
+// Expose refresh function globally for debugging
+window.refreshUserProfile = refreshProfileData
+
+// Privacy filtering function
+const applyPrivacyFiltering = async (data) => {
+  try {
+    // Get current user info
+    const currentUserResponse = await api.get('/auth/user/')
+    const currentUser = currentUserResponse.data
+    
+    // If viewing own profile, show everything
+    if (currentUser.id === data.id) {
+      education.value = data.education || []
+      workHistories.value = data.work_histories || []
+      achievements.value = data.achievements || []
+      return
+    }
+    
+    // For other users, get their privacy settings (with timestamp to avoid cache)
+    const privacyResponse = await api.get(`/auth/profile/field-update/`, {
+      params: { 
+        user_id: data.id,
+        _t: Date.now() // Prevent caching
+      }
+    })
+    
+    const privacySettings = {}
+    privacyResponse.data.forEach(setting => {
+      privacySettings[setting.field_name] = setting.visibility
+    })
+    
+    console.log('🔐 Privacy settings for user:', privacySettings)
+    console.log('🔐 Connection status (isFollowing):', isFollowing.value)
+    
+    // Filter education based on privacy
+    education.value = (data.education || []).filter(edu => {
+      const privacy = privacySettings[`education_${edu.id}`] || 'connections_only'
+      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+      console.log(`🔐 Education ${edu.id}: privacy="${privacy}", visible=${isVisible}`)
+      return isVisible
+    })
+    
+    // Filter work histories based on privacy
+    workHistories.value = (data.work_histories || []).filter(work => {
+      const privacy = privacySettings[`experience_${work.id}`] || 'connections_only'
+      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+      console.log(`🔐 Experience ${work.id}: privacy="${privacy}", visible=${isVisible}`)
+      return isVisible
+    })
+    
+    // Filter achievements based on privacy
+    achievements.value = (data.achievements || []).filter(achievement => {
+      const privacy = privacySettings[`achievement_${achievement.id}`] || 'connections_only'
+      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+      console.log(`🔐 Achievement ${achievement.id}: privacy="${privacy}", visible=${isVisible}`)
+      return isVisible
+    })
+    
+    console.log('🔐 After privacy filtering:', {
+      education: education.value.length,
+      workHistories: workHistories.value.length, 
+      achievements: achievements.value.length
+    })
+    
+  } catch (error) {
+    console.error('❌ Error applying privacy filtering:', error)
+    // Fallback: show everything if privacy check fails
+    education.value = data.education || []
+    workHistories.value = data.work_histories || []
+    achievements.value = data.achievements || []
+  }
+}
+
 // Fetch user profile data
 const fetchUserProfile = async () => {
   try {
@@ -204,10 +283,13 @@ const fetchUserProfile = async () => {
     const data = response.data
     user.value = data
     profile.value = data.profile
-    education.value = data.education || []
-    workHistories.value = data.work_histories || []
-    achievements.value = data.achievements || []
     connections.value = data.connections_count || 0
+    
+    // Check if already following FIRST (needed for privacy filtering)
+    await checkFollowingStatus()
+    
+    // Apply privacy filtering to the data AFTER connection status is known
+    await applyPrivacyFiltering(data)
     
     // Load user skills separately (like MyProfile does)
     await loadUserSkills()
@@ -229,9 +311,6 @@ const fetchUserProfile = async () => {
       achievements: achievements.value.length,
       skills: skills.value.length
     })
-    
-    // Check if already following
-    await checkFollowingStatus()
     
   } catch (error) {
     console.error('Error fetching user profile:', error)
@@ -261,9 +340,33 @@ const loadUserSkills = async () => {
       const response = await api.get('/auth/user-skills/')
       skills.value = response.data || []
     } else {
-      // For other users' profiles, skills data should come from enhanced-profile
-      // For now, we'll try to get it from the user_skills field if available
-      skills.value = user.value.user_skills || []
+      // For other users' profiles, apply privacy filtering to skills
+      const allSkills = user.value.user_skills || []
+      
+      try {
+        // Get privacy settings for skills
+        const privacyResponse = await api.get(`/auth/profile/field-update/`, {
+          params: { user_id: user.value.id }
+        })
+        
+        const privacySettings = {}
+        privacyResponse.data.forEach(setting => {
+          privacySettings[setting.field_name] = setting.visibility
+        })
+        
+        // Filter skills based on privacy
+        skills.value = allSkills.filter(skill => {
+          const privacy = privacySettings[`skill_${skill.id}`] || 'connections_only'
+          return privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+        })
+        
+        console.log('🔐 Skills after privacy filtering:', skills.value.length, 'of', allSkills.length)
+        
+      } catch (error) {
+        console.error('❌ Error filtering skills privacy:', error)
+        // Fallback: show all skills if privacy check fails
+        skills.value = allSkills
+      }
     }
   } catch (error) {
     console.error('Error loading user skills:', error)
@@ -335,7 +438,26 @@ watch(userIdentifier, () => {
   }
 })
 
+// Auto-refresh privacy data periodically (every 30 seconds)
+let refreshInterval = null
+
 onMounted(() => {
   fetchUserProfile()
+  
+  // Set up auto-refresh for privacy changes
+  refreshInterval = setInterval(() => {
+    if (user.value && !loading.value) {
+      console.log('🔄 Auto-refreshing UserProfile for privacy changes...')
+      refreshProfileData()
+    }
+  }, 30000) // Refresh every 30 seconds
+})
+
+// Cleanup interval on unmount
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
 })
 </script>

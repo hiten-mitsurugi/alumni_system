@@ -605,17 +605,98 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
             return []
     
     def to_representation(self, instance):
-        """Override to add debugging for education data"""
+        """Override to filter data based on privacy settings"""
         ret = super().to_representation(instance)
-        # Debug logging
-        print(f"=== SERIALIZER DEBUG for user {instance.id} ===")
-        print(f"Education queryset: {instance.education.all()}")
-        print(f"Education count: {instance.education.count()}")
-        if instance.education.exists():
-            for edu in instance.education.all():
-                print(f"  - {edu.field_of_study} at {edu.institution} ({edu.start_date} to {edu.end_date})")
-        print(f"Serialized education data: {ret.get('education', 'NO EDUCATION KEY')}")
+        
+        # Get the requesting user from context
+        request = self.context.get('request')
+        requesting_user = request.user if request else None
+        
+        # If this is the user's own profile, return everything
+        if requesting_user and requesting_user.id == instance.id:
+            print(f"🔓 Own profile - returning all data for user {instance.id}")
+            return ret
+        
+        # Apply privacy filtering for other users
+        print(f"🔒 Filtering privacy for user {instance.id}, viewed by {requesting_user.id if requesting_user else 'anonymous'}")
+        
+        # Filter individual items based on privacy settings
+        ret = self._filter_privacy_items(ret, instance, requesting_user)
+        
         return ret
+    
+    def _filter_privacy_items(self, data, target_user, requesting_user):
+        """Filter individual items based on their privacy settings"""
+        from .models import FieldPrivacySetting
+        
+        # Filter education items
+        if 'education' in data and data['education']:
+            filtered_education = []
+            for edu in data['education']:
+                field_name = f"education_{edu['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_education.append(edu)
+                else:
+                    print(f"🚫 Hiding education {edu['id']} (visibility: {visibility})")
+            data['education'] = filtered_education
+        
+        # Filter work histories
+        if 'work_histories' in data and data['work_histories']:
+            filtered_work = []
+            for work in data['work_histories']:
+                field_name = f"experience_{work['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_work.append(work)
+                else:
+                    print(f"🚫 Hiding work experience {work['id']} (visibility: {visibility})")
+            data['work_histories'] = filtered_work
+        
+        # Filter achievements
+        if 'achievements' in data and data['achievements']:
+            filtered_achievements = []
+            for achievement in data['achievements']:
+                field_name = f"achievement_{achievement['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_achievements.append(achievement)
+                else:
+                    print(f"🚫 Hiding achievement {achievement['id']} (visibility: {visibility})")
+            data['achievements'] = filtered_achievements
+        
+        # Filter user skills
+        if 'user_skills' in data and data['user_skills']:
+            filtered_skills = []
+            for skill in data['user_skills']:
+                field_name = f"skill_{skill['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_skills.append(skill)
+                else:
+                    print(f"🚫 Hiding skill {skill['id']} (visibility: {visibility})")
+            data['user_skills'] = filtered_skills
+        
+        return data
+    
+    def _is_item_visible(self, visibility, requesting_user, target_user):
+        """Check if an item should be visible based on privacy settings"""
+        if visibility == 'everyone':
+            return True
+        elif visibility == 'only_me':
+            return False
+        elif visibility == 'connections_only':
+            if not requesting_user or requesting_user.is_anonymous:
+                return False
+            # Check if users are connected
+            from .models import Following
+            return Following.objects.filter(
+                follower=requesting_user,
+                following=target_user,
+                is_mutual=True,
+                status='accepted'
+            ).exists()
+        return False
     
     class Meta:
         model = CustomUser
@@ -689,5 +770,5 @@ class ProfileFieldUpdateSerializer(serializers.Serializer):
     visibility = serializers.ChoiceField(
         choices=FieldPrivacySetting.VISIBILITY_CHOICES, 
         required=False,
-        default='alumni_only'
+        default='connections_only'
     )

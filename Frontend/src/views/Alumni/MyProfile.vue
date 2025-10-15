@@ -151,6 +151,7 @@
             @edit="editEducation"
             @edit-profile="editProfile"
             @delete="deleteEducation"
+            @education-visibility-changed="handleEducationVisibilityChange"
           />
           
           <!-- Experience Section -->
@@ -160,6 +161,7 @@
             @add="addExperience"
             @edit="editExperience"
             @delete="deleteExperience"
+            @experience-visibility-changed="handleExperienceVisibilityChange"
           />
           
           <!-- Skills Section -->
@@ -169,6 +171,7 @@
             @add="addSkill"
             @edit="editSkill"
             @delete="deleteSkill"
+            @skill-visibility-changed="handleSkillVisibilityChange"
           />
           
           <!-- Achievements Section -->
@@ -178,6 +181,7 @@
             @add="addAchievement"
             @edit="editAchievement"
             @delete="deleteAchievement"
+            @toggle-visibility="handleAchievementVisibilityChange"
           />
         </div>
 
@@ -462,9 +466,25 @@ const fetchProfile = async () => {
     
     user.value = data
     profile.value = data.profile
-    education.value = data.education || []
-    workHistories.value = data.work_histories || []
-    achievements.value = data.achievements || []
+    
+    // Load privacy settings and apply to data
+    await loadPrivacySettings()
+    
+    // Add privacy settings to each item
+    education.value = (data.education || []).map(edu => ({
+      ...edu,
+      visibility: getItemPrivacy('education', edu.id) || 'connections_only'
+    }))
+    
+    workHistories.value = (data.work_histories || []).map(work => ({
+      ...work,
+      visibility: getItemPrivacy('experience', work.id) || 'connections_only'
+    }))
+    
+    achievements.value = (data.achievements || []).map(achievement => ({
+      ...achievement,
+      visibility: getItemPrivacy('achievement', achievement.id) || 'connections_only'
+    }))
     
     // Load user skills separately
     await loadUserSkills()
@@ -486,7 +506,12 @@ const loadUserSkills = async () => {
   try {
     const endpoint = isOwnProfile.value ? '/user-skills/' : `/user-skills/user/${profileUserId.value}/`
     const response = await api.get(`/auth${endpoint}`)
-    skills.value = response.data || []
+    
+    // Apply privacy settings to each skill
+    skills.value = (response.data || []).map(skill => ({
+      ...skill,
+      visibility: getItemPrivacy('skill', skill.id) || 'connections_only'
+    }))
   } catch (error) {
     console.error('Error loading user skills:', error)
     skills.value = []
@@ -845,6 +870,138 @@ const saveAchievement = async (achievementData) => {
     } else {
       alert('Failed to save achievement. Please try again.')
     }
+  }
+}
+
+// Privacy settings state and functions
+const privacySettings = ref({})
+
+const loadPrivacySettings = async () => {
+  try {
+    console.log('🔐 Loading privacy settings...')
+    const response = await api.get('/auth/profile/field-update/')
+    
+    // Convert array to lookup object
+    privacySettings.value = {}
+    response.data.forEach(setting => {
+      privacySettings.value[setting.field_name] = setting.visibility
+    })
+    
+    console.log('🔐 Privacy settings loaded:', privacySettings.value)
+  } catch (error) {
+    console.error('❌ Failed to load privacy settings:', error)
+    privacySettings.value = {}
+  }
+}
+
+const getItemPrivacy = (itemType, itemId) => {
+  const fieldName = `${itemType}_${itemId}`
+  return privacySettings.value[fieldName] || 'connections_only'
+}
+
+// Privacy handlers for individual items
+const handleEducationVisibilityChange = async (educationId, newVisibility) => {
+  console.log('🎯 handleEducationVisibilityChange called:', { educationId, newVisibility })
+  try {
+    // Use the existing field-update endpoint with a specific naming convention
+    console.log('📤 Sending privacy update request...')
+    const response = await api.post('/auth/profile/field-update/', {
+      field_name: `education_${educationId}`,
+      visibility: newVisibility
+    })
+    
+    // Update both local state and privacy settings cache
+    const edu = education.value.find(e => e.id === educationId)
+    if (edu) {
+      edu.visibility = newVisibility
+      console.log('🔄 Updated local education visibility:', edu)
+    }
+    
+    // Update privacy settings cache
+    privacySettings.value[`education_${educationId}`] = newVisibility
+    
+    console.log('✅ Education privacy updated:', response.data)
+  } catch (error) {
+    console.error('❌ Failed to update education privacy:', error)
+    alert('Failed to update privacy setting. Please try again.')
+  }
+}
+
+const handleExperienceVisibilityChange = async (experienceId, newVisibility) => {
+  console.log('🎯 handleExperienceVisibilityChange called:', { experienceId, newVisibility })
+  try {
+    console.log('📤 Sending experience privacy update request...')
+    const response = await api.post('/auth/profile/field-update/', {
+      field_name: `experience_${experienceId}`,
+      visibility: newVisibility
+    })
+    
+    // Update both local state and privacy settings cache
+    const exp = workHistories.value.find(w => w.id === experienceId)
+    if (exp) {
+      exp.visibility = newVisibility
+      console.log('🔄 Updated local experience visibility:', exp)
+    }
+    
+    // Update privacy settings cache
+    privacySettings.value[`experience_${experienceId}`] = newVisibility
+    
+    console.log('✅ Experience privacy updated:', response.data)
+  } catch (error) {
+    console.error('❌ Failed to update experience privacy:', error)
+    alert('Failed to update privacy setting. Please try again.')
+  }
+}
+
+const handleSkillVisibilityChange = async (skillId, newVisibility) => {
+  console.log('🎯 handleSkillVisibilityChange called:', { skillId, newVisibility })
+  try {
+    console.log('📤 Sending skill privacy update request...')
+    const response = await api.post('/auth/profile/field-update/', {
+      field_name: `skill_${skillId}`,
+      visibility: newVisibility
+    })
+    
+    // Update both local state and privacy settings cache
+    const skill = skills.value.find(s => s.id === skillId)
+    if (skill) {
+      skill.visibility = newVisibility
+      console.log('🔄 Updated local skill visibility:', skill)
+    }
+    
+    // Update privacy settings cache
+    privacySettings.value[`skill_${skillId}`] = newVisibility
+    
+    console.log('✅ Skill privacy updated:', response.data)
+  } catch (error) {
+    console.error('❌ Failed to update skill privacy:', error)
+    alert('Failed to update privacy setting. Please try again.')
+  }
+}
+
+const handleAchievementVisibilityChange = async (achievementId, newVisibility) => {
+  console.log('🎯 handleAchievementVisibilityChange called:', { achievementId, newVisibility })
+  try {
+    console.log('📤 Sending achievement privacy update request...')
+    const response = await api.post('/auth/profile/field-update/', {
+      field_name: `achievement_${achievementId}`,
+      visibility: newVisibility
+    })
+    
+    // Update both local state and privacy settings cache
+    const achievement = achievements.value.find(a => a.id === achievementId)
+    if (achievement) {
+      achievement.visibility = newVisibility
+      console.log('🔄 Updated local achievement visibility:', achievement)
+    }
+    
+    // Update privacy settings cache
+    privacySettings.value[`achievement_${achievementId}`] = newVisibility
+    
+    console.log('✅ Achievement privacy updated:', response.data)
+  } catch (error) {
+    console.error('❌ Failed to update achievement privacy:', error)
+    alert('Failed to update privacy setting. Please try again.')
   }
 }
 
