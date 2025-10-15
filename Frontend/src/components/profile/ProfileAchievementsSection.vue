@@ -97,7 +97,7 @@
       <p class="mb-4">Showcase your accomplishments, certifications, awards, and recognition.</p>
       <button 
         @click="$emit('add')"
-        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        class="inline-flex items-center px-4 py-2 bg-white text-green-600 hover:text-green-700"
       >
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>

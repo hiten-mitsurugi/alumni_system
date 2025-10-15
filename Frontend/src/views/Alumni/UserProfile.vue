@@ -76,19 +76,68 @@
         </div>
       </div>
 
-      <!-- Profile Content Grid -->
+      <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column - About & Contact (2/3) -->
+        <!-- Left Column - Profile Sections -->
         <div class="lg:col-span-2 space-y-6">
           <!-- About Section -->
-          <UserAboutSection 
-            :user="user" 
+          <ProfileAboutSection 
+            :profile="profile" 
+            :is-own-profile="false"
+            :user-id="user?.id"
+            @profile-updated="fetchUserProfile"
+          />
+          
+          <!-- Contact Information Section -->
+          <ProfileContactSection 
+            :profile="profile" 
+            :is-own-profile="false"
+            :user-id="user?.id"
+            @profile-updated="fetchUserProfile"
+          />
+          
+          <!-- Education Section -->
+          <ProfileEducationSection 
+            :education="education" 
             :profile="profile"
+            :user="user"
+            :is-own-profile="false"
+            @add="() => {}"
+            @edit="() => {}"
+            @edit-profile="() => {}"
+            @delete="() => {}"
+          />
+          
+          <!-- Experience Section -->
+          <ProfileExperienceSection 
+            :workHistories="workHistories" 
+            :is-own-profile="false"
+            @add="() => {}"
+            @edit="() => {}"
+            @delete="() => {}"
+          />
+          
+          <!-- Skills Section -->
+          <ProfileSkillsSection 
+            :skills="skills" 
+            :is-own-profile="false"
+            @add="() => {}"
+            @edit="() => {}"
+            @delete="() => {}"
+          />
+          
+          <!-- Achievements Section -->
+          <ProfileAchievementsSection 
+            :achievements="achievements" 
+            :is-own-profile="false"
+            @add="() => {}"
+            @edit="() => {}"
+            @delete="() => {}"
           />
         </div>
 
-        <!-- Right Column - Suggestions (1/3) -->
-        <div class="lg:col-span-1 space-y-6">
+        <!-- Right Column - Sidebar -->
+        <div class="space-y-6">
           <!-- Suggestions Widget -->
           <UserSuggestionsWidget @connect="handleConnect" />
         </div>
@@ -104,7 +153,12 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 
 // Components
-import UserAboutSection from '@/components/user-profile/UserAboutSection.vue'
+import ProfileAboutSection from '@/components/profile/ProfileAboutSection.vue'
+import ProfileContactSection from '@/components/profile/ProfileContactSection.vue'
+import ProfileEducationSection from '@/components/profile/ProfileEducationSection.vue'
+import ProfileExperienceSection from '@/components/profile/ProfileExperienceSection.vue'
+import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
+import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
 import UserSuggestionsWidget from '@/components/user-profile/UserSuggestionsWidget.vue'
 
 const route = useRoute()
@@ -115,6 +169,10 @@ const authStore = useAuthStore()
 const loading = ref(true)
 const user = ref(null)
 const profile = ref(null)
+const education = ref([])
+const workHistories = ref([])
+const skills = ref([])
+const achievements = ref([])
 const connections = ref(0)
 const isFollowing = ref(false)
 const isConnecting = ref(false)
@@ -132,16 +190,27 @@ const fetchUserProfile = async () => {
       return
     }
 
-    // Fetch user profile by username
+    // Fetch user profile by username using enhanced-profile endpoint
     const response = await api.get(`/auth/enhanced-profile/username/${userIdentifier.value}/`)
     
     // Debug: Log the API response structure
     console.log('UserProfile API response:', response.data)
+    console.log('Available fields in response:', Object.keys(response.data))
+    console.log('Skills data in response:', response.data.user_skills)
+    console.log('Skills data type:', typeof response.data.user_skills)
+    console.log('Skills data length:', response.data.user_skills?.length)
     
     // The API returns the user data directly, with profile nested inside
-    user.value = response.data
-    profile.value = response.data.profile
-    connections.value = response.data.connections_count || 0
+    const data = response.data
+    user.value = data
+    profile.value = data.profile
+    education.value = data.education || []
+    workHistories.value = data.work_histories || []
+    achievements.value = data.achievements || []
+    connections.value = data.connections_count || 0
+    
+    // Load user skills separately (like MyProfile does)
+    await loadUserSkills()
     
     // Debug: Log the extracted data
     console.log('UserProfile extracted data:', {
@@ -154,7 +223,11 @@ const fetchUserProfile = async () => {
         bio: profile.value?.bio,
         headline: profile.value?.headline,
         fields: profile.value ? Object.keys(profile.value) : []
-      }
+      },
+      education: education.value.length,
+      workHistories: workHistories.value.length,
+      achievements: achievements.value.length,
+      skills: skills.value.length
     })
     
     // Check if already following
@@ -167,6 +240,34 @@ const fetchUserProfile = async () => {
     }
   } finally {
     loading.value = false
+  }
+}
+
+// Load user skills using the same approach as MyProfile
+const loadUserSkills = async () => {
+  try {
+    if (!user.value) return
+    
+    // For UserProfile, we're viewing another user's profile, but the /auth/user-skills/ endpoint
+    // only returns skills for the authenticated user. Since we can't get other users' skills directly,
+    // we'll need to check if this is our own profile or implement a different approach.
+    
+    // Check if we're viewing our own profile
+    const currentUserResponse = await api.get('/auth/user/')
+    const currentUser = currentUserResponse.data
+    
+    if (currentUser.id === user.value.id) {
+      // If viewing own profile, use the user-skills endpoint
+      const response = await api.get('/auth/user-skills/')
+      skills.value = response.data || []
+    } else {
+      // For other users' profiles, skills data should come from enhanced-profile
+      // For now, we'll try to get it from the user_skills field if available
+      skills.value = user.value.user_skills || []
+    }
+  } catch (error) {
+    console.error('Error loading user skills:', error)
+    skills.value = []
   }
 }
 

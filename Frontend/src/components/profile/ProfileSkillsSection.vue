@@ -99,9 +99,18 @@ const props = defineProps({
 
 const emit = defineEmits(['add', 'edit', 'delete'])
 
+// Debug: Log skills data received by the component
+console.log('ProfileSkillsSection - Received skills prop:', props.skills)
+console.log('ProfileSkillsSection - Skills array length:', props.skills?.length)
+console.log('ProfileSkillsSection - isOwnProfile:', props.isOwnProfile)
+
 // Categorize skills by their category
 const categorizedSkills = computed(() => {
-  if (!props.skills || props.skills.length === 0) return {}
+  console.log('ProfileSkillsSection - Computing categorized skills with:', props.skills)
+  if (!props.skills || props.skills.length === 0) {
+    console.log('ProfileSkillsSection - No skills found, returning empty object')
+    return {}
+  }
   
   const categories = {}
   props.skills.forEach(skill => {

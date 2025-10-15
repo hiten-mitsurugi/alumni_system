@@ -577,6 +577,7 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     work_histories = WorkHistorySerializer(many=True, read_only=True)
     achievements = AchievementSerializer(many=True, read_only=True)
     education = serializers.SerializerMethodField()
+    user_skills = UserSkillSerializer(many=True, read_only=True)
     real_time_status = serializers.SerializerMethodField()
     
     def get_education(self, obj):
@@ -625,7 +626,7 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
             'contact_number', 'birth_date', 'year_graduated', 'mothers_name',
             'mothers_occupation', 'fathers_name', 'fathers_occupation',
             'is_active', 'is_staff', 'is_superuser', 'last_login', 'date_joined',
-            'profile', 'work_histories', 'achievements', 'education', 'real_time_status'
+            'profile', 'work_histories', 'achievements', 'education', 'user_skills', 'real_time_status'
         ]
     
     def get_real_time_status(self, obj):
