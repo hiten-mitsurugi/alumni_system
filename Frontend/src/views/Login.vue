@@ -5,16 +5,22 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import api from '../services/api';
 import backgroundImage from "@/assets/Background.png";
+import { Eye as EyeIcon, EyeOff as EyeOffIcon } from 'lucide-vue-next';
 
 const email = ref('');
 const password = ref('');
 const error = ref('');
+const showPassword = ref(false);
 const router = useRouter();
 const authStore = useAuthStore();
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validatePassword = (password) =>
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
 
 const login = async () => {
   error.value = '';
@@ -85,14 +91,26 @@ const login = async () => {
               placeholder="Email"
               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              @keydown.enter="login"
             />
-            <input
-              v-model="password"
-              type="password"
-              placeholder="Password"
-              class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+            <div class="relative">
+              <input
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Password"
+                class="w-full p-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                @keydown.enter="login"
+              />
+              <button
+                type="button"
+                @click="togglePasswordVisibility"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <EyeIcon v-if="!showPassword" class="w-5 h-5" />
+                <EyeOffIcon v-else class="w-5 h-5" />
+              </button>
+            </div>
             <button
               type="submit"
               class="w-full bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 font-medium"
