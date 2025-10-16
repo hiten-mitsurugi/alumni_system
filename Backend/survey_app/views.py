@@ -417,9 +417,9 @@ def survey_export_view(request):
         
         # Apply date filters
         if date_from:
-            all_responses = all_responses.filter(created_at__gte=date_from)
+            all_responses = all_responses.filter(submitted_at__gte=date_from)
         if date_to:
-            all_responses = all_responses.filter(created_at__lte=date_to)
+            all_responses = all_responses.filter(submitted_at__lte=date_to)
         
         # Apply category filter
         if category_id:
@@ -428,8 +428,13 @@ def survey_export_view(request):
         print(f"📝 Found {all_responses.count()} responses to include")
         
         # ===== STEP 3: Get ALL users who have ANY responses =====
+        # Ensure User model is resolved (use get_user_model to support custom user model)
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
         user_ids = all_responses.values_list('user_id', flat=True).distinct()
-        users = User.objects.filter(id__in=user_ids).select_related('profile').prefetch_related('addresses')
+        # auth_app.Address uses related_name='normalized_addresses'
+        users = User.objects.filter(id__in=user_ids).select_related('profile').prefetch_related('normalized_addresses')
         
         print(f"👥 Found {users.count()} users with responses")
         
@@ -571,14 +576,14 @@ def survey_export_view(request):
                             cell_value = getattr(user.profile, field_name, '')
                         
                     elif data_type == 'address_present':
-                        # Get value from Present Address
-                        present_address = user.addresses.filter(address_category='present').first()
+                        # Get value from Present Address (Address model related_name: normalized_addresses)
+                        present_address = user.normalized_addresses.filter(address_category='present').first()
                         if present_address:
                             cell_value = getattr(present_address, field_name, '')
                         
                     elif data_type == 'address_permanent':
-                        # Get value from Permanent Address
-                        permanent_address = user.addresses.filter(address_category='permanent').first()
+                        # Get value from Permanent Address (Address model related_name: normalized_addresses)
+                        permanent_address = user.normalized_addresses.filter(address_category='permanent').first()
                         if permanent_address:
                             cell_value = getattr(permanent_address, field_name, '')
                         
