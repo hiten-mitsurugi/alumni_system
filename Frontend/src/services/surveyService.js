@@ -55,10 +55,26 @@ class SurveyService {
     return api.get('/survey/admin/responses/', { params: filters })
   }
 
-  async exportResponses(format = 'json') {
-    return api.get('/survey/admin/export/', {
-      params: { format },
-      responseType: format === 'csv' ? 'blob' : 'json'
+  async exportResponses(exportData = {}) {
+    const {
+      format = 'xlsx',
+      category_id = null,
+      date_from = null,
+      date_to = null,
+      include_profile_fields = [
+        'first_name', 'last_name', 'email', 'program', 
+        'year_graduated', 'student_id', 'birth_date', 'user_type'
+      ]
+    } = exportData
+
+    return api.post('/survey/admin/export/', {
+      format,
+      category_id,
+      date_from,
+      date_to,
+      include_profile_fields
+    }, {
+      responseType: format === 'xlsx' ? 'blob' : 'json'
     })
   }
 

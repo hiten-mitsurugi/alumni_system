@@ -38,9 +38,16 @@ const categoryQuestions = ref([])
 const analytics = ref(null)
 
 // Export data
-const exportFormat = ref('csv')
+const exportFormat = ref('xlsx')
 const exportCategory = ref('')
 const includeInactive = ref(false)
+const exportDateFrom = ref('')
+const exportDateTo = ref('')
+const exportProfileFields = ref([
+  'first_name', 'last_name', 'email', 'program', 
+  'year_graduated', 'student_id', 'birth_date', 'user_type'
+])
+const isExporting = ref(false)
 
 // Pagination
 const currentCategoryPage = ref(1)
@@ -426,18 +433,49 @@ const goToQuestionsTab = async () => {
 
 // Export data
 const exportData = async () => {
+  if (isExporting.value) return
+  
   try {
-    const response = await surveyService.exportResponses('csv')
-    // Handle CSV download
+    isExporting.value = true
+    
+    const exportParams = {
+      format: exportFormat.value,
+      category_id: exportCategory.value || null,
+      date_from: exportDateFrom.value || null,
+      date_to: exportDateTo.value || null,
+      include_profile_fields: exportProfileFields.value
+    }
+    
+    const response = await surveyService.exportResponses(exportParams)
+    
+    // Handle file download
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', 'survey-responses.csv')
+    
+    // Set filename based on format
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
+    const extension = exportFormat.value === 'xlsx' ? 'xlsx' : 'csv'
+    const filename = `survey_responses_${timestamp}.${extension}`
+    
+    link.setAttribute('download', filename)
     document.body.appendChild(link)
     link.click()
     link.remove()
+    window.URL.revokeObjectURL(url)
+    
+    // Close modal
+    showExportModal.value = false
+    
+    // Show success message (if you have a toast system)
+    console.log('Export completed successfully!')
+    
   } catch (error) {
     console.error('Error exporting data:', error)
+    // Show error message (if you have a toast system)
+    alert('Failed to export data. Please try again.')
+  } finally {
+    isExporting.value = false
   }
 }
 </script>
@@ -1402,7 +1440,7 @@ const exportData = async () => {
     >
       <div 
         :class="[
-          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-md',
+          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl',
           isDragging && draggedModal === 'export' ? 'dragging' : ''
         ]"
         data-modal="export"
@@ -1434,21 +1472,22 @@ const exportData = async () => {
           </button>
         </div>
         
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+          <!-- Export Format -->
           <div>
             <label class="block text-sm font-semibold text-slate-700 mb-3">Export Format</label>
             <div class="grid grid-cols-2 gap-3">
               <button
-                @click="exportFormat = 'csv'"
+                @click="exportFormat = 'json'"
                 :class="[
                   'p-4 border-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer',
-                  exportFormat === 'csv'
+                  exportFormat === 'json'
                     ? 'border-green-500 bg-green-50 text-green-700'
                     : 'border-slate-300 text-slate-600 hover:border-green-300 hover:bg-green-50'
                 ]"
               >
                 <FileText class="w-5 h-5 mx-auto mb-2" />
-                CSV File
+                JSON Data
               </button>
               <button
                 @click="exportFormat = 'xlsx'"
@@ -1465,6 +1504,7 @@ const exportData = async () => {
             </div>
           </div>
           
+          <!-- Category Filter -->
           <div>
             <label class="block text-sm font-semibold text-slate-700 mb-3">Category Filter</label>
             <select
@@ -1477,35 +1517,108 @@ const exportData = async () => {
                 :key="category.id"
                 :value="category.id"
               >
-                {{ category.name }}
+                {{ category.name }} ({{ category.active_questions_count }} questions)
               </option>
             </select>
           </div>
           
-          <div class="flex items-center p-4 bg-slate-50 rounded-lg">
-            <input
-              v-model="includeInactive"
-              type="checkbox"
-              class="h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded cursor-pointer"
-            />
-            <label class="ml-3 block text-sm font-medium text-slate-700 cursor-pointer">
-              Include inactive questions
-            </label>
+          <!-- Date Range Filter -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">From Date</label>
+              <input
+                v-model="exportDateFrom"
+                type="date"
+                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">To Date</label>
+              <input
+                v-model="exportDateTo"
+                type="date"
+                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
           </div>
           
+          <!-- Profile Fields Selection (only for Excel) -->
+          <div v-if="exportFormat === 'xlsx'">
+            <label class="block text-sm font-semibold text-slate-700 mb-3">Include Profile Fields</label>
+            <div class="grid grid-cols-2 gap-2 p-4 bg-slate-50 rounded-lg max-h-40 overflow-y-auto">
+              <label v-for="field in [
+                { key: 'first_name', label: 'First Name' },
+                { key: 'last_name', label: 'Last Name' },
+                { key: 'email', label: 'Email' },
+                { key: 'program', label: 'Program' },
+                { key: 'year_graduated', label: 'Year Graduated' },
+                { key: 'student_id', label: 'Student ID' },
+                { key: 'birth_date', label: 'Birth Date' },
+                { key: 'user_type', label: 'User Type' },
+                { key: 'date_joined', label: 'Date Joined' }
+              ]" 
+              :key="field.key"
+              class="flex items-center space-x-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="field.key"
+                  v-model="exportProfileFields"
+                  class="h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded"
+                />
+                <span class="text-sm text-slate-700">{{ field.label }}</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Export Summary -->
+          <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h4 class="text-sm font-medium text-blue-800">Export Summary</h4>
+                <div class="mt-1 text-sm text-blue-700">
+                  <p v-if="exportFormat === 'xlsx'">
+                    Excel file with user profiles and survey responses
+                  </p>
+                  <p v-else>
+                    JSON data of survey responses only
+                  </p>
+                  <p v-if="exportCategory">
+                    Filtered by: {{ categories.find(c => c.id == exportCategory)?.name || 'Selected Category' }}
+                  </p>
+                  <p v-if="exportDateFrom || exportDateTo">
+                    Date range: {{ exportDateFrom || 'No start' }} to {{ exportDateTo || 'No end' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
           <div class="flex justify-end gap-3 pt-6 border-t border-slate-200">
             <button
               @click="showExportModal = false"
-              class="px-6 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+              :disabled="isExporting"
+              class="px-6 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               @click="exportData"
-              class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg"
+              :disabled="isExporting"
+              class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <Download class="w-4 h-4 inline mr-2" />
-              Export Data
+              <Download v-if="!isExporting" class="w-4 h-4" />
+              <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isExporting ? 'Exporting...' : 'Export Data' }}
             </button>
           </div>
         </div>

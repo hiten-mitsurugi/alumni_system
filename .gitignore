@@ -67,3 +67,30 @@ htmlcov/
 *.sqlite
 *.sqlite3
 *.db
+
+# Generated test files and exports
+*.xlsx
+*.xls
+*.csv
+test_*.py
+debug_*.py
+analyze_*.py
+verify_*.py
+complete_dynamic_export.xlsx
+dynamic_export_test.xlsx
+export_test.xlsx
+test_export.xlsx
+test_survey_export.xlsx
+
+# Test directories
+Frontend/src/tests/
+Backend/survey_app/tests/
+Backend/test_*.py
+Backend/debug_*.py
+
+# PowerShell scripts
+*.ps1
+
+# Debug logs
+debug.log
+*.log
