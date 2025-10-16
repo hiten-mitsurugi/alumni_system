@@ -1,6 +1,27 @@
 <template>
-  <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Import Alumni Data</h2>
+  <div :class="[
+    'p-6 rounded-lg shadow-lg max-w-2xl mx-auto relative',
+    themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white'
+  ]">
+    <!-- Close Button -->
+    <button
+      @click="$emit('close')"
+      :class="[
+        'absolute top-4 right-4 transition-colors duration-200',
+        themeStore.isAdminDark() 
+          ? 'text-gray-400 hover:text-gray-200' 
+          : 'text-gray-400 hover:text-gray-600'
+      ]"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    
+    <h2 :class="[
+      'text-2xl font-bold mb-6',
+      themeStore.isAdminDark() ? 'text-white' : 'text-gray-800'
+    ]">Import Alumni Data</h2>
     
     <!-- File Drop Zone -->
     <div
@@ -10,7 +31,11 @@
       @dragleave="handleDragLeave"
       :class="[
         'border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-200 cursor-pointer',
-        isDragging ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50',
+        isDragging 
+          ? 'border-green-500 bg-green-50' 
+          : themeStore.isAdminDark() 
+            ? 'border-gray-600 bg-gray-700' 
+            : 'border-gray-300 bg-gray-50',
         isUploading ? 'pointer-events-none opacity-50' : ''
       ]"
       @click="triggerFileInput"
@@ -24,13 +49,28 @@
       />
       
       <div v-if="!selectedFile && !isUploading">
-        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg :class="[
+          'mx-auto h-12 w-12 mb-4',
+          themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-400'
+        ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
         </svg>
-        <p class="text-lg text-gray-600 mb-2">Drag and drop your file here</p>
-        <p class="text-sm text-gray-500 mb-4">or click to browse</p>
-        <p class="text-xs text-gray-400">Supports CSV, Excel (.xlsx, .xls), and Text files</p>
-        <p class="text-xs text-gray-400">Maximum file size: 10MB</p>
+        <p :class="[
+          'text-lg mb-2',
+          themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600'
+        ]">Drag and drop your file here</p>
+        <p :class="[
+          'text-sm mb-4',
+          themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+        ]">or click to browse</p>
+        <p :class="[
+          'text-xs',
+          themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-400'
+        ]">Supports CSV, Excel (.xlsx, .xls), and Text files</p>
+        <p :class="[
+          'text-xs',
+          themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-400'
+        ]">Maximum file size: 10MB</p>
       </div>
       
       <div v-else-if="selectedFile && !isUploading" class="space-y-4">
@@ -38,8 +78,14 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
         <div>
-          <p class="text-lg font-medium text-gray-800">{{ selectedFile.name }}</p>
-          <p class="text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</p>
+          <p :class="[
+            'text-lg font-medium',
+            themeStore.isAdminDark() ? 'text-white' : 'text-gray-800'
+          ]">{{ selectedFile.name }}</p>
+          <p :class="[
+            'text-sm',
+            themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+          ]">{{ formatFileSize(selectedFile.size) }}</p>
         </div>
         <div class="flex justify-center space-x-4">
           <button
@@ -59,14 +105,23 @@
       
       <div v-else-if="isUploading" class="space-y-4">
         <div class="animate-spin mx-auto h-12 w-12 border-4 border-green-600 border-t-transparent rounded-full"></div>
-        <p class="text-lg text-gray-600">Uploading and processing file...</p>
-        <div class="w-full bg-gray-200 rounded-full h-2">
+        <p :class="[
+          'text-lg',
+          themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600'
+        ]">Uploading and processing file...</p>
+        <div :class="[
+          'w-full rounded-full h-2',
+          themeStore.isAdminDark() ? 'bg-gray-600' : 'bg-gray-200'
+        ]">
           <div 
             class="bg-green-600 h-2 rounded-full transition-all duration-300 ease-out"
             :style="{ width: uploadProgress + '%' }"
           ></div>
         </div>
-        <p class="text-sm text-gray-500">{{ uploadProgress }}%</p>
+        <p :class="[
+          'text-sm',
+          themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+        ]">{{ uploadProgress }}%</p>
       </div>
     </div>
     
@@ -143,10 +198,24 @@
     </div>
     
     <!-- File Format Help -->
-    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-      <h3 class="text-lg font-semibold text-blue-800 mb-2">Required File Format</h3>
-      <p class="text-sm text-blue-700 mb-3">Your file must contain these columns (in any order):</p>
-      <div class="grid grid-cols-2 gap-2 text-sm text-blue-700">
+    <div :class="[
+      'mt-6 p-4 rounded-lg border',
+      themeStore.isAdminDark() 
+        ? 'bg-blue-900/20 border-blue-700' 
+        : 'bg-blue-50 border-blue-200'
+    ]">
+      <h3 :class="[
+        'text-lg font-semibold mb-2',
+        themeStore.isAdminDark() ? 'text-blue-300' : 'text-blue-800'
+      ]">Required File Format</h3>
+      <p :class="[
+        'text-sm mb-3',
+        themeStore.isAdminDark() ? 'text-blue-200' : 'text-blue-700'
+      ]">Your file must contain these columns (in any order):</p>
+      <div :class="[
+        'grid grid-cols-2 gap-2 text-sm',
+        themeStore.isAdminDark() ? 'text-blue-200' : 'text-blue-700'
+      ]">
         <div>• first_name</div>
         <div>• last_name</div>
         <div>• birth_date (YYYY-MM-DD)</div>
@@ -155,28 +224,48 @@
         <div>• sex (male or female)</div>
         <div>• middle_name (optional)</div>
       </div>
-      <div class="mt-3 p-2 bg-blue-100 rounded text-sm text-blue-800">
+      <div :class="[
+        'mt-3 p-2 rounded text-sm',
+        themeStore.isAdminDark() 
+          ? 'bg-blue-800/30 text-blue-200' 
+          : 'bg-blue-100 text-blue-800'
+      ]">
         <strong>Sex values must be exactly:</strong> "male" or "female"
       </div>
       <div class="mt-3 flex space-x-4">
         <a
           href="/sample_alumni.csv"
           download
-          class="text-sm text-blue-600 hover:text-blue-800 underline"
+          :class="[
+            'text-sm underline',
+            themeStore.isAdminDark() 
+              ? 'text-blue-300 hover:text-blue-200' 
+              : 'text-blue-600 hover:text-blue-800'
+          ]"
         >
           Download CSV Sample
         </a>
         <a
           href="/sample_alumni.xlsx"
           download
-          class="text-sm text-blue-600 hover:text-blue-800 underline"
+          :class="[
+            'text-sm underline',
+            themeStore.isAdminDark() 
+              ? 'text-blue-300 hover:text-blue-200' 
+              : 'text-blue-600 hover:text-blue-800'
+          ]"
         >
           Download Excel Sample
         </a>
         <a
           href="/sample_alumni.txt"
           download
-          class="text-sm text-blue-600 hover:text-blue-800 underline"
+          :class="[
+            'text-sm underline',
+            themeStore.isAdminDark() 
+              ? 'text-blue-300 hover:text-blue-200' 
+              : 'text-blue-600 hover:text-blue-800'
+          ]"
         >
           Download TXT Sample
         </a>
@@ -188,13 +277,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import api from '@/services/api'
 
 // Emit events
-const emit = defineEmits(['import-completed'])
+const emit = defineEmits(['import-completed', 'close'])
 
 // Auth store
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 // Reactive data
 const isDragging = ref(false)

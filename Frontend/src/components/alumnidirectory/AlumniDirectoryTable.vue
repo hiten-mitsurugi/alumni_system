@@ -1,12 +1,14 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useThemeStore } from '@/stores/theme';
 import { SearchIcon, FilterIcon, ChevronDownIcon, MoreVerticalIcon, TrashIcon, EyeIcon, EditIcon } from 'lucide-vue-next';
 import AlumniModalSimple from './AlumniModalSimple.vue';
 import AlumniFileImport from '../AlumniFileImport.vue';
 import axios from 'axios';
 
 const authStore = useAuthStore();
+const themeStore = useThemeStore();
 const BASE_URL = 'http://127.0.0.1:8000';
 
 // State
@@ -324,7 +326,10 @@ onMounted(() => {
 
 <template>
   <div class="alumni-directory-container">
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden relative">
+    <div :class="[
+      'rounded-lg shadow-lg overflow-hidden relative',
+      themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white'
+    ]">
       <!-- Header -->
       <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
         <div class="flex justify-between items-center">
@@ -356,7 +361,10 @@ onMounted(() => {
       </div>
 
       <!-- Search and Controls -->
-      <div class="p-6 border-b border-gray-200">
+      <div :class="[
+        'p-6 border-b',
+        themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200'
+      ]">
         <div class="flex items-center gap-4">
           <!-- Search Bar -->
           <div class="flex-1 max-w-md">
@@ -365,9 +373,17 @@ onMounted(() => {
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search by firstname, lastname or fullname..."
-                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                :class="[
+                  'w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200',
+                  themeStore.isAdminDark() 
+                    ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
+                    : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                ]"
               />
-              <SearchIcon class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+              <SearchIcon :class="[
+                'absolute left-3 top-3.5 h-5 w-5',
+                themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-400'
+              ]" />
             </div>
           </div>
 
@@ -377,7 +393,12 @@ onMounted(() => {
             <div class="relative">
               <button
                 @click="toggleFilterDropdown"
-                class="flex items-center gap-2 px-4 py-3 bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 rounded-lg shadow-sm transition-all duration-200 border border-gray-300 cursor-pointer"
+                :class="[
+                  'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border cursor-pointer',
+                  themeStore.isAdminDark() 
+                    ? 'bg-gray-700 hover:bg-green-800 hover:text-green-300 hover:border-green-600 text-gray-300 border-gray-600' 
+                    : 'bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 border-gray-300'
+                ]"
               >
                 <FilterIcon class="w-5 h-5" />
                 <span>Filters</span>
@@ -397,18 +418,36 @@ onMounted(() => {
               >
                 <div
                   v-if="showFilterDropdown"
-                  class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 filter-dropdown-scrollable"
+                  :class="[
+                    'absolute right-0 top-full mt-2 w-80 rounded-lg shadow-xl border z-50 filter-dropdown-scrollable',
+                    themeStore.isAdminDark() 
+                      ? 'bg-gray-800 border-gray-700' 
+                      : 'bg-white border-gray-200'
+                  ]"
                   @click.stop
                 >
                   <div class="p-4 space-y-4">
-                    <h3 class="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">Filter Options</h3>
+                    <h3 :class="[
+                      'text-sm font-semibold border-b pb-2',
+                      themeStore.isAdminDark() 
+                        ? 'text-gray-300 border-gray-700' 
+                        : 'text-gray-700 border-gray-200'
+                    ]">Filter Options</h3>
 
                     <!-- Program Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Program</label>
+                      <label :class="[
+                        'text-sm font-medium mb-1 block',
+                        themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700'
+                      ]">Program</label>
                       <select
                         v-model="selectedProgram"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 hover:bg-green-200 transition-colors duration-200"
+                        :class="[
+                          'w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 transition-colors duration-200',
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white hover:bg-gray-600' 
+                            : 'border-gray-300 bg-white text-gray-900 hover:bg-green-200'
+                        ]"
                       >
                         <option value="">All Programs</option>
                         <option v-for="program in programs" :key="program" :value="program">{{ program }}</option>
@@ -417,23 +456,39 @@ onMounted(() => {
 
                     <!-- Year Graduated Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Year Graduated</label>
+                      <label :class="[
+                        'text-sm font-medium mb-1 block',
+                        themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700'
+                      ]">Year Graduated</label>
                       <input
                         v-model="selectedYear"
                         type="number"
                         :min="currentYear - 50"
                         :max="currentYear + 5"
                         placeholder="Enter year (YYYY)"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 hover:bg-green-200 transition-colors duration-200"
+                        :class="[
+                          'w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 transition-colors duration-200',
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 hover:bg-gray-600' 
+                            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 hover:bg-green-200'
+                        ]"
                       />
                     </div>
 
                     <!-- Sex Filter -->
                     <div>
-                      <label class="text-sm font-medium text-gray-700 mb-1 block">Sex</label>
+                      <label :class="[
+                        'text-sm font-medium mb-1 block',
+                        themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700'
+                      ]">Sex</label>
                       <select
                         v-model="selectedSex"
-                        class="w-full text-sm border-gray-300 rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 hover:bg-green-200 transition-colors duration-200"
+                        :class="[
+                          'w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 transition-colors duration-200',
+                          themeStore.isAdminDark() 
+                            ? 'border-gray-600 bg-gray-700 text-white hover:bg-gray-600' 
+                            : 'border-gray-300 bg-white text-gray-900 hover:bg-green-200'
+                        ]"
                       >
                         <option value="">All</option>
                         <option value="male">Male</option>
@@ -443,10 +498,18 @@ onMounted(() => {
                     </div>
 
                     <!-- Clear Filters Button -->
-                    <div class="pt-2 border-t border-gray-200">
+                    <div :class="[
+                      'pt-2 border-t',
+                      themeStore.isAdminDark() ? 'border-gray-700' : 'border-gray-200'
+                    ]">
                       <button
                         @click="clearFilters"
-                        class="w-full py-2 px-3 text-sm bg-green-600 text-gray-100 hover:bg-green-200 hover:text-green-800 rounded-md transition-colors duration-200 font-medium"
+                        :class="[
+                          'w-full py-2 px-3 text-sm rounded-md transition-colors duration-200 font-medium',
+                          themeStore.isAdminDark() 
+                            ? 'bg-green-600 text-gray-100 hover:bg-green-700' 
+                            : 'bg-green-600 text-gray-100 hover:bg-green-200 hover:text-green-800'
+                        ]"
                       >
                         Clear All Filters
                       </button>
@@ -464,8 +527,12 @@ onMounted(() => {
                 :class="[
                   'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border',
                   selectedAlumniIds.length > 0
-                    ? 'bg-white hover:bg-green-200 text-green-700 border-green-300 cursor-pointer'
-                    : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                    ? themeStore.isAdminDark() 
+                      ? 'bg-gray-700 hover:bg-green-800 hover:text-green-300 hover:border-green-600 text-gray-300 border-gray-600 cursor-pointer'
+                      : 'bg-white hover:bg-green-200 text-green-700 border-green-300 cursor-pointer'
+                    : themeStore.isAdminDark()
+                      ? 'bg-gray-800 text-gray-500 border-gray-600 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
                 ]"
               >
                 <MoreVerticalIcon class="w-5 h-5" />
@@ -489,21 +556,36 @@ onMounted(() => {
               >
                 <div
                   v-if="showActionsDropdown && selectedAlumniIds.length > 0"
-                  class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                  :class="[
+                    'absolute right-0 top-full mt-2 w-48 rounded-lg shadow-xl border z-50',
+                    themeStore.isAdminDark() 
+                      ? 'bg-gray-800 border-gray-700' 
+                      : 'bg-white border-gray-200'
+                  ]"
                   @click.stop
                 >
                   <div class="py-2">
                     <button
                       @click="bulkEditAlumni"
-                      class="w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-200 flex items-center gap-2"
+                      :class="[
+                        'w-full px-4 py-2 text-left text-sm flex items-center gap-2',
+                        themeStore.isAdminDark() 
+                          ? 'text-green-400 hover:bg-green-900/20' 
+                          : 'text-green-600 hover:bg-green-200'
+                      ]"
                     >
                       <EditIcon class="w-4 h-4" />
                       Edit Selected ({{ selectedAlumniIds.length }})
                     </button>
-                    <hr class="my-1">
+                    <hr :class="themeStore.isAdminDark() ? 'border-gray-700 my-1' : 'border-gray-200 my-1'">
                     <button
                       @click="bulkDeleteAlumni"
-                      class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-200 flex items-center gap-2"
+                      :class="[
+                        'w-full px-4 py-2 text-left text-sm flex items-center gap-2',
+                        themeStore.isAdminDark() 
+                          ? 'text-red-400 hover:bg-red-900/20' 
+                          : 'text-red-600 hover:bg-red-200'
+                      ]"
                     >
                       <TrashIcon class="w-4 h-4" />
                       Delete Selected ({{ selectedAlumniIds.length }})
@@ -516,7 +598,10 @@ onMounted(() => {
         </div>
 
         <!-- Results info -->
-        <div class="mt-4 text-sm text-gray-600">
+        <div :class="[
+          'mt-4 text-sm',
+          themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600'
+        ]">
           <span class="font-semibold">{{ filteredAlumni.length }}</span> 
           of 
           <span class="font-semibold">{{ alumni.length }}</span> 
@@ -526,7 +611,10 @@ onMounted(() => {
 
       <!-- Table -->
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table :class="[
+          'w-full',
+          themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white'
+        ]">
           <thead class="bg-gradient-to-r from-green-600 to-green-700">
             <tr>
               <!-- Select All Checkbox -->
@@ -579,11 +667,21 @@ onMounted(() => {
               </th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody :class="[
+            'divide-y',
+            themeStore.isAdminDark() 
+              ? 'bg-gray-800 divide-gray-700' 
+              : 'bg-white divide-gray-200'
+          ]">
             <tr
               v-for="person in paginatedAlumni"
               :key="person.id"
-              class="transition-colors duration-150"
+              :class="[
+                'transition-colors duration-150',
+                themeStore.isAdminDark() 
+                  ? 'hover:bg-gray-700' 
+                  : 'hover:bg-gray-50'
+              ]"
             >
               <!-- Row Checkbox -->
               <td class="px-6 py-4" @click.stop>
@@ -597,26 +695,38 @@ onMounted(() => {
 
               <!-- Full Name -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">
+                <div :class="[
+                  'text-sm font-medium',
+                  themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'
+                ]">
                   {{ `${person.first_name} ${person.middle_name || ''} ${person.last_name}`.replace(/\s+/g, ' ').trim() }}
                 </div>
               </td>
 
               <!-- Program -->
               <td class="px-6 py-4">
-                <div class="text-sm text-gray-900 max-w-xs">
+                <div :class="[
+                  'text-sm max-w-xs',
+                  themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-900'
+                ]">
                   <span class="line-clamp-2">{{ person.program }}</span>
                 </div>
               </td>
 
               <!-- Year Graduated -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 font-medium">{{ person.year_graduated }}</div>
+                <div :class="[
+                  'text-sm font-medium',
+                  themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'
+                ]">{{ person.year_graduated }}</div>
               </td>
 
               <!-- Birth Date -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">
+                <div :class="[
+                  'text-sm',
+                  themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-900'
+                ]">
                   {{ person.birth_date ? new Date(person.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-' }}
                 </div>
               </td>
@@ -639,11 +749,20 @@ onMounted(() => {
             <tr v-if="paginatedAlumni.length === 0 && filteredAlumni.length === 0">
               <td colspan="6" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
-                  <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg :class="[
+                    'w-12 h-12 mb-4',
+                    themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-400'
+                  ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m0 0V9a2 2 0 012-2h2m0 0V6a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414A1 1 0 0016 7.414V9a2 2 0 012 2v2m0 0v2a2 2 0 01-2 2h-2m0 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v10.586a1 1 0 001.707.707l2.414-2.414A1 1 0 0012.586 17H15a2 2 0 002-2v-2z" />
                   </svg>
-                  <h3 class="text-lg font-medium text-gray-900 mb-2">No Alumni Found</h3>
-                  <p class="text-gray-500">
+                  <h3 :class="[
+                    'text-lg font-medium mb-2',
+                    themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'
+                  ]">No Alumni Found</h3>
+                  <p :class="[
+                    'mb-4',
+                    themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+                  ]">
                     {{ searchQuery ? 'Try adjusting your search terms.' : 'Get started by creating your first alumni directory entry.' }}
                   </p>
                   <button
@@ -661,10 +780,18 @@ onMounted(() => {
       </div>
 
       <!-- Pagination -->
-      <div v-if="filteredAlumni.length > 0" class="bg-white px-6 py-4 border-t border-gray-200">
+      <div v-if="filteredAlumni.length > 0" :class="[
+        'px-6 py-4 border-t',
+        themeStore.isAdminDark() 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      ]">
         <div class="flex items-center justify-between">
           <!-- Results info -->
-          <div class="text-sm text-gray-700">
+          <div :class="[
+            'text-sm',
+            themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700'
+          ]">
             Showing {{ paginationInfo.start }} to {{ paginationInfo.end }} of {{ paginationInfo.total }} results
           </div>
           
@@ -677,8 +804,12 @@ onMounted(() => {
               :class="[
                 'px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                 currentPage === 1 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                  ? themeStore.isAdminDark() 
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : themeStore.isAdminDark() 
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
+                    : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
               ]"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -698,7 +829,9 @@ onMounted(() => {
                     'px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                     currentPage === page
                       ? 'bg-green-600 text-white shadow-sm'
-                      : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                      : themeStore.isAdminDark() 
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
+                        : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
                   ]"
                 >
                   {{ page }}
@@ -707,7 +840,10 @@ onMounted(() => {
                 <span
                   v-else-if="(page === 2 && currentPage > 4) || (page === totalPages - 1 && currentPage < totalPages - 3)"
                   :key="`ellipsis-${page}`"
-                  class="px-2 py-2 text-gray-500"
+                  :class="[
+                    'px-2 py-2',
+                    themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500'
+                  ]"
                 >
                   ...
                 </span>
@@ -721,8 +857,12 @@ onMounted(() => {
               :class="[
                 'px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                 currentPage === totalPages 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                  ? themeStore.isAdminDark() 
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : themeStore.isAdminDark() 
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
+                    : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
               ]"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -734,10 +874,17 @@ onMounted(() => {
       </div>
 
       <!-- Loading overlay -->
-      <div v-if="loading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+      <div v-if="loading" :class="[
+        'absolute inset-0 flex items-center justify-center',
+        themeStore.isAdminDark() 
+          ? 'bg-gray-800 bg-opacity-75' 
+          : 'bg-white bg-opacity-75'
+      ]">
         <div class="flex items-center space-x-3">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          <span class="text-gray-600">Loading alumni directory...</span>
+          <span :class="[
+            themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600'
+          ]">Loading alumni directory...</span>
         </div>
       </div>
     </div>
@@ -755,7 +902,10 @@ onMounted(() => {
 
     <!-- Import Modal -->
     <div v-if="showImportModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <AlumniFileImport @import-completed="fetchAlumni(); closeImportModal();" />
+      <AlumniFileImport 
+        @import-completed="fetchAlumni(); closeImportModal();" 
+        @close="closeImportModal"
+      />
     </div>
   </div>
 </template>

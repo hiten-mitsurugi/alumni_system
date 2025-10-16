@@ -1,7 +1,11 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import AlumniDirectoryTable from '@/components/alumnidirectory/AlumniDirectoryTable.vue';
+import { useThemeStore } from '@/stores/theme';
+
+const themeStore = useThemeStore();
+const adminDark = computed(() => themeStore.isAdminDark());
 
 // You can add any page-level logic here if needed
 onMounted(() => {
@@ -10,13 +14,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
+  <div :class="[
+    'min-h-screen p-6',
+    adminDark 
+      ? 'bg-gradient-to-br from-gray-900 to-green-900' 
+      : 'bg-gray-50'
+  ]">
     <div class="max-w-7xl mx-auto">
       <!-- Page Header -->
       <div class="mb-8">
         <div class="flex items-center justify-between">
          
-          <div class="text-sm text-gray-500">
+          <div :class="[
+            'text-sm',
+            adminDark ? 'text-gray-300' : 'text-gray-500'
+          ]">
             <time :datetime="new Date().toISOString()">
               {{ new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
