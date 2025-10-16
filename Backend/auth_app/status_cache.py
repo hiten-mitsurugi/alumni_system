@@ -51,8 +51,8 @@ class UserStatusCache:
             
             # Update database profile status to online
             try:
-                from auth_app.models import Alumni
-                alumni = Alumni.objects.get(id=user_id)
+                from auth_app.models import CustomUser
+                alumni = CustomUser.objects.get(id=user_id)
                 if hasattr(alumni, 'profile') and alumni.profile:
                     alumni.profile.status = 'online'
                     alumni.profile.last_seen = timezone.now()
@@ -91,8 +91,8 @@ class UserStatusCache:
             
             # Update database profile status to offline
             try:
-                from auth_app.models import Alumni
-                alumni = Alumni.objects.get(id=user_id)
+                from auth_app.models import CustomUser
+                alumni = CustomUser.objects.get(id=user_id)
                 if hasattr(alumni, 'profile') and alumni.profile:
                     alumni.profile.status = 'offline'
                     alumni.profile.last_seen = timezone.now()

@@ -198,10 +198,12 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
-            # Update user's online status
+            # Update user's online status in profile
             user = request.user
-            user.is_online = False
-            user.save(update_fields=['is_online'])
+            if hasattr(user, 'profile') and user.profile:
+                user.profile.status = 'offline'
+                user.profile.last_seen = timezone.now()
+                user.profile.save(update_fields=['status', 'last_seen'])
             
             # Update status cache
             set_user_offline(user.id)

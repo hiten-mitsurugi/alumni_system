@@ -111,6 +111,11 @@ const previousCategory = () => {
 
 // Response handling
 const updateResponse = (questionId, value) => {
+  // Validate question ID before storing
+  if (questionId === null || questionId === undefined || questionId === '' || isNaN(parseInt(questionId))) {
+    console.warn('⚠️ Invalid question ID in updateResponse:', questionId, 'value:', value)
+    return
+  }
   responses.value[questionId] = value
 }
 
@@ -145,20 +150,52 @@ const submitSurvey = async () => {
   submitting.value = true
   
   try {
-    // Prepare response data
+    // Prepare response data (filter out empty responses and invalid question IDs)
     const responseData = {
-      responses: Object.entries(responses.value).map(([questionId, value]) => ({
-        question: parseInt(questionId),
-        response_data: { value }
-      }))
+      responses: Object.entries(responses.value)
+        .filter(([questionId, value]) => {
+          // Filter out empty, null, or undefined values
+          if (value === null || value === undefined || value === '') {
+            console.warn('⚠️ Filtering out empty value for question:', questionId)
+            return false
+          }
+          // Filter out invalid question IDs (must be a valid number)
+          if (questionId === null || questionId === undefined || questionId === 'null' || questionId === 'undefined') {
+            console.warn('⚠️ Filtering out null/undefined question ID:', questionId, 'with value:', value)
+            return false
+          }
+          const parsedId = parseInt(questionId)
+          if (isNaN(parsedId) || parsedId <= 0) {
+            console.warn('⚠️ Filtering out invalid question ID:', questionId, 'parsed as:', parsedId, 'with value:', value)
+            return false
+          }
+          return true
+        })
+        .map(([questionId, value]) => ({
+          question_id: parseInt(questionId),
+          response_data: value
+        }))
     }
+    
+    // Check if we have any responses to submit
+    if (responseData.responses.length === 0) {
+      alert('Please answer at least one question before submitting.')
+      return
+    }
+    
+    console.log('� Raw Object.entries(responses.value):', Object.entries(responses.value))
+    console.log('�🚀 Submitting survey data:', JSON.stringify(responseData, null, 2))
+    console.log('📋 Current responses:', responses.value)
     
     await surveyService.submitSurveyResponse(responseData)
     showResults.value = true
     await loadProgress() // Refresh progress
   } catch (error) {
     console.error('Error submitting survey:', error)
-    alert('Error submitting survey. Please try again.')
+    console.error('❌ Error response:', error.response?.data)
+    console.error('❌ Error status:', error.response?.status)
+    console.error('❌ Full error:', error)
+    alert(`Error submitting survey: ${error.response?.data?.message || error.message}. Please try again.`)
   } finally {
     submitting.value = false
   }

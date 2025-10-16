@@ -13,8 +13,12 @@ export const useAuthStore = defineStore('auth', {
     setToken(access, refresh) {
       this.token = access;
       this.refreshToken = refresh;
-      localStorage.setItem('access_token', access);       // ✅ updated
-      localStorage.setItem('refresh_token', refresh);
+      localStorage.setItem('access_token', access);
+      if (refresh) {
+        localStorage.setItem('refresh_token', refresh);
+      } else {
+        localStorage.removeItem('refresh_token');
+      }
     },
 
     setUser(user) {

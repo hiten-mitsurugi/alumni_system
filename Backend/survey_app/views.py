@@ -282,13 +282,20 @@ class SurveyResponseSubmitView(APIView):
     permission_classes = [CanRespondToSurveys]
     
     def post(self, request):
+        # Debug logging
+        print(f"🚀 Survey submission received from user: {request.user}")
+        print(f"📋 Request data: {request.data}")
+        print(f"📊 Data type: {type(request.data)}")
+        
         # Check if it's bulk submission
         if 'responses' in request.data:
+            print("📦 Processing as bulk submission")
             serializer = SurveyResponseSubmissionSerializer(
                 data=request.data,
                 context={'request': request, 'ip_address': self.get_client_ip(request)}
             )
         else:
+            print("📝 Processing as single response")
             # Single response submission
             serializer = SurveyResponseSerializer(
                 data=request.data,
@@ -296,7 +303,9 @@ class SurveyResponseSubmitView(APIView):
             )
         
         if serializer.is_valid():
+            print("✅ Serializer validation passed")
             response = serializer.save()
+            print(f"✅ Response saved successfully: {response}")
             
             # Clear user's cache
             cache_key = f'active_survey_questions_user_{request.user.id}'
@@ -308,6 +317,7 @@ class SurveyResponseSubmitView(APIView):
                 status=status.HTTP_201_CREATED
             )
         
+        print(f"❌ Serializer validation failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def get_client_ip(self, request):

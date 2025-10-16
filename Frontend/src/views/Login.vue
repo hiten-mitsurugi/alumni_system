@@ -38,7 +38,8 @@ const login = async () => {
       email: email.value,
       password: password.value,
     });
-    authStore.setToken(response.data.token);
+    // Handle single token from backend (access token)
+    authStore.setToken(response.data.token, null);
     authStore.setUser(response.data.user);
     if (response.data.user.user_type === 1) {
       router.push('/super-admin');
