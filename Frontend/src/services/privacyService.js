@@ -254,7 +254,5 @@ class PrivacyService {
         return true // Default to public if unknown
     }
   }
-}
 
-// Export singleton instance
-export default new PrivacyService()
+}

@@ -23,6 +23,8 @@ from .views.profile_social import EnhancedProfileView
 # Import field privacy views
 from .views_field_privacy import ProfileFieldUpdateView, ProfileAboutDataView, UserAddressesView
 
+
+
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 
@@ -97,6 +99,8 @@ urlpatterns = [
     
     # Address endpoints
     path('profile/<int:user_id>/addresses/', UserAddressesView.as_view(), name='user_addresses'),
+    
+
     
     # Survey and questionnaire endpoints (temporarily commented out)
     # path('skills-relevance/', SkillsRelevanceView.as_view(), name='skills_relevance'),

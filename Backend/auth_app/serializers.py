@@ -772,3 +772,4 @@ class ProfileFieldUpdateSerializer(serializers.Serializer):
         required=False,
         default='connections_only'
     )
+    target_user_id = serializers.IntegerField(required=False)

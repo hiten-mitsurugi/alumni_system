@@ -4,7 +4,7 @@
     <div class="relative" v-if="mode === 'field'">
       <button 
         @click="toggleDropdown"
-        class="flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 focus:outline-none"
         :class="getButtonClasses()"
       >
         <component :is="getVisibilityIcon()" class="w-4 h-4" />
@@ -51,7 +51,7 @@
         <select 
           :value="value"
           @change="$emit('update:modelValue', $event.target.value)"
-          class="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
         >
           <option value="" disabled>Select privacy level</option>
           <option 
@@ -64,7 +64,7 @@
         </select>
         <button
           @click="$emit('apply-to-section')"
-          class="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
           :disabled="!value"
         >
           Apply to All
@@ -226,7 +226,7 @@ onUnmounted(() => {
 <style scoped>
 /* Custom styles for the privacy selector */
 .privacy-selector {
-  @apply relative;
+  position: relative;
 }
 
 /* Smooth transitions for dropdown */
@@ -254,13 +254,14 @@ onUnmounted(() => {
 /* Focus states for accessibility */
 .privacy-selector button:focus,
 .privacy-selector select:focus {
-  @apply ring-2 ring-blue-500 ring-offset-1;
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .privacy-selector .w-64 {
-    @apply w-56;
+    width: 14rem;
   }
 }
 </style>

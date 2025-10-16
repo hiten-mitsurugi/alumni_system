@@ -280,6 +280,282 @@ export function usePrivacy() {
     }
   }
 
+  // Section-Level Privacy State
+  const sectionPrivacySettings = ref({})
+  const privacyProfiles = ref([])
+  const activePrivacyProfile = ref(null)
+
+  /**
+   * Load section-level privacy settings
+   */
+  const loadSectionPrivacySettings = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await privacyService.getSectionPrivacySettings()
+      sectionPrivacySettings.value = response.section_settings || {}
+      
+      console.log('🔐 Section privacy settings loaded:', sectionPrivacySettings.value)
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to load section privacy settings'
+      showToast('Failed to load section privacy settings', 'error')
+      console.error('Section privacy settings load error:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Update section-level privacy setting
+   */
+  const updateSectionPrivacySetting = async (section, visibility) => {
+    try {
+      const response = await privacyService.updateSectionPrivacySetting(section, visibility)
+      
+      // Update local state
+      sectionPrivacySettings.value[section] = visibility
+      
+      showToast(`Section privacy updated for ${section}`, 'success')
+      return response
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to update section privacy'
+      showToast('Failed to update section privacy', 'error')
+      console.error('Section privacy update error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Bulk update section privacy settings
+   */
+  const bulkUpdateSectionPrivacy = async (sectionUpdates) => {
+    try {
+      const response = await privacyService.bulkUpdateSectionPrivacy(sectionUpdates)
+      
+      // Update local state
+      Object.assign(sectionPrivacySettings.value, sectionUpdates)
+      
+      showToast(`Updated section privacy for ${Object.keys(sectionUpdates).length} sections`, 'success')
+      return response
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to bulk update section privacy'
+      showToast('Failed to bulk update section privacy', 'error')
+      console.error('Bulk section privacy update error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Load privacy profiles (templates)
+   */
+  const loadPrivacyProfiles = async () => {
+    try {
+      const response = await privacyService.getPrivacyProfiles()
+      privacyProfiles.value = response.profiles || []
+      activePrivacyProfile.value = response.active_profile || null
+      
+      console.log('🔐 Privacy profiles loaded:', privacyProfiles.value)
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to load privacy profiles'
+      showToast('Failed to load privacy profiles', 'error')
+      console.error('Privacy profiles load error:', err)
+    }
+  }
+
+  /**
+   * Create new privacy profile
+   */
+  const createPrivacyProfile = async (name, description, sectionSettings, isDefault = false) => {
+    try {
+      const response = await privacyService.createPrivacyProfile({
+        name,
+        description,
+        section_settings: sectionSettings,
+        is_default: isDefault
+      })
+      
+      // Add to local state
+      privacyProfiles.value.push(response.profile)
+      
+      showToast(`Privacy profile "${name}" created`, 'success')
+      return response
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to create privacy profile'
+      showToast('Failed to create privacy profile', 'error')
+      console.error('Privacy profile creation error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Apply privacy profile (template)
+   */
+  const applyPrivacyProfile = async (profileId) => {
+    try {
+      const response = await privacyService.applyPrivacyProfile(profileId)
+      
+      // Update local state
+      sectionPrivacySettings.value = response.section_settings || {}
+      activePrivacyProfile.value = profileId
+      
+      showToast('Privacy profile applied successfully', 'success')
+      return response
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to apply privacy profile'
+      showToast('Failed to apply privacy profile', 'error')
+      console.error('Privacy profile application error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Delete privacy profile
+   */
+  const deletePrivacyProfile = async (profileId) => {
+    try {
+      await privacyService.deletePrivacyProfile(profileId)
+      
+      // Remove from local state
+      privacyProfiles.value = privacyProfiles.value.filter(p => p.id !== profileId)
+      if (activePrivacyProfile.value === profileId) {
+        activePrivacyProfile.value = null
+      }
+      
+      showToast('Privacy profile deleted', 'success')
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to delete privacy profile'
+      showToast('Failed to delete privacy profile', 'error')
+      console.error('Privacy profile deletion error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Get section privacy setting
+   */
+  const getSectionPrivacySetting = (section) => {
+    return sectionPrivacySettings.value[section] || 'public'
+  }
+
+  /**
+   * Check for privacy conflicts between field and section levels
+   */
+  const getPrivacyConflicts = () => {
+    const conflicts = []
+    
+    Object.keys(privacySettings).forEach(section => {
+      const sectionPrivacy = getSectionPrivacySetting(section)
+      const sectionFields = fieldMappings[section] || []
+      
+      sectionFields.forEach(field => {
+        const fieldPrivacy = getFieldPrivacy(field, section)
+        
+        if (fieldPrivacy !== sectionPrivacy) {
+          conflicts.push({
+            section,
+            field,
+            sectionPrivacy,
+            fieldPrivacy,
+            type: 'field_section_mismatch'
+          })
+        }
+      })
+    })
+    
+    return conflicts
+  }
+
+  /**
+   * Resolve privacy conflicts by prioritizing section or field level
+   */
+  const resolvePrivacyConflicts = async (resolution = 'prioritize_section') => {
+    const conflicts = getPrivacyConflicts()
+    
+    if (conflicts.length === 0) {
+      showToast('No privacy conflicts to resolve', 'info')
+      return
+    }
+    
+    const updates = {}
+    
+    conflicts.forEach(conflict => {
+      if (resolution === 'prioritize_section') {
+        updates[conflict.field] = conflict.sectionPrivacy
+      } else if (resolution === 'prioritize_field') {
+        sectionPrivacySettings.value[conflict.section] = conflict.fieldPrivacy
+      }
+    })
+    
+    try {
+      if (resolution === 'prioritize_section' && Object.keys(updates).length > 0) {
+        await bulkUpdatePrivacy(updates)
+      } else if (resolution === 'prioritize_field') {
+        await bulkUpdateSectionPrivacy(sectionPrivacySettings.value)
+      }
+      
+      showToast(`Resolved ${conflicts.length} privacy conflicts`, 'success')
+      
+    } catch (err) {
+      error.value = err.message || 'Failed to resolve privacy conflicts'
+      showToast('Failed to resolve privacy conflicts', 'error')
+      console.error('Privacy conflict resolution error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Get effective privacy level for a field (considering both field and section)
+   */
+  const getEffectivePrivacy = (fieldName, section = null) => {
+    const fieldPrivacy = getFieldPrivacy(fieldName, section)
+    const sectionPrivacy = getSectionPrivacySetting(section)
+    
+    // Return the more restrictive privacy level
+    const privacyLevels = {
+      'public': 0,
+      'alumni_only': 1,
+      'connections_only': 2,
+      'private': 3
+    }
+    
+    const fieldLevel = privacyLevels[fieldPrivacy] || 0
+    const sectionLevel = privacyLevels[sectionPrivacy] || 0
+    
+    const effectiveLevel = Math.max(fieldLevel, sectionLevel)
+    const effectivePrivacy = Object.keys(privacyLevels).find(key => privacyLevels[key] === effectiveLevel)
+    
+    return effectivePrivacy || 'public'
+  }
+
+  /**
+   * Get section privacy statistics
+   */
+  const sectionPrivacyStats = computed(() => {
+    const stats = {
+      public: 0,
+      alumni_only: 0,
+      connections_only: 0,
+      private: 0,
+      total: Object.keys(sectionPrivacySettings.value).length
+    }
+    
+    Object.values(sectionPrivacySettings.value).forEach(visibility => {
+      if (stats[visibility] !== undefined) {
+        stats[visibility]++
+      }
+    })
+    
+    return stats
+  })
+
   return {
     // State
     privacySettings,
@@ -288,6 +564,12 @@ export function usePrivacy() {
     privacyOptions,
     fieldMappings,
     privacyStats,
+    
+    // Section-level state
+    sectionPrivacySettings,
+    privacyProfiles,
+    activePrivacyProfile,
+    sectionPrivacyStats,
     
     // Methods
     loadPrivacySettings,
@@ -303,6 +585,19 @@ export function usePrivacy() {
     previewPrivacy,
     resetPrivacySettings,
     exportPrivacySettings,
-    importPrivacySettings
+    importPrivacySettings,
+    
+    // Section-level methods
+    loadSectionPrivacySettings,
+    updateSectionPrivacySetting,
+    bulkUpdateSectionPrivacy,
+    loadPrivacyProfiles,
+    createPrivacyProfile,
+    applyPrivacyProfile,
+    deletePrivacyProfile,
+    getSectionPrivacySetting,
+    getPrivacyConflicts,
+    resolvePrivacyConflicts,
+    getEffectivePrivacy
   }
 }

@@ -3,6 +3,13 @@
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold text-gray-900">About</h2>
       <div v-if="isOwnProfile" class="flex items-center gap-2">
+        <!-- Section Privacy Icon -->
+        <SectionPrivacyIcon
+          section-name="about"
+          :current-privacy="sectionPrivacy.about || 'connections_only'"
+          @privacy-changed="handleSectionPrivacyChange"
+          @apply-to-all-fields="applyPrivacyToAllFields"
+        />
       </div>
     </div>
     
@@ -155,6 +162,7 @@ import { ref, computed, onMounted } from 'vue'
 import { PlusIcon } from '@heroicons/vue/24/outline'
 import api from '../../services/api'
 import AboutItem from './AboutItem.vue'
+import SectionPrivacyIcon from '../privacy/SectionPrivacyIcon.vue'
 
 const props = defineProps({
   profile: Object,
@@ -169,6 +177,9 @@ const loading = ref(true)
 const error = ref(null)
 const fieldData = ref({})
 const showAddFieldModal = ref(false)
+const sectionPrivacy = ref({
+  about: 'connections_only'
+})
 
 // About fields only (contact fields moved to separate component)
 const aboutFields = [
@@ -211,8 +222,12 @@ async function fetchProfileData() {
     
     fieldData.value = filteredFieldData
     
+    // Calculate section privacy from actual field privacy settings
+    calculateSectionPrivacy()
+    
     console.log('Profile data loaded:', response.data)
     console.log('Filtered field data:', filteredFieldData)
+    console.log('Calculated section privacy:', sectionPrivacy.value)
   } catch (err) {
     console.error('Error fetching profile data:', err)
     error.value = 'Failed to load profile data. Please try again.'
@@ -221,13 +236,59 @@ async function fetchProfileData() {
   }
 }
 
+// Calculate section privacy based on individual field settings
+function calculateSectionPrivacy() {
+  const aboutFieldNames = Object.keys(fieldData.value).filter(field => 
+    aboutFields.includes(field)
+  )
+  
+  if (aboutFieldNames.length === 0) {
+    sectionPrivacy.value.about = 'connections_only'
+    return
+  }
+  
+  // Get all privacy values for fields in this section
+  const privacyValues = aboutFieldNames.map(field => 
+    fieldData.value[field]?.visibility || 'connections_only'
+  )
+  
+  // Determine section privacy based on field privacy values
+  // If all fields have the same privacy, use that
+  // Otherwise, use the most common or most restrictive
+  const uniqueValues = [...new Set(privacyValues)]
+  
+  if (uniqueValues.length === 1) {
+    // All fields have the same privacy
+    sectionPrivacy.value.about = uniqueValues[0]
+  } else {
+    // Mixed privacy levels - use the most common one
+    const counts = {}
+    privacyValues.forEach(value => {
+      counts[value] = (counts[value] || 0) + 1
+    })
+    
+    const mostCommon = Object.entries(counts).reduce((a, b) => 
+      counts[a[0]] > counts[b[0]] ? a : b
+    )[0]
+    
+    sectionPrivacy.value.about = mostCommon
+  }
+}
+
 async function updateField(fieldName, newValue) {
   try {
-    const response = await api.post('/auth/profile/field-update/', {
+    const payload = {
       field_name: fieldName,
       field_value: newValue,
-      visibility: fieldData.value[fieldName]?.visibility || 'alumni_only'
-    })
+      visibility: fieldData.value[fieldName]?.visibility || 'connections_only'
+    }
+    
+    // Include target user ID if editing another user's profile
+    if (props.userId && props.userId !== 'me') {
+      payload.target_user_id = props.userId
+    }
+    
+    const response = await api.post('/auth/profile/field-update/', payload)
     
     // Update local data
     if (fieldData.value[fieldName]) {
@@ -244,20 +305,71 @@ async function updateField(fieldName, newValue) {
 
 async function toggleVisibility(fieldName, newVisibility) {
   try {
-    const response = await api.post('/auth/profile/field-update/', {
+    const payload = {
       field_name: fieldName,
       visibility: newVisibility
-    })
+    }
+    
+    // Include target user ID if editing another user's profile
+    if (props.userId && props.userId !== 'me') {
+      payload.target_user_id = props.userId
+    }
+    
+    const response = await api.post('/auth/profile/field-update/', payload)
     
     // Update local data
     if (fieldData.value[fieldName]) {
       fieldData.value[fieldName].visibility = newVisibility
     }
     
+    // Recalculate section privacy after individual field change
+    calculateSectionPrivacy()
+    
     console.log('Visibility updated:', response.data)
   } catch (err) {
     console.error('Error updating visibility:', err)
     alert('Failed to update privacy setting. Please try again.')
+  }
+}
+
+// Section Privacy Methods
+async function handleSectionPrivacyChange(data) {
+  // Just apply to all fields directly since we don't have separate section privacy
+  await applyPrivacyToAllFields(data)
+}
+
+async function applyPrivacyToAllFields(data) {
+  try {
+    // Get all field names in this section
+    const fieldNames = Object.keys(fieldData.value)
+    
+    // Update each field's privacy
+    for (const fieldName of fieldNames) {
+      const payload = {
+        field_name: fieldName,
+        visibility: data.privacy
+      }
+      
+      // Include target user ID if editing another user's profile
+      if (props.userId && props.userId !== 'me') {
+        payload.target_user_id = props.userId
+      }
+      
+      await api.post('/auth/profile/field-update/', payload)
+      
+      if (fieldData.value[fieldName]) {
+        fieldData.value[fieldName].visibility = data.privacy
+      }
+    }
+    
+    sectionPrivacy.value[data.section] = data.privacy
+    console.log('Applied privacy to all fields in section:', data)
+    
+    // Don't refetch data immediately to avoid overriding the section privacy state
+    // emit('profile-updated')
+  } catch (err) {
+    console.error('Error applying privacy to all fields:', err)
+    alert('Failed to apply privacy to all fields. Please try again.')
   }
 }
 

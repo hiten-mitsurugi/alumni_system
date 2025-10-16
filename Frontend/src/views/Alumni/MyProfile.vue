@@ -193,6 +193,8 @@
           <!-- Recent Activity (if own profile) -->
           <RecentActivityWidget v-if="isOwnProfile" />
           
+
+          
         </div>
       </div>
     </div>
@@ -258,6 +260,7 @@ import ProfileContactSection from '@/components/profile/ProfileContactSection.vu
 import ProfileEducationSection from '@/components/profile/ProfileEducationSection.vue'
 import ProfileExperienceSection from '@/components/profile/ProfileExperienceSection.vue'
 import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
+
 import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
 import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnectionsWidget.vue'
 import RecentActivityWidget from '@/components/profile/RecentActivityWidget.vue'

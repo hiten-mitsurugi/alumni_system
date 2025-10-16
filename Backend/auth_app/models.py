@@ -596,3 +596,8 @@ class FieldPrivacySetting(models.Model):
             setting.visibility = visibility
             setting.save()
         return setting
+
+
+class SectionPrivacySetting(models.Model):
+    pass
+

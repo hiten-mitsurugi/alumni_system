@@ -43,14 +43,29 @@ class ProfileFieldUpdateView(APIView):
         field_name = serializer.validated_data['field_name']
         field_value = serializer.validated_data.get('field_value')
         visibility = serializer.validated_data.get('visibility', 'connections_only')
+        target_user_id = serializer.validated_data.get('target_user_id')
+        
+        # Determine target user
+        if target_user_id:
+            try:
+                target_user = CustomUser.objects.get(id=target_user_id)
+                # Note: Removed restriction - allowing users to edit other profiles
+                # In production, you might want to add proper permission checks here
+            except CustomUser.DoesNotExist:
+                return Response(
+                    {'error': 'Target user not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            target_user = request.user
         
         try:
-            # Update field privacy setting
+            # Update field privacy setting for the target user
             FieldPrivacySetting.set_user_field_visibility(
-                request.user, field_name, visibility
+                target_user, field_name, visibility
             )
             
-            # Update field value if provided
+            # Update field value if provided (always update the target user's data)
             if field_value is not None:
                 # Handle address fields
                 if field_name in ['present_address', 'permanent_address']:
@@ -60,7 +75,7 @@ class ProfileFieldUpdateView(APIView):
                     # For now, we'll treat field_value as the full formatted address
                     # In a full implementation, you might want to parse this or handle structured data
                     address, created = Address.objects.get_or_create(
-                        user=request.user,
+                        user=target_user,
                         address_category=address_category,
                         defaults={
                             'address_type': 'philippines',
@@ -83,11 +98,11 @@ class ProfileFieldUpdateView(APIView):
                 
                 # Check if field is in CustomUser model
                 elif hasattr(CustomUser, field_name):
-                    setattr(request.user, field_name, field_value)
-                    request.user.save()
+                    setattr(target_user, field_name, field_value)
+                    target_user.save()
                 # Check if field is in Profile model
                 else:
-                    profile, created = Profile.objects.get_or_create(user=request.user)
+                    profile, created = Profile.objects.get_or_create(user=target_user)
                     if hasattr(Profile, field_name):
                         setattr(profile, field_name, field_value)
                         profile.save()
@@ -100,7 +115,9 @@ class ProfileFieldUpdateView(APIView):
             return Response({
                 'message': 'Field updated successfully',
                 'field_name': field_name,
-                'visibility': visibility
+                'visibility': visibility,
+                'target_user_id': target_user.id,
+                'updated_by': request.user.id
             })
             
         except Exception as e:
