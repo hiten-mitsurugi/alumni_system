@@ -20,6 +20,19 @@ urlpatterns = [
     path('admin/analytics/', views.SurveyResponseAnalyticsView.as_view(), name='admin-analytics'),
     path('admin/responses/', views.SurveyResponsesView.as_view(), name='admin-responses'),
     
+    # Comprehensive Analytics Dashboard
+    path('admin/analytics/overview/', views.AnalyticsOverviewView.as_view(), name='analytics-overview'),
+    path('admin/analytics/employability/', views.EmployabilityAnalyticsView.as_view(), name='analytics-employability'),
+    path('admin/analytics/skills/', views.SkillsAnalyticsView.as_view(), name='analytics-skills'),
+    path('admin/analytics/curriculum/', views.CurriculumAnalyticsView.as_view(), name='analytics-curriculum'),
+    path('admin/analytics/studies/', views.StudiesAnalyticsView.as_view(), name='analytics-studies'),
+    path('admin/analytics/competitiveness/', views.CompetitivenessAnalyticsView.as_view(), name='analytics-competitiveness'),
+    path('admin/analytics/program-comparison/', views.ProgramComparisonAnalyticsView.as_view(), name='analytics-program-comparison'),
+    path('admin/analytics/demographics/', views.DemographicsAnalyticsView.as_view(), name='analytics-demographics'),
+    path('admin/analytics/filter-options/', views.AnalyticsFilterOptionsView.as_view(), name='analytics-filter-options'),
+    path('admin/analytics/export/', views.AnalyticsExportView.as_view(), name='analytics-export'),
+    path('admin/analytics/export-full/', views.AnalyticsFullReportView.as_view(), name='analytics-export-full'),
+    
     # Utility endpoints
     path('admin/export/', views.survey_export_view, name='admin-export'),
     path('admin/clear-cache/', views.clear_survey_cache_view, name='admin-clear-cache'),

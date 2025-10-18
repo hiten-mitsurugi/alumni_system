@@ -819,3 +819,354 @@ class RegistrationSurveyQuestionsView(APIView):
         response['Pragma'] = 'no-cache'
         response['Expires'] = '0'
         return response
+
+
+# ============================================================================
+# COMPREHENSIVE ANALYTICS DASHBOARD VIEWS
+# ============================================================================
+
+class AnalyticsOverviewView(APIView):
+    """
+    Analytics Overview - Executive summary and KPIs
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        try:
+            filters = request.data.get('filters', {})
+            
+            # Apply filters and get basic stats
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            users = User.objects.filter(user_type=3)  # Alumni only
+            responses = SurveyResponse.objects.all()
+            
+            # Apply filters (implement filtering logic)
+            if filters.get('programs'):
+                users = users.filter(program__in=filters['programs'])
+            if filters.get('graduation_years'):
+                users = users.filter(year_graduated__in=filters['graduation_years'])
+            
+            # Calculate KPIs
+            total_respondents = users.count()
+            employed_count = users.filter(employment_status__in=['employed_locally', 'employed_internationally']).count()
+            international_count = users.filter(employment_status='employed_internationally').count()
+            
+            overview_data = {
+                'total_respondents': total_respondents,
+                'employed_count': employed_count,
+                'international_count': international_count,
+                'unemployed_count': users.filter(employment_status='unemployed').count(),
+                'self_employed_count': users.filter(employment_status='self_employed').count(),
+                'average_income': 0,  # Calculate from survey responses
+                'average_competitiveness': 0,  # Calculate from survey responses
+                'studies_count': 0,  # Calculate from survey responses
+                'quick_insights': [
+                    f"Total of {total_respondents} alumni have responded to the survey",
+                    f"Employment rate stands at {(employed_count/total_respondents*100):.1f}%" if total_respondents > 0 else "No employment data available",
+                    f"International employment accounts for {(international_count/employed_count*100):.1f}% of employed alumni" if employed_count > 0 else "No international employment data"
+                ]
+            }
+            
+            return Response({'overview': overview_data})
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class EmployabilityAnalyticsView(APIView):
+    """
+    Employment outcome analysis
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        try:
+            filters = request.data.get('filters', {})
+            
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            users = User.objects.filter(user_type=3)  # Alumni only
+            
+            # Apply filters
+            if filters.get('programs'):
+                users = users.filter(program__in=filters['programs'])
+            
+            # Calculate employment statistics
+            total = users.count()
+            employed = users.filter(employment_status__in=['employed_locally', 'employed_internationally']).count()
+            unemployed = users.filter(employment_status='unemployed').count()
+            self_employed = users.filter(employment_status='self_employed').count()
+            local_employed = users.filter(employment_status='employed_locally').count()
+            international_employed = users.filter(employment_status='employed_internationally').count()
+            
+            # Program analysis
+            programs = users.values('program').distinct()
+            program_analysis = []
+            
+            for program in programs:
+                if program['program']:
+                    program_users = users.filter(program=program['program'])
+                    program_total = program_users.count()
+                    program_employed = program_users.filter(employment_status__in=['employed_locally', 'employed_internationally']).count()
+                    
+                    program_analysis.append({
+                        'name': program['program'],
+                        'employmentRate': round((program_employed/program_total*100) if program_total > 0 else 0, 2),
+                        'localEmployment': round((program_users.filter(employment_status='employed_locally').count()/program_total*100) if program_total > 0 else 0, 2),
+                        'internationalEmployment': round((program_users.filter(employment_status='employed_internationally').count()/program_total*100) if program_total > 0 else 0, 2),
+                        'averageIncome': 25000,  # Placeholder - calculate from actual data
+                        'jobRelevancePercentage': 85,  # Placeholder - calculate from actual data
+                        'jobRelevanceScore': 4.2,  # Placeholder
+                        'respondentCount': program_total
+                    })
+            
+            # Sort by employment rate
+            program_analysis.sort(key=lambda x: x['employmentRate'], reverse=True)
+            
+            employability_data = {
+                'overallStats': {
+                    'employmentRate': round((employed/total*100) if total > 0 else 0, 2),
+                    'unemploymentRate': round((unemployed/total*100) if total > 0 else 0, 2),
+                    'selfEmployedRate': round((self_employed/total*100) if total > 0 else 0, 2),
+                    'averageIncome': 25000,  # Placeholder
+                    'localEmploymentRate': round((local_employed/employed*100) if employed > 0 else 0, 2),
+                    'internationalRate': round((international_employed/employed*100) if employed > 0 else 0, 2)
+                },
+                'programAnalysis': program_analysis,
+                'topPerformers': program_analysis[:5],
+                'incomeAnalysis': {
+                    'distribution': {'₱15,000-₱25,000': 45, '₱25,000-₱35,000': 30, '₱35,000+': 25},
+                    'localAverage': 22000,
+                    'internationalAverage': 45000,
+                    'bySector': {'Private': 28000, 'Government': 25000, 'NGO': 22000}
+                },
+                'jobRelevance': {
+                    'Highly Relevant': {'percentage': 65},
+                    'Somewhat Relevant': {'percentage': 25},
+                    'Not Relevant': {'percentage': 10}
+                },
+                'employmentSectors': {
+                    'Private': 60,
+                    'Government': 25,
+                    'NGO': 10,
+                    'Self-Employed': 5
+                }
+            }
+            
+            return Response({'employability': employability_data})
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SkillsAnalyticsView(APIView):
+    """
+    Skills relevance analysis
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder implementation
+        skills_data = {
+            'overallAverages': {
+                'Communication': 4.2,
+                'Critical Thinking': 4.0,
+                'Leadership': 3.8,
+                'Adaptability': 4.1,
+                'Productivity': 3.9,
+                'Entrepreneurship': 3.5
+            },
+            'rankedSkills': [
+                {'skill': 'Communication', 'average': 4.2},
+                {'skill': 'Adaptability', 'average': 4.1},
+                {'skill': 'Critical Thinking', 'average': 4.0},
+                {'skill': 'Productivity', 'average': 3.9},
+                {'skill': 'Leadership', 'average': 3.8},
+                {'skill': 'Entrepreneurship', 'average': 3.5}
+            ],
+            'topSkills': [
+                {'skill': 'Communication', 'average': 4.2},
+                {'skill': 'Adaptability', 'average': 4.1},
+                {'skill': 'Critical Thinking', 'average': 4.0}
+            ]
+        }
+        return Response({'skills': skills_data})
+
+
+class CurriculumAnalyticsView(APIView):
+    """
+    Curriculum effectiveness analysis
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder implementation
+        curriculum_data = {
+            'componentRatings': {
+                'Major Courses': 4.3,
+                'OJT/Internship': 4.5,
+                'General Education': 3.8,
+                'Electives': 3.6,
+                'Co-curricular': 3.9,
+                'Extra-curricular': 3.7
+            }
+        }
+        return Response({'curriculum': curriculum_data})
+
+
+class StudiesAnalyticsView(APIView):
+    """
+    Further studies analysis
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder implementation
+        studies_data = {
+            'overview': {
+                'participationRate': 35,
+                'totalPursuing': 150
+            }
+        }
+        return Response({'studies': studies_data})
+
+
+class CompetitivenessAnalyticsView(APIView):
+    """
+    Competitiveness analysis
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder implementation
+        competitiveness_data = {
+            'overallScore': 4.1,
+            'distribution': {'5': 30, '4': 40, '3': 20, '2': 8, '1': 2}
+        }
+        return Response({'competitiveness': competitiveness_data})
+
+
+class ProgramComparisonAnalyticsView(APIView):
+    """
+    Program comparison analysis
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder implementation
+        comparison_data = {
+            'performanceMatrix': [],
+            'overallRankings': []
+        }
+        return Response({'program_comparison': comparison_data})
+
+
+class DemographicsAnalyticsView(APIView):
+    """
+    Demographics analysis
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder implementation
+        demographics_data = {
+            'overview': {
+                'totalRespondents': 500,
+                'genderDistribution': {'Male': 45, 'Female': 55},
+                'civilStatusDistribution': {'Single': 60, 'Married': 35, 'Others': 5},
+                'locationDistribution': {'Local': 75, 'International': 25}
+            }
+        }
+        return Response({'demographics': demographics_data})
+
+
+class AnalyticsFilterOptionsView(APIView):
+    """
+    Get available filter options for analytics
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def get(self, request):
+        try:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            # Get unique programs
+            programs = User.objects.filter(user_type=3, program__isnull=False).values_list('program', flat=True).distinct()
+            program_options = []
+            for program in programs:
+                if program:
+                    count = User.objects.filter(user_type=3, program=program).count()
+                    program_options.append({'value': program, 'label': program, 'count': count})
+            
+            # Get graduation years
+            years = User.objects.filter(user_type=3, year_graduated__isnull=False).values_list('year_graduated', flat=True).distinct().order_by('-year_graduated')
+            year_options = []
+            for year in years:
+                count = User.objects.filter(user_type=3, year_graduated=year).count()
+                year_options.append({'value': year, 'label': str(year), 'count': count})
+            
+            # Get employment statuses
+            employment_options = [
+                {'value': 'employed_locally', 'label': 'Employed Locally', 'count': User.objects.filter(user_type=3, employment_status='employed_locally').count()},
+                {'value': 'employed_internationally', 'label': 'Employed Internationally', 'count': User.objects.filter(user_type=3, employment_status='employed_internationally').count()},
+                {'value': 'self_employed', 'label': 'Self-Employed', 'count': User.objects.filter(user_type=3, employment_status='self_employed').count()},
+                {'value': 'unemployed', 'label': 'Unemployed', 'count': User.objects.filter(user_type=3, employment_status='unemployed').count()},
+            ]
+            
+            # Basic location options
+            location_options = [
+                {'value': 'local', 'label': 'Local (Philippines)', 'count': User.objects.filter(user_type=3, employment_status='employed_locally').count()},
+                {'value': 'international', 'label': 'International', 'count': User.objects.filter(user_type=3, employment_status='employed_internationally').count()},
+            ]
+            
+            # Gender options
+            gender_options = [
+                {'value': 'male', 'label': 'Male', 'count': User.objects.filter(user_type=3, sex='male').count()},
+                {'value': 'female', 'label': 'Female', 'count': User.objects.filter(user_type=3, sex='female').count()},
+            ]
+            
+            # Civil status options
+            civil_status_options = [
+                {'value': 'single', 'label': 'Single', 'count': User.objects.filter(user_type=3, civil_status='single').count()},
+                {'value': 'married', 'label': 'Married', 'count': User.objects.filter(user_type=3, civil_status='married').count()},
+                {'value': 'separated', 'label': 'Separated', 'count': User.objects.filter(user_type=3, civil_status='separated').count()},
+                {'value': 'widowed', 'label': 'Widowed', 'count': User.objects.filter(user_type=3, civil_status='widowed').count()},
+            ]
+            
+            return Response({
+                'programs': program_options,
+                'graduationYears': year_options,
+                'employmentStatuses': employment_options,
+                'locations': location_options,
+                'genders': gender_options,
+                'civilStatuses': civil_status_options
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AnalyticsExportView(APIView):
+    """
+    Export specific analytics reports
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder for export functionality
+        return Response({'message': 'Export functionality coming soon'})
+
+
+class AnalyticsFullReportView(APIView):
+    """
+    Export comprehensive analytics report
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def post(self, request):
+        # Placeholder for full report export
+        return Response({'message': 'Full report export functionality coming soon'})
