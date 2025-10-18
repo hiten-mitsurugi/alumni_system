@@ -3,7 +3,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { 
-  BarChart3, Download, Filter, Calendar, Printer, FileSpreadsheet, FileText, RefreshCw,
+  BarChart3, Download, Filter, Calendar, FileSpreadsheet, FileText, RefreshCw,
   TrendingUp, Briefcase, Target, BookOpen, GraduationCap, Trophy, GitCompare, Users, ChevronDown
 } from 'lucide-vue-next'
 import AnalyticsOverview from '@/components/analytics/AnalyticsOverview.vue'
@@ -159,10 +159,6 @@ const exportReport = async (format) => {
   }
 }
 
-const printReport = () => {
-  window.print()
-}
-
 const refreshData = () => {
   loadAnalyticsData()
 }
@@ -189,7 +185,7 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
 <template>
   <div :class="['min-h-screen transition-colors', isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900']" @click="closeDropdown">
     <!-- Header Section -->
-    <div :class="['sticky top-0 z-30 border-b backdrop-blur-sm', isDark ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200']">
+    <div :class="['sticky top-0 z-30 border-b backdrop-blur-sm no-print', isDark ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200']">
       <div class="px-6 py-4">
         <!-- Title and Stats Row -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
@@ -350,14 +346,6 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
                 </div>
               </div>
             </div>
-
-            <button
-              @click="printReport"
-              :class="['flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors', isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-white text-gray-700 hover:bg-gray-50 border']"
-            >
-              <Printer class="w-4 h-4" />
-              Print
-            </button>
           </div>
         </div>
       </div>
@@ -369,12 +357,29 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
         :applied-filters="appliedFilters"
         @apply="applyFilters"
         @clear="clearFilters"
-        :class="['border-t', isDark ? 'border-gray-700' : 'border-gray-200']"
+        :class="['border-t no-print', isDark ? 'border-gray-700' : 'border-gray-200']"
       />
     </div>
 
     <!-- Content Area -->
     <div class="flex-1">
+      <!-- Print-only Header -->
+      <div class="print-only hidden">
+        <div class="text-center mb-8 p-6 border-b">
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">
+            {{ currentReport.title }}
+          </h1>
+          <p class="text-gray-600 mb-4">
+            {{ currentReport.description }}
+          </p>
+          <div class="text-sm text-gray-500">
+            <p>CSU Graduate Tracer Study Analytics System</p>
+            <p>Generated on: {{ new Date().toLocaleDateString() }} at {{ new Date().toLocaleTimeString() }}</p>
+            <p v-if="hasActiveFilters">Filters Applied: {{ Object.keys(appliedFilters).length }} filter(s)</p>
+          </div>
+        </div>
+      </div>
+      
       <!-- Main Report Area -->
       <div class="p-6">
         <!-- Loading State -->
@@ -388,7 +393,7 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
         </div>
 
         <!-- Report Components -->
-        <div v-else-if="analyticsData">
+        <div v-else-if="analyticsData" class="analytics-section">
           <AnalyticsOverview
             v-if="activeReport === 'overview'"
             :data="analyticsData"
@@ -457,9 +462,4 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
 </template>
 
 <style scoped>
-@media print {
-  .no-print {
-    display: none !important;
-  }
-}
 </style>
