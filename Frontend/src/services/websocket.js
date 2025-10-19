@@ -165,7 +165,7 @@ export class WebSocketService {
     };
   }
 
-  async reconnect(endpoint, attempt = 0) {
+  async reconnect(endpoint, _attempt = 0) {
     // Don't reconnect if we're not authenticated
     const authStore = this.getAuthStore();
     if (!authStore.token) {
