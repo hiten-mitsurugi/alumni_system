@@ -94,3 +94,6 @@ Backend/debug_*.py
 # Debug logs
 debug.log
 *.log
+
+# Lint fix utilities
+fix-lint-errors.js
