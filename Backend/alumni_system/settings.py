@@ -146,7 +146,16 @@ def test_redis_connection():
     """Test if Redis is available"""
     try:
         import redis
-        r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD if REDIS_PASSWORD else None, db=0)
+        # Set a short timeout for development to avoid long waits
+        r = redis.Redis(
+            host=REDIS_HOST, 
+            port=REDIS_PORT, 
+            password=REDIS_PASSWORD if REDIS_PASSWORD else None, 
+            db=0,
+            socket_connect_timeout=2,  # 2 second timeout
+            socket_timeout=2,
+            retry_on_timeout=False
+        )
         r.ping()
         return True
     except Exception as e:
