@@ -380,13 +380,17 @@ class Profile(models.Model):
         self.fathers_occupation = self.user.fathers_occupation
         self.year_graduated = self.user.year_graduated
         self.program = self.user.program
-        current_job = self.user.work_histories.filter(is_current_job=True).first()
-        if current_job:
-            # Map to existing profile fields for compatibility
-            self.present_employment_status = current_job.classification  # Use classification instead of removed employment_status
-            self.employment_classification = current_job.classification
-            self.present_occupation = current_job.occupation
-            self.employing_agency = current_job.employing_agency
+        
+        # Only sync work history for alumni (user_type=3), not for admins (user_type=1,2)
+        if self.user.user_type == 3:
+            current_job = self.user.work_histories.filter(is_current_job=True).first()
+            if current_job:
+                # Map to existing profile fields for compatibility
+                self.present_employment_status = current_job.classification  # Use classification instead of removed employment_status
+                self.employment_classification = current_job.classification
+                self.present_occupation = current_job.occupation
+                self.employing_agency = current_job.employing_agency
+        
         super().save(*args, **kwargs)
 
 

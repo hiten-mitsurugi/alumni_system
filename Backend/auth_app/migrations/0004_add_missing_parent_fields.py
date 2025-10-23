@@ -1,4 +1,6 @@
 # Generated migration to add missing parent fields
+# NOTE: This migration is now a no-op because these fields already exist in the database
+# and are properly defined in the model
 from django.db import migrations
 
 
@@ -9,21 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Add missing parent fields using raw SQL
-        migrations.RunSQL(
-            "ALTER TABLE auth_app_customuser ADD COLUMN mothers_name VARCHAR(150);",
-            reverse_sql="ALTER TABLE auth_app_customuser DROP COLUMN mothers_name;"
-        ),
-        migrations.RunSQL(
-            "ALTER TABLE auth_app_customuser ADD COLUMN mothers_occupation VARCHAR(100);",
-            reverse_sql="ALTER TABLE auth_app_customuser DROP COLUMN mothers_occupation;"
-        ),
-        migrations.RunSQL(
-            "ALTER TABLE auth_app_customuser ADD COLUMN fathers_name VARCHAR(150);",
-            reverse_sql="ALTER TABLE auth_app_customuser DROP COLUMN fathers_name;"
-        ),
-        migrations.RunSQL(
-            "ALTER TABLE auth_app_customuser ADD COLUMN fathers_occupation VARCHAR(100);",
-            reverse_sql="ALTER TABLE auth_app_customuser DROP COLUMN fathers_occupation;"
-        ),
+        # No operations needed - parent fields already exist in database
+        # This migration is kept for migration history consistency
     ]

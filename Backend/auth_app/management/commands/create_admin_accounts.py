@@ -184,8 +184,9 @@ class Command(BaseCommand):
                     }
                 )
 
-                # Create profile for the user
+                # Create profile for the user - simpler approach for admin accounts
                 from auth_app.models import Profile
+                # For admin accounts, just create a basic profile without complex syncing
                 profile = Profile.objects.create(
                     user=user,
                     full_name=f'{user.first_name} {user.last_name}',
@@ -200,7 +201,8 @@ class Command(BaseCommand):
                     fathers_occupation=user.fathers_occupation,
                     year_graduated=user.year_graduated,
                     program=user.program,
-                    present_employment_status=user.employment_status,
+                    # Set default employment status for admin accounts
+                    present_employment_status='employed_locally',
                     status='online',
                     bio=f'System generated {account_type} account',
                     last_seen=timezone.now()

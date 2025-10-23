@@ -13,24 +13,38 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='post',
-            name='approved_at',
-            field=models.DateTimeField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='post',
-            name='approved_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='approved_posts', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='post',
-            name='decline_reason',
-            field=models.TextField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='post',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending Review'), ('approved', 'Approved'), ('declined', 'Declined')], default='pending', max_length=20),
+        # Add columns only if they don't exist
+        migrations.RunSQL(
+            """
+            DO $$
+            BEGIN
+                -- Add approved_at column if it doesn't exist
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='posts_app_post' AND column_name='approved_at') THEN
+                    ALTER TABLE posts_app_post ADD COLUMN approved_at TIMESTAMP WITH TIME ZONE NULL;
+                END IF;
+                
+                -- Add approved_by_id column if it doesn't exist
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='posts_app_post' AND column_name='approved_by_id') THEN
+                    ALTER TABLE posts_app_post ADD COLUMN approved_by_id INTEGER NULL;
+                    ALTER TABLE posts_app_post ADD CONSTRAINT posts_app_post_approved_by_id_fkey FOREIGN KEY (approved_by_id) REFERENCES auth_app_customuser(id) ON DELETE SET NULL;
+                END IF;
+                
+                -- Add decline_reason column if it doesn't exist
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='posts_app_post' AND column_name='decline_reason') THEN
+                    ALTER TABLE posts_app_post ADD COLUMN decline_reason TEXT NULL;
+                END IF;
+                
+                -- Add status column if it doesn't exist
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='posts_app_post' AND column_name='status') THEN
+                    ALTER TABLE posts_app_post ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending';
+                END IF;
+            END $$;
+            """,
+            reverse_sql="""
+            ALTER TABLE posts_app_post DROP COLUMN IF EXISTS approved_at;
+            ALTER TABLE posts_app_post DROP COLUMN IF EXISTS approved_by_id;
+            ALTER TABLE posts_app_post DROP COLUMN IF EXISTS decline_reason;
+            ALTER TABLE posts_app_post DROP COLUMN IF EXISTS status;
+            """
         ),
     ]
