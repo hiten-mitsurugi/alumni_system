@@ -43,10 +43,10 @@ class AlumniDirectoryCheckSerializer(serializers.Serializer):
     program = serializers.CharField(required=True)
     birth_date = serializers.DateField(required=True)
     year_graduated = serializers.IntegerField(required=True)
-    sex = serializers.ChoiceField(choices=CustomUser.GENDER_CHOICES, required=True)
+    sex = serializers.ChoiceField(choices=CustomUser.SEX_CHOICES, required=True)
 
     def validate_sex(self, value):
-        valid_choices = [choice[0] for choice in CustomUser.GENDER_CHOICES]
+        valid_choices = [choice[0] for choice in CustomUser.SEX_CHOICES]
         if value not in valid_choices:
             raise serializers.ValidationError(f'"{value}" is not a valid choice.')
         return value
@@ -109,7 +109,12 @@ class WorkHistorySerializer(serializers.ModelSerializer):
     skills = SkillSerializer(many=True, required=False)
     class Meta:
         model = WorkHistory
-        exclude = ['user']
+        fields = [
+            'id', 'occupation', 'employing_agency', 'classification', 
+            'length_of_service', 'description', 'start_date', 'end_date', 'skills',
+            'job_type', 'employment_status', 'how_got_job', 'monthly_income',
+            'is_breadwinner', 'college_education_relevant'
+        ]
 
 class SkillsRelevanceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -134,7 +139,7 @@ class FeedbackRecommendationsSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
     confirm_password = serializers.CharField(write_only=True, style={'input_type': 'password'})
-    sex = serializers.ChoiceField(choices=CustomUser.GENDER_CHOICES, required=True)
+    gender = serializers.ChoiceField(choices=CustomUser.GENDER_CHOICES, required=True)
     civil_status = serializers.ChoiceField(choices=CustomUser.CIVIL_STATUS_CHOICES, required=True)
     employment_status = serializers.ChoiceField(choices=CustomUser.EMPLOYMENT_STATUS_CHOICES, required=True)
     work_histories = JSONField(required=False)  # Made optional for dynamic surveys
@@ -153,7 +158,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             'first_name', 'middle_name', 'last_name', 'email', 'password', 'confirm_password',
-            'government_id', 'program', 'profile_picture', 'contact_number', 'sex', 'gender', 'birth_date', 
+            'government_id', 'program', 'profile_picture', 'contact_number', 'gender', 'birth_date', 
             'year_graduated', 'employment_status', 'civil_status', 'alumni_exists', 'mothers_name', 
             'mothers_occupation', 'fathers_name', 'fathers_occupation', 'work_histories', 
             'skills_relevance', 'curriculum_relevance', 'perception_further_studies', 
@@ -205,7 +210,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             program=validated_data['program'],
             profile_picture=validated_data['profile_picture'],
             contact_number=validated_data['contact_number'],
-            sex=validated_data['sex'],
             gender=validated_data.get('gender'),
             civil_status=validated_data['civil_status'],
             birth_date=validated_data['birth_date'],
@@ -574,11 +578,17 @@ class EnhancedProfileSerializer(serializers.ModelSerializer):
 class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     """Enhanced User serializer with LinkedIn-style profile features"""
     profile = EnhancedProfileSerializer(read_only=True)
-    work_histories = WorkHistorySerializer(many=True, read_only=True)
+    work_histories = serializers.SerializerMethodField()
     achievements = AchievementSerializer(many=True, read_only=True)
     education = serializers.SerializerMethodField()
     user_skills = UserSkillSerializer(many=True, read_only=True)
     real_time_status = serializers.SerializerMethodField()
+    
+    def get_work_histories(self, obj):
+        """Get work histories deferring the problematic is_current_job field"""
+        # Defer the is_current_job field that doesn't exist in database
+        work_histories = obj.work_histories.all().defer('is_current_job')
+        return WorkHistorySerializer(work_histories, many=True).data
     
     def get_education(self, obj):
         """Explicitly get education records for the user"""

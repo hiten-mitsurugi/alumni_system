@@ -1,29 +1,31 @@
 
 ➤ Present Employment: 
 • Are you presently employed? (☐ Yes ☐ No ☐ Never been employed if yes show the other questions below if no do no show) 
-• Present Employment Status (☐ Employed Locally ☐ Employed Internationally 
-• ☐ Self-employed ☐ Unemployed ☐ Retired) 
-• Classification of Employment / Sector (☐ Government ☐ Private ☐ NGO ☐ Freelance ☐ Business 
-Owner) 
-• Present Occupation 
-• Employing Agency Name & Location 
-• How did you get your current job? (☐ Less than ₱15,000 ☐ ₱15,000 – ₱29,999 ☐ ₱30,000 – 
-₱49,999 
-☐ ₱50,000 and above ☐ Prefer not to say) 
-• Monthly Income 
-• Are you the breadwinner? (☐ Yes ☐ No) 
-• Length of Service (Years / Months) 
-• Was college education relevant to this job? (☐ Yes ☐ No ☐ Somewhat) 
+• Present Employment Status (Drop down( Employed Locally,  Employed Internationally,  Self-employed,  Unemployed Retired) )(Required "Yes" answer from "Are you presently employed?" before shown)
+• Classification of Employment / Sector (Dropdown (Government, Private, NGO, Freelance, Business Owner) )(Required "Yes" answer from "Are you presently employed?" before shown)
+• Present Occupation (Required "Yes" answer from "Are you presently employed?" before shown)
+• Employing Agency Name (Required "Yes" answer from "Are you presently employed?" before shown)
+• Employing Location (Required "Yes" answer from "Are you presently employed?" before shown)
+• How did you get your current job?(Drop down (Referral, Online application, Walk-in Company offer,  Internship/OJT, Job Fair))(Required "Yes" answer from "Are you presently employed?" before shown)
+• Monthly Income (Dropdown ( Less than ₱15,000|  ₱15,000 – ₱29,999|  ₱30,000 – ₱49,999| ₱50,000 and above| Prefer not to say)) (Required "Yes" answer from "Are you presently employed?" before shown)
+• Are you the breadwinner? (☐ Yes ☐ No) (Required "Yes" answer from "Are you presently employed?" before shown)
+• Length of Service (Years) (Drop Down(Less than 1 year, 1–3 years, 4–6 years, More than 6 years) (Required "Yes" answer from "Are you presently employed?" before shown)
+• Was college education relevant to this job? (☐ Yes ☐ No ☐ Somewhat) (Required "Yes" answer from "Are you presently employed?" before shown)
+
 ➤ First Job (if different from current if yes show the other questions below if no do no show): 
 • Is your current job your first job? (☐ Yes ☐ No) 
-• First Job Title 
-• First Employer 
-• Employment Status in First Job 
-• Sector Classification (First Job) 
-• How did you get your first job? 
-• Monthly Income in First Job 
-• Length of Service (Years / Months) 
-• Was college education relevant to first job? 
+• First Job Title (Required "No" answer from "Is your current job your first job?")
+• First Employer (Required "No" answer from "Is your current job your first job?")
+• First Employing Location (Required "Yes" answer from "Are you presently employed?" before shown)
+• Employment Status in First Job (Drop down( Employed Locally,  Employed Internationally,  Self-employed,  Unemployed Retired) (Required "No" answer from "Is your current job your first job?")
+• Sector Classification (First Job) (Dropdown (Government, Private, NGO, Freelance, Business Owner)(Required "No" answer from "Is your current job your first job?")
+• How did you get your first job? (Drop down (Referral, Online application, Walk-in Company offer,  Internship/OJT, Job Fair))(Required "No" answer from "Is your current job your first job?")
+• Monthly Income in First Job (Dropdown ( Less than ₱15,000|  ₱15,000 – ₱29,999|  ₱30,000 – ₱49,999| ₱50,000 and above| Prefer not to say))(Required "No" answer from "Is your current job your first job?")
+• Length of Service (Years / Months)(Drop Down(Less than 1 year, 1–3 years, 4–6 years, More than 6 years) (Required "No" answer from "Is your current job your first job?")
+• Was college education relevant to first job? (Required "No" answer from "Is your current job your first job?")
+
+
+
 SECTION 4: Skills Relevance in Workplace 
 ➤ Likert Scale (1 – Not Useful | 5 – Very Useful) 
 Rate the relevance of each skill in your work: 
@@ -36,7 +38,10 @@ Rate the relevance of each skill in your work:
 • Entrepreneurship 
 • Global Citizenship 
 • Adaptability 
-• Accessing, Analyzing, and Synthesizing Information 
+• Accessing, Analyzing, and Synthesizing Information
+
+
+ 
 SECTION 5: Curriculum and Program Relevance 
 ➤ Courses Usefulness (Likert Scale) 
 How useful are the following course curricula in your professional work?  
@@ -49,18 +54,21 @@ How useful are the following course curricula in your professional work?
 How useful are the following curricular programs in your professional work? 
 • Co-Curricular Activities (e.g., seminars, field trips) 
 • Extra-Curricular Activities (e.g., intramurals, exit conference) 
+
+
 SECTION 6: Perception and Further Studies 
 • Competitiveness of graduates (Likert Scale 1-5) 
 • Have you pursued further studies? (☐ Yes ☐ No if yes show the other questions below if no do no show) 
 If yes: 
-o Mode of Study (☐ Full-time ☐ Part-time ☐ Online ☐ Others) 
-o Level of Study (☐ Master’s ☐ Doctoral ☐ Certificate) 
-o Field of Study 
-o Specialization 
-o Is it related to your undergrad? (☐ Yes ☐ No if yes show the other questions below if no do no show) 
-o Reasons for further study (Multiple selections) 
-☐ Career growth ☐ Interest ☐ Job requirement ☐ Promotion ☐ Personal development 
-☐ Others 
+o Mode of Study (☐ Full-time ☐ Part-time ☐ Online ☐ Others) (Required "Yes" answer from "Have you pursued further studies?" before shown)
+o Level of Study (☐ Master’s ☐ Doctoral ☐ Certificate) (Required "Yes" answer from "Have you pursued further studies?" before shown)
+o Field of Study (Required "Yes" answer from "Have you pursued further studies?" before shown)
+o Specialization (Required "Yes" answer from "Have you pursued further studies?" before shown)
+o Is it related to your undergrad? (Required "Yes" answer from "Have you pursued further studies?" before shown)
+o Reasons for further study (Drop Down (Career growth, Interest,Job requirement, Promotion, Personal development, Others) (Required "Yes" answer from "Have you pursued further studies?" before shown)
+
+
+
 SECTION 7: Feedback and Recommendations 
 • What are your recommendations to improve the program you had in college? (Paragraph 
 response)

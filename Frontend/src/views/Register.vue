@@ -5,6 +5,7 @@ import api from '../services/api';
 import Navbar from '@/components/Navbar.vue';
 import VerifyAlumniDirectory from '@/components/register/VerifyAlumniDirectory.vue';
 import PersonalInfo from '@/components/register/PersonalInfo.vue';
+import VerificationAgreement from '@/components/register/VerificationAgreement.vue';
 import WorkHistory from '@/components/register/WorkHistory.vue';
 import SkillsRelevance from '@/components/register/SkillRelevance.vue';
 import CurriculumRelevance from '@/components/register/CurriculumRelevance.vue';
@@ -13,7 +14,7 @@ import FeedbackRecommendations from '@/components/register/FeedbackRecommendatio
 import backgroundImage from '@/assets/Background.png';
 
 const currentStep = ref(1);
-const totalSteps = 7;
+const totalSteps = 8;
 const error = ref('');
 const success = ref('');
 
@@ -402,23 +403,31 @@ const updateStep7Form = (newForm) => {
           <PersonalInfo :form="form.value" @update:form="updateStep2Form" />
         </div>
         <div v-if="currentStep === 3">
-          <h3 class="text-xl font-semibold text-center mb-6">Step 3: Work History</h3>
+          <h3 class="text-xl font-semibold text-center mb-6">Step 3: Verification Agreement</h3>
+          <VerificationAgreement :form="form.value" @proceed="handleVerificationProceed" @go-back="handleVerificationGoBack" @skip-register="handleSkipRegister" />
+        </div>
+        <div v-if="currentStep === 4">
+          <h3 class="text-xl font-semibold text-center mb-6">Step 4: Work History</h3>
           <WorkHistory :form="form.value" @update:form="updateStep3Form" />
         </div>
         <div v-if="currentStep === 4">
-          <h3 class="text-xl font-semibold text-center mb-6">Step 4: Skills Relevance in Workplace</h3>
-          <SkillsRelevance :form="form.value" @update:form="updateStep4Form" />
+          <h3 class="text-xl font-semibold text-center mb-6">Step 4: Work History</h3>
+          <WorkHistory :form="form.value" @update:form="updateStep3Form" />
         </div>
         <div v-if="currentStep === 5">
-          <h3 class="text-xl font-semibold text-center mb-6">Step 5: Curriculum and Program Relevance</h3>
-          <CurriculumRelevance :form="form.value" @update:form="updateStep5Form" />
+          <h3 class="text-xl font-semibold text-center mb-6">Step 5: Skills Relevance in Workplace</h3>
+          <SkillsRelevance :form="form.value" @update:form="updateStep4Form" />
         </div>
         <div v-if="currentStep === 6">
-          <h3 class="text-xl font-semibold text-center mb-6">Step 6: Perception and Further Studies</h3>
-          <PerceptionFurtherStudies :form="form.value" @update:form="updateStep6Form" />
+          <h3 class="text-xl font-semibold text-center mb-6">Step 6: Curriculum and Program Relevance</h3>
+          <CurriculumRelevance :form="form.value" @update:form="updateStep5Form" />
         </div>
         <div v-if="currentStep === 7">
-          <h3 class="text-xl font-semibold text-center mb-6">Step 7: Feedback and Recommendations</h3>
+          <h3 class="text-xl font-semibold text-center mb-6">Step 7: Perception and Further Studies</h3>
+          <PerceptionFurtherStudies :form="form.value" @update:form="updateStep6Form" />
+        </div>
+        <div v-if="currentStep === 8">
+          <h3 class="text-xl font-semibold text-center mb-6">Step 8: Feedback and Recommendations</h3>
           <FeedbackRecommendations :form="form.value" @update:form="updateStep7Form" />
         </div>
         <div class="flex justify-between mt-6">
@@ -427,16 +436,16 @@ const updateStep7Form = (newForm) => {
             Back
           </button>
           <button v-if="currentStep > 1 && currentStep < totalSteps" @click="nextStep"
-            class="bg-green-700 text-white py-2 px-4 rounded hover:bg-green-800 ml-auto">
+            class="bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-auto">
             Proceed
           </button>
           <button v-if="currentStep === totalSteps" @click="submitForm"
-            class="bg-green-700 text-white py-2 px-4 rounded hover:bg-green-800 ml-auto">
+            class="bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-auto">
             Submit
           </button>
         </div>
         <p v-if="error" class="text-red-500 text-sm text-center mt-2">{{ error }}</p>
-        <p v-if="success.value" class="text-green-500 text-sm text-center mt-2">{{ success.value }}</p>
+        <p v-if="success.value" class="text-orange-500 text-sm text-center mt-2">{{ success.value }}</p>
         <p class="text-center text-sm mt-4">
           Already have an account? <router-link to="/login" class="text-blue-600 hover:underline">Login</router-link>
         </p>

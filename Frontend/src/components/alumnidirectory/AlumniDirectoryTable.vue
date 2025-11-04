@@ -35,40 +35,9 @@ const itemsPerPage = 9;
 
 // Programs list for filter
 const programs = [
-  'BA in Sociology',
-  'Bachelor of Agricultural Technology',
-  'Bachelor of Elementary Education',
-  'Bachelor of Secondary Education Major in English',
-  'Bachelor of Secondary Education Major in Filipino',
-  'Bachelor of Secondary Education Major in Mathematics',
-  'Bachelor of Secondary Education Major in Science',
-  'BS in Agroforestry',
-  'BS in Agricultural and Biosystems Engineering',
-  'BS in Agriculture',
-  'BS in Agriculture, Major in Agribusiness Management',
-  'BS in Agriculture, Major in Agricultural Economics',
-  'BS in Agriculture, Major in Agronomy',
-  'BS in Agriculture, Major in Animal Science',
-  'BS in Agriculture, Major in Crop Protection',
-  'BS in Agriculture, Major in Horticulture',
-  'BS in Agriculture, Major in Soil Science',
-  'BS in Applied Mathematics',
-  'BS in Biology',
-  'BS in Chemistry',
-  'BS in Civil Engineering',
   'BS in Computer Science',
-  'BS in Electronics Engineering',
-  'BS in Environmental Science',
-  'BS in Forestry',
-  'BS in Geodetic Engineering',
-  'BS in Geology',
   'BS in Information Systems',
   'BS in Information Technology',
-  'BS in Mathematics',
-  'BS in Mining Engineering',
-  'BS in Physics',
-  'BS in Psychology',
-  'BS in Social Work'
 ];
 
 // Computed
@@ -331,16 +300,16 @@ onMounted(() => {
       themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white'
     ]">
       <!-- Header -->
-      <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
+      <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
         <div class="flex justify-between items-center">
           <div>
             <h2 class="text-2xl font-bold text-white">Alumni Directory</h2>
-            <p class="text-green-100 mt-1">Manage alumni records and information</p>
+            <p class="text-orange-100 mt-1">Manage alumni records and information</p>
           </div>
           <div class="flex space-x-3">
             <button
               @click="openImportModal"
-              class="bg-white  text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-300 transition-colors duration-200 flex items-center space-x-2"
+              class="bg-white  text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-200 transition-colors duration-200 flex items-center space-x-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -349,7 +318,7 @@ onMounted(() => {
             </button>
             <button
               @click="openCreateModal"
-              class="bg-white text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-300 transition-colors duration-200 flex items-center space-x-2"
+              class="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-200 transition-colors duration-200 flex items-center space-x-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -374,7 +343,7 @@ onMounted(() => {
                 type="text"
                 placeholder="Search by firstname, lastname or fullname..."
                 :class="[
-                  'w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200',
+                  'w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200',
                   themeStore.isAdminDark() 
                     ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
                     : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
@@ -396,8 +365,8 @@ onMounted(() => {
                 :class="[
                   'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border cursor-pointer',
                   themeStore.isAdminDark() 
-                    ? 'bg-gray-700 hover:bg-green-800 hover:text-green-300 hover:border-green-600 text-gray-300 border-gray-600' 
-                    : 'bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 border-gray-300'
+                    ? 'bg-gray-700 hover:bg-orange-600 hover:text-orange-300 hover:border-orange-600 text-gray-300 border-gray-600' 
+                    : 'bg-white hover:bg-orange-200 hover:text-orange-600 hover:border-orange-300 text-gray-700 border-gray-300'
                 ]"
               >
                 <FilterIcon class="w-5 h-5" />
@@ -443,10 +412,10 @@ onMounted(() => {
                       <select
                         v-model="selectedProgram"
                         :class="[
-                          'w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 transition-colors duration-200',
+                          'w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200',
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white hover:bg-gray-600' 
-                            : 'border-gray-300 bg-white text-gray-900 hover:bg-green-200'
+                            : 'border-gray-300 bg-white text-gray-900 hover:bg-orange-200'
                         ]"
                       >
                         <option value="">All Programs</option>
@@ -467,10 +436,10 @@ onMounted(() => {
                         :max="currentYear + 5"
                         placeholder="Enter year (YYYY)"
                         :class="[
-                          'w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 transition-colors duration-200',
+                          'w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200',
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 hover:bg-gray-600' 
-                            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 hover:bg-green-200'
+                            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 hover:bg-orange-200'
                         ]"
                       />
                     </div>
@@ -484,10 +453,10 @@ onMounted(() => {
                       <select
                         v-model="selectedSex"
                         :class="[
-                          'w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500 transition-colors duration-200',
+                          'w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200',
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white hover:bg-gray-600' 
-                            : 'border-gray-300 bg-white text-gray-900 hover:bg-green-200'
+                            : 'border-gray-300 bg-white text-gray-900 hover:bg-orange-200'
                         ]"
                       >
                         <option value="">All</option>
@@ -507,8 +476,8 @@ onMounted(() => {
                         :class="[
                           'w-full py-2 px-3 text-sm rounded-md transition-colors duration-200 font-medium',
                           themeStore.isAdminDark() 
-                            ? 'bg-green-600 text-gray-100 hover:bg-green-700' 
-                            : 'bg-green-600 text-gray-100 hover:bg-green-200 hover:text-green-800'
+                            ? 'bg-orange-600 text-gray-100 hover:bg-orange-500' 
+                            : 'bg-orange-600 text-gray-100 hover:bg-orange-200 hover:text-orange-600'
                         ]"
                       >
                         Clear All Filters
@@ -528,8 +497,8 @@ onMounted(() => {
                   'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border',
                   selectedAlumniIds.length > 0
                     ? themeStore.isAdminDark() 
-                      ? 'bg-gray-700 hover:bg-green-800 hover:text-green-300 hover:border-green-600 text-gray-300 border-gray-600 cursor-pointer'
-                      : 'bg-white hover:bg-green-200 text-green-700 border-green-300 cursor-pointer'
+                      ? 'bg-gray-700 hover:bg-orange-600 hover:text-orange-300 hover:border-orange-600 text-gray-300 border-gray-600 cursor-pointer'
+                      : 'bg-white hover:bg-orange-200 text-orange-600 border-orange-300 cursor-pointer'
                     : themeStore.isAdminDark()
                       ? 'bg-gray-800 text-gray-500 border-gray-600 cursor-not-allowed'
                       : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
@@ -539,7 +508,7 @@ onMounted(() => {
                 <span>Actions</span>
                 <span
                   v-if="selectedAlumniIds.length > 0"
-                  class="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full"
+                  class="bg-orange-600 text-white text-xs px-2 py-0.5 rounded-full"
                 >
                   {{ selectedAlumniIds.length }}
                 </span>
@@ -570,8 +539,8 @@ onMounted(() => {
                       :class="[
                         'w-full px-4 py-2 text-left text-sm flex items-center gap-2',
                         themeStore.isAdminDark() 
-                          ? 'text-green-400 hover:bg-green-900/20' 
-                          : 'text-green-600 hover:bg-green-200'
+                          ? 'text-orange-400 hover:bg-orange-900/20' 
+                          : 'text-orange-600 hover:bg-orange-200'
                       ]"
                     >
                       <EditIcon class="w-4 h-4" />
@@ -615,7 +584,7 @@ onMounted(() => {
           'w-full',
           themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white'
         ]">
-          <thead class="bg-gradient-to-r from-green-600 to-green-700">
+          <thead class="bg-gradient-to-r from-orange-500 to-orange-600">
             <tr>
               <!-- Select All Checkbox -->
               <th class="px-6 py-3 w-12">
@@ -623,7 +592,7 @@ onMounted(() => {
                   type="checkbox"
                   :checked="isAllSelected"
                   @change="toggleSelectAll"
-                  class="w-4 h-4 accent-green-600 border-gray-300 rounded focus:ring-green-500"
+                  class="w-4 h-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500"
                 />
               </th>
               <th 
@@ -689,7 +658,7 @@ onMounted(() => {
                   type="checkbox"
                   :checked="selectedAlumniIds.includes(person.id)"
                   @change="toggleAlumniSelection(person.id)"
-                  class="w-4 h-4 accent-green-600 border-gray-300 rounded focus:ring-green-500"
+                  class="w-4 h-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500"
                 />
               </td>
 
@@ -736,7 +705,7 @@ onMounted(() => {
                 <span
                   class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
                   :class="{
-                    'bg-green-100 text-green-600': person.sex === 'male',
+                    'bg-orange-100 text-orange-600': person.sex === 'male',
                     'bg-pink-100 text-pink-800': person.sex === 'female',
                     'bg-gray-100 text-gray-800': person.sex === 'prefer_not_to_say'
                   }"
@@ -768,7 +737,7 @@ onMounted(() => {
                   <button
                     v-if="!searchQuery"
                     @click="openCreateModal"
-                    class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
+                    class="mt-4 bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-500 transition-colors duration-200"
                   >
                     Create Alumni Entry
                   </button>
@@ -809,7 +778,7 @@ onMounted(() => {
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : themeStore.isAdminDark() 
                     ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
-                    : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                    : 'bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200'
               ]"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

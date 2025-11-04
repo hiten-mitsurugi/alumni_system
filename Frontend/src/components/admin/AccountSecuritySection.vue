@@ -1,7 +1,7 @@
 <template>
   <div v-if="passwordForm" class="p-8">
     <div class="flex items-center gap-3 mb-6">
-      <ShieldIcon class="w-6 h-6 text-blue-600" />
+      <ShieldIcon class="w-6 h-6 text-orange-600" />
       <h2 class="text-2xl font-bold"
           :class="themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'">
         Account & Security
@@ -27,8 +27,8 @@
                    :type="showPassword ? 'text' : 'password'"
                    class="w-full px-4 py-2 pr-12 rounded-lg border transition-colors duration-200"
                    :class="themeStore.isAdminDark()
-                     ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                     : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'">
+                     ? 'bg-gray-700 border-gray-600 text-white focus:border-orange-500'
+                     : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'">
             <button @click="showPassword = !showPassword"
                     type="button"
                     class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -49,8 +49,8 @@
                      :type="showNewPassword ? 'text' : 'password'"
                      class="w-full px-4 py-2 pr-12 rounded-lg border transition-colors duration-200"
                      :class="themeStore.isAdminDark()
-                       ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                       : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'">
+                       ? 'bg-gray-700 border-gray-600 text-white focus:border-orange-500'
+                       : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'">
               <button @click="showNewPassword = !showNewPassword"
                       type="button"
                       class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -70,8 +70,8 @@
                      :type="showConfirmPassword ? 'text' : 'password'"
                      class="w-full px-4 py-2 pr-12 rounded-lg border transition-colors duration-200"
                      :class="themeStore.isAdminDark()
-                       ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                       : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'">
+                       ? 'bg-gray-700 border-gray-600 text-white focus:border-orange-500'
+                       : 'bg-white border-gray-300 text-gray-900 focus:border-orange500'">
               <button @click="showConfirmPassword = !showConfirmPassword"
                       type="button"
                       class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -85,7 +85,7 @@
         <div class="flex justify-end">
           <button @click="saveAccountSettingsWrapper"
                   :disabled="props.isLoading"
-                  class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  class="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             <LockIcon class="w-4 h-4" />
             {{ props.isLoading ? 'Updating...' : 'Update Password' }}
           </button>

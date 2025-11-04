@@ -5,6 +5,8 @@ import api from '../services/api';
 import Navbar from '@/components/Navbar.vue';
 import VerifyAlumniDirectory from '@/components/register/VerifyAlumniDirectory.vue';
 import PersonalInfo from '@/components/register/PersonalInfo.vue';
+import VerificationAgreement from '@/components/register/VerificationAgreement.vue';
+import SurveyConsent from '@/components/register/SurveyConsent.vue';
 import DynamicSurveyStep from '@/components/register/DynamicSurveyStep.vue';
 import { useRegistrationSurvey } from '@/composables/useRegistrationSurvey';
 import backgroundImage from '@/assets/Background.png';
@@ -12,6 +14,9 @@ import backgroundImage from '@/assets/Background.png';
 const currentStep = ref(1);
 const error = ref('');
 const success = ref('');
+const agreementAccepted = ref(false);
+const skipVerificationAgreement = ref(false);
+const surveyConsentGiven = ref(false);
 
 // Use registration survey composable
 const {
@@ -29,12 +34,14 @@ const {
 
 // Calculate total steps dynamically based on conditional logic
 const totalSteps = computed(() => {
-  let stepCount = 2; // 2 static steps
+  let stepCount = 4; // 4 static steps (Verify, PersonalInfo, VerificationAgreement, SurveyConsent)
   
-  // Add survey categories that should be visible
-  for (const categoryData of surveyCategories.value) {
-    if (shouldShowCategory(categoryData)) {
-      stepCount++;
+  // Add survey categories that should be visible ONLY if survey consent is given
+  if (surveyConsentGiven.value) {
+    for (const categoryData of surveyCategories.value) {
+      if (shouldShowCategory(categoryData)) {
+        stepCount++;
+      }
     }
   }
   
@@ -81,7 +88,7 @@ const getVisibleCategories = computed(() => {
 
 // Get current survey category for dynamic steps (considering skipped categories)
 const currentSurveyCategory = computed(() => {
-  const surveyStepIndex = currentStep.value - 3; // Adjust for static steps
+  const surveyStepIndex = currentStep.value - 5; // Adjust for 4 static steps (was 4, now 5)
   const visibleCategories = getVisibleCategories.value;
   return visibleCategories[surveyStepIndex] || null;
 });
@@ -136,6 +143,7 @@ const form = ref({
     full_address: ''
   },
   same_as_present: false,
+  gender: '',
   civil_status: '',
   employment_status: '',
   government_id: null,
@@ -150,6 +158,8 @@ const form = ref({
 const getStepTitle = computed(() => {
   if (currentStep.value === 1) return 'Step 1: Verify Alumni Directory';
   if (currentStep.value === 2) return 'Step 2: Personal and Demographic Information';
+  if (currentStep.value === 3) return 'Step 3: Confirm Your Information';
+  if (currentStep.value === 4) return 'Step 4: Survey Participation';
   
   const category = currentSurveyCategory.value;
   return category ? `Step ${currentStep.value}: ${category.category.name}` : '';
@@ -177,9 +187,15 @@ const validateStep = (step) => {
     }
     
     return true;
+  } else if (step === 3) {
+    // Step 3: Verification Agreement - validation not needed, handled by handlers
+    return true;
+  } else if (step === 4) {
+    // Step 4: Survey Consent - validation not needed, handled by handlers
+    return true;
   } else {
     // Survey steps validation using the composable
-    const surveyStepIndex = step - 3;
+    const surveyStepIndex = step - 5; // Adjust for 4 static steps now
     const visibleCategories = getVisibleCategories.value;
     
     if (surveyStepIndex >= 0 && surveyStepIndex < visibleCategories.length) {
@@ -199,10 +215,10 @@ const nextStep = () => {
   let nextStepNumber = currentStep.value + 1;
   
   // For survey steps, check if we need to skip categories
-  if (nextStepNumber > 2) {
+  if (nextStepNumber > 4) {
     const visibleCategories = getVisibleCategories.value;
     const maxSurveySteps = visibleCategories.length;
-    const maxTotalSteps = 2 + maxSurveySteps;
+    const maxTotalSteps = 4 + maxSurveySteps; // 4 static steps
     
     if (nextStepNumber <= maxTotalSteps) {
       currentStep.value = nextStepNumber;
@@ -217,7 +233,7 @@ const prevStep = () => {
     let prevStepNumber = currentStep.value - 1;
     
     // For survey steps, navigate through visible categories only
-    if (currentStep.value > 2) {
+    if (currentStep.value > 4) {
       currentStep.value = prevStepNumber;
     } else {
       currentStep.value = prevStepNumber;
@@ -231,6 +247,34 @@ const handleVerified = () => {
   setTimeout(() => {
     nextStep();
   });
+};
+
+const handleAgreementProceed = () => {
+  agreementAccepted.value = true;
+  nextStep();
+};
+
+const handleAgreementGoBack = () => {
+  agreementAccepted.value = false;
+  prevStep();
+};
+
+const handleAgreementSkip = () => {
+  // Allow user to skip the full survey and register with basic info
+  skipVerificationAgreement.value = true;
+  // Jump directly to submission
+  currentStep.value = totalSteps.value;
+};
+
+const handleSurveyConsentAccept = () => {
+  surveyConsentGiven.value = true;
+  nextStep();
+};
+
+const handleSurveyConsentDecline = () => {
+  surveyConsentGiven.value = false;
+  // Jump directly to submission (skip all surveys)
+  currentStep.value = totalSteps.value;
 };
 
 const submitForm = async () => {
@@ -265,6 +309,7 @@ const submitForm = async () => {
   formData.append('birth_date', form.value.birth_date || '');
   formData.append('year_graduated', form.value.year_graduated || '');
   formData.append('employment_status', form.value.employment_status || '');
+  formData.append('gender', form.value.gender || '');
   if (form.value.profile_picture) formData.append('profile_picture', form.value.profile_picture);
   formData.append('civil_status', form.value.civil_status || '');
   formData.append('sex', form.value.sex || '');
@@ -352,7 +397,7 @@ onMounted(async () => {
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div
-              class="bg-green-700 h-2 rounded-full transition-all duration-300"
+              class="bg-orange-500 h-2 rounded-full transition-all duration-300"
               :style="{ width: `${(currentStep / totalSteps) * 100}%` }"
             ></div>
           </div>
@@ -361,7 +406,7 @@ onMounted(async () => {
         <!-- Loading Survey Questions -->
         <div v-if="surveyLoading" class="flex items-center justify-center py-12">
           <div class="text-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700 mx-auto mb-4"></div>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
             <p class="text-gray-600">Loading survey questions...</p>
           </div>
         </div>
@@ -394,8 +439,28 @@ onMounted(async () => {
             <PersonalInfo :form="form" @update:form="updateStep2Form" />
           </div>
 
+          <!-- Step 3: Verification Agreement -->
+          <div v-if="currentStep === 3">
+            <h3 class="text-xl font-semibold text-center mb-6">{{ getStepTitle }}</h3>
+            <VerificationAgreement 
+              :form="form"
+              @proceed="handleAgreementProceed"
+              @go-back="handleAgreementGoBack"
+              @skip-register="handleAgreementSkip"
+            />
+          </div>
+
+          <!-- Step 4: Survey Consent -->
+          <div v-if="currentStep === 4">
+            <SurveyConsent
+              :form="form"
+              @accept="handleSurveyConsentAccept"
+              @decline="handleSurveyConsentDecline"
+            />
+          </div>
+
           <!-- Dynamic Survey Steps -->
-          <div v-if="currentStep > 2 && currentSurveyCategory">
+          <div v-if="currentStep > 4 && currentSurveyCategory">
             <h3 class="text-xl font-semibold text-center mb-6">{{ getStepTitle }}</h3>
             <DynamicSurveyStep
               :category="currentSurveyCategory.category"
@@ -410,7 +475,7 @@ onMounted(async () => {
         <!-- Navigation Buttons -->
         <div class="flex justify-between mt-6" v-if="!surveyLoading && !surveyError">
           <button 
-            v-if="currentStep > 1" 
+            v-if="currentStep > 1 && currentStep !== 4" 
             @click="prevStep"
             class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition-colors"
           >
@@ -418,10 +483,11 @@ onMounted(async () => {
           </button>
           
           <!-- Hide Proceed button for Step 1 (Verify Alumni Directory) since it auto-proceeds -->
+          <!-- Hide Proceed button for Step 4 (Survey Consent) since it has custom buttons -->
           <button 
-            v-if="currentStep < totalSteps && currentStep !== 1" 
+            v-if="currentStep < totalSteps && currentStep !== 1 && currentStep !== 4" 
             @click="nextStep"
-            class="bg-green-700 text-white py-2 px-4 rounded hover:bg-green-800 ml-auto transition-colors"
+            class="bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-auto transition-colors"
           >
             Proceed
           </button>
@@ -429,7 +495,7 @@ onMounted(async () => {
           <button 
             v-if="currentStep === totalSteps" 
             @click="submitForm"
-            class="bg-green-700 text-white py-2 px-4 rounded hover:bg-green-800 ml-auto transition-colors"
+            class="bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-auto transition-colors"
           >
             Submit Registration
           </button>
@@ -439,7 +505,7 @@ onMounted(async () => {
         <p v-if="error" class="text-red-500 text-sm text-center mt-4">{{ error }}</p>
         
         <!-- Success Message -->
-        <p v-if="success" class="text-green-500 text-sm text-center mt-4">{{ success }}</p>
+        <p v-if="success" class="text-orange-500 text-sm text-center mt-4">{{ success }}</p>
         
         <!-- Login Link -->
         <p class="text-center text-sm mt-6">

@@ -9,7 +9,7 @@
             <div class="relative">
               <input v-model="internalFilters.search" type="text"
                 placeholder="Search by firstname, last name or fullname..."
-                :class="['w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200', 
+                :class="['w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200', 
                   themeStore.isAdminDark() 
                     ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
                     : 'border-white bg-white text-gray-900 placeholder-gray-500']"
@@ -25,8 +25,8 @@
               <button @click="toggleFilterDropdown"
                 :class="['flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border cursor-pointer', 
                   themeStore.isAdminDark() 
-                    ? 'bg-gray-700 hover:bg-green-800 hover:text-green-300 hover:border-green-600 text-gray-300 border-gray-600' 
-                    : 'bg-white hover:bg-green-200 hover:text-green-700 hover:border-green-300 text-gray-700 border-gray-300']">
+                    ? 'bg-gray-700 hover:bg-orange-500 hover:text-orange-300 hover:border-orange-600 text-gray-300 border-gray-600' 
+                    : 'bg-white hover:bg-orange-200 hover:text-orange-600 hover:border-orange-300 text-gray-700 border-gray-300']">
                 <FilterIcon class="w-5 h-5" />
                 <span>Filters</span>
                 <ChevronDownIcon
@@ -54,7 +54,7 @@
                     <div>
                       <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Employment Status</label>
                       <select v-model="internalFilters.employment_status" @change="applyFilters"
-                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500', 
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white' 
                             : 'border-gray-300 bg-white text-gray-900']">
@@ -70,7 +70,7 @@
                     <div>
                       <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Sex</label>
                       <select v-model="internalFilters.sex" @change="applyFilters"
-                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500', 
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white' 
                             : 'border-gray-300 bg-white text-gray-900']">
@@ -91,7 +91,7 @@
                         max="2099"
                         step="1"
                         placeholder="e.g. 2022"
-                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500', 
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
                             : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500']"
@@ -102,7 +102,7 @@
                     <div>
                       <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Program</label>
                       <select v-model="internalFilters.program" @change="applyFilters"
-                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500', 
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white' 
                             : 'border-gray-300 bg-white text-gray-900']">
@@ -115,7 +115,7 @@
                     <div>
                       <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Account Status</label>
                       <select v-model="internalFilters.status" @change="applyFilters"
-                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-green-500 focus:border-green-500', 
+                        :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500', 
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white' 
                             : 'border-gray-300 bg-white text-gray-900']">
@@ -145,12 +145,12 @@
               <button @click="toggleActionsDropdown" :disabled="selectedUsers.length === 0" :class="[
                 'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border',
                 selectedUsers.length > 0
-                  ? 'bg-white hover:bg-green-200 text-green-700 border-green-300 cursor-pointer'
+                  ? 'bg-white hover:bg-orange-200 text-orange-600 border-orange-300 cursor-pointer'
                   : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
               ]">
                 <MoreVerticalIcon class="w-5 h-5" />
                 <span>Actions</span>
-                <span v-if="selectedUsers.length > 0" class="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">
+                <span v-if="selectedUsers.length > 0" class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
                   {{ selectedUsers.length }}
                 </span>
               </button>
@@ -170,7 +170,7 @@
                       Block Selected ({{ selectedUsers.length }})
                     </button>
                     <button @click="bulkUnblockUsers"
-                      class="w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50 flex items-center gap-2">
+                      class="w-full px-4 py-2 text-left text-sm text-orange-500 hover:bg-orange-50 flex items-center gap-2">
                       <UnlockIcon class="w-4 h-4" />
                       Unblock Selected ({{ selectedUsers.length }})
                     </button>
@@ -191,12 +191,12 @@
       <!-- Table -->
       <div class="overflow-x-auto">
         <table v-if="users.length" class="min-w-full">
-          <thead class="bg-green-700 text-white text-sm uppercase">
+          <thead class="bg-orange-600 text-white text-sm uppercase">
             <tr>
               <!-- Select All Checkbox -->
               <th class="p-4 w-12">
                 <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
-                  class="w-4 h-4 accent-green-600 border-gray-300 rounded focus:ring-green-500" />
+                  class="w-4 h-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500" />
 
               </th>
               <th class="p-4">Profile</th>
@@ -213,11 +213,11 @@
           </thead>
           <tbody>
             <tr v-for="user in users" :key="user.id" @click="viewUserDetails(user)"
-              class="border-t hover:bg-green-50 cursor-pointer transition-colors duration-200">
+              class="border-t hover:bg-orange-50 cursor-pointer transition-colors duration-200">
               <!-- Row Checkbox -->
               <td class="p-4" @click.stop>
                 <input type="checkbox" :checked="selectedUsers.includes(user.id)" @change="toggleUserSelection(user.id)"
-                  class="w-4 h-4 accent-green-600 border-gray-300 rounded focus:ring-green-500" />
+                  class="w-4 h-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500" />
               </td>
               <td class="p-4">
                 <img :src="user.profile_picture" class="w-10 h-10 rounded-full object-cover border" />
@@ -239,7 +239,7 @@
                 </div>
               </td>
               <td class="p-4">
-                <span :class="user.is_active ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'">
+                <span :class="user.is_active ? 'text-orange-600 font-semibold' : 'text-red-500 font-semibold'">
                   {{ user.is_active ? 'Active' : 'Blocked' }}
                 </span>
               </td>

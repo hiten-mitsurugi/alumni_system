@@ -209,7 +209,7 @@ onUnmounted(() => {
       <h1 class="text-2xl font-bold text-gray-800">Approved Users</h1>
       <button
         @click="openCreateModal"
-        class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200"
+        class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200"
       >
         + Create User
       </button>

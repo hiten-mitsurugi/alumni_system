@@ -17,7 +17,7 @@ onMounted(() => {
   <div :class="[
     'min-h-screen p-6',
     adminDark 
-      ? 'bg-gradient-to-br from-gray-900 to-green-900' 
+      ? 'bg-gradient-to-br from-gray-900 to-orange-600' 
       : 'bg-gray-50'
   ]">
     <div class="max-w-7xl mx-auto">

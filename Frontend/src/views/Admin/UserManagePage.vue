@@ -52,6 +52,11 @@ const fetchApprovedUsers = async () => {
     const params = { ...filters.value };
     const res = await api.get('/auth/approved-users/', { params });
     approvedUsers.value = Array.isArray(res.data) ? res.data : [];
+    console.log('📋 Fetched approved users:', approvedUsers.value.length);
+    if (approvedUsers.value.length > 0) {
+      console.log('  First user:', approvedUsers.value[0]);
+      console.log('  First user real_time_status:', approvedUsers.value[0].real_time_status);
+    }
     currentPage.value = 1;
   } catch (error) {
     console.error('Failed to fetch users:', error);

@@ -3,6 +3,7 @@ import { defineProps, defineEmits, reactive, watch, ref, computed } from 'vue';
 import { Eye, EyeOff, Check, X, AlertCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-vue-next';
 import api from '@/services/api';
 import AddressSelector from '@/components/common/AddressSelector.vue';
+import TermsAndConditions from '@/components/TermsAndConditions.vue';
 
 // Define props and emits
 const props = defineProps(['form']);
@@ -12,57 +13,29 @@ const emit = defineEmits(['update:form', 'validation-change']);
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 
+// Terms & Conditions
+const showTermsModal = ref(false);
+const agreedToTerms = ref(false);
+
 // Validation states
 const emailExists = ref(false);
 const checkingEmail = ref(false);
 const emailError = ref('');
 
 // Initialize localForm with all expected fields to prevent undefined errors
-const localForm = reactive({
-  email: props.form?.email || '',
-  contact_number: props.form?.contact_number || '',
-  password: props.form?.password || '',
-  confirm_password: props.form?.confirm_password || '',
-  present_address: props.form?.present_address || '',
-  permanent_address: props.form?.permanent_address || '',
-  present_address_data: props.form?.present_address_data || {
-    address_type: 'philippines',
-    region_code: '',
-    region_name: '',
-    province_code: '',
-    province_name: '',
-    city_code: '',
-    city_name: '',
-    barangay: '',
-    street_address: '',
-    postal_code: '',
-    country: '',
-    full_address: ''
-  },
-  permanent_address_data: props.form?.permanent_address_data || {
-    address_type: 'philippines',
-    region_code: '',
-    region_name: '',
-    province_code: '',
-    province_name: '',
-    city_code: '',
-    city_name: '',
-    barangay: '',
-    street_address: '',
-    postal_code: '',
-    country: '',
-    full_address: ''
-  },
-  same_as_present: props.form?.same_as_present || false,
-  civil_status: props.form?.civil_status || '',
-  employment_status: props.form?.employment_status || '',
-  government_id: props.form?.government_id || null,
-  profile_picture: props.form?.profile_picture || null,
-  mothers_name: props.form?.mothers_name || '',
-  mothers_occupation: props.form?.mothers_occupation || '',
-  fathers_name: props.form?.fathers_name || '',
-  fathers_occupation: props.form?.fathers_occupation || '',
-});
+  const localForm = reactive({
+    email: props.form?.email || '',
+    password: props.form?.password || '',
+    confirmPassword: props.form?.confirmPassword || '',
+    address: props.form?.address || '',
+    country: props.form?.country || '',
+    state: props.form?.state || '',
+    city: props.form?.city || '',
+    family_info: props.form?.family_info || '',
+    government_id: props.form?.government_id || null,
+    id_number: props.form?.id_number || '',
+    agreed_to_terms: props.form?.agreed_to_terms || false,
+  });
 
 // Password validation rules
 const passwordRequirements = computed(() => {
@@ -174,13 +147,14 @@ const handleFileChange = (event, field) => {
 
 // Emit validation status to parent
 const emitValidation = () => {
-  const isValid = !emailExists.value && isPasswordValid.value && passwordsMatch.value && localForm.email && localForm.password;
+  const isValid = !emailExists.value && isPasswordValid.value && passwordsMatch.value && localForm.email && localForm.password && agreedToTerms.value;
   emit('validation-change', {
     isValid,
     errors: {
       email: emailError.value,
       password: !isPasswordValid.value ? 'Password does not meet requirements' : '',
-      confirmPassword: !passwordsMatch.value ? 'Passwords do not match' : ''
+      confirmPassword: !passwordsMatch.value ? 'Passwords do not match' : '',
+      terms: !agreedToTerms.value ? 'You must agree to the Terms and Conditions' : ''
     }
   });
 };
@@ -228,6 +202,14 @@ watch([() => localForm.password, () => localForm.confirm_password], () => {
 watch([emailExists, emailError], () => {
   emitValidation();
 });
+
+// Sync agreed_to_terms from ref to reactive form
+watch(
+  agreedToTerms,
+  (newVal) => {
+    localForm.agreed_to_terms = newVal;
+  }
+);
 
 // Sync updates to parent
 watch(
@@ -404,7 +386,20 @@ watch(
         </div>
       </div>
 
-      <!-- Civil Status -->
+      <!-- Gender and Civil Status in one row -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Gender</label>
+        <select v-model="localForm.gender" class="mt-1 w-full border rounded-md p-2">
+          <option value="">Select Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="non_binary">Non-binary</option>
+          <option value="transgender">Transgender</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+          <option value="other_specify">Other (please specify)</option>
+        </select>
+      </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Civil Status</label>
         <select v-model="localForm.civil_status" class="mt-1 w-full border rounded-md p-2">
@@ -416,8 +411,8 @@ watch(
         </select>
       </div>
 
-      <!-- Employment Status -->
-      <div>
+      <!-- Employment Status - Full row -->
+      <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700">Employment Status</label>
         <select v-model="localForm.employment_status" class="mt-1 w-full border rounded-md p-2">
           <option value="">Select Employment Status</option>
@@ -460,6 +455,31 @@ watch(
         <label class="block text-sm font-medium text-gray-700">Father's Occupation</label>
         <input v-model="localForm.fathers_occupation" type="text" class="mt-1 w-full border rounded-md p-2" />
       </div>
+
+      <!-- Terms and Conditions -->
+      <div class="md:col-span-2 mt-6 pt-6 border-t border-gray-300">
+        <div class="flex items-start gap-3">
+          <input 
+            v-model="agreedToTerms" 
+            type="checkbox" 
+            class="w-4 h-4 mt-1 text-green-600 border-gray-300 rounded focus:ring-green-500"
+          />
+          <label class="text-sm text-gray-700">
+            I agree to the 
+            <button 
+              type="button"
+              @click="showTermsModal = true" 
+              class="text-blue-600 hover:underline font-medium"
+            >
+              Terms and Conditions
+            </button>
+          </label>
+        </div>
+        <p v-if="!agreedToTerms" class="text-red-500 text-xs mt-2">You must accept the Terms and Conditions to proceed</p>
+      </div>
     </div>
+
+    <!-- Terms and Conditions Modal -->
+    <TermsAndConditions :isOpen="showTermsModal" @close="showTermsModal = false" />
   </div>
 </template>

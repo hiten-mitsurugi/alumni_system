@@ -736,7 +736,7 @@ onUnmounted(() => {
       <div
         :class="[
           'p-4 rounded-lg shadow-lg border-l-4',
-          notification.type === 'success' ? 'bg-green-50 border-green-400 text-green-800' :
+          notification.type === 'success' ? 'bg-orange-50 border-orange-400 text-orange-600' :
           notification.type === 'error' ? 'bg-red-50 border-red-400 text-red-800' :
           'bg-blue-50 border-blue-400 text-blue-800'
         ]"

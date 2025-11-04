@@ -113,7 +113,7 @@ const isActive = (path) => route.path.startsWith(path);
         <img :src="profilePicture" alt="Profile Picture"
           class="w-12 sm:w-16 md:w-18 h-12 sm:h-16 md:h-18 rounded-full border-2 border-gray-900 object-cover mb-1" />
         <label for="profilePictureUploadSuperAdmin"
-               class="absolute bottom-0 right-0 bg-green-600 text-white p-1 rounded-full hover:bg-green-700 transition-colors cursor-pointer">
+               class="absolute bottom-0 right-0 bg-orange-500 text-white p-1 rounded-full hover:bg-orange-600 transition-colors cursor-pointer">
           <CameraIcon class="w-3 h-3" />
         </label>
         <input type="file"
@@ -133,7 +133,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin') && route.path === '/super-admin'
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <DashboardIcon class="w-4 h-4" />
             <span>Dashboard</span>
@@ -144,7 +144,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin/user-management"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin/user-management')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <UserManagementIcon class="w-4 h-4" />
             <span>User Management</span>
@@ -155,7 +155,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin/survey-management"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin/survey-management')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <SurveyIcon class="w-4 h-4" />
             <span>Survey Management</span>
@@ -166,7 +166,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin/alumni-directory"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin/alumni-directory')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <DirectoryIcon class="w-4 h-4" />
             <span>Alumni Directory</span>
@@ -177,7 +177,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin/system-monitoring"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin/system-monitoring')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <MonitoringIcon class="w-4 h-4" />
             <span>System Monitoring</span>
@@ -188,7 +188,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin/analytic-dashboard"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin/analytic-dashboard')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <AnalyticsIcon class="w-4 h-4" />
             <span>Analytic Dashboard</span>
@@ -199,7 +199,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin/pending-user-approval"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin/pending-user-approval')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <ApprovalIcon class="w-4 h-4" />
             <span>Pending User Approval</span>
@@ -210,7 +210,7 @@ const isActive = (path) => route.path.startsWith(path);
           <router-link to="/super-admin/settings"
             class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
             :class="isActive('/super-admin/settings')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <SettingsIcon class="w-4 h-4" />
             <span>Settings</span>

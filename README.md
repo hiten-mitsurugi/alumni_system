@@ -51,6 +51,7 @@ python manage.py makemigrations
 python manage.py migrate
 
 daphne -b 0.0.0.0 -p 8000 alumni_system.asgi:application
+python manage.py runserver 0.0.0.0:8000
 
 
 ### ⚙️ Frontend Setup (Vue.js + Vite + TailwindCSS)
@@ -66,6 +67,8 @@ npm run build
 npm run dev
 npm run dev -- --host 0.0.0.0
 
+python manage.py create_admin_accounts
+python manage.py populate_from_tracer --tracer-file="../tracer.txt"
 
 
 or you can directly run 

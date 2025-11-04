@@ -93,7 +93,7 @@ const cancelDelete = () => {
 </script>
 
 <template>
-  <tr class="hover:bg-green-200 transition-colors duration-150">
+  <tr class="hover:bg-orange-200 transition-colors duration-150">
     <!-- School ID -->
     <td class="px-6 py-4 whitespace-nowrap">
       <div class="text-sm font-medium text-gray-900">{{ alumni.school_id }}</div>
@@ -103,7 +103,7 @@ const cancelDelete = () => {
     <td class="px-6 py-4 whitespace-nowrap">
       <div 
         @click="viewProfile"
-        class="text-sm font-medium text-gray-900 cursor-pointer hover:text-green-600 hover:underline transition-colors"
+        class="text-sm font-medium text-gray-900 cursor-pointer hover:text-orange-600 hover:underline transition-colors"
         :title="`View ${fullName}'s profile`"
       >
         {{ fullName }}
@@ -146,7 +146,7 @@ const cancelDelete = () => {
         <!-- View Profile Button -->
         <button
           @click="viewProfile"
-          class="text-green-600 hover:text-green-800 hover:bg-green-200 p-2 rounded-lg transition-colors duration-200"
+          class="text-orange-600 hover:text-orange-800 hover:bg-orange-200 p-2 rounded-lg transition-colors duration-200"
           title="View Profile"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +194,7 @@ const cancelDelete = () => {
         <button
           @click="cancelDelete"
           :disabled="deleting"
-          class="text-gray-600 hover:text-gray-800 hover:bg-green-200 p-1 rounded transition-colors duration-200 disabled:opacity-50"
+          class="text-gray-600 hover:text-gray-800 hover:bg-orange-200 p-1 rounded transition-colors duration-200 disabled:opacity-50"
           title="Cancel Delete"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

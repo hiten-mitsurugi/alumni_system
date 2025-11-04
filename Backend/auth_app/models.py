@@ -17,8 +17,9 @@ class CustomUser(AbstractUser):
         ('male', 'Male'),
         ('female', 'Female'),
         ('non_binary', 'Non-binary'),
+        ('transgender', 'Transgender'),
         ('prefer_not_to_say', 'Prefer not to say'),
-        ('other', 'Other'),
+        ('other_specify', 'Other (please specify)'),
     )
     CIVIL_STATUS_CHOICES = (
         ('single', 'Single'),
@@ -382,14 +383,12 @@ class Profile(models.Model):
         self.program = self.user.program
         
         # Only sync work history for alumni (user_type=3), not for admins (user_type=1,2)
+        # NOTE: is_current_job field doesn't exist in database (migration mismatch)
+        # So we skip syncing work history during profile creation, can be added later
         if self.user.user_type == 3:
-            current_job = self.user.work_histories.filter(is_current_job=True).first()
-            if current_job:
-                # Map to existing profile fields for compatibility
-                self.present_employment_status = current_job.classification  # Use classification instead of removed employment_status
-                self.employment_classification = current_job.classification
-                self.present_occupation = current_job.occupation
-                self.employing_agency = current_job.employing_agency
+            # Work histories are optional - skip syncing if not provided
+            # (Can be added/updated through ExperienceModal after registration)
+            pass
         
         super().save(*args, **kwargs)
 

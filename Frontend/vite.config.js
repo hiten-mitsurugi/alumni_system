@@ -3,6 +3,22 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import tailwindcss from '@tailwindcss/vite';
+import os from 'os';
+
+// 🧠 Automatically detect local IP address
+function getLocalIp() {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+}
+
+const localIP = process.env.HMR_HOST || getLocalIp();
 
 export default defineConfig({
   plugins: [
@@ -56,4 +72,15 @@ export default defineConfig({
 //       },
 //     },
 //   },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: false,
+    allowedHosts: ['*'],
+    hmr: {
+      host: localIP,
+    },
+  },
 });
+
+console.log(`✅ Vite running with dynamic IP: ${localIP}`);

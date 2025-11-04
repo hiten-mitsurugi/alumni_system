@@ -35,7 +35,7 @@
           <div class="absolute -top-16 left-6">
             <div class="relative">
               <img 
-                :src="user?.profile_picture || '/default-avatar.png'" 
+                :src="profilePictureUrl" 
                 alt="Profile Picture"
                 class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
               />
@@ -403,6 +403,32 @@ const displayEducationInfo = computed(() => {
   return null
 })
 
+// Profile picture URL with cache-busting (same logic as AlumniNavbar)
+const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`
+
+const profilePictureUrl = computed(() => {
+  const pic = user.value?.profile_picture
+  console.log('🖼️ profilePictureUrl computed - user.value:', user.value)
+  console.log('🖼️ profilePictureUrl computed - pic value:', pic)
+  
+  if (!pic) {
+    console.log('🖼️ No profile_picture, returning default')
+    return '/default-avatar.png'
+  }
+  
+  const baseUrl = pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
+  const cacheBuster = `?t=${Date.now()}`
+  const finalUrl = `${baseUrl}${cacheBuster}`
+  
+  console.log('🖼️ Profile picture URL:', {
+    original: pic,
+    baseUrl,
+    finalUrl
+  })
+  
+  return finalUrl
+})
+
 // Methods
 const fetchProfile = async () => {
   try {
@@ -466,9 +492,14 @@ const fetchProfile = async () => {
     const data = response.data
     
     console.log('Profile data received:', data.first_name, data.last_name)
+    console.log('🖼️ API Response full data keys:', Object.keys(data))
+    console.log('🖼️ API Response profile_picture:', data.profile_picture)
+    console.log('🖼️ API Response profile object:', data.profile)
     
     user.value = data
     profile.value = data.profile
+    
+    console.log('🖼️ After assignment - user.value.profile_picture:', user.value.profile_picture)
     
     // Load privacy settings and apply to data
     await loadPrivacySettings()

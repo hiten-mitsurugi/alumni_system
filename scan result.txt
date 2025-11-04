@@ -1,0 +1,267 @@
+Results:
+
+└─# nikto -h http://192.168.1.11:5173
+- Nikto v2.5.0
+---------------------------------------------------------------------------
++ Target IP:          192.168.1.11
++ Target Hostname:    192.168.1.11
++ Target Port:        5173
++ Start Time:         2025-11-01 10:03:10 (GMT8)
+---------------------------------------------------------------------------
++ Server: No banner retrieved
++ /: The anti-clickjacking X-Frame-Options header is not present. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
++ /: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ /11.alz: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /192.168.tar.lzma: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /1.pem: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /database.tar: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /site.jks: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /site.war: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /192168111.tar: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
+
+
+
+┌──(root㉿roman)-[/home/roman]
+└─# nikto -h 192.168.1.11 -p 5173 -o nikto_5173.txt -Format txt
+
+- Nikto v2.5.0
+---------------------------------------------------------------------------
++ Target IP:          192.168.1.11
++ Target Hostname:    192.168.1.11
++ Target Port:        5173
++ Start Time:         2025-11-01 10:05:22 (GMT8)
+---------------------------------------------------------------------------
++ Server: No banner retrieved
++ /: The anti-clickjacking X-Frame-Options header is not present. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
++ /: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ /192_168_1_11.pem: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /backup.cer: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
++ /dump.alz: Potentially interesting backup/cert file found. . See: https://cwe.mitre.org/data/definitions/530.html
+
+
+
+└─# nikto -h 192.168.1.11 -p 8000 -o nikto_8000.txt -Format txt
+
+- Nikto v2.5.0
+---------------------------------------------------------------------------
++ Target IP:          192.168.1.11
++ Target Hostname:    192.168.1.11
++ Target Port:        8000
++ Start Time:         2025-11-01 10:09:26 (GMT8)
+---------------------------------------------------------------------------
++ Server: WSGIServer/0.2 CPython/3.13.1
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ /: Retrieved access-control-allow-origin header: *.
++ /SilverStream: SilverStream allows directory listing. See: https://web.archive.org/web/20011226154728/http://archives.neohapsis.com/archives/sf/pentest/2000-11/0147.html
++ /static/: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/
++ 8102 requests: 0 error(s) and 3 item(s) reported on remote host
++ End Time:           2025-11-01 10:13:07 (GMT8) (221 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
+
+
+
+└─# dirb http://192.168.1.11:5173 /usr/share/seclists/Discovery/Web-Content/common.txt
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Sat Nov  1 10:27:25 2025
+URL_BASE: http://192.168.1.11:5173/
+WORDLIST_FILES: /usr/share/seclists/Discovery/Web-Content/common.txt
+
+-----------------
+
+GENERATED WORDS: 4745                                                          
+
+---- Scanning URL: http://192.168.1.11:5173/ ----
++ http://192.168.1.11:5173/.env (CODE:403|SIZE:500)                                                                                                                                                                                       
++ http://192.168.1.11:5173/.gitattributes (CODE:200|SIZE:278)                                                                                                                                                                             
++ http://192.168.1.11:5173/.gitignore (CODE:200|SIZE:1620)                                                                                                                                                                                
++ http://192.168.1.11:5173/extra (CODE:500|SIZE:12346)                                                                                                                                                                                    
++ http://192.168.1.11:5173/favicon.ico (CODE:200|SIZE:4286)                                                                                                                                                                               
++ http://192.168.1.11:5173/node_modules/.package-lock.json (CODE:200|SIZE:151120)                                                                                                                                                         
++ http://192.168.1.11:5173/package (CODE:200|SIZE:772)                                                                                                                                                                                    
++ http://192.168.1.11:5173/package.json (CODE:200|SIZE:751)                                                                                                                                                                               
++ http://192.168.1.11:5173/package-lock.json (CODE:200|SIZE:150017)                                                                                                                                                                       
++ http://192.168.1.11:5173/vite.config.js (CODE:200|SIZE:14320) 
+
+
+
+──(root㉿roman)-[/home/roman]
+└─# ffuf -u http://192.168.1.11:8000/api/FUZZ -w /usr/share/wordlists/dirbuster/directory-list-2.3-small.txt -mc 200-299    
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://192.168.1.11:8000/api/FUZZ
+ :: Wordlist         : FUZZ: /usr/share/wordlists/dirbuster/directory-list-2.3-small.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299
+________________________________________________
+
+#                       [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 10ms]
+# Copyright 2007 James Fisher [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 6ms]
+# directory-list-2.3-small.txt [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 10ms]
+# on atleast 3 different hosts [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 58ms]
+# or send a letter to Creative Commons, 171 Second Street,  [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 1ms]
+# This work is licensed under the Creative Commons  [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 103ms]
+# Suite 300, San Francisco, California, 94105, USA. [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 5ms]
+                        [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 50ms]
+#                       [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 135ms]
+# Priority ordered case sensative list, where entries were found  [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 3ms]
+# Attribution-Share Alike 3.0 License. To view a copy of this  [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 163ms]
+#                       [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 201ms]
+# license, visit http://creativecommons.org/licenses/by-sa/3.0/  [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 199ms]
+#                       [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 64ms]
+                        [Status: 200, Size: 47, Words: 1, Lines: 1, Duration: 170ms]
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+burpsuite:
+request:
+GET /api/auth/login/ HTTP/1.1
+Host: 192.168.1.11:8000
+Content-Length: 54
+Accept-Language: en-US,en;q=0.9
+Accept: application/json, text/plain, */*
+Content-Type: application/json
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.140 Safari/537.36
+Origin: http://192.168.1.11:5173
+Referer: http://192.168.1.11:5173/
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+
+{"email":"admin@gmail.com","password":"roman!qwe456B"}
+response:
+HTTP/1.1 405 Method Not Allowed
+Date: Sat, 01 Nov 2025 03:26:29 GMT
+Server: WSGIServer/0.2 CPython/3.13.1
+Content-Type: application/json
+Vary: Accept, Cookie, origin
+Allow: POST, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 40
+access-control-allow-origin: *
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"detail":"Method \"GET\" not allowed."}
+
+
+POST /api/auth/login/ HTTP/1.1
+Host: 192.168.1.11:8000
+Content-Length: 54
+Accept-Language: en-US,en;q=0.9
+Accept: application/json, text/plain, */*
+Content-Type: application/json
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.140 Safari/537.36
+Origin: http://192.168.1.11:5173
+Referer: http://192.168.1.11:5173/
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+
+{"email":"admin@gmail.com","password":"roman!qwe456B"}
+
+response:
+HTTP/1.1 401 Unauthorized
+Date: Sat, 01 Nov 2025 03:29:48 GMT
+Server: WSGIServer/0.2 CPython/3.13.1
+Content-Type: application/json
+Vary: Accept, Cookie, origin
+Allow: POST, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 32
+access-control-allow-origin: *
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"detail":"Invalid credentials"}
+
+request:
+OPTIONS /api/auth/login/ HTTP/1.1
+Host: 192.168.1.11:8000
+Accept: */*
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type
+Origin: http://192.168.1.11:5173
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.140 Safari/537.36
+Sec-Fetch-Mode: cors
+Referer: http://192.168.1.11:5173/
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Connection: keep-alive
+
+response:
+HTTP/1.1 200 OK
+Date: Sat, 01 Nov 2025 03:21:07 GMT
+Server: WSGIServer/0.2 CPython/3.13.1
+content-length: 0
+Content-Type: text/html; charset=utf-8
+Vary: origin
+access-control-allow-origin: *
+access-control-allow-headers: accept, authorization, content-type, user-agent, x-csrftoken, x-requested-with
+access-control-allow-methods: DELETE, GET, OPTIONS, PATCH, POST, PUT
+access-control-max-age: 86400
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+                                                                                                                                                                          
+ ---------------------------------------------------------
+┌──(root㉿roman)-[/home/roman]
+└─# curl -I http://192.168.1.11:5173/package.json      
+HTTP/1.1 200 OK
+Vary: Origin
+Content-Length: 751
+Content-Type: application/json
+Last-Modified: Mon, 13 Oct 2025 03:59:27 GMT
+ETag: W/"751-1760327967120"
+Cache-Control: no-cache
+Date: Sat, 01 Nov 2025 04:02:48 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+
+┌──(root㉿roman)-[/home/roman]
+└─# curl -I http://192.168.1.11:5173/            
+HTTP/1.1 200 OK
+Vary: Origin
+Content-Type: text/html
+Cache-Control: no-cache
+Etag: W/"22d-wRcVDfAIVeveoG2C09B7Mdhdxy4"
+Date: Sat, 01 Nov 2025 04:03:50 GMT
+Connection: keep-alive
+Keep-Alive: timeo
+
+
+┌──(root㉿roman)-[/home/roman]
+└─# curl -H "Origin: http://evil.com" -I http://192.168.1.11:8000/api/
+HTTP/1.1 200 OK
+Date: Sat, 01 Nov 2025 04:04:29 GMT
+Server: WSGIServer/0.2 CPython/3.13.1
+Content-Type: application/json
+Vary: Accept, Cookie, origin
+Allow: GET, HEAD, OPTIONS
+X-Frame-Options: DENY
+access-control-allow-origin: *
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+                                                                

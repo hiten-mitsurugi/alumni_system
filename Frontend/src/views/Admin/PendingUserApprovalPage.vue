@@ -104,14 +104,18 @@ const rejectUser = async () => {
     return;
   }
   
+  // Store user details before closeModal() sets selectedUser to null
+  const userEmail = selectedUser.value.email;
+  const userId = selectedUser.value.id;
+  
   try {
-  const response = await api.post(`/auth/reject-user/${selectedUser.value.id}/`);
-    pendingUsers.value = pendingUsers.value.filter(u => u.id !== selectedUser.value.id);
+  const response = await api.post(`/auth/reject-user/${userId}/`);
+    pendingUsers.value = pendingUsers.value.filter(u => u.id !== userId);
     closeModal();
     
     // Show success message with email status
     if (response.data.email_sent) {
-      alert(`✅ User application rejected.\n📧 Notification email sent to ${selectedUser.value.email}`);
+      alert(`✅ User application rejected.\n📧 Notification email sent to ${userEmail}`);
     } else {
       alert(`✅ User application rejected.\n⚠️ Email notification failed to send.`);
     }

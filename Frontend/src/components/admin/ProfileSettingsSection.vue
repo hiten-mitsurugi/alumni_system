@@ -1,7 +1,7 @@
 <template>
   <div class="p-8">
     <div class="flex items-center gap-3 mb-6">
-      <UserIcon class="w-6 h-6 text-blue-600" />
+      <UserIcon class="w-6 h-6 text-orange-600" />
       <h2 class="text-2xl font-bold"
           :class="themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'">
         Profile Settings
@@ -19,8 +19,8 @@
                type="text"
                class="w-full px-4 py-2 rounded-lg border transition-colors duration-200"
                :class="themeStore.isAdminDark()
-                 ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                 : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'">
+                 ? 'bg-gray-700 border-gray-600 text-white focus:border-orange-500'
+                 : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'">
       </div>
       <div>
         <label class="block text-sm font-medium mb-2"
@@ -43,8 +43,8 @@
                type="email"
                class="w-full px-4 py-2 rounded-lg border transition-colors duration-200"
                :class="themeStore.isAdminDark()
-                 ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                 : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'">
+                 ? 'bg-gray-700 border-gray-600 text-white focus:border-orange-500'
+                 : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'">
       </div>
       <div>
         <label class="block text-sm font-medium mb-2"
@@ -55,8 +55,8 @@
                type="tel"
                class="w-full px-4 py-2 rounded-lg border transition-colors duration-200"
                :class="themeStore.isAdminDark()
-                 ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                 : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'">
+                 ? 'bg-gray-700 border-gray-600 text-white focus:border-orange-500'
+                 : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'">
       </div>
     </div>
 
@@ -70,8 +70,8 @@
                 rows="4"
                 class="w-full px-4 py-2 rounded-lg border transition-colors duration-200"
                 :class="themeStore.isAdminDark()
-                  ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                  : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'"
+                  ? 'bg-gray-700 border-gray-600 text-white focus:border-orange-500'
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'"
                 placeholder="Tell us about yourself..."></textarea>
     </div>
 
@@ -79,7 +79,7 @@
     <div class="flex justify-end">
       <button @click="saveProfileSettingsWrapper"
               :disabled="isLoading"
-              class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              class="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
         <SaveIcon class="w-4 h-4" />
         {{ isLoading ? 'Saving...' : 'Save Changes' }}
       </button>

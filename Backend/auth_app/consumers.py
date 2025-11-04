@@ -54,16 +54,13 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             
             await self.accept()
             
-            # Start heartbeat to keep user online (temporarily disabled for testing)
-            logger.info(f"WebSocket connection accepted for user {user.username} (heartbeat disabled for testing)")
-            
-            # Heartbeat disabled for stability testing
-            # try:
-            #     self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
-            #     logger.info(f"WebSocket connection accepted for user {user.username} with heartbeat")
-            # except Exception as e:
-            #     logger.warning(f"Could not start heartbeat for user {user.id}: {e}")
-            #     logger.info(f"WebSocket connection accepted for user {user.username} without heartbeat")
+            # Start heartbeat to keep user online
+            try:
+                self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
+                logger.info(f"WebSocket connection accepted for user {user.username} with heartbeat")
+            except Exception as e:
+                logger.warning(f"Could not start heartbeat for user {user.id}: {e}")
+                logger.info(f"WebSocket connection accepted for user {user.username} without heartbeat")
             
         except Exception as e:
             logger.error(f"WebSocket connect error for user {self.scope['user']}: {str(e)}")

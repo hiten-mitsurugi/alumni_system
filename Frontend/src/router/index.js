@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useUiStore } from '../stores/ui';
 
 const routes = [
   // 🔓 Public Routes
@@ -13,6 +14,12 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: () => import('../views/RegisterDynamic.vue'),
+    meta: { requiresGuest: true },
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('../views/ForgotPassword.vue'),
     meta: { requiresGuest: true },
   },
 
@@ -187,11 +194,15 @@ router.beforeEach(async (to, from, next) => {
 
   // Fetch user data if token exists but no user loaded
   if (isAuthenticated && !authStore.user) {
+    const ui = useUiStore();
     try {
+      ui.start('Loading user...');
       await authStore.fetchUser();
     } catch {
       authStore.logout();
       return next('/login');
+    } finally {
+      ui.stop();
     }
   }
 

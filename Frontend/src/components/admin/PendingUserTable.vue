@@ -24,7 +24,7 @@ watch(() => props.paginatedUsers, (val) => {
       v-if="users.length"
       :class="['min-w-full rounded-xl shadow overflow-hidden', themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white']"
     >
-      <thead class="bg-green-700 text-white text-left text-sm uppercase">
+      <thead class="bg-orange-600 text-white text-left text-sm uppercase">
         <tr>
           <th class="p-4">#</th>
           <th class="p-4">Profile</th>
@@ -97,7 +97,7 @@ watch(() => props.paginatedUsers, (val) => {
         @click="emit('change-page', page)"
         :class="[ 'px-3 py-1 rounded text-sm',
           page === currentPage
-            ? 'bg-green-700 text-white'
+            ? 'bg-orange-600 text-white'
             : themeStore.isAdminDark() 
               ? 'bg-gray-700 hover:bg-gray-600 text-white' 
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'

@@ -3,8 +3,11 @@ import { RouterView } from 'vue-router';
 import { onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { websocketService } from '@/services/websocket';
+import GlobalLoading from '@/components/common/GlobalLoading.vue';
+import { useUiStore } from '@/stores/ui';
 
 const authStore = useAuthStore();
+const ui = useUiStore();
 
 // Global status update handler
 const handleGlobalStatusUpdate = (data) => {
@@ -69,5 +72,6 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen bg-gray-50">
     <RouterView />
+    <GlobalLoading v-if="ui.isLoading" :message="ui.message" />
   </div>
 </template>

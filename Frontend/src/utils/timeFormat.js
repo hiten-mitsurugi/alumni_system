@@ -75,16 +75,27 @@ export function formatLastLogin(lastLogin, realTimeStatus) {
  * @returns {boolean} - True if user is actually online
  */
 function isUserActuallyOnline(realTimeStatus) {
-  if (!realTimeStatus) return false;
+  if (!realTimeStatus || typeof realTimeStatus !== 'object') {
+    console.debug('🔍 isUserActuallyOnline: No valid status object:', realTimeStatus);
+    return false;
+  }
+  
+  console.debug('🔍 isUserActuallyOnline received:', { 
+    status: realTimeStatus.status, 
+    is_online: realTimeStatus.is_online,
+    last_seen: realTimeStatus.last_seen 
+  });
   
   // If backend status is explicitly offline, user is offline
   if (realTimeStatus.status === 'offline') {
+    console.debug('  → Status is explicitly offline');
     return false;
   }
   
   // If backend status is online, check if last_seen is reasonable
   if (realTimeStatus.status === 'online') {
     if (!realTimeStatus.last_seen) {
+      console.debug('  → Status is online, no last_seen check, trusting backend');
       return true; // Trust backend status
     }
     
@@ -94,14 +105,18 @@ function isUserActuallyOnline(realTimeStatus) {
     
     // If backend says online but last seen is over 10 minutes ago, something's wrong
     if (diffMinutes > 10) {
+      console.debug(`  → Status is online but last_seen ${diffMinutes.toFixed(2)} minutes ago: FALSE`);
       return false;
     }
     
+    console.debug(`  → Status is online, last_seen ${diffMinutes.toFixed(2)} minutes ago: TRUE`);
     return true;
   }
   
   // Fallback to legacy is_online field if status field is not available
-  return realTimeStatus.is_online === true;
+  const fallback = realTimeStatus.is_online === true;
+  console.debug('  → No status field, using is_online fallback:', fallback);
+  return fallback;
 }
 
 /**

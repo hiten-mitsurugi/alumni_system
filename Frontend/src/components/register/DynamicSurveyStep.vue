@@ -157,17 +157,20 @@
           <!-- Rating Scale -->
           <div
             v-else-if="question.question_type === 'rating'"
-            class="mt-1 space-y-2"
+            class="mt-2"
           >
-            <div class="flex items-center justify-between text-sm text-gray-600">
-              <span>{{ question.min_value }}</span>
-              <span>{{ question.max_value }}</span>
+            <!-- Labels for min and max -->
+            <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+              <span class="font-medium">{{ question.min_value }} - Low</span>
+              <span class="font-medium">{{ question.max_value }} - High</span>
             </div>
-            <div class="flex items-center justify-center space-x-2">
+            
+            <!-- Rating options -->
+            <div class="flex items-center justify-start gap-2 flex-wrap">
               <div
                 v-for="rating in getRatingRange(question)"
                 :key="rating"
-                class="flex flex-col items-center"
+                class="flex flex-col items-center gap-1"
               >
                 <input
                   :id="`${question.id}_${rating}`"
@@ -176,11 +179,11 @@
                   :value="rating"
                   :name="`question_${question.id}`"
                   :required="question.is_required"
-                  class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  class="h-5 w-5 text-orange-600 border-gray-300 focus:ring-orange-500 cursor-pointer"
                 />
                 <label
                   :for="`${question.id}_${rating}`"
-                  class="text-sm text-gray-700 cursor-pointer"
+                  class="text-sm font-medium text-gray-700 cursor-pointer text-center w-8"
                 >
                   {{ rating }}
                 </label>

@@ -101,7 +101,7 @@ const handleAccountSaved = (result) => {
             :class="themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'">
           Welcome Back! {{ user?.first_name || 'User' }} {{ user?.last_name || '' }}
         </h1>
-        <p class="text-lg font-medium text-green-600 dark:text-green-400">
+        <p class="text-lg font-medium text-orange-600 dark:text-orange-400">
           Super Admin Settings
         </p>
       </div>
@@ -128,7 +128,7 @@ const handleAccountSaved = (result) => {
                 @click="navigateToSection(section.id)"
                 class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] group"
                 :class="activeSection === section.id
-                  ? (themeStore.isAdminDark() ? 'bg-green-600 text-white shadow-lg' : 'bg-green-600 text-white shadow-lg')
+                  ? (themeStore.isAdminDark() ? 'bg-orange-500 text-white shadow-lg' : 'bg-orange-500 text-white shadow-lg')
                   : (themeStore.isAdminDark() ? 'text-gray-300 hover:bg-gray-600' : 'text-gray-700 hover:bg-gray-100')
                 ">
                 
@@ -143,7 +143,7 @@ const handleAccountSaved = (result) => {
                     {{ section.label }}
                   </div>
                   <div class="text-xs opacity-75 mt-1"
-                       :class="activeSection === section.id ? 'text-green-100' : (themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500')">
+                       :class="activeSection === section.id ? 'text-orange-100' : (themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500')">
                     {{ section.description }}
                   </div>
                 </div>
@@ -214,12 +214,12 @@ const handleAccountSaved = (result) => {
          style="position: fixed !important;">
       <div class="flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg backdrop-blur-sm border"
            :class="notification.type === 'success'
-             ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-800 dark:text-green-200'
+             ? 'bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-600 text-orange-600 dark:text-orange-200'
              : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-800 dark:text-red-200'">
 
         <!-- Success Icon -->
         <div v-if="notification.type === 'success'"
-             class="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+             class="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
           <CheckIcon class="w-5 h-5 text-white" />
         </div>
 

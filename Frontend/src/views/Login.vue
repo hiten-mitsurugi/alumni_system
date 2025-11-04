@@ -3,6 +3,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useUiStore } from '../stores/ui';
 import api from '../services/api';
 import backgroundImage from "@/assets/Background.png";
 import { Eye as EyeIcon, EyeOff as EyeOffIcon } from 'lucide-vue-next';
@@ -13,6 +14,7 @@ const error = ref('');
 const showPassword = ref(false);
 const router = useRouter();
 const authStore = useAuthStore();
+const ui = useUiStore();
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validatePassword = (password) =>
@@ -34,6 +36,7 @@ const login = async () => {
     return;
   }
   try {
+    ui.start('Signing in...');
     const response = await api.post('/auth/login/', {
       email: email.value,
       password: password.value,
@@ -51,6 +54,9 @@ const login = async () => {
   } catch (err) {
     error.value = err.response?.data?.detail || 'Login failed. Please try again.';
     console.error('Login error:', error.value);
+  }
+  finally {
+    ui.stop();
   }
 };
 </script>
@@ -114,15 +120,21 @@ const login = async () => {
             </div>
             <button
               type="submit"
-              class="w-full bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 font-medium"
+              :disabled="ui.isLoading"
+              class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-medium disabled:opacity-60"
             >
               Login
             </button>
             <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
-            <p class="text-center text-sm">
-              Don't have an account?
-              <router-link to="/register" class="text-blue-600 hover:underline">Register</router-link>
-            </p>
+            <div class="flex justify-between items-center text-sm mt-4">
+              <router-link to="/forgot-password" class="text-orange-600 hover:underline">
+                Forgot Password?
+              </router-link>
+              <span class="text-gray-600">
+                Don't have an account?
+                <router-link to="/register" class="text-blue-600 hover:underline">Register</router-link>
+              </span>
+            </div>
           </form>
           <!-- Form End -->
         </div>

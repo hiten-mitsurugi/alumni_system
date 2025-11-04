@@ -5,6 +5,7 @@ import router from './router';
 import './assets/main.css';
 import { useAuthStore } from './stores/auth';
 import { useThemeStore } from './stores/theme';
+import { useUiStore } from './stores/ui';
 
 // Clear any old dark mode settings from localStorage
 localStorage.removeItem('darkMode');
@@ -30,5 +31,7 @@ theme.initializeAdminTheme();
 
 // Initialize auth store
 if (auth.token) {
-  auth.fetchUser();
+  const ui = useUiStore();
+  ui.start('Loading user...');
+  auth.fetchUser().catch(() => {}).finally(() => ui.stop());
 }

@@ -8,15 +8,15 @@
       </div>
 
       <!-- Already Submitted Notice -->
-      <div v-if="hasSubmitted" class="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-        <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-if="hasSubmitted" class="bg-orange-50 border border-orange-200 rounded-lg p-6 text-center">
+        <div class="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
           </svg>
         </div>
         <h3 class="text-lg font-medium text-green-900 mb-2">Survey Already Completed</h3>
         <p class="text-green-700">Thank you for your participation! You have already submitted your responses to this survey.</p>
-        <p class="text-sm text-green-600 mt-2">If you need to update your responses, please contact the administration.</p>
+        <p class="text-sm text-orange-600 mt-2">If you need to update your responses, please contact the administration.</p>
       </div>
 
       <!-- Loading State -->
@@ -370,8 +370,8 @@
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
       >
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center">
-          <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
