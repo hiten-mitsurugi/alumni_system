@@ -1,253 +1,3 @@
-<template>
-  <div class="min-h-screen bg-amber-50">
-    <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-    </div>
-
-    <!-- Main Profile Content -->
-    <div v-else class="max-w-6xl mx-auto p-4">
-      <!-- Profile Header Section -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-        <!-- Cover Photo -->
-        <div class="relative h-48 bg-gradient-to-r from-green-400 to-blue-500">
-          <img 
-            v-if="profile?.cover_photo" 
-            :src="profile.cover_photo" 
-            alt="Cover Photo"
-            class="w-full h-full object-cover"
-          />
-          <div 
-            v-if="isOwnProfile" 
-            class="absolute top-4 right-4 bg-white rounded-full p-2 cursor-pointer hover:bg-gray-100"
-            @click="editCoverPhoto"
-          >
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Profile Info -->
-        <div class="relative px-6 pb-6">
-          <!-- Profile Picture -->
-          <div class="absolute -top-16 left-6">
-            <div class="relative">
-              <img 
-                :src="profilePictureUrl" 
-                alt="Profile Picture"
-                class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
-              />
-              <div 
-                v-if="isOwnProfile" 
-                class="absolute bottom-2 right-2 bg-green-600 rounded-full p-2 cursor-pointer hover:bg-green-700"
-                @click="editProfilePicture"
-              >
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Name and Basic Info -->
-          <div class="pt-20">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h1 class="text-3xl font-bold text-gray-900">
-                  {{ user?.first_name }} {{ user?.middle_name }} {{ user?.last_name }}
-                </h1>
-                <p class="text-lg text-gray-600 mt-1">
-                  {{ displayHeadline }}
-                </p>
-                
-                <!-- Education Info (derived from Education section) -->
-                <div v-if="displayEducationInfo" class="flex items-center text-gray-500 mt-2">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                  </svg>
-                  {{ displayEducationInfo }}
-                </div>
-                
-                <!-- Location -->
-                <div class="flex items-center text-gray-500 mt-2">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  </svg>
-                  {{ profile?.location || profile?.present_address || 'Location not specified' }}
-                </div>
-                
-                <!-- Connections -->
-                <div class="flex items-center text-gray-500 mt-1">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  </svg>
-                  {{ connectionsCount }} connections
-                </div>
-              </div>
-
-              <!-- Action Buttons -->
-              <div v-if="!isOwnProfile" class="flex space-x-3 mt-4 lg:mt-0">
-                <button 
-                  @click="toggleFollow"
-                  :disabled="followLoading"
-                  class="px-6 py-2 rounded-lg font-medium transition-colors"
-                  :class="isFollowing 
-                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
-                    : 'bg-green-600 text-white hover:bg-green-700'"
-                >
-                  <span v-if="followLoading" class="animate-spin mr-2">⟳</span>
-                  {{ isFollowing ? 'Following' : 'Follow' }}
-                </button>
-                <button 
-                  @click="openMessage"
-                  class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                >
-                  Message
-                </button>
-              </div>
-              
-              <!-- Edit Profile Button for own profile -->
-              <div v-else class="mt-4 lg:mt-0">
-                <button 
-                  @click="editProfile"
-                  class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
-                >
-                  Edit Profile
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column - Profile Sections -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- About Section -->
-          <ProfileAboutSection 
-            :profile="profile" 
-            :is-own-profile="isOwnProfile"
-            @profile-updated="fetchProfile"
-          />
-          
-          <!-- Contact Information Section -->
-          <ProfileContactSection 
-            :profile="profile" 
-            :is-own-profile="isOwnProfile"
-            @profile-updated="fetchProfile"
-          />
-          
-          <!-- Education Section -->
-          <ProfileEducationSection 
-            :education="education" 
-            :profile="profile"
-            :user="user"
-            :is-own-profile="isOwnProfile"
-            @add="addEducation"
-            @edit="editEducation"
-            @edit-profile="editProfile"
-            @delete="deleteEducation"
-            @education-visibility-changed="handleEducationVisibilityChange"
-          />
-          
-          <!-- Experience Section -->
-          <ProfileExperienceSection 
-            :workHistories="workHistories" 
-            :is-own-profile="isOwnProfile"
-            @add="addExperience"
-            @edit="editExperience"
-            @delete="deleteExperience"
-            @experience-visibility-changed="handleExperienceVisibilityChange"
-          />
-          
-          <!-- Skills Section -->
-          <ProfileSkillsSection 
-            :skills="skills" 
-            :is-own-profile="isOwnProfile"
-            @add="addSkill"
-            @edit="editSkill"
-            @delete="deleteSkill"
-            @skill-visibility-changed="handleSkillVisibilityChange"
-          />
-          
-          <!-- Achievements Section -->
-          <ProfileAchievementsSection 
-            :achievements="achievements" 
-            :is-own-profile="isOwnProfile"
-            @add="addAchievement"
-            @edit="editAchievement"
-            @delete="deleteAchievement"
-            @toggle-visibility="handleAchievementVisibilityChange"
-          />
-        </div>
-
-        <!-- Right Column - Sidebar -->
-        <div class="space-y-6">
-          <!-- People You May Know -->
-          <SuggestedConnectionsWidget @connect="handleConnect" />
-          
-          <!-- Recent Activity (if own profile) -->
-          <RecentActivityWidget v-if="isOwnProfile" />
-          
-
-          
-        </div>
-      </div>
-    </div>
-
-    <!-- Edit Profile Modal -->
-    <EditProfileModal 
-      v-if="showEditModal"
-      :profile="profile"
-      @close="showEditModal = false"
-      @save="updateProfile"
-    />
-    
-    <!-- Cover Photo Upload Modal -->
-    <CoverPhotoModal 
-      v-if="showCoverModal"
-      @close="showCoverModal = false"
-      @save="updateCoverPhoto"
-    />
-
-    <!-- Education Modal -->
-    <EducationModal
-      v-if="showEducationModal"
-      :education="selectedEducation"
-      @close="closeEducationModal"
-      @save="saveEducation"
-    />
-
-    <!-- Experience Modal -->
-    <ExperienceModal
-      v-if="showExperienceModal"
-      :experience="selectedExperience"
-      @close="closeExperienceModal"
-      @save="saveExperience"
-    />
-
-    <!-- Skill Modal -->
-    <SkillModal
-      v-if="showSkillModal"
-      :skill="selectedSkill"
-      @close="closeSkillModal"
-      @save="saveSkill"
-    />
-
-    <!-- Achievement Modal -->
-    <AchievementModal
-      v-if="showAchievementModal"
-      :achievement="selectedAchievement"
-      @close="closeAchievementModal"
-      @save="saveAchievement"
-    />
-  </div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -271,6 +21,10 @@ import EducationModal from '@/components/profile/EducationModal.vue'
 import ExperienceModal from '@/components/profile/ExperienceModal.vue'
 import SkillModal from '@/components/profile/SkillModal.vue'
 import AchievementModal from '@/components/profile/AchievementModal.vue'
+
+// Tab components
+import PostsTab from '@/components/profile/tabs/PostsTab.vue'
+import PhotosTab from '@/components/profile/tabs/PhotosTab.vue'
 
 // Reactive data
 const route = useRoute()
@@ -304,6 +58,9 @@ const achievements = ref([])
 const isFollowing = ref(false)
 const connectionsCount = ref(0)
 const resolvedUserId = ref(null) // Track the resolved user ID
+
+// Tab state
+const activeTab = ref('about') // Default to about tab
 
 // Computed properties
 const isOwnProfile = computed(() => {
@@ -1055,6 +812,314 @@ watch(() => route.params.userIdentifier, () => {
   fetchProfile()
 }, { immediate: false })
 </script>
+
+<template>
+  <div class="min-h-screen bg-amber-50">
+    <!-- Loading State -->
+    <div v-if="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+    </div>
+
+    <!-- Main Profile Content -->
+    <div v-else class="max-w-6xl mx-auto p-4">
+      <!-- Profile Header Section -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+        <!-- Cover Photo -->
+        <div class="relative h-48 bg-gradient-to-r from-green-400 to-blue-500">
+          <img 
+            v-if="profile?.cover_photo" 
+            :src="profile.cover_photo" 
+            alt="Cover Photo"
+            class="w-full h-full object-cover"
+          />
+          <div 
+            v-if="isOwnProfile" 
+            class="absolute top-4 right-4 bg-white rounded-full p-2 cursor-pointer hover:bg-gray-100"
+            @click="editCoverPhoto"
+          >
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Profile Info -->
+        <div class="relative px-6 pb-6">
+          <!-- Profile Picture -->
+          <div class="absolute -top-16 left-6">
+            <div class="relative">
+              <img 
+                :src="profilePictureUrl" 
+                alt="Profile Picture"
+                class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+              />
+              <div 
+                v-if="isOwnProfile" 
+                class="absolute bottom-2 right-2 bg-orange-500 rounded-full p-2 cursor-pointer hover:bg-orange-600"
+                @click="editProfilePicture"
+              >
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Name and Basic Info -->
+          <div class="pt-20">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                  {{ user?.first_name }} {{ user?.middle_name }} {{ user?.last_name }}
+                </h1>
+                <p class="text-lg text-gray-600 mt-1">
+                  {{ displayHeadline }}
+                </p>
+                
+                <!-- Education Info (derived from Education section) -->
+                <div v-if="displayEducationInfo" class="flex items-center text-gray-500 mt-2">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  {{ displayEducationInfo }}
+                </div>
+                
+                <!-- Location -->
+                <div class="flex items-center text-gray-500 mt-2">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  {{ profile?.location || profile?.present_address || 'Location not specified' }}
+                </div>
+                
+                <!-- Connections -->
+                <div class="flex items-center text-gray-500 mt-1">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  {{ connectionsCount }} connections
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div v-if="!isOwnProfile" class="flex space-x-3 mt-4 lg:mt-0">
+                <button 
+                  @click="toggleFollow"
+                  :disabled="followLoading"
+                  class="px-6 py-2 rounded-lg font-medium transition-colors"
+                  :class="isFollowing 
+                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                    : 'bg-orange-500 text-white hover:bg-orange-600'"
+                >
+                  <span v-if="followLoading" class="animate-spin mr-2">⟳</span>
+                  {{ isFollowing ? 'Following' : 'Follow' }}
+                </button>
+                <button 
+                  @click="openMessage"
+                  class="px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                >
+                  Message
+                </button>
+              </div>
+              
+              <!-- Edit Profile Button for own profile -->
+              <div v-else class="mt-4 lg:mt-0">
+                <button 
+                  @click="editProfile"
+                  class="px-6 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav class="flex space-x-8">
+            <button
+              @click="activeTab = 'about'"
+              :class="[
+                'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                activeTab === 'about'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ]"
+            >
+              About
+            </button>
+            <button
+              @click="activeTab = 'posts'"
+              :class="[
+                'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                activeTab === 'posts'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ]"
+            >
+              Posts
+            </button>
+            <button
+              @click="activeTab = 'photos'"
+              :class="[
+                'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                activeTab === 'photos'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ]"
+            >
+              Photos
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column - Profile Sections -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <!-- About Tab Content -->
+          <div v-show="activeTab === 'about'" class="space-y-6">
+            <!-- About Section -->
+            <ProfileAboutSection 
+              :profile="profile" 
+              :is-own-profile="isOwnProfile"
+              @profile-updated="fetchProfile"
+            />
+            
+            <!-- Contact Information Section -->
+            <ProfileContactSection 
+              :profile="profile" 
+              :is-own-profile="isOwnProfile"
+              @profile-updated="fetchProfile"
+            />
+            
+            <!-- Education Section -->
+            <ProfileEducationSection 
+              :education="education" 
+              :profile="profile"
+              :user="user"
+              :is-own-profile="isOwnProfile"
+              @add="addEducation"
+              @edit="editEducation"
+              @edit-profile="editProfile"
+              @delete="deleteEducation"
+              @education-visibility-changed="handleEducationVisibilityChange"
+            />
+            
+            <!-- Experience Section -->
+            <ProfileExperienceSection 
+              :workHistories="workHistories" 
+              :is-own-profile="isOwnProfile"
+              @add="addExperience"
+              @edit="editExperience"
+              @delete="deleteExperience"
+              @experience-visibility-changed="handleExperienceVisibilityChange"
+            />
+            
+            <!-- Skills Section -->
+            <ProfileSkillsSection 
+              :skills="skills" 
+              :is-own-profile="isOwnProfile"
+              @add="addSkill"
+              @edit="editSkill"
+              @delete="deleteSkill"
+              @skill-visibility-changed="handleSkillVisibilityChange"
+            />
+            
+            <!-- Achievements Section -->
+            <ProfileAchievementsSection 
+              :achievements="achievements" 
+              :is-own-profile="isOwnProfile"
+              @add="addAchievement"
+              @edit="editAchievement"
+              @delete="deleteAchievement"
+              @toggle-visibility="handleAchievementVisibilityChange"
+            />
+          </div>
+
+          <!-- Posts Tab Content -->
+          <div v-show="activeTab === 'posts'">
+            <PostsTab :user-id="resolvedUserId" />
+          </div>
+
+          <!-- Photos Tab Content -->
+          <div v-show="activeTab === 'photos'">
+            <PhotosTab />
+          </div>
+
+        </div>
+
+        <!-- Right Column - Sidebar -->
+        <div class="space-y-6">
+          <!-- People You May Know -->
+          <SuggestedConnectionsWidget @connect="handleConnect" />
+          
+          <!-- Recent Activity (if own profile) -->
+          <RecentActivityWidget v-if="isOwnProfile" />
+          
+
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <EditProfileModal 
+      v-if="showEditModal"
+      :profile="profile"
+      @close="showEditModal = false"
+      @save="updateProfile"
+    />
+    
+    <!-- Cover Photo Upload Modal -->
+    <CoverPhotoModal 
+      v-if="showCoverModal"
+      @close="showCoverModal = false"
+      @save="updateCoverPhoto"
+    />
+
+    <!-- Education Modal -->
+    <EducationModal
+      v-if="showEducationModal"
+      :education="selectedEducation"
+      @close="closeEducationModal"
+      @save="saveEducation"
+    />
+
+    <!-- Experience Modal -->
+    <ExperienceModal
+      v-if="showExperienceModal"
+      :experience="selectedExperience"
+      @close="closeExperienceModal"
+      @save="saveExperience"
+    />
+
+    <!-- Skill Modal -->
+    <SkillModal
+      v-if="showSkillModal"
+      :skill="selectedSkill"
+      @close="closeSkillModal"
+      @save="saveSkill"
+    />
+
+    <!-- Achievement Modal -->
+    <AchievementModal
+      v-if="showAchievementModal"
+      :achievement="selectedAchievement"
+      @close="closeAchievementModal"
+      @save="saveAchievement"
+    />
+  </div>
+</template>
+
+
 
 <style scoped>
 /* Custom styles if needed */
