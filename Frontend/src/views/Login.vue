@@ -16,7 +16,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const ui = useUiStore();
 
-const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const validateEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 const validatePassword = (password) =>
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
 
@@ -36,27 +36,29 @@ const login = async () => {
     return;
   }
   try {
-    ui.start('Signing in...');
     const response = await api.post('/auth/login/', {
       email: email.value,
       password: password.value,
     });
-    // Handle single token from backend (access token)
+    // Set user data immediately
     authStore.setToken(response.data.token, null);
     authStore.setUser(response.data.user);
-    if (response.data.user.user_type === 1) {
-      router.push('/super-admin');
-    } else if (response.data.user.user_type === 2) {
-      router.push('/admin');
-    } else if (response.data.user.user_type === 3) {
-      router.push('/alumni');
-    }
+    // Show brief loading screen then redirect
+    ui.start('Signing in...');
+    setTimeout(() => {
+      ui.stop(); // Stop loading before redirect
+      if (response.data.user.user_type === 1) {
+        router.push('/super-admin');
+      } else if (response.data.user.user_type === 2) {
+        router.push('/admin');
+      } else if (response.data.user.user_type === 3) {
+        router.push('/alumni');
+      }
+    }, 1000);
   } catch (err) {
-    error.value = err.response?.data?.detail || 'Login failed. Please try again.';
+    // Show error immediately without loading
+    error.value = err.response?.data?.detail || 'Invalid email or password';
     console.error('Login error:', error.value);
-  }
-  finally {
-    ui.stop();
   }
 };
 </script>

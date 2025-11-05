@@ -19,7 +19,11 @@ const confirmPassword = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
-const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+const validateEmail = (email) => {
+  // RFC5322 partial regex for email validation - stricter than basic pattern
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  return emailRegex.test(email)
+}
 
 const requestReset = async () => {
   error.value = ''
@@ -31,12 +35,18 @@ const requestReset = async () => {
   }
 
   try {
-    ui.start('Sending reset link...')
+    ui.start('Sending reset password...')
     await api.post('/auth/forgot-password/', { email: email.value })
-    success.value = 'Reset link has been sent to your email. Please check your inbox.'
-    step.value = 'code'
+    success.value = 'If an account exists with this email, a password reset email has been sent. Please check your inbox and spam folder.'
+    // Reset form after success
+    email.value = ''
+    step.value = 'email'
+    // Show success for 5 seconds then redirect to login
+    setTimeout(() => {
+      router.push('/login')
+    }, 5000)
   } catch (err) {
-    error.value = err.response?.data?.detail || 'Failed to send reset link. Please try again.'
+    error.value = err.response?.data?.detail || 'Failed to process password reset. Please try again.'
   } finally {
     ui.stop()
   }
@@ -83,6 +93,12 @@ const verifyAndReset = async () => {
   } finally {
     ui.stop()
   }
+}
+
+// This function is kept for backward compatibility but not used in current flow
+const skipCodeVerification = () => {
+  // Flow: User receives password via email, logs in directly
+  router.push('/login')
 }
 
 const goBack = () => {
@@ -135,101 +151,43 @@ const goBack = () => {
           <!-- Step 1: Email -->
           <div v-if="step === 'email'" class="space-y-4">
             <p class="text-gray-600 text-sm mb-6">
-              Enter your email address and we'll send you a link to reset your password.
+              Enter your registered email address and we'll send you a temporary password to reset your account.
             </p>
+            
+            <div v-if="success" class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 mb-4">
+              <CheckCircle class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p class="text-green-700 text-sm">{{ success }}</p>
+                <p class="text-green-600 text-xs mt-2">Redirecting to login in a few seconds...</p>
+              </div>
+            </div>
+
             <input
               v-model="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="Enter your registered email"
               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               @keydown.enter="requestReset"
             />
+            
             <button
               @click="requestReset"
               :disabled="ui.isLoading"
               class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-medium disabled:opacity-60 transition-colors"
             >
-              {{ ui.isLoading ? 'Sending...' : 'Send Reset Link' }}
+              {{ ui.isLoading ? 'Sending...' : 'Send Password Reset Email' }}
             </button>
+            
             <p v-if="error" class="text-red-500 text-sm flex items-center gap-2">
               <AlertCircle class="w-4 h-4" />
               {{ error }}
             </p>
-          </div>
 
-          <!-- Step 2: Code & New Password -->
-          <div v-if="step === 'code'" class="space-y-4">
-            <div v-if="success" class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <p class="text-green-700 text-sm">{{ success }}</p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p class="text-blue-700 text-xs">
+                <strong>What happens next:</strong> We'll send you a temporary password to your email. Use it to log in, then change it to a permanent password.
+              </p>
             </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Verification Code</label>
-              <input
-                v-model="resetCode"
-                type="text"
-                placeholder="Enter the code from your email"
-                class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <p class="text-xs text-gray-500 mt-1">Check your email for the reset code</p>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-              <div class="relative">
-                <input
-                  v-model="newPassword"
-                  :type="showPassword ? 'text' : 'password'"
-                  placeholder="Enter new password"
-                  class="w-full p-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-                <button
-                  type="button"
-                  @click="showPassword = !showPassword"
-                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {{ showPassword ? '👁️' : '👁️‍🗨️' }}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-              <div class="relative">
-                <input
-                  v-model="confirmPassword"
-                  :type="showConfirmPassword ? 'text' : 'password'"
-                  placeholder="Confirm new password"
-                  class="w-full p-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  @keydown.enter="verifyAndReset"
-                />
-                <button
-                  type="button"
-                  @click="showConfirmPassword = !showConfirmPassword"
-                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {{ showConfirmPassword ? '👁️' : '👁️‍🗨️' }}
-                </button>
-              </div>
-            </div>
-
-            <p class="text-xs text-gray-500 bg-gray-50 p-3 rounded">
-              Password must be at least 8 characters with uppercase, lowercase, number, and special character.
-            </p>
-
-            <button
-              @click="verifyAndReset"
-              :disabled="ui.isLoading"
-              class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-medium disabled:opacity-60 transition-colors"
-            >
-              {{ ui.isLoading ? 'Resetting...' : 'Reset Password' }}
-            </button>
-
-            <p v-if="error" class="text-red-500 text-sm flex items-center gap-2">
-              <AlertCircle class="w-4 h-4" />
-              {{ error }}
-            </p>
           </div>
 
           <!-- Back to Login Link -->

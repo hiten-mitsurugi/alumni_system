@@ -35,16 +35,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401 && !error.config._retry) {
-      // Handle 401 errors (authentication failures)
+    const authStore = useAuthStore();
+    
+    // Only handle 401 for EXISTING authenticated users (token is already set)
+    // Don't redirect on login failures (which also return 401)
+    if (error.response?.status === 401 && !error.config._retry && authStore.token) {
+      // User has a token but it's invalid - try to refresh
       error.config._retry = true;
-      const authStore = useAuthStore();
       const refreshSuccess = await authStore.tryRefreshToken();
       if (refreshSuccess) {
         // Use the updated token from the store
         error.config.headers.Authorization = `Bearer ${authStore.token}`;
         return api(error.config); // Retry with new token
       } else {
+        // Refresh failed - logout and redirect
         authStore.logout();
         window.location.href = '/login';
       }
@@ -57,10 +61,9 @@ api.interceptors.response.use(
                          errorMessage.toLowerCase().includes('signature') ||
                          errorMessage.toLowerCase().includes('expired');
       
-      if (isAuthError) {
-        // Only try refresh for actual auth-related 403 errors
+      if (isAuthError && authStore.token) {
+        // Only try refresh for actual auth-related 403 errors WITH existing token
         error.config._retry = true;
-        const authStore = useAuthStore();
         const refreshSuccess = await authStore.tryRefreshToken();
         if (refreshSuccess) {
           // Use the updated token from the store

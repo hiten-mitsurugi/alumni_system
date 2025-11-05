@@ -112,7 +112,7 @@ class LoginView(APIView):
             user = CustomUser.objects.filter(email=email).first()
             if user is None:
                 logger.info(f"❌ No user found with email: {email}")
-                return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'detail': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
             
             logger.info(f"✅ User found: {user.username} (ID: {user.id})")
             
@@ -121,7 +121,7 @@ class LoginView(APIView):
             logger.info(f"🔐 Authentication result: {authenticated_user}")
             
             if authenticated_user is None:
-                return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'detail': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
             
             # Check if user needs approval (alumni users)
             if not user.is_approved and user.user_type == 3:
@@ -137,51 +137,54 @@ class LoginView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            # Update user's last_login field and status
-            user.last_login = timezone.now()
-            user.save(update_fields=['last_login'])
-            
-            # Set user online in cache
-            set_user_online(user.id)
-            
-            # Update profile status
-            try:
-                from auth_app.models import Profile
-                profile, created = Profile.objects.get_or_create(user=user)
-                profile.status = 'online'
-                profile.last_seen = timezone.now()
-                profile.save()
-                
-                logger.info(f"User {user.id} status set to online on login")
-            except Exception as profile_error:
-                logger.error(f"Profile update failed: {str(profile_error)}")
-            
-            # Broadcast status change to all connected users
-            try:
-                channel_layer = get_channel_layer()
-                status_payload = {
-                    'type': 'status_update',
-                    'user_id': user.id,
-                    'status': 'online',
-                    'last_seen': timezone.now().isoformat(),
-                    'last_login': user.last_login.isoformat()
-                }
-                logger.info(f"Broadcasting login status update: {status_payload}")
-                
-                # Broadcast to status updates group
-                async_to_sync(channel_layer.group_send)(
-                    'status_updates',
-                    {
-                        'type': 'status_update',
-                        'data': status_payload
-                    }
-                )
-                logger.info(f"Successfully broadcast login status update for user {user.id}")
-            except Exception as ws_error:
-                logger.error(f"WebSocket status broadcast failed in LoginView: {str(ws_error)}")
-            
-            # Generate tokens
+            # Generate tokens FIRST (fastest operation)
             refresh = RefreshToken.for_user(user)
+            
+            # Update user's last_login field and status (do this in background)
+            from threading import Thread
+            def update_login_status():
+                try:
+                    user.last_login = timezone.now()
+                    user.save(update_fields=['last_login'])
+                    set_user_online(user.id)
+                    
+                    # Update profile status
+                    try:
+                        from auth_app.models import Profile
+                        profile, created = Profile.objects.get_or_create(user=user)
+                        profile.status = 'online'
+                        profile.last_seen = timezone.now()
+                        profile.save()
+                        logger.info(f"User {user.id} status set to online on login")
+                    except Exception as profile_error:
+                        logger.error(f"Profile update failed: {str(profile_error)}")
+                    
+                    # Broadcast status change to all connected users
+                    try:
+                        channel_layer = get_channel_layer()
+                        status_payload = {
+                            'type': 'status_update',
+                            'user_id': user.id,
+                            'status': 'online',
+                            'last_seen': timezone.now().isoformat(),
+                            'last_login': user.last_login.isoformat()
+                        }
+                        async_to_sync(channel_layer.group_send)(
+                            'status_updates',
+                            {
+                                'type': 'status_update',
+                                'data': status_payload
+                            }
+                        )
+                        logger.info(f"Successfully broadcast login status update for user {user.id}")
+                    except Exception as ws_error:
+                        logger.error(f"WebSocket status broadcast failed in LoginView: {str(ws_error)}")
+                except Exception as e:
+                    logger.error(f"Background login status update failed: {str(e)}")
+            
+            # Run status update in background thread (non-blocking)
+            background_thread = Thread(target=update_login_status, daemon=True)
+            background_thread.start()
             
             return Response({
                 'token': str(refresh.access_token),
@@ -287,3 +290,127 @@ class CheckEmailExistsView(APIView):
         except Exception as e:
             logger.error(f"Error checking email existence for {email}: {str(e)}")
             return Response({'error': 'Unable to check email availability'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ForgotPasswordView(APIView):
+    """
+    Handle forgot password requests.
+    Validates email exists in system and sends random password to registered email.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        import re
+        import secrets
+        import string
+        
+        email = request.data.get('email', '').strip()
+        
+        # Validate email format using regex
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not email or not re.match(email_regex, email):
+            logger.warning(f"Invalid email format provided: {email}")
+            return Response(
+                {'detail': 'Please enter a valid email address'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Check if email exists in CustomUser
+            user = CustomUser.objects.filter(email=email).first()
+            
+            if not user:
+                logger.warning(f"Password reset requested for non-existent email: {email}")
+                # Return same error message for security (don't reveal if email exists)
+                return Response(
+                    {'detail': 'If an account exists with this email, you will receive a password reset email.'},
+                    status=status.HTTP_200_OK
+                )
+            
+            # Generate random password (12 characters: uppercase, lowercase, digits, special chars)
+            characters = string.ascii_letters + string.digits + string.punctuation
+            random_password = ''.join(secrets.choice(characters) for _ in range(12))
+            
+            # Update user's password
+            user.set_password(random_password)
+            user.save()
+            logger.info(f"Password reset for user: {user.email} (ID: {user.id})")
+            
+            # Send email in background thread (non-blocking)
+            from threading import Thread
+            def send_reset_email():
+                try:
+                    subject = 'Alumni Mates - Password Reset'
+                    plain_message = f"""
+Hello {user.first_name},
+
+A password reset request was submitted for your Alumni Mates account.
+
+Your temporary password is: {random_password}
+
+Please use this password to log in to your account. You can change it to a more secure password after logging in.
+
+If you did not request this password reset, please contact our support team immediately.
+
+Best regards,
+Alumni Mates Support Team
+                    """
+                    
+                    html_message = f"""
+<html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="color: #ff6600;">Password Reset Request</h2>
+                
+                <p>Hello <strong>{user.first_name}</strong>,</p>
+                
+                <p>A password reset request was submitted for your Alumni Mates account.</p>
+                
+                <div style="background-color: #f0f0f0; padding: 15px; border-left: 4px solid #ff6600; margin: 20px 0;">
+                    <p style="margin: 0;"><strong>Your temporary password is:</strong></p>
+                    <p style="margin: 10px 0; font-size: 18px; font-weight: bold; color: #ff6600; font-family: monospace;">{random_password}</p>
+                </div>
+                
+                <p>Please use this password to log in to your account. <strong>You can change it to a more secure password after logging in.</strong></p>
+                
+                <p style="color: #666; font-size: 14px; border-top: 1px solid #ddd; padding-top: 15px; margin-top: 20px;">
+                    If you did not request this password reset, please contact our support team immediately at <strong>support@alumnimates.com</strong>
+                </p>
+                
+                <p style="color: #999; font-size: 12px; margin-top: 20px;">
+                    Best regards,<br>
+                    <strong>Alumni Mates Support Team</strong>
+                </p>
+            </div>
+        </div>
+    </body>
+</html>
+                    """
+                    
+                    email_obj = EmailMultiAlternatives(
+                        subject=subject,
+                        body=plain_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[user.email]
+                    )
+                    email_obj.attach_alternative(html_message, "text/html")
+                    email_obj.send(fail_silently=False)
+                    logger.info(f"Password reset email sent successfully to {user.email}")
+                except Exception as email_error:
+                    logger.error(f"Failed to send password reset email to {user.email}: {str(email_error)}")
+            
+            email_thread = Thread(target=send_reset_email, daemon=True)
+            email_thread.start()
+            
+            return Response(
+                {'detail': 'If an account exists with this email, you will receive a password reset email.'},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            logger.error(f"Unexpected error in ForgotPasswordView: {str(e)}", exc_info=True)
+            return Response(
+                {'detail': 'An error occurred processing your request. Please try again later.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
