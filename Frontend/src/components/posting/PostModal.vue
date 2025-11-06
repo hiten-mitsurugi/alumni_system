@@ -77,9 +77,9 @@
         </h3>
         <button
           @click="closeModal"
-          class="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+          class="p-2 hover:bg-orange-100 hover:text-orange-600 rounded-full transition-colors flex-shrink-0"
         >
-          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-500 hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -230,8 +230,8 @@
                   </div>
                   <div class="flex items-center space-x-2 text-xs text-gray-500">
                     <span>{{ comment.time_since }}</span>
-                    <button class="hover:text-blue-600">Like</button>
-                    <button class="hover:text-blue-600">Reply</button>
+                    <button class="hover:text-orange-600">Like</button>
+                    <button class="hover:text-orange-600">Reply</button>
                   </div>
                 </div>
               </div>
@@ -261,7 +261,7 @@
                   <!-- Emoji Button -->
                   <button
                     @click="toggleEmojiPicker"
-                    class="emoji-button p-1.5 sm:p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    class="emoji-button p-1.5 sm:p-3 text-gray-500 hover:text-orange-600 hover:bg-orange-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                     title="Add emoji"
                   >
                     😀
@@ -273,7 +273,7 @@
                     v-model="newComment"
                     type="text"
                     placeholder="Write a comment..."
-                    class="flex-1 px-3 sm:px-4 py-1.5 sm:py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
+                    class="flex-1 px-3 sm:px-4 py-1.5 sm:py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
                     @keyup.enter="addComment"
                     @focus="closeEmojiPicker"
                   />
@@ -282,7 +282,7 @@
                   <button
                     @click="addComment"
                     :disabled="!newComment.trim()"
-                    class="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-600 text-white rounded-full hover:bg-orange-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                   >
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

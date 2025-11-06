@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUiStore } from '../stores/ui'
 import api from '../services/api'
@@ -113,6 +113,22 @@ const goBack = () => {
     router.push('/login')
   }
 }
+
+// Force light theme while on forgot-password page and restore previous state on unmount
+onMounted(() => {
+  const wasDark = document.documentElement.classList.contains('dark');
+  try { localStorage.setItem('prev-theme-was-dark', wasDark ? '1' : '0'); } catch (e) {}
+  document.documentElement.classList.remove('dark');
+});
+
+onUnmounted(() => {
+  try {
+    if (localStorage.getItem('prev-theme-was-dark') === '1') {
+      document.documentElement.classList.add('dark');
+    }
+    localStorage.removeItem('prev-theme-was-dark');
+  } catch (e) {}
+});
 </script>
 
 <template>

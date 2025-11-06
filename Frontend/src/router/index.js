@@ -163,11 +163,6 @@ const routes = [
         component: () => import('../views/Alumni/Survey.vue'),
       },
       {
-        path: 'donate',
-        name: 'AlumniDonate',
-        component: () => import('../views/Alumni/Donate.vue'),
-      },
-      {
         path: 'settings',
         name: 'AlumniSettings',
         component: () => import('../views/Alumni/Settings.vue'),

@@ -7,16 +7,15 @@
       class="fixed inset-0 bg-black/20 z-40 lg:hidden"
     ></div>
 
-    <!-- Sidebar: Only show on desktop or when expanded on mobile -->
+    <!-- Sidebar: Always fixed overlay, hidden on mobile unless expanded -->
     <AlumniSidebar 
       v-if="!isMobile || sidebarExpanded"
       :isExpanded="sidebarExpanded" 
       @toggle="sidebarExpanded = !sidebarExpanded"
-      class="fixed lg:relative z-50"
     />
 
-    <!-- Main content area: no margin when sidebar is hidden on mobile -->
-    <div :class="['flex-1 flex flex-col', (!isMobile || sidebarExpanded) ? 'ml-20 lg:ml-0' : 'ml-0']">
+    <!-- Main content area: Offset only on desktop when sidebar is visible -->
+    <div :class="['flex-1 flex flex-col w-full transition-all duration-200', !isMobile ? 'ml-20' : '']">
       <AlumniNavbar @openSidebar="sidebarExpanded = true" />
       <main class="p-4 overflow-auto flex-1 bg-amber-50 transition-colors duration-200">
         <router-view />
@@ -43,14 +42,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Ensure sidebar overlaps content clearly */
-.fixed {
-  z-index: 50;
-}
-
-/* Optional: Dim content slightly when sidebar is expanded */
-div[data-expanded=true] main {
-  transition: opacity 0.2s ease;
-  opacity: 0.85;
+/* Main content always takes full width */
+div[class*="flex-1"] {
+  width: 100%;
 }
 </style>

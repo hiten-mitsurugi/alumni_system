@@ -24,7 +24,6 @@ import AchievementModal from '@/components/profile/AchievementModal.vue'
 
 // Tab components
 import PostsTab from '@/components/profile/tabs/PostsTab.vue'
-import PhotosTab from '@/components/profile/tabs/PhotosTab.vue'
 
 // Reactive data
 const route = useRoute()
@@ -964,17 +963,6 @@ watch(() => route.params.userIdentifier, () => {
             >
               Posts
             </button>
-            <button
-              @click="activeTab = 'photos'"
-              :class="[
-                'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
-                activeTab === 'photos'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              ]"
-            >
-              Photos
-            </button>
           </nav>
         </div>
       </div>
@@ -1047,11 +1035,6 @@ watch(() => route.params.userIdentifier, () => {
           <!-- Posts Tab Content -->
           <div v-show="activeTab === 'posts'">
             <PostsTab :user-id="resolvedUserId" />
-          </div>
-
-          <!-- Photos Tab Content -->
-          <div v-show="activeTab === 'photos'">
-            <PhotosTab />
           </div>
 
         </div>

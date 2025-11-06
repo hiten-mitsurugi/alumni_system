@@ -57,7 +57,7 @@
 
                 <!-- Other file types -->
                 <div v-else
-                  class="aspect-square bg-gradient-to-br from-green-100 to-purple-100 flex flex-col items-center justify-center p-2">
+                  class="aspect-square bg-gradient-to-br from-orange-100 to-purple-100 flex flex-col items-center justify-center p-2">
                   <svg class="w-8 h-8 text-slate-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -89,7 +89,7 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 lg:gap-4">
           <!-- File Upload -->
           <label
-            class="flex items-center space-x-2 text-green-700 hover:text-white cursor-pointer border-2 border-green-700 bg-white hover:bg-green-700 px-2 md:px-3 py-2 rounded-lg md:rounded-xl transition-all duration-300 shadow-sm text-xs md:text-sm w-full sm:w-auto justify-center sm:justify-start">
+            class="flex items-center space-x-2 text-orange-600 hover:text-white cursor-pointer border-2 border-orange-600 bg-white hover:bg-orange-600 px-2 md:px-3 py-2 rounded-lg md:rounded-xl transition-all duration-300 shadow-sm text-xs md:text-sm w-full sm:w-auto justify-center sm:justify-start">
             <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -103,7 +103,7 @@
 
           <!-- Category Selector -->
           <select v-model="localCategory"
-            class="text-xs md:text-sm font-medium border-2 border-green-700 rounded-lg md:rounded-xl px-2 md:px-3 py-2 focus:ring-2 focus:ring-green-700 focus:border-green-700 bg-white hover:bg-green-700 hover:text-white text-green-700 shadow-sm w-full sm:w-auto transition-all duration-300">
+            class="text-xs md:text-sm font-medium border-2 border-orange-600 rounded-lg md:rounded-xl px-2 md:px-3 py-2 focus:ring-2 focus:ring-orange-600 focus:border-orange-600 bg-white hover:bg-orange-600 hover:text-white text-orange-600 shadow-sm w-full sm:w-auto transition-all duration-300">
             <option v-for="cat in categories.slice(1)" :key="cat.value" :value="cat.value">
               {{ cat.label }}
             </option>
@@ -112,7 +112,7 @@
         <button @click="createPost" :disabled="!localContent.trim() || isPosting" :class="[
           'px-4 md:px-6 py-2 rounded-lg md:rounded-xl font-medium text-sm md:text-base transition-all duration-300 shadow-md transform w-full sm:w-auto border-2',
           localContent.trim() && !isPosting
-            ? 'border-green-700 bg-white text-green-700 hover:bg-green-700 hover:text-white active:bg-white active:border-green-800 hover:scale-105 hover:shadow-lg'
+            ? 'border-orange-600 bg-white text-orange-600 hover:bg-orange-600 hover:text-white active:bg-white active:border-orange-700 hover:scale-105 hover:shadow-lg'
             : 'border-slate-300 bg-slate-100 text-slate-500 cursor-not-allowed'
         ]">
           <span v-if="isPosting" class="flex items-center">

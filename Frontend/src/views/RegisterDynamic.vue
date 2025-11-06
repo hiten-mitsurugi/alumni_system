@@ -1,6 +1,6 @@
 <script setup>
 defineOptions({ name: 'AlumniRegister' });
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import api from '../services/api';
 import Navbar from '@/components/Navbar.vue';
 import VerifyAlumniDirectory from '@/components/register/VerifyAlumniDirectory.vue';
@@ -372,9 +372,21 @@ const handleSurveyResponses = (responses) => {
   updateCategoryResponses(responses);
 };
 
-// Load survey data on mount
+// Force light theme while this registration page is mounted and load survey data
 onMounted(async () => {
+  const wasDark = document.documentElement.classList.contains('dark');
+  try { localStorage.setItem('prev-theme-was-dark', wasDark ? '1' : '0'); } catch (e) {}
+  document.documentElement.classList.remove('dark');
   await loadRegistrationSurvey();
+});
+
+onUnmounted(() => {
+  try {
+    if (localStorage.getItem('prev-theme-was-dark') === '1') {
+      document.documentElement.classList.add('dark');
+    }
+    localStorage.removeItem('prev-theme-was-dark');
+  } catch (e) {}
 });
 </script>
 

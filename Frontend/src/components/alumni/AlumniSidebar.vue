@@ -1,7 +1,7 @@
 <template>
   <div :class="[
     'bg-white text-gray-800 h-full transition-all duration-200 shadow-xl border-r border-gray-200',
-    'lg:static',
+    'fixed top-0 left-0 z-50',
     // Mobile: Always show collapsed (w-20), expand to w-64 when toggled
     isExpanded ? 'w-64' : 'w-20'
   ]">
@@ -22,8 +22,6 @@
       <SidebarItem :icon="Users" label="My Mates" to="/alumni/my-mates" :expanded="isExpanded" />
       <SidebarItem :icon="MessageCircle" label="Messaging" to="/alumni/messaging" :expanded="isExpanded" :badge="messagingBadgeCount" />
       <SidebarItem :icon="FileText" label="Survey" to="/alumni/survey" :expanded="isExpanded" badge="2" />
-      <SidebarItem :icon="Heart" label="Donate" to="/alumni/donate" :expanded="isExpanded" />
-      <SidebarItem :icon="Settings" label="Settings" to="/alumni/settings" :expanded="isExpanded" />
     </nav>
   </div>
 </template>
@@ -41,7 +39,6 @@ import {
   Users,
   MessageCircle,
   FileText,
-  Heart,
   Settings
 } from 'lucide-vue-next'
 

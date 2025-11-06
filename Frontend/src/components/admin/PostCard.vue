@@ -30,7 +30,7 @@ defineProps({
         <div class="flex items-center gap-2 mb-2">
           <h3 class="text-lg font-bold">{{ post.title }}</h3>
           <span :class="{
-            'bg-green-100 text-green-800': post.category.toLowerCase() === 'news',
+            'bg-orange-100 text-orange-600': post.category.toLowerCase() === 'news',
             'bg-purple-100 text-purple-800': post.category.toLowerCase() === 'event',
             'bg-yellow-100 text-yellow-800': post.category.toLowerCase() === 'discussion' || post.category.toLowerCase() === 'job',
           }" class="text-sm px-2 py-1 rounded">
@@ -55,7 +55,7 @@ defineProps({
           <Trash2 class="w-5 h-5" /> Delete
         </button>
         <template v-if="showApprovalActions">
-          <button @click="onApprove(post)" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          <button @click="onApprove(post)" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
             Approve
           </button>
           <button @click="onReject(post)" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">

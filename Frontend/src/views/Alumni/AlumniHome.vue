@@ -551,8 +551,8 @@ onUnmounted(() => {
         <div class="main-content-wrapper">
           <div class="space-y-4 md:space-y-6">
             <!-- Category Tabs -->
-            <div class="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div class="grid grid-cols-7 border-b border-gray-100">
+            <div class="bg-orange-600 rounded-lg sm:rounded-xl border border-orange-600 shadow-sm overflow-hidden">
+              <div class="grid grid-cols-7 border-b border-orange-600">
                 <button
                   v-for="category in categories"
                   :key="category.value"
@@ -560,8 +560,8 @@ onUnmounted(() => {
                   :class="[
                     'flex items-center justify-center px-2 py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 text-center',
                     selectedCategory === category.value
-                      ? 'text-blue-600 border-blue-600 bg-blue-50'
-                      : 'text-gray-600 border-transparent hover:text-blue-600 hover:bg-blue-50'
+                      ? 'text-white border-white bg-orange-300'
+                      : 'text-orange-100 border-transparent hover:text-white hover:bg-orange-300'
                   ]"
                 >
                   <span class="truncate">{{ category.label }}</span>
@@ -655,7 +655,7 @@ onUnmounted(() => {
                 <button
                   v-if="!searchQuery"
                   @click="showCreateForm = true"
-                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  class="inline-flex items-center px-4 py-2 bg-orange-600 text-white font-medium text-sm rounded-lg hover:bg-orange-500 transition-colors"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -690,8 +690,8 @@ onUnmounted(() => {
                 :class="[
                   'flex items-center justify-center px-1 py-3 text-xs font-medium transition-colors border-b-2 text-center',
                   selectedCategory === category.value
-                    ? 'text-blue-600 border-blue-600 bg-blue-50'
-                    : 'text-gray-600 border-transparent hover:text-blue-600 hover:bg-blue-50'
+                    ? 'text-orange-600 border-orange-600 bg-orange-50'
+                    : 'text-gray-600 border-transparent hover:text-orange-600 hover:bg-orange-50'
                 ]"
               >
                 <span class="truncate">{{ category.label }}</span>
@@ -702,7 +702,7 @@ onUnmounted(() => {
           <!-- Posts Feed Only -->
           <div class="space-y-4">
             <div v-if="isLoading" class="flex justify-center py-8">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
             </div>
             
             <div v-else-if="filteredPosts.length === 0" class="text-center py-8 text-gray-500">
@@ -738,7 +738,7 @@ onUnmounted(() => {
           'p-4 rounded-lg shadow-lg border-l-4',
           notification.type === 'success' ? 'bg-orange-50 border-orange-400 text-orange-600' :
           notification.type === 'error' ? 'bg-red-50 border-red-400 text-red-800' :
-          'bg-blue-50 border-blue-400 text-blue-800'
+          'bg-orange-50 border-orange-400 text-orange-800'
         ]"
       >
         <div class="flex items-center">

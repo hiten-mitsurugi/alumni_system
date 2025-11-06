@@ -8,6 +8,7 @@ import api from '../services/api';
 import backgroundImage from "@/assets/Background.png";
 import { Eye as EyeIcon, EyeOff as EyeOffIcon } from 'lucide-vue-next';
 
+// Refs and stores
 const email = ref('');
 const password = ref('');
 const error = ref('');
@@ -90,7 +91,7 @@ const login = async () => {
             <img src="@/assets/CSU Icon.png" alt="Logo 1" class="h-12" />
             <img src="@/assets/ARO_logo-removebg-preview.png" alt="Logo 2" class="h-12" />
           </div>
-          <h3 class="text-xl font-semibold text-center mb-6">Login</h3>
+          <h3 class="text-xl font-semibold text-center mb-6 text-black">Login</h3>
 
           <!-- Form Start -->
           <form @submit.prevent="login" class="space-y-4">
@@ -98,7 +99,8 @@ const login = async () => {
               v-model="email"
               type="email"
               placeholder="Email"
-              class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 placeholder-gray-500"
+              style="background-color: #ffffff; color: #111827;"
               required
               @keydown.enter="login"
             />
@@ -107,7 +109,8 @@ const login = async () => {
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="Password"
-                class="w-full p-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 placeholder-gray-500"
+                style="background-color: #ffffff; color: #111827;"
                 required
                 @keydown.enter="login"
               />
@@ -134,7 +137,7 @@ const login = async () => {
               </router-link>
               <span class="text-gray-600">
                 Don't have an account?
-                <router-link to="/register" class="text-blue-600 hover:underline">Register</router-link>
+                <router-link to="/register" class="text-orange-600 hover:underline">Register</router-link>
               </span>
             </div>
           </form>
@@ -144,3 +147,45 @@ const login = async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+input[type="email"],
+input[type="password"] {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  box-shadow: inset 0 0 0 50px #ffffff !important;
+  -webkit-box-shadow: inset 0 0 0 50px #ffffff !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+input[type="email"]::placeholder,
+input[type="password"]::placeholder {
+  color: #9ca3af !important;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px #f97316, inset 0 0 0 50px #ffffff !important;
+  -webkit-box-shadow: 0 0 0 2px #f97316, inset 0 0 0 50px #ffffff !important;
+  border-color: #f97316 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+input[type="email"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
+input[type="email"]:-webkit-autofill:focus,
+input[type="password"]:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 2px #f97316, 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: #ffffff !important;
+}
+</style>
