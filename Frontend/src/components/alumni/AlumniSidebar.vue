@@ -1,22 +1,22 @@
 <template>
   <div :class="[
-    'bg-white text-gray-800 h-full transition-all duration-200 shadow-xl border-r border-gray-200',
+    'bg-white dark:bg-gray-800 text-gray-800 dark:text-white h-full transition-all duration-200 shadow-xl border-r border-gray-200 dark:border-gray-700',
     'fixed top-0 left-0 z-50',
     // Mobile: Always show collapsed (w-20), expand to w-64 when toggled
     isExpanded ? 'w-64' : 'w-20'
   ]">
-    <div class="p-4 flex justify-between items-center border-b border-gray-200 bg-white">
-      <span v-if="isExpanded" class="text-xl font-semibold text-gray-800">Alumni System</span>
-      <button 
+    <div class="flex items-center justify-between p-4 bg-white border-b border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+      <span v-if="isExpanded" class="text-xl font-semibold text-gray-800 dark:text-white">Alumni System</span>
+      <button
         @click="$emit('toggle')"
-        class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800"
+        class="p-2 text-gray-600 transition-colors duration-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
     </div>
-    <nav class="mt-6 px-3">
+    <nav class="px-3 mt-6">
       <SidebarItem :icon="Home" label="Home" to="/alumni/home" :expanded="isExpanded" />
       <SidebarItem :icon="User" label="My Profile" to="/alumni/my-profile" :expanded="isExpanded" />
       <SidebarItem :icon="Users" label="My Mates" to="/alumni/my-mates" :expanded="isExpanded" />
@@ -50,7 +50,7 @@ defineProps(['isExpanded'])
 // Computed property for messaging badge count
 const messagingBadgeCount = computed(() => {
   const count = messagingNotificationStore.totalUnreadCount
-  console.log('🔧 AlumniSidebar: Badge count computed:', { 
+  console.log('🔧 AlumniSidebar: Badge count computed:', {
     messages: messagingNotificationStore.unreadMessages,
     requests: messagingNotificationStore.unreadMessageRequests,
     total: count,
@@ -64,7 +64,7 @@ onMounted(async () => {
   console.log('🔧 AlumniSidebar: Component mounted, checking initialization...')
   console.log('🔧 AlumniSidebar: Auth user:', authStore.user?.id)
   console.log('🔧 AlumniSidebar: Store initialized:', messagingNotificationStore.isInitialized)
-  
+
   if (authStore.user && !messagingNotificationStore.isInitialized) {
     console.log('🔧 AlumniSidebar: Initializing messaging notification store...')
     await messagingNotificationStore.initialize()
@@ -74,7 +74,7 @@ onMounted(async () => {
   } else {
     console.log('🔧 AlumniSidebar: Store already initialized')
   }
-  
+
   // 🔧 ENHANCEMENT: Force refresh counts to ensure real-time accuracy
   if (authStore.user) {
     console.log('🔄 AlumniSidebar: Force refreshing notification counts...')

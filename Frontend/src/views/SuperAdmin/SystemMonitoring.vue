@@ -51,7 +51,7 @@ onMounted(() => {
           <p class="text-sm">Uptime</p>
           <div class="flex items-baseline justify-between">
             <h2 class="text-2xl font-semibold">{{ overview?.systemMonitoring?.uptime ?? overview?.uptime ?? '--' }}%</h2>
-            <p :class="['text-sm', overview?.systemMonitoring?.status === 'online' ? 'text-orange-500' : 'text-red-500']">{{ overview?.systemMonitoring?.status ?? 'unknown' }}</p>
+            <p :class="['text-sm', overview?.systemMonitoring?.status === 'online' ? 'text-green-500' : 'text-red-500']">{{ overview?.systemMonitoring?.status ?? 'unknown' }}</p>
           </div>
           <p class="text-xs text-gray-400 mt-2">Last backup: {{ overview?.systemMonitoring?.lastBackup ?? 'N/A' }}</p>
         </div>        <div :class="['rounded-lg p-4 border', isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900']">

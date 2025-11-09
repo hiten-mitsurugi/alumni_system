@@ -824,7 +824,7 @@ onUnmounted(() => {
           </p>
           <div v-if="!searchQuery" class="mt-4">
             <button
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              :class="['inline-flex items-center px-4 py-2 text-white font-medium text-sm rounded-lg transition-colors duration-200', themeStore.isAdminDark() ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-600 hover:bg-orange-700']"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />

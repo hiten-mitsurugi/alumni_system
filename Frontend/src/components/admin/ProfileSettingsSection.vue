@@ -79,7 +79,7 @@
     <div class="flex justify-end">
       <button @click="saveProfileSettingsWrapper"
               :disabled="isLoading"
-              class="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              :class="['flex items-center gap-2 px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors', themeStore.isAdminDark() ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white']">
         <SaveIcon class="w-4 h-4" />
         {{ isLoading ? 'Saving...' : 'Save Changes' }}
       </button>

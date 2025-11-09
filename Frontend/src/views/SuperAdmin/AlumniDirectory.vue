@@ -17,24 +17,24 @@ onMounted(() => {
   <div :class="[
     'min-h-screen p-6',
     adminDark 
-      ? 'bg-gradient-to-br from-gray-900 to-orange-600' 
+      ? 'bg-gray-900' 
       : 'bg-gray-50'
   ]">
-    <div class="max-w-7xl mx-auto">
+    <div class="mx-auto max-w-7xl">
       <!-- Page Header -->
       <div class="mb-8">
         <div class="flex items-center justify-between">
-         
+
           <div :class="[
             'text-sm',
             adminDark ? 'text-gray-300' : 'text-gray-500'
           ]">
             <time :datetime="new Date().toISOString()">
-              {{ new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+              {{ new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
               }) }}
             </time>
           </div>
@@ -59,11 +59,11 @@ onMounted(() => {
     max-width: 100%;
     padding: 0 1rem;
   }
-  
+
   .text-3xl {
     font-size: 1.875rem;
   }
-  
+
   .flex.items-center.justify-between {
     flex-direction: column;
     align-items: flex-start;

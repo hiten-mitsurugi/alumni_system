@@ -191,45 +191,52 @@
       <!-- Table -->
       <div class="overflow-x-auto">
         <table v-if="users.length" class="min-w-full">
-          <thead class="bg-orange-600 text-white text-sm uppercase">
+          <thead :class="['text-white text-sm uppercase', themeStore.isAdminDark() ? 'bg-gray-700' : 'bg-orange-600']">
             <tr>
               <!-- Select All Checkbox -->
-              <th class="p-4 w-12">
+              <th class="p-4 w-12 text-left">
                 <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
                   class="w-4 h-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500" />
 
               </th>
-              <th class="p-4">Profile</th>
-              <th class="p-4">First Name</th>
-              <th class="p-4">Last Name</th>
-              <th class="p-4">Sex</th>
-              <th class="p-4">Program</th>
-              <th class="p-4">Year</th>
-              <th class="p-4">Employment</th>
-              <th class="p-4">Online Status</th>
-              <th class="p-4">Status</th>
-              <th class="p-4">Last Login</th>
+              <th class="p-4 w-20 text-center">Profile</th>
+              <th class="p-4 w-32 text-left">First Name</th>
+              <th class="p-4 w-32 text-left">Last Name</th>
+              <th class="p-4 w-20 text-center">Sex</th>
+              <th class="p-4 w-40 text-left">Program</th>
+              <th class="p-4 w-24 text-center">Year</th>
+              <th class="p-4 w-32 text-left">Employment</th>
+              <th class="p-4 w-32 text-center">Online Status</th>
+              <th class="p-4 w-24 text-center">Status</th>
+              <th class="p-4 w-32 text-left">Last Login</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="user in users" :key="user.id" @click="viewUserDetails(user)"
-              class="border-t hover:bg-orange-50 cursor-pointer transition-colors duration-200">
+              :class="['border-t cursor-pointer transition-colors duration-200', themeStore.isAdminDark() ? 'hover:bg-gray-700' : 'hover:bg-orange-50']">
               <!-- Row Checkbox -->
-              <td class="p-4" @click.stop>
+              <td class="p-4 w-12 text-left" @click.stop>
                 <input type="checkbox" :checked="selectedUsers.includes(user.id)" @change="toggleUserSelection(user.id)"
                   class="w-4 h-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500" />
               </td>
-              <td class="p-4">
-                <img :src="user.profile_picture" class="w-10 h-10 rounded-full object-cover border" />
+              <td class="p-4 w-20">
+                <div class="flex items-center justify-center">
+                  <img 
+                    :src="user.profile_picture || '/default-avatar.png'" 
+                    :alt="`${user.first_name} ${user.last_name}`"
+                    class="w-10 h-10 rounded-full object-cover border"
+                    @error="$event.target.src = '/default-avatar.png'"
+                  />
+                </div>
               </td>
-              <td class="p-4">{{ user.first_name }}</td>
-              <td class="p-4">{{ user.last_name }}</td>
-              <td class="p-4">{{ user.sex || 'N/A' }}</td>
-              <td class="p-4">{{ user.program }}</td>
-              <td class="p-4">{{ user.year_graduated }}</td>
-              <td class="p-4">{{ formatEmployment(user.employment_status) }}</td>
-              <td class="p-4">
-                <div class="flex items-center space-x-2">
+              <td :class="['p-4 w-32 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.first_name }}</td>
+              <td :class="['p-4 w-32 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.last_name }}</td>
+              <td :class="['p-4 w-20 text-center', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.sex || 'N/A' }}</td>
+              <td :class="['p-4 w-40 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.program }}</td>
+              <td :class="['p-4 w-24 text-center', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.year_graduated }}</td>
+              <td :class="['p-4 w-32 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ formatEmployment(user.employment_status) }}</td>
+              <td class="p-4 w-32">
+                <div class="flex items-center justify-center space-x-2">
                   <div
                     :class="['w-2 h-2 rounded-full', getOnlineStatusClass(userStatuses.get(user.id) || user.real_time_status)]">
                   </div>
@@ -238,12 +245,14 @@
                   </span>
                 </div>
               </td>
-              <td class="p-4">
-                <span :class="user.is_active ? 'text-orange-600 font-semibold' : 'text-red-500 font-semibold'">
-                  {{ user.is_active ? 'Active' : 'Blocked' }}
-                </span>
+              <td class="p-4 w-24">
+                <div class="flex justify-center">
+                  <span :class="user.is_active ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'">
+                    {{ user.is_active ? 'Active' : 'Blocked' }}
+                  </span>
+                </div>
               </td>
-              <td class="p-4 text-sm text-gray-900">
+              <td :class="['p-4 w-32 text-left text-sm', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-900']">
                 {{ formatLastLogin(user.last_login, userStatuses.get(user.id) || user.real_time_status) }}
               </td>
             </tr>

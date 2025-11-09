@@ -11,6 +11,10 @@ import {
   BarChart3
 } from 'lucide-vue-next'
 import surveyService from '@/services/surveyService'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme store
+const themeStore = useThemeStore()
 
 // Reactive data
 const loading = ref(true)
@@ -300,20 +304,20 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
+  <div :class="themeStore.isDarkMode ? 'min-h-screen bg-gray-900 py-8' : 'min-h-screen bg-gray-50 py-8'">
     <div class="max-w-4xl mx-auto px-4">
       <!-- Header -->
-      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md p-6 mb-6' : 'bg-white rounded-lg shadow-md p-6 mb-6'">
         <div class="flex items-center justify-between mb-4">
-          <h1 class="text-3xl font-bold text-gray-900">Alumni Tracer Survey</h1>
-          <div class="flex items-center gap-2 text-sm text-gray-600">
+          <h1 :class="themeStore.isDarkMode ? 'text-3xl font-bold text-white' : 'text-3xl font-bold text-gray-900'">Alumni Tracer Survey</h1>
+          <div :class="themeStore.isDarkMode ? 'flex items-center gap-2 text-sm text-gray-300' : 'flex items-center gap-2 text-sm text-gray-600'">
             <BarChart3 class="w-4 h-4" />
             {{ overallProgress }}% Complete
           </div>
         </div>
         
         <!-- Progress Bar -->
-        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+        <div :class="themeStore.isDarkMode ? 'w-full bg-gray-700 rounded-full h-2 mb-4' : 'w-full bg-gray-200 rounded-full h-2 mb-4'">
           <div 
             class="bg-blue-600 h-2 rounded-full transition-all duration-300"
             :style="{ width: `${overallProgress}%` }"
@@ -330,7 +334,7 @@ onMounted(async () => {
               'px-3 py-2 text-sm rounded-lg transition-colors',
               index === currentCategoryIndex 
                 ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : (themeStore.isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
             ]"
           >
             {{ category.category.name }}
@@ -344,27 +348,27 @@ onMounted(async () => {
       </div>
 
       <!-- Survey Complete -->
-      <div v-else-if="showResults" class="bg-white rounded-lg shadow-md p-8 text-center">
+      <div v-else-if="showResults" :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md p-8 text-center' : 'bg-white rounded-lg shadow-md p-8 text-center'">
         <CheckCircle class="w-16 h-16 text-green-600 mx-auto mb-4" />
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">Survey Completed!</h2>
-        <p class="text-gray-600 mb-6">
+        <h2 :class="themeStore.isDarkMode ? 'text-2xl font-bold text-white mb-2' : 'text-2xl font-bold text-gray-900 mb-2'">Survey Completed!</h2>
+        <p :class="themeStore.isDarkMode ? 'text-gray-300 mb-6' : 'text-gray-600 mb-6'">
           Thank you for taking the time to complete the Alumni Tracer Survey. 
           Your responses will help improve our programs and services.
         </p>
         
-        <div v-if="progress" class="bg-gray-50 rounded-lg p-4 mb-6">
-          <h3 class="font-semibold text-gray-900 mb-2">Your Survey Statistics</h3>
+        <div v-if="progress" :class="themeStore.isDarkMode ? 'bg-gray-700 rounded-lg p-4 mb-6' : 'bg-gray-50 rounded-lg p-4 mb-6'">
+          <h3 :class="themeStore.isDarkMode ? 'font-semibold text-white mb-2' : 'font-semibold text-gray-900 mb-2'">Your Survey Statistics</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <span class="text-gray-600">Questions Answered:</span>
+              <span :class="themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'">Questions Answered:</span>
               <span class="font-semibold ml-2">{{ progress.answered_questions }}/{{ progress.total_questions }}</span>
             </div>
             <div>
-              <span class="text-gray-600">Completion Rate:</span>
+              <span :class="themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'">Completion Rate:</span>
               <span class="font-semibold ml-2">{{ progress.progress_percentage }}%</span>
             </div>
             <div>
-              <span class="text-gray-600">Status:</span>
+              <span :class="themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'">Status:</span>
               <span :class="[
                 'font-semibold ml-2',
                 progress.is_complete ? 'text-green-600' : 'text-yellow-600'
@@ -384,14 +388,14 @@ onMounted(async () => {
       </div>
 
       <!-- Survey Questions -->
-      <div v-else-if="currentCategory" class="bg-white rounded-lg shadow-md">
+      <div v-else-if="currentCategory" :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md' : 'bg-white rounded-lg shadow-md'">
         <!-- Category Header -->
-        <div class="bg-blue-50 p-6 border-b">
-          <h2 class="text-xl font-bold text-gray-900">{{ currentCategory.category.name }}</h2>
-          <p v-if="currentCategory.category.description" class="text-gray-600 mt-2">
+        <div :class="themeStore.isDarkMode ? 'bg-gray-700 p-6 border-b border-gray-600' : 'bg-blue-50 p-6 border-b'">
+          <h2 :class="themeStore.isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'">{{ currentCategory.category.name }}</h2>
+          <p v-if="currentCategory.category.description" :class="themeStore.isDarkMode ? 'text-gray-300 mt-2' : 'text-gray-600 mt-2'">
             {{ currentCategory.category.description }}
           </p>
-          <div class="mt-4 text-sm text-gray-600">
+          <div :class="themeStore.isDarkMode ? 'mt-4 text-sm text-gray-400' : 'mt-4 text-sm text-gray-600'">
             Category {{ currentCategoryIndex + 1 }} of {{ totalCategories }} • 
             {{ currentQuestions.length }} questions
           </div>
@@ -402,14 +406,14 @@ onMounted(async () => {
           <div
             v-for="question in currentQuestions"
             :key="question.id"
-            class="border-b border-gray-100 pb-8 last:border-b-0"
+            :class="themeStore.isDarkMode ? 'border-b border-gray-700 pb-8 last:border-b-0' : 'border-b border-gray-100 pb-8 last:border-b-0'"
           >
             <div class="mb-4">
-              <label class="block text-lg font-medium text-gray-900 mb-2">
+              <label :class="themeStore.isDarkMode ? 'block text-lg font-medium text-white mb-2' : 'block text-lg font-medium text-gray-900 mb-2'">
                 {{ question.question_text }}
                 <span v-if="question.is_required" class="text-red-500">*</span>
               </label>
-              <p v-if="question.help_text" class="text-sm text-gray-600 mb-3">
+              <p v-if="question.help_text" :class="themeStore.isDarkMode ? 'text-sm text-gray-400 mb-3' : 'text-sm text-gray-600 mb-3'">
                 {{ question.help_text }}
               </p>
             </div>
@@ -421,7 +425,9 @@ onMounted(async () => {
                 :placeholder="getQuestionConfig(question).placeholder"
                 :value="getResponseValue(question.id)"
                 @input="updateResponse(question.id, $event.target.value)"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                :class="themeStore.isDarkMode 
+                  ? 'w-full px-4 py-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent' 
+                  : 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'"
                 :required="question.is_required"
               />
             </template>
@@ -433,7 +439,9 @@ onMounted(async () => {
                 :rows="getQuestionConfig(question).rows"
                 :value="getResponseValue(question.id)"
                 @input="updateResponse(question.id, $event.target.value)"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                :class="themeStore.isDarkMode 
+                  ? 'w-full px-4 py-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent' 
+                  : 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'"
                 :required="question.is_required"
               ></textarea>
             </template>
@@ -443,7 +451,9 @@ onMounted(async () => {
               <select
                 :value="getResponseValue(question.id)"
                 @change="updateResponse(question.id, $event.target.value)"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                :class="themeStore.isDarkMode 
+                  ? 'w-full px-4 py-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent' 
+                  : 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'"
                 :required="question.is_required"
               >
                 <option value="">Please select an option</option>
@@ -473,7 +483,7 @@ onMounted(async () => {
                     @change="updateResponse(question.id, option)"
                     class="w-4 h-4 text-blue-600 focus:ring-blue-500"
                   />
-                  <span class="text-gray-900">{{ option }}</span>
+                  <span :class="themeStore.isDarkMode ? 'text-gray-200' : 'text-gray-900'">{{ option }}</span>
                 </label>
               </div>
             </template>
@@ -493,7 +503,7 @@ onMounted(async () => {
                     @change="handleCheckboxChange(question.id, option, $event.target.checked)"
                     class="w-4 h-4 text-blue-600 focus:ring-blue-500"
                   />
-                  <span class="text-gray-900">{{ option }}</span>
+                  <span :class="themeStore.isDarkMode ? 'text-gray-200' : 'text-gray-900'">{{ option }}</span>
                 </label>
               </div>
             </template>
@@ -501,7 +511,7 @@ onMounted(async () => {
             <!-- Rating -->
             <template v-else-if="getQuestionConfig(question).type === 'rating'">
               <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-600">{{ getQuestionConfig(question).min }}</span>
+                <span :class="themeStore.isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'">{{ getQuestionConfig(question).min }}</span>
                 <div class="flex gap-1">
                   <button
                     v-for="rating in Array.from({length: getQuestionConfig(question).max - getQuestionConfig(question).min + 1}, (_, i) => i + getQuestionConfig(question).min)"
@@ -511,35 +521,37 @@ onMounted(async () => {
                       'w-10 h-10 rounded-full border-2 transition-colors',
                       getResponseValue(question.id) === rating
                         ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'border-gray-300 text-gray-600 hover:border-blue-400'
+                        : (themeStore.isDarkMode 
+                          ? 'border-gray-600 text-gray-400 hover:border-blue-400' 
+                          : 'border-gray-300 text-gray-600 hover:border-blue-400')
                     ]"
                   >
                     {{ rating }}
                   </button>
                 </div>
-                <span class="text-sm text-gray-600">{{ getQuestionConfig(question).max }}</span>
+                <span :class="themeStore.isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'">{{ getQuestionConfig(question).max }}</span>
               </div>
             </template>
           </div>
         </div>
 
         <!-- Navigation -->
-        <div class="bg-gray-50 px-6 py-4 flex justify-between items-center">
+        <div :class="themeStore.isDarkMode ? 'bg-gray-700 px-6 py-4 flex justify-between items-center' : 'bg-gray-50 px-6 py-4 flex justify-between items-center'">
           <button
             @click="previousCategory"
             :disabled="currentCategoryIndex === 0"
             :class="[
               'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
               currentCategoryIndex === 0
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? (themeStore.isDarkMode ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
+                : (themeStore.isDarkMode ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')
             ]"
           >
             <ChevronLeft class="w-4 h-4" />
             Previous
           </button>
 
-          <div class="text-sm text-gray-600">
+          <div :class="themeStore.isDarkMode ? 'text-sm text-gray-300' : 'text-sm text-gray-600'">
             {{ currentCategoryIndex + 1 }} of {{ totalCategories }}
           </div>
 
@@ -551,7 +563,7 @@ onMounted(async () => {
               'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
               canGoNext
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : (themeStore.isDarkMode ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
             ]"
           >
             Next
@@ -566,7 +578,7 @@ onMounted(async () => {
               'flex items-center gap-2 px-6 py-2 rounded-lg transition-colors',
               canGoNext && !submitting
                 ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : (themeStore.isDarkMode ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
             ]"
           >
             <Send class="w-4 h-4" />
@@ -576,10 +588,10 @@ onMounted(async () => {
       </div>
 
       <!-- No Survey Data -->
-      <div v-else-if="!loading && surveyData.length === 0" class="bg-white rounded-lg shadow-md p-8 text-center">
+      <div v-else-if="!loading && surveyData.length === 0" :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md p-8 text-center' : 'bg-white rounded-lg shadow-md p-8 text-center'">
         <AlertCircle class="w-16 h-16 text-yellow-600 mx-auto mb-4" />
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">No Survey Available</h2>
-        <p class="text-gray-600">
+        <h2 :class="themeStore.isDarkMode ? 'text-2xl font-bold text-white mb-2' : 'text-2xl font-bold text-gray-900 mb-2'">No Survey Available</h2>
+        <p :class="themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'">
           There are currently no active surveys available. Please check back later.
         </p>
       </div>

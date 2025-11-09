@@ -300,16 +300,29 @@ onMounted(() => {
       themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-white'
     ]">
       <!-- Header -->
-      <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+      <div :class="[
+        'px-6 py-4',
+        themeStore.isAdminDark() 
+          ? 'bg-gray-700' 
+          : 'bg-gradient-to-r from-orange-500 to-orange-600'
+      ]">
         <div class="flex justify-between items-center">
           <div>
             <h2 class="text-2xl font-bold text-white">Alumni Directory</h2>
-            <p class="text-orange-100 mt-1">Manage alumni records and information</p>
+            <p :class="[
+              'mt-1',
+              themeStore.isAdminDark() ? 'text-gray-300' : 'text-orange-100'
+            ]">Manage alumni records and information</p>
           </div>
           <div class="flex space-x-3">
             <button
               @click="openImportModal"
-              class="bg-white  text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-200 transition-colors duration-200 flex items-center space-x-2"
+              :class="[
+                'px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center space-x-2',
+                themeStore.isAdminDark() 
+                  ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                  : 'bg-white text-orange-600 hover:bg-orange-200'
+              ]"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -318,7 +331,12 @@ onMounted(() => {
             </button>
             <button
               @click="openCreateModal"
-              class="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-200 transition-colors duration-200 flex items-center space-x-2"
+              :class="[
+                'px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center space-x-2',
+                themeStore.isAdminDark() 
+                  ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                  : 'bg-white text-orange-600 hover:bg-orange-200'
+              ]"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -343,10 +361,10 @@ onMounted(() => {
                 type="text"
                 placeholder="Search by firstname, lastname or fullname..."
                 :class="[
-                  'w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200',
+                  'w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:ring-2 transition-all duration-200',
                   themeStore.isAdminDark() 
-                    ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
-                    : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                    ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-gray-500 focus:border-gray-500' 
+                    : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:ring-orange-500 focus:border-orange-500'
                 ]"
               />
               <SearchIcon :class="[
@@ -365,7 +383,7 @@ onMounted(() => {
                 :class="[
                   'flex items-center gap-2 px-4 py-3 rounded-lg shadow-sm transition-all duration-200 border cursor-pointer',
                   themeStore.isAdminDark() 
-                    ? 'bg-gray-700 hover:bg-orange-600 hover:text-orange-300 hover:border-orange-600 text-gray-300 border-gray-600' 
+                    ? 'bg-gray-700 hover:bg-gray-600 hover:text-white hover:border-gray-500 text-gray-300 border-gray-600' 
                     : 'bg-white hover:bg-orange-200 hover:text-orange-600 hover:border-orange-300 text-gray-700 border-gray-300'
                 ]"
               >
@@ -412,10 +430,10 @@ onMounted(() => {
                       <select
                         v-model="selectedProgram"
                         :class="[
-                          'w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200',
+                          'w-full text-sm rounded-md py-2 px-3 transition-colors duration-200',
                           themeStore.isAdminDark() 
-                            ? 'border-gray-600 bg-gray-700 text-white hover:bg-gray-600' 
-                            : 'border-gray-300 bg-white text-gray-900 hover:bg-orange-200'
+                            ? 'border-gray-600 bg-gray-700 text-white hover:bg-gray-600 focus:ring-gray-500 focus:border-gray-500' 
+                            : 'border-gray-300 bg-white text-gray-900 hover:bg-orange-200 focus:ring-orange-500 focus:border-orange-500'
                         ]"
                       >
                         <option value="">All Programs</option>
@@ -436,10 +454,10 @@ onMounted(() => {
                         :max="currentYear + 5"
                         placeholder="Enter year (YYYY)"
                         :class="[
-                          'w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200',
+                          'w-full text-sm rounded-md py-2 px-3 transition-colors duration-200',
                           themeStore.isAdminDark() 
-                            ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 hover:bg-gray-600' 
-                            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 hover:bg-orange-200'
+                            ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 hover:bg-gray-600 focus:ring-gray-500 focus:border-gray-500' 
+                            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 hover:bg-orange-200 focus:ring-orange-500 focus:border-orange-500'
                         ]"
                       />
                     </div>

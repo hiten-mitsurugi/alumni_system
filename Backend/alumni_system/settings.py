@@ -8,7 +8,7 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from Backend/.env (always use the correct one)
 env = environ.Env()
-environ.Env.read_env(env_file=os.path.join(os.path.dirname(BASE_DIR), '.env'))
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 
 # === Core Settings ===
 SECRET_KEY = config('SECRET_KEY')

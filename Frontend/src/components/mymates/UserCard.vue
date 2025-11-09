@@ -1,31 +1,31 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow w-full max-w-[396px] sm:max-w-none">
+  <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-4 hover:shadow-md transition-shadow w-full max-w-[396px] sm:max-w-none' : 'bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow w-full max-w-[396px] sm:max-w-none'">
     <div class="text-center">
       <!-- Profile Picture -->
       <img
         :src="getProfilePictureUrl(user.profile_picture)"
         :alt="`${getFirstName()} ${getLastName()}`"
-        class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full mx-auto mb-2 sm:mb-3 object-cover border-2 border-gray-100 cursor-pointer hover:ring-2 hover:ring-green-500 transition-all"
+        :class="themeStore.isDarkMode ? 'w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full mx-auto mb-2 sm:mb-3 object-cover border-2 border-gray-600 cursor-pointer hover:ring-2 hover:ring-green-500 transition-all' : 'w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full mx-auto mb-2 sm:mb-3 object-cover border-2 border-gray-100 cursor-pointer hover:ring-2 hover:ring-green-500 transition-all'"
         @click="$emit('view-profile', user)"
         @error="handleImageError"
       />
       
       <!-- User Info -->
       <h3 
-        class="font-semibold text-gray-900 text-sm mb-1 cursor-pointer hover:text-green-600 transition-colors"
+        :class="themeStore.isDarkMode ? 'font-semibold text-white text-sm mb-1 cursor-pointer hover:text-green-400 transition-colors' : 'font-semibold text-gray-900 text-sm mb-1 cursor-pointer hover:text-green-600 transition-colors'"
         @click="$emit('view-profile', user)"
       >
         {{ getFirstName() }} {{ getLastName() }}
       </h3>
-      <p class="text-xs text-gray-600 mb-2 line-clamp-2">{{ user.headline }}</p>
+      <p :class="themeStore.isDarkMode ? 'text-xs text-gray-400 mb-2 line-clamp-2' : 'text-xs text-gray-600 mb-2 line-clamp-2'">{{ user.headline }}</p>
       
       <!-- Address -->
-      <p v-if="getAddress()" class="text-xs text-gray-500 mb-2">
+      <p v-if="getAddress()" :class="themeStore.isDarkMode ? 'text-xs text-gray-500 mb-2' : 'text-xs text-gray-500 mb-2'">
         📍 {{ getAddress() }}
       </p>
       
       <!-- Additional Info -->
-      <p v-if="user.mutualConnections > 0" class="text-xs text-gray-500 mb-3">
+      <p v-if="user.mutualConnections > 0" :class="themeStore.isDarkMode ? 'text-xs text-gray-500 mb-3' : 'text-xs text-gray-500 mb-3'">
         {{ user.mutualConnections }} mutual connection{{ user.mutualConnections !== 1 ? 's' : '' }}
       </p>
       
@@ -40,7 +40,9 @@
             'flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50',
             action.primary 
               ? 'bg-green-600 text-white hover:bg-green-700' 
-              : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+              : (themeStore.isDarkMode 
+                ? 'border border-gray-600 text-gray-300 hover:bg-gray-700' 
+                : 'border border-gray-300 text-gray-700 hover:bg-gray-50')
           ]"
         >
           <span v-if="user.processing && action.showLoading" class="animate-spin mr-1">⟳</span>
@@ -57,7 +59,9 @@
           'w-full px-2 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50',
           singleAction.primary 
             ? 'bg-green-600 text-white hover:bg-green-700' 
-            : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+            : (themeStore.isDarkMode 
+              ? 'border border-gray-600 text-gray-300 hover:bg-gray-700' 
+              : 'border border-gray-300 text-gray-700 hover:bg-gray-50')
         ]"
       >
         <span v-if="user.processing" class="animate-spin mr-1">⟳</span>
@@ -69,6 +73,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useThemeStore } from '@/stores/theme';
+
+const themeStore = useThemeStore();
 
 const props = defineProps({
   user: {

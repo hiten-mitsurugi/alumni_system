@@ -1,6 +1,6 @@
 /* ===============================================
    RESPONSIVE ALUMNI HOME LAYOUT SYSTEM
-   Comprehensive solution for all screen sizes
+   Comprehensive solution for all screen sizes with Dark Mode Support
    =============================================== */
 
 /* Container and Grid Layout */
@@ -9,6 +9,33 @@
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  background: #fef7e0; /* amber-50 fallback */
+  transition: background-color 0.3s ease;
+}
+
+/* Dark mode container */
+.dark .alumni-home-container {
+  background: #111827 !important; /* gray-900 - force override */
+  color: #f9fafb; /* gray-50 */
+}
+
+/* Force dark mode on all potential parent containers */
+.dark body,
+.dark html,
+.dark #app,
+.dark .alumni-layout {
+  background-color: #111827 !important; /* gray-900 */
+}
+
+/* Remove any potential margins or padding that could show cream background */
+.dark body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.dark #app {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .alumni-home-grid {
@@ -218,6 +245,19 @@
   background: #94a3b8;
 }
 
+/* Dark mode scrollbar */
+.dark .alumni-sidebar::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+}
+
+.dark .alumni-sidebar::-webkit-scrollbar-thumb {
+  background: #6b7280; /* gray-500 */
+}
+
+.dark .alumni-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
+}
+
 /* Hide scrollbar for category tabs */
 .scrollbar-hide {
   -ms-overflow-style: none;
@@ -389,4 +429,54 @@ button {
     overflow-x: hidden;
     scroll-behavior: smooth;
   }
+}
+
+/* ===============================================
+   DARK MODE STYLES
+   Additional styles for dark theme support
+   =============================================== */
+
+/* Dark mode background and text colors */
+.dark .alumni-main-content {
+  color: #f9fafb; /* gray-50 */
+}
+
+.dark .main-content-wrapper {
+  color: #f9fafb; /* gray-50 */
+}
+
+/* Dark mode hover effects */
+.dark .hover\:bg-gray-50:hover {
+  background-color: #374151 !important; /* gray-700 */
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: #4b5563 !important; /* gray-600 */
+}
+
+/* Dark mode modal backgrounds */
+.dark .bg-white {
+  background-color: #1f2937; /* gray-800 */
+  color: #f9fafb; /* gray-50 */
+}
+
+/* Ensure proper contrast in dark mode */
+.dark .text-gray-600 {
+  color: #d1d5db; /* gray-300 */
+}
+
+.dark .text-gray-700 {
+  color: #f3f4f6; /* gray-100 */
+}
+
+.dark .text-gray-800 {
+  color: #f9fafb; /* gray-50 */
+}
+
+.dark .border-gray-200 {
+  border-color: #374151; /* gray-700 */
+}
+
+.dark .border-gray-300 {
+  border-color: #4b5563; /* gray-600 */
 }

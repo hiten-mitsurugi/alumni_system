@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { onMounted, watch, computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onMounted, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useSettings } from '@/composables/useSettings'
 import { useProfile } from '@/composables/useProfile'
 import { useThemeStore } from '@/stores/theme'
@@ -9,10 +9,7 @@ import ProfileSettingsSection from '@/components/admin/ProfileSettingsSection.vu
 import AccountSecuritySection from '@/components/admin/AccountSecuritySection.vue'
 import AppearanceSection from '@/components/admin/AppearanceSection.vue'
 import {
-  Check as CheckIcon,
-  User as UserIcon,
-  Shield as ShieldIcon,
-  Palette as PaletteIcon
+  Check as CheckIcon
 } from 'lucide-vue-next'
 
 // Composables and stores
@@ -27,41 +24,13 @@ const {
 } = useSettings()
 
 const route = useRoute()
-const router = useRouter()
-
-// Settings sections configuration
-const sections = [
-  { 
-    id: 'profile', 
-    label: 'Profile Settings', 
-    icon: UserIcon,
-    description: 'Personal information and profile picture'
-  },
-  { 
-    id: 'account', 
-    label: 'Account & Security', 
-    icon: ShieldIcon,
-    description: 'Password and security settings'
-  },
-  { 
-    id: 'appearance', 
-    label: 'Appearance', 
-    icon: PaletteIcon,
-    description: 'Theme and visual preferences'
-  }
-]
 
 // derive active section reactively from the route param (:section?)
 const activeSection = computed(() => {
   return route.params.section || route.query.section || 'profile'
 })
 
-// Navigate to a specific section
-const navigateToSection = (sectionId) => {
-  router.push({ name: 'SuperAdminSettings', params: { section: sectionId } })
-}
-
-const { profileForm, initializeProfile, user, getProfilePictureUrl } = useProfile()
+const { initializeProfile, user, getProfilePictureUrl } = useProfile()
 
 // Watch for route changes to ensure proper reactivity
 watch(() => route.params.section, (newSection, oldSection) => {
@@ -110,100 +79,51 @@ const handleAccountSaved = (result) => {
       </p>
     </div>
 
-    <!-- Main Content - Layout with Sidebar and Content -->
-    <div class="max-w-7xl relative z-10">
-      <div class="flex gap-6">
-        <!-- Settings Navigation Sidebar -->
-        <div class="w-80 flex-shrink-0">
-          <div class="rounded-xl shadow-sm border transition-colors duration-200 p-6"
-               :class="themeStore.isAdminDark() ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'">
-            <h3 class="text-lg font-semibold mb-4"
-                :class="themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'">
-              Settings
-            </h3>
-            <nav class="space-y-2">
-              <button
-                v-for="section in sections"
-                :key="section.id"
-                @click="navigateToSection(section.id)"
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] group"
-                :class="activeSection === section.id
-                  ? (themeStore.isAdminDark() ? 'bg-orange-500 text-white shadow-lg' : 'bg-orange-500 text-white shadow-lg')
-                  : (themeStore.isAdminDark() ? 'text-gray-300 hover:bg-gray-600' : 'text-gray-700 hover:bg-gray-100')
-                ">
-                
-                <!-- Icon -->
-                <component 
-                  :is="section.icon" 
-                  class="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                
-                <!-- Label and Description -->
-                <div class="flex-1 min-w-0">
-                  <div class="font-medium">
-                    {{ section.label }}
-                  </div>
-                  <div class="text-xs opacity-75 mt-1"
-                       :class="activeSection === section.id ? 'text-orange-100' : (themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500')">
-                    {{ section.description }}
-                  </div>
-                </div>
+    <!-- Main Content - Show content based on route -->
+    <div class="max-w-4xl relative z-10">
+      <div class="rounded-xl shadow-sm border transition-colors duration-200"
+           :class="themeStore.isAdminDark() ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'">
 
-                <!-- Active indicator -->
-                <div 
-                  v-if="activeSection === section.id"
-                  class="w-2 h-2 bg-white rounded-full opacity-75"></div>
-              </button>
-            </nav>
-          </div>
-        </div>
+        <!-- Render the appropriate section based on the route param -->
+        <ProfileSettingsSection 
+          v-show="activeSection === 'profile'"
+          v-if="user"
+          :key="`profile-${activeSection}`"
+          :user="user"
+          :isLoading="isLoading"
+          :getProfilePictureUrl="getProfilePictureUrl"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+          @profile-saved="handleProfileSaved"
+        />
 
-        <!-- Settings Content -->
-        <div class="flex-1">
-          <div class="rounded-xl shadow-sm border transition-colors duration-200"
-               :class="themeStore.isAdminDark() ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'">
+        <AccountSecuritySection 
+          v-show="activeSection === 'account'"
+          :key="`account-${activeSection}`"
+          :isLoading="isLoading"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+          @account-saved="handleAccountSaved"
+        />
 
-            <!-- Render the appropriate section based on the route param -->
-            <ProfileSettingsSection 
-              v-show="activeSection === 'profile'"
-              v-if="user"
-              :key="`profile-${activeSection}`"
-              :user="user"
-              :isLoading="isLoading"
-              :getProfilePictureUrl="getProfilePictureUrl"
-              :showSuccessMessage="showSuccessMessage"
-              :showErrorMessage="showErrorMessage"
-              @profile-saved="handleProfileSaved"
-            />
+        <AppearanceSection 
+          v-show="activeSection === 'appearance'"
+          :key="`appearance-${activeSection}`"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+        />
 
-            <AccountSecuritySection 
-              v-show="activeSection === 'account'"
-              :key="`account-${activeSection}`"
-              :isLoading="isLoading"
-              :showSuccessMessage="showSuccessMessage"
-              :showErrorMessage="showErrorMessage"
-              @account-saved="handleAccountSaved"
-            />
-
-            <AppearanceSection 
-              v-show="activeSection === 'appearance'"
-              :key="`appearance-${activeSection}`"
-              :showSuccessMessage="showSuccessMessage"
-              :showErrorMessage="showErrorMessage"
-            />
-
-            <!-- Fallback content when no section matches -->
-            <ProfileSettingsSection 
-              v-if="!['profile', 'account', 'appearance'].includes(activeSection) && user"
-              :key="`profile-fallback-${activeSection}`"
-              :user="user"
-              :isLoading="isLoading"
-              :getProfilePictureUrl="getProfilePictureUrl"
-              :showSuccessMessage="showSuccessMessage"
-              :showErrorMessage="showErrorMessage"
-              @profile-saved="handleProfileSaved"
-            />
-          </div>
-        </div>
+        <!-- Fallback content when no section matches -->
+        <ProfileSettingsSection 
+          v-if="!['profile', 'account', 'appearance'].includes(activeSection) && user"
+          :key="`profile-fallback-${activeSection}`"
+          :user="user"
+          :isLoading="isLoading"
+          :getProfilePictureUrl="getProfilePictureUrl"
+          :showSuccessMessage="showSuccessMessage"
+          :showErrorMessage="showErrorMessage"
+          @profile-saved="handleProfileSaved"
+        />
       </div>
     </div>
 

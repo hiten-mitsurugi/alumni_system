@@ -190,8 +190,8 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
         <!-- Title and Stats Row -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
           <div class="flex items-center gap-3">
-            <div :class="['p-2 rounded-lg', isDark ? 'bg-blue-600' : 'bg-blue-100']">
-              <BarChart3 :class="['w-6 h-6', isDark ? 'text-white' : 'text-blue-600']" />
+            <div class="p-2">
+              <BarChart3 :class="['w-6 h-6', isDark ? 'text-orange-400' : 'text-orange-600']" />
             </div>
             <div>
               <h1 :class="['text-2xl lg:text-3xl font-bold', isDark ? 'text-white' : 'text-gray-900']">
@@ -234,7 +234,7 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
                 @click="showReportDropdown = !showReportDropdown"
                 :class="[
                   'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-[200px] justify-between',
-                  isDark ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-600 text-white hover:bg-blue-700'
+                  isDark ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-orange-600 text-white hover:bg-orange-700'
                 ]"
               >
                 <div class="flex items-center gap-2">
@@ -261,7 +261,7 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
                     :class="[
                       'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
                       activeReport === report.id
-                        ? isDark ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'
+                        ? isDark ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-700'
                         : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
                     ]"
                   >
@@ -282,13 +282,13 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
               :class="[
                 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 showFilters
-                  ? isDark ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
+                  ? isDark ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-700'
                   : isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-white text-gray-700 hover:bg-gray-50 border'
               ]"
             >
               <Filter class="w-4 h-4" />
               Filters
-              <span v-if="hasActiveFilters" :class="['px-1.5 py-0.5 rounded text-xs', isDark ? 'bg-blue-500' : 'bg-blue-600 text-white']">
+              <span v-if="hasActiveFilters" :class="['px-1.5 py-0.5 rounded text-xs', isDark ? 'bg-orange-500 text-white' : 'bg-orange-600 text-white']">
                 {{ Object.keys(appliedFilters).length }}
               </span>
             </button>
@@ -315,7 +315,12 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
           <div class="flex flex-wrap gap-2">
             <div class="relative group">
               <button
-                :class="['flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors', isDark ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-100 text-green-700 hover:bg-green-200']"
+                :class="[
+                  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors', 
+                  isDark 
+                    ? 'bg-orange-600 text-white hover:bg-orange-700' 
+                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                ]"
               >
                 <Download class="w-4 h-4" />
                 Export
@@ -450,7 +455,7 @@ const isDark = computed(() => themeStore.isAdminDark?.() || false)
             </p>
             <button
               @click="loadAnalyticsData"
-              :class="['px-4 py-2 rounded-lg text-sm font-medium transition-colors', isDark ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-100 text-blue-700 hover:bg-blue-200']"
+              :class="['px-4 py-2 rounded-lg text-sm font-medium transition-colors', isDark ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-orange-100 text-orange-700 hover:bg-orange-200']"
             >
               Retry
             </button>

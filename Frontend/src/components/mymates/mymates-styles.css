@@ -349,14 +349,10 @@ input[type="text"]:focus {
 }
 
 /* Component specific styles */
-.mymates-container {
-  background: #f9fafb;
-}
+/* Remove hardcoded backgrounds to allow Vue theme classes to work */
+/* .mymates-container - background removed to allow Vue template theme control */
 
-.mymates-header {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-}
+/* .mymates-header - background removed to allow Vue template theme control */
 
 .mymates-stats {
   color: #6b7280;

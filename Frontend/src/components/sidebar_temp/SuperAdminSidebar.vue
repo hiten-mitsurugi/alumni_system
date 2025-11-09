@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth'; // ✅ Using alias
 import { useThemeStore } from '@/stores/theme';
@@ -83,6 +83,23 @@ const logout = async () => {
   await authStore.logoutWithAPI();
   router.push('/login');
 };
+
+// Settings dropdown functionality
+const settingsOpen = ref(route.path.startsWith('/super-admin/settings'))
+
+const toggleSettings = (e) => {
+  e.preventDefault()
+  settingsOpen.value = !settingsOpen.value
+  if (settingsOpen.value) {
+    // navigate to base settings page if opening
+    router.push('/super-admin/settings/profile').catch(() => {})
+  }
+}
+
+// Watch for route changes to update settings submenu state
+watch(() => route.path, (p) => {
+  if (p.startsWith('/super-admin/settings')) settingsOpen.value = true
+})
 
 const user = computed(() => authStore.user || {});
 
@@ -207,14 +224,65 @@ const isActive = (path) => route.path.startsWith(path);
         </li>
 
         <li>
-          <router-link to="/super-admin/settings"
-            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
-            :class="isActive('/super-admin/settings')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
-            <SettingsIcon class="w-4 h-4" />
-            <span>Settings</span>
-          </router-link>
+          <!-- Settings Dropdown -->
+          <div class="space-y-1">
+            <button 
+              @click="toggleSettings"
+              class="w-full flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
+              :class="settingsOpen ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
+                                    : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
+            >
+              <SettingsIcon class="w-4 h-4" />
+              <span>Settings</span>
+              <svg class="ml-auto w-4 h-4 transition-transform duration-200" 
+                   :class="settingsOpen ? 'rotate-180' : ''"
+                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+            <!-- Settings Submenu -->
+            <Transition 
+              enter-active-class="transition-all duration-200"
+              enter-from-class="opacity-0 max-h-0"
+              enter-to-class="opacity-100 max-h-40"
+              leave-active-class="transition-all duration-200"
+              leave-from-class="opacity-100 max-h-40"
+              leave-to-class="opacity-0 max-h-0"
+            >
+              <div v-show="settingsOpen" class="ml-4 overflow-hidden space-y-1">
+                <router-link 
+                  to="/super-admin/settings/profile" 
+                  class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
+                  :class="route.path === '/super-admin/settings/profile' 
+                            ? (themeStore.isAdminDark() ? 'text-orange-400 bg-orange-900/30' : 'text-orange-600 bg-orange-50') 
+                            : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')"
+                >
+                  Profile
+                </router-link>
+                
+                <router-link 
+                  to="/super-admin/settings/account" 
+                  class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
+                  :class="route.path === '/super-admin/settings/account' 
+                            ? (themeStore.isAdminDark() ? 'text-orange-400 bg-orange-900/30' : 'text-orange-600 bg-orange-50') 
+                            : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')"
+                >
+                  Account & Security
+                </router-link>
+                
+                <router-link 
+                  to="/super-admin/settings/appearance" 
+                  class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins']"
+                  :class="route.path === '/super-admin/settings/appearance' 
+                            ? (themeStore.isAdminDark() ? 'text-orange-400 bg-orange-900/30' : 'text-orange-600 bg-orange-50') 
+                            : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')"
+                >
+                  Appearance
+                </router-link>
+              </div>
+            </Transition>
+          </div>
         </li>
       </ul>
     </nav>

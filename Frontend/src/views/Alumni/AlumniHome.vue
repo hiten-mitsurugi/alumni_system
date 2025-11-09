@@ -533,7 +533,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="alumni-home-container min-h-screen bg-amber-50">
+  <div class="alumni-home-container min-h-screen bg-amber-50 dark:bg-gray-900">
     <!-- Responsive Grid Layout -->
     <div class="alumni-home-grid">
       <!-- Left Sidebar: Profile Card -->

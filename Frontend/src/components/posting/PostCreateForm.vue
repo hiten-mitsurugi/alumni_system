@@ -1,16 +1,16 @@
 <template>
   <div
-    :class="themeStore.isAdminDark() ? 'bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg mb-4 md:mb-6 overflow-hidden' : 'bg-white border border-gray-100 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg mb-4 md:mb-6 overflow-hidden'">
-    <div :class="themeStore.isAdminDark() ? 'bg-gray-800 border-b border-gray-700 px-3 md:px-4 lg:px-6 py-3 md:py-4' : 'bg-white border-b border-gray-100 px-3 md:px-4 lg:px-6 py-3 md:py-4'">
-      <h2 :class="themeStore.isAdminDark() ? 'text-base md:text-lg font-bold text-gray-100 flex items-center' : 'text-base md:text-lg font-bold text-gray-900 flex items-center'">
-        <svg :class="themeStore.isAdminDark() ? 'w-5 h-5 md:w-6 md:h-6 mr-2 text-gray-100' : 'w-5 h-5 md:w-6 md:h-6 mr-2 text-gray-900'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    :class="themeStore.isDarkMode ? 'bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg mb-4 md:mb-6 overflow-hidden' : 'bg-white border border-gray-100 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg mb-4 md:mb-6 overflow-hidden'">
+    <div :class="themeStore.isDarkMode ? 'bg-gray-800 border-b border-gray-700 px-3 md:px-4 lg:px-6 py-3 md:py-4' : 'bg-white border-b border-gray-100 px-3 md:px-4 lg:px-6 py-3 md:py-4'">
+      <h2 :class="themeStore.isDarkMode ? 'text-base md:text-lg font-bold text-gray-100 flex items-center' : 'text-base md:text-lg font-bold text-gray-900 flex items-center'">
+        <svg :class="themeStore.isDarkMode ? 'w-5 h-5 md:w-6 md:h-6 mr-2 text-gray-100' : 'w-5 h-5 md:w-6 md:h-6 mr-2 text-gray-900'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
         <span class="hidden sm:inline">Share Your Thoughts</span>
         <span class="sm:hidden">Share</span>
       </h2>
-      <p :class="themeStore.isAdminDark() ? 'text-gray-300 text-xs md:text-sm mt-1 hidden md:block' : 'text-gray-600 text-xs md:text-sm mt-1 hidden md:block'">Connect with your fellow alumni and share what's
+      <p :class="themeStore.isDarkMode ? 'text-gray-300 text-xs md:text-sm mt-1 hidden md:block' : 'text-gray-600 text-xs md:text-sm mt-1 hidden md:block'">Connect with your fellow alumni and share what's
         on your mind</p>
     </div>
 
@@ -21,11 +21,11 @@
         <div class="flex-1 min-w-0">
           <!-- Title Input -->
           <input v-model="localTitle" type="text" placeholder="Add a title (optional)..."
-            :class="themeStore.isAdminDark() ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'" />
+            :class="themeStore.isDarkMode ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'" />
 
           <!-- Content Textarea -->
           <textarea v-model="localContent" placeholder="What would you like to share?" rows="3"
-            :class="themeStore.isAdminDark() ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'"></textarea>
+            :class="themeStore.isDarkMode ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'"></textarea>
 
           <!-- File Preview -->
           <div v-if="selectedFiles.length > 0" class="mt-3 md:mt-4">
@@ -89,7 +89,7 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 lg:gap-4">
           <!-- File Upload -->
           <label
-            class="flex items-center space-x-2 text-orange-600 hover:text-white cursor-pointer border-2 border-orange-600 bg-white hover:bg-orange-600 px-2 md:px-3 py-2 rounded-lg md:rounded-xl transition-all duration-300 shadow-sm text-xs md:text-sm w-full sm:w-auto justify-center sm:justify-start">
+            :class="['flex items-center space-x-2 cursor-pointer border-2 px-2 md:px-3 py-2 rounded-lg md:rounded-xl transition-all duration-300 shadow-sm text-xs md:text-sm w-full sm:w-auto justify-center sm:justify-start', isDark ? 'text-gray-300 hover:text-white border-gray-600 bg-gray-700 hover:bg-gray-600' : 'text-orange-600 hover:text-white border-orange-600 bg-white hover:bg-orange-600']">
             <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -103,7 +103,7 @@
 
           <!-- Category Selector -->
           <select v-model="localCategory"
-            class="text-xs md:text-sm font-medium border-2 border-orange-600 rounded-lg md:rounded-xl px-2 md:px-3 py-2 focus:ring-2 focus:ring-orange-600 focus:border-orange-600 bg-white hover:bg-orange-600 hover:text-white text-orange-600 shadow-sm w-full sm:w-auto transition-all duration-300">
+            :class="['text-xs md:text-sm font-medium border-2 rounded-lg md:rounded-xl px-2 md:px-3 py-2 shadow-sm w-full sm:w-auto transition-all duration-300', isDark ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 hover:text-white text-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-gray-500' : 'border-orange-600 bg-white hover:bg-orange-600 hover:text-white text-orange-600 focus:ring-2 focus:ring-orange-600 focus:border-orange-600']">
             <option v-for="cat in categories.slice(1)" :key="cat.value" :value="cat.value">
               {{ cat.label }}
             </option>
@@ -112,7 +112,7 @@
         <button @click="createPost" :disabled="!localContent.trim() || isPosting" :class="[
           'px-4 md:px-6 py-2 rounded-lg md:rounded-xl font-medium text-sm md:text-base transition-all duration-300 shadow-md transform w-full sm:w-auto border-2',
           localContent.trim() && !isPosting
-            ? 'border-orange-600 bg-white text-orange-600 hover:bg-orange-600 hover:text-white active:bg-white active:border-orange-700 hover:scale-105 hover:shadow-lg'
+            ? (isDark ? 'border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white active:bg-gray-700 active:border-gray-700 hover:scale-105 hover:shadow-lg' : 'border-orange-600 bg-white text-orange-600 hover:bg-orange-600 hover:text-white active:bg-white active:border-orange-700 hover:scale-105 hover:shadow-lg')
             : 'border-slate-300 bg-slate-100 text-slate-500 cursor-not-allowed'
         ]">
           <span v-if="isPosting" class="flex items-center">
@@ -147,6 +147,7 @@ import { useThemeStore } from '@/stores/theme'
 
 // Theme store
 const themeStore = useThemeStore()
+const isDark = computed(() => themeStore.isDarkMode || false)
 
 // Props
 const props = defineProps({

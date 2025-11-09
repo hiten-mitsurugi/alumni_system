@@ -21,6 +21,11 @@ import {
   Move
 } from 'lucide-vue-next'
 import surveyService from '@/services/surveyService'
+import { useThemeStore } from '@/stores/theme'
+
+// Theme setup
+const themeStore = useThemeStore()
+const isDark = computed(() => themeStore.isAdminDark?.())
 
 // Reactive data
 const loading = ref(true)
@@ -545,18 +550,26 @@ const exportData = async () => {
 
 <template>
 <div>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50 p-6">
+  <div :class="['min-h-screen p-6', isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-slate-50 to-orange-50']">
     <!-- Header Section -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">
+    <div :class="[
+      'rounded-xl shadow-sm border p-8 mb-8',
+      isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'
+    ]">
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-4xl font-bold text-slate-800 mb-2">Survey Management</h1>
-          <p class="text-slate-600">Create, manage, and analyze your dynamic survey system</p>
+          <h1 :class="['text-4xl font-bold mb-2', isDark ? 'text-white' : 'text-slate-800']">Survey Management</h1>
+          <p :class="[isDark ? 'text-gray-300' : 'text-slate-600']">Create, manage, and analyze your dynamic survey system</p>
         </div>
         <div class="flex gap-3">
           <button
             @click="showExportModal = true"
-            class="group flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg hover:from-orange-500 hover:to-orange-600 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
+            :class="[
+              'group flex items-center gap-2 px-5 py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105',
+              isDark 
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                : 'bg-gradient-to-r from-orange-600 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600'
+            ]"
           >
             <Download class="w-4 h-4 group-hover:animate-bounce" />
             Export Data
@@ -566,15 +579,22 @@ const exportData = async () => {
     </div>
 
     <!-- Tab Navigation -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
+    <div :class="[
+      'rounded-xl shadow-sm border mb-6',
+      isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'
+    ]">
       <nav class="flex space-x-1 p-2">
         <button
           @click="activeTab = 'categories'"
           :class="[
             'flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer',
             activeTab === 'categories'
-              ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md'
-              : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+              ? isDark 
+                ? 'bg-gray-700 text-white shadow-md'
+                : 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md'
+              : isDark
+                ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
           ]"
         >
           <FolderPlus class="w-4 h-4" />
@@ -585,8 +605,12 @@ const exportData = async () => {
           :class="[
             'flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer',
             activeTab === 'questions'
-              ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md'
-              : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+              ? isDark 
+                ? 'bg-gray-700 text-white shadow-md'
+                : 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md'
+              : isDark
+                ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
           ]"
         >
           <ListChecks class="w-4 h-4" />
@@ -597,7 +621,14 @@ const exportData = async () => {
           :class="[
             'flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer',
             activeTab === 'analytics'
-              ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md'
+              ? isDark 
+                ? 'bg-gray-700 text-white shadow-md'
+                : 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md'
+              : isDark
+                ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+          ]"
+        >
               : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
           ]"
         >
@@ -619,12 +650,17 @@ const exportData = async () => {
     <div v-else-if="activeTab === 'categories'" class="space-y-6">
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-slate-800">Survey Categories</h2>
-          <p class="text-slate-600 mt-1">Organize your survey questions into logical categories</p>
+          <h2 :class="['text-2xl font-bold', isDark ? 'text-white' : 'text-slate-800']">Survey Categories</h2>
+          <p :class="['mt-1', isDark ? 'text-gray-300' : 'text-slate-600']">Organize your survey questions into logical categories</p>
         </div>
         <button
           @click="openCategoryModal()"
-          class="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg hover:from-orange-500 hover:to-orange-600 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
+          :class="[
+            'group flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105',
+            isDark 
+              ? 'bg-gray-700 hover:bg-gray-600 text-white'
+              : 'bg-gradient-to-r from-orange-600 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600'
+          ]"
         >
           <Plus class="w-5 h-5 group-hover:rotate-90 transition-transform" />
           Add Category
@@ -635,19 +671,34 @@ const exportData = async () => {
         <div
           v-for="category in paginatedCategories"
           :key="category.id"
-          class="group bg-white rounded-xl border border-slate-200 hover:border-indigo-300 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105"
+          :class="[
+            'group rounded-xl border p-6 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105',
+            isDark 
+              ? 'bg-gray-800 border-gray-700 hover:border-gray-600' 
+              : 'bg-white border-slate-200 hover:border-indigo-300'
+          ]"
         >
           <div class="flex justify-between items-start mb-4">
             <div class="flex-1">
-              <h3 class="font-bold text-lg text-slate-800 group-hover:text-orange-600 transition-colors">
+              <h3 :class="[
+                'font-bold text-lg transition-colors',
+                isDark
+                  ? 'text-white group-hover:text-gray-400'
+                  : 'text-slate-800 group-hover:text-orange-600'
+              ]">
                 {{ category.name }}
               </h3>
-              <p class="text-slate-600 text-sm mt-2 line-clamp-2">{{ category.description }}</p>
+              <p :class="['text-sm mt-2 line-clamp-2', isDark ? 'text-gray-300' : 'text-slate-600']">{{ category.description }}</p>
             </div>
             <div class="flex gap-1 ml-4">
               <button
                 @click.stop="openCategoryModal(category)"
-                class="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer"
+                :class="[
+                  'p-2 rounded-lg transition-all duration-200 cursor-pointer',
+                  isDark
+                    ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                    : 'text-slate-400 hover:text-orange-600 hover:bg-orange-50'
+                ]"
                 title="Edit Category"
               >
                 <Edit class="w-4 h-4" />
@@ -753,13 +804,18 @@ const exportData = async () => {
     <div v-else-if="activeTab === 'questions'" class="space-y-6">
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-slate-800">All Survey Questions</h2>
-          <p class="text-slate-600 mt-1">Manage all survey questions across all categories</p>
+          <h2 :class="['text-2xl font-bold', isDark ? 'text-white' : 'text-slate-800']">All Survey Questions</h2>
+          <p :class="['mt-1', isDark ? 'text-gray-300' : 'text-slate-600']">Manage all survey questions across all categories</p>
         </div>
         <div class="flex gap-3">
           <button
             @click="openQuestionModal()"
-            class="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg hover:from-orange-500 hover:to-orange-600 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105"
+            :class="[
+              'group flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform hover:scale-105',
+              isDark 
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                : 'bg-gradient-to-r from-orange-600 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600'
+            ]"
           >
             <Plus class="w-5 h-5 group-hover:rotate-90 transition-transform" />
             Add Question
@@ -767,49 +823,63 @@ const exportData = async () => {
         </div>
       </div>
 
-      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div :class="[
+        'rounded-xl border overflow-hidden shadow-sm',
+        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'
+      ]">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-slate-200">
-            <thead class="bg-gradient-to-r from-slate-50 to-slate-100">
+            <thead :class="[
+              isDark ? 'bg-gray-700' : 'bg-gradient-to-r from-slate-50 to-slate-100'
+            ]">
               <tr>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Question
                 </th>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Category
                 </th>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Type
                 </th>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Required
                 </th>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Status
                 </th>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Responses
                 </th>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Conditional
                 </th>
-                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <th :class="['px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider', isDark ? 'text-gray-300' : 'text-slate-600']">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-slate-100">
-              <tr v-for="question in paginatedQuestions" :key="question.id" class="hover:bg-slate-50 transition-colors duration-150">
+            <tbody :class="[
+              'divide-y', 
+              isDark ? 'bg-gray-800 divide-gray-700' : 'bg-white divide-slate-100'
+            ]">
+              <tr v-for="question in paginatedQuestions" :key="question.id" :class="[
+                'transition-colors duration-150',
+                isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-50'
+              ]">
                 <td class="px-6 py-4">
-                  <div class="text-sm font-medium text-slate-800 max-w-xs">
+                  <div :class="['text-sm font-medium max-w-xs', isDark ? 'text-white' : 'text-slate-800']">
                     {{ question.question_text.length > 50 ? question.question_text.substring(0, 50) + '...' : question.question_text }}
                   </div>
-                  <div v-if="question.help_text" class="text-sm text-slate-500 mt-1 max-w-xs">
+                  <div v-if="question.help_text" :class="['text-sm mt-1 max-w-xs', isDark ? 'text-gray-400' : 'text-slate-500']">
                     {{ question.help_text }}
                   </div>
                 </td>
                 <td class="px-6 py-4">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-600">
+                  <span :class="[
+                    'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium',
+                    isDark ? 'bg-gray-700 text-gray-300' : 'bg-orange-100 text-orange-600'
+                  ]">
                     {{ question.category?.name }}
                   </span>
                 </td>
@@ -1047,7 +1117,8 @@ const exportData = async () => {
     >
       <div 
         :class="[
-          'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-md',
+          'draggable-modal relative rounded-2xl shadow-2xl w-full max-w-md',
+          isDark ? 'bg-gray-800' : 'bg-white',
           isDragging && draggedModal === 'category' ? 'dragging' : ''
         ]"
         data-modal="category"

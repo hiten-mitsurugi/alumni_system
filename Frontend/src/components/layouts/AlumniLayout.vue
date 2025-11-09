@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-amber-50 relative transition-colors duration-200">
+  <div class="flex h-screen bg-amber-50 dark:bg-gray-900 relative transition-colors duration-200">
     <!-- Transparent overlay when sidebar is expanded on mobile -->
     <div 
       v-if="sidebarExpanded && isMobile"
@@ -17,7 +17,7 @@
     <!-- Main content area: Offset only on desktop when sidebar is visible -->
     <div :class="['flex-1 flex flex-col w-full transition-all duration-200', !isMobile ? 'ml-20' : '']">
       <AlumniNavbar @openSidebar="sidebarExpanded = true" />
-      <main class="p-4 overflow-auto flex-1 bg-amber-50 transition-colors duration-200">
+      <main class="p-4 overflow-auto flex-1 bg-amber-50 dark:bg-gray-900 transition-colors duration-200">
         <router-view />
       </main>
     </div>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import AlumniSidebar from '@/components/alumni/AlumniSidebar.vue'
 import AlumniNavbar from '@/components/alumni/AlumniNavbar.vue'
 

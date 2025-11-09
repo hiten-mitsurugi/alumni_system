@@ -7,11 +7,11 @@ import { useAuthStore } from './stores/auth';
 import { useThemeStore } from './stores/theme';
 import { useUiStore } from './stores/ui';
 
-// Clear any old dark mode settings from localStorage
-localStorage.removeItem('darkMode');
-
-// Remove dark class from document if it exists
-document.documentElement.classList.remove('dark');
+// Clear any old dark mode settings from localStorage ONLY if they're the old format
+const oldDarkMode = localStorage.getItem('darkMode');
+if (oldDarkMode) {
+  localStorage.removeItem('darkMode');
+}
 
 const app = createApp(App);
 const pinia = createPinia();

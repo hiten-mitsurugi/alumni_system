@@ -5,26 +5,29 @@ export const useThemeStore = defineStore('theme', () => {
   // State
   const isDarkMode = ref(false)
 
-  // Initialize theme from localStorage or system preference
+  // Initialize theme from localStorage (no system preference fallback)
   const initializeTheme = () => {
     const savedTheme = localStorage.getItem('theme')
-    if (savedTheme) {
-      isDarkMode.value = savedTheme === 'dark'
+    if (savedTheme === 'dark') {
+      isDarkMode.value = true
     } else {
-      // Check system preference
-      isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+      // Default to light mode if no saved preference
+      isDarkMode.value = false
     }
     applyTheme()
   }
 
   // Apply theme to document
   const applyTheme = () => {
+    console.log('⚡ Applying theme, isDarkMode:', isDarkMode.value)
     if (isDarkMode.value) {
       document.documentElement.classList.add('dark')
       document.body.classList.add('dark')
+      console.log('✅ Added dark class')
     } else {
       document.documentElement.classList.remove('dark')
       document.body.classList.remove('dark')
+      console.log('✅ Removed dark class')
     }
   }
 

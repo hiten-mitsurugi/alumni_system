@@ -17,7 +17,8 @@ import {
   Settings as SettingsIcon,
   MessageCircle as MessageCircleIcon,
   AlertTriangle as AlertTriangleIcon,
-  Camera as CameraIcon
+  Camera as CameraIcon,
+  ChevronDown as ChevronDownIcon
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -187,7 +188,7 @@ const handleProfilePictureUpload = async (event) => {
             to="/admin"
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin') && route.path === '/admin' 
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
             <LayoutDashboardIcon class="w-4 h-4" /> <span>Dashboard</span>
@@ -198,7 +199,7 @@ const handleProfilePictureUpload = async (event) => {
             to="/admin/contents"
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/contents') 
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
             <FileTextIcon class="w-4 h-4" /> <span>Contents</span>
@@ -209,7 +210,7 @@ const handleProfilePictureUpload = async (event) => {
             to="/admin/messaging"
             class="flex items-center gap-2 p-2 rounded transition text-sm relative"
             :class="isActive('/admin/messaging') 
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
             <MessageCircleIcon class="w-4 h-4" />
@@ -238,7 +239,7 @@ const handleProfilePictureUpload = async (event) => {
             to="/admin/user-management"
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/user-management') 
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
             <UsersIcon class="w-4 h-4" /> <span>Users</span>
@@ -248,8 +249,8 @@ const handleProfilePictureUpload = async (event) => {
           <router-link
             to="/admin/pending-user-approval"
             class="flex items-center gap-2 p-2 rounded transition text-sm"
-            :class="isActive('/admin/pending-approvals') 
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+            :class="isActive('/admin/pending-user-approval') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
             <UserCheckIcon class="w-4 h-4" /> <span>Pending</span>
@@ -260,18 +261,21 @@ const handleProfilePictureUpload = async (event) => {
             to="/admin/post-reports"
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/post-reports') 
-              ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') 
+              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
           >
             <AlertTriangleIcon class="w-4 h-4" /> <span>Reports</span>
           </router-link>
         </li>
         <li>
-    <button @click="toggleSettings"
-      class="flex items-center gap-2 w-full text-left p-2 rounded transition text-sm"
-      :class="isActive('/admin/settings') ? (themeStore.isAdminDark() ? 'font-semibold text-green-400 bg-green-900/40' : 'font-semibold text-green-600 bg-green-100') : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
-            <SettingsIcon class="w-4 h-4" />
-            <span>Settings</span>
+          <button @click="toggleSettings"
+            class="flex items-center gap-2 w-full text-left p-2 rounded transition text-sm justify-between"
+            :class="isActive('/admin/settings') ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
+            <div class="flex items-center gap-2">
+              <SettingsIcon class="w-4 h-4" />
+              <span>Settings</span>
+            </div>
+            <ChevronDownIcon :class="['w-4 h-4 transition-transform duration-200', settingsOpen ? 'rotate-180' : '']" />
           </button>
 
           <!-- Submenu shown when settingsOpen is true -->

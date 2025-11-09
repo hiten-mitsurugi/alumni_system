@@ -167,6 +167,11 @@ const routes = [
         name: 'AlumniSettings',
         component: () => import('../views/Alumni/Settings.vue'),
       },
+      {
+        path: 'debug-theme',
+        name: 'AlumniDebugTheme',
+        component: () => import('../components/DebugTheme.vue'),
+      },
     ],
   },
 

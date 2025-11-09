@@ -1,5 +1,5 @@
 <template>
-  <div :class="themeStore.isAdminDark() ? 
+  <div :class="themeStore.isDarkMode ? 
     (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4') : 
     (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4')">
     <div class="flex items-center gap-0 w-full justify-between">
@@ -32,7 +32,7 @@
               v-for="reaction in reactionTypes"
               :key="reaction.type"
               @click="handleReaction(reaction.type)"
-              :class="['flex items-center justify-center rounded-md transition-all duration-150 hover:bg-orange-100', size === 'small' ? 'w-8 h-8 text-base' : 'w-9 h-9 text-lg']"
+              :class="['flex items-center justify-center rounded-md transition-all duration-150', isDark ? 'hover:bg-gray-600' : 'hover:bg-orange-100', size === 'small' ? 'w-8 h-8 text-base' : 'w-9 h-9 text-lg']"
               :title="reaction.label"
             >
               <span :class="size === 'small' ? 'text-base filter drop-shadow-sm' : 'text-lg filter drop-shadow-sm'">{{ reaction.emoji }}</span>
@@ -95,6 +95,7 @@ import { useThemeStore } from '@/stores/theme'
 
 // Theme store
 const themeStore = useThemeStore()
+const isDark = computed(() => themeStore.isDarkMode || false)
 
 // Props
 const props = defineProps({
@@ -183,6 +184,22 @@ const currentReactionLabel = computed(() => {
 .action-neutral {
   color: #f97316; /* orange-500 */
   background: transparent;
+}
+
+/* Dark mode styling */
+.dark .action-neutral,
+:is([data-theme="dark"]) .action-neutral {
+  color: #fb923c; /* orange-400 for better contrast in dark mode */
+}
+
+.dark .action-icon,
+:is([data-theme="dark"]) .action-icon {
+  color: #fb923c; /* orange-400 for better contrast in dark mode */
+}
+
+.dark .action-label,
+:is([data-theme="dark"]) .action-label {
+  color: #fb923c; /* orange-400 for better contrast in dark mode */
 }
 .action-compact {
   padding: 0.5rem 1rem;
@@ -281,6 +298,23 @@ button:hover .action-tooltip {
 
 .action-btn:hover .action-label {
   color: #ea580c; /* orange-600 */
+}
+
+/* Dark mode hover states */
+.dark .action-btn:hover,
+:is([data-theme="dark"]) .action-btn:hover {
+  background-color: rgba(251, 146, 60, 0.1); /* orange-400 with transparency for dark mode */
+  color: #f97316; /* orange-500 for hover in dark mode */
+}
+
+.dark .action-btn:hover .action-icon,
+:is([data-theme="dark"]) .action-btn:hover .action-icon {
+  color: #f97316; /* orange-500 for hover in dark mode */
+}
+
+.dark .action-btn:hover .action-label,
+:is([data-theme="dark"]) .action-btn:hover .action-label {
+  color: #f97316; /* orange-500 for hover in dark mode */
 }
 
 .active-reaction {
