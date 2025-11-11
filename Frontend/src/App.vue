@@ -1,13 +1,23 @@
 <script setup>
 import { RouterView } from 'vue-router';
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useThemeStore } from '@/stores/theme';
+import { useRoute } from 'vue-router';
 import { websocketService } from '@/services/websocket';
 import GlobalLoading from '@/components/common/GlobalLoading.vue';
 import { useUiStore } from '@/stores/ui';
 
 const authStore = useAuthStore();
+const themeStore = useThemeStore();
 const ui = useUiStore();
+const route = useRoute();
+
+// Check if current route should be excluded from theme
+const isPublicRoute = computed(() => {
+  const publicRoutes = ['/login', '/register', '/forgot-password'];
+  return publicRoutes.includes(route.path);
+});
 
 // Global status update handler
 const handleGlobalStatusUpdate = (data) => {
@@ -70,7 +80,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div :class="[
+    'min-h-screen transition-colors duration-200',
+    isPublicRoute 
+      ? 'bg-gray-50' 
+      : themeStore.isDarkMode 
+        ? 'bg-gray-900' 
+        : 'bg-gray-50'
+  ]">
     <RouterView />
     <GlobalLoading v-if="ui.isLoading" :message="ui.message" />
   </div>

@@ -25,7 +25,8 @@ app.mount('#app');
 const auth = useAuthStore();
 const theme = useThemeStore();
 
-// Initialize theme store
+// Initialize theme store - sync reactive state with DOM
+console.log('🚀 Initializing theme store after Vue mount')
 theme.initializeTheme();
 theme.initializeAdminTheme();
 

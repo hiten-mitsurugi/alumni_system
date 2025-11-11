@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import api from '@/services/api'
 
 // Component imports
@@ -29,6 +30,7 @@ import PostsTab from '@/components/profile/tabs/PostsTab.vue'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 const loading = ref(true)
 const followLoading = ref(false)
@@ -64,17 +66,17 @@ const activeTab = ref('about') // Default to about tab
 // Computed properties
 const isOwnProfile = computed(() => {
   const userIdentifier = route.params.userIdentifier
-  
-  // If no userIdentifier in route, it's own profile  
+
+  // If no userIdentifier in route, it's own profile
   if (!userIdentifier) {
     return true
   }
-  
+
   // Check if userIdentifier matches current user's username
   if (authStore.user && userIdentifier === authStore.user.username) {
     return true
   }
-  
+
   return false
 })
 
@@ -85,35 +87,35 @@ const profileUserId = computed(() => {
 // Computed properties to derive profile info from detailed sections
 const currentEducation = computed(() => {
   if (!education.value || education.value.length === 0) return null
-  
+
   // Find current education (is_current = true) or most recent one
   const current = education.value.find(edu => edu.is_current)
   if (current) return current
-  
+
   // If no current, get the most recent one by end_date or start_date
   const sorted = [...education.value].sort((a, b) => {
     const dateA = new Date(a.end_date || a.start_date || '1900-01-01')
     const dateB = new Date(b.end_date || b.start_date || '1900-01-01')
     return dateB - dateA
   })
-  
+
   return sorted[0]
 })
 
 const currentJob = computed(() => {
   if (!workHistories.value || workHistories.value.length === 0) return null
-  
+
   // Find current job (job_type = 'current_job') or most recent one
   const current = workHistories.value.find(work => work.job_type === 'current_job')
   if (current) return current
-  
+
   // If no current job, get the most recent one by end_date or start_date
   const sorted = [...workHistories.value].sort((a, b) => {
     const dateA = new Date(a.end_date || a.start_date || '1900-01-01')
     const dateB = new Date(b.end_date || b.start_date || '1900-01-01')
     return dateB - dateA
   })
-  
+
   return sorted[0]
 })
 
@@ -122,17 +124,17 @@ const displayHeadline = computed(() => {
   if (profile.value?.headline) {
     return profile.value.headline
   }
-  
+
   if (currentJob.value) {
     return `${currentJob.value.occupation} at ${currentJob.value.employing_agency}`
   }
-  
+
   if (currentEducation.value) {
     const degree = currentEducation.value.degree_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Student'
     const field = currentEducation.value.field_of_study ? ` in ${currentEducation.value.field_of_study}` : ''
     return `${degree}${field}`
   }
-  
+
   return 'Alumni'
 })
 
@@ -141,7 +143,7 @@ const displayEducationInfo = computed(() => {
     const degree = currentEducation.value.degree_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''
     const field = currentEducation.value.field_of_study || ''
     const institution = currentEducation.value.institution || ''
-    
+
     if (degree && field && institution) {
       return `${degree} in ${field} from ${institution}`
     } else if (degree && institution) {
@@ -150,12 +152,12 @@ const displayEducationInfo = computed(() => {
       return institution
     }
   }
-  
+
   // Fallback to user basic info if available
   if (user.value?.program && user.value?.year_graduated) {
     return `${user.value.program} (Class of ${user.value.year_graduated})`
   }
-  
+
   return null
 })
 
@@ -166,22 +168,22 @@ const profilePictureUrl = computed(() => {
   const pic = user.value?.profile_picture
   console.log('🖼️ profilePictureUrl computed - user.value:', user.value)
   console.log('🖼️ profilePictureUrl computed - pic value:', pic)
-  
+
   if (!pic) {
     console.log('🖼️ No profile_picture, returning default')
     return '/default-avatar.png'
   }
-  
+
   const baseUrl = pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
   const cacheBuster = `?t=${Date.now()}`
   const finalUrl = `${baseUrl}${cacheBuster}`
-  
+
   console.log('🖼️ Profile picture URL:', {
     original: pic,
     baseUrl,
     finalUrl
   })
-  
+
   return finalUrl
 })
 
@@ -189,12 +191,12 @@ const profilePictureUrl = computed(() => {
 const fetchProfile = async () => {
   try {
     loading.value = true
-    
+
     let userIdentifier = route.params.userIdentifier
     console.log('fetchProfile called with userIdentifier:', userIdentifier)
-    
+
     let userId = null
-    
+
     if (!userIdentifier) {
       // No userIdentifier, use current user
       userId = authStore.user?.id
@@ -230,55 +232,55 @@ const fetchProfile = async () => {
         }
       }
     }
-    
+
     // Set the resolved user ID for isOwnProfile computation
     resolvedUserId.value = userId
-    
+
     console.log('Final userId for API call:', userId)
     console.log('isOwnProfile after resolution:', isOwnProfile.value)
-    
+
     // Use ID-based API endpoint (reliable)
     const endpoint = (userId === authStore.user?.id)
-      ? '/enhanced-profile/' 
+      ? '/enhanced-profile/'
       : `/enhanced-profile/${userId}/`
-    
+
     console.log('Fetching from endpoint:', endpoint)
-    
+
     const response = await api.get(`/auth${endpoint}`)
     const data = response.data
-    
+
     console.log('Profile data received:', data.first_name, data.last_name)
     console.log('🖼️ API Response full data keys:', Object.keys(data))
     console.log('🖼️ API Response profile_picture:', data.profile_picture)
     console.log('🖼️ API Response profile object:', data.profile)
-    
+
     user.value = data
     profile.value = data.profile
-    
+
     console.log('🖼️ After assignment - user.value.profile_picture:', user.value.profile_picture)
-    
+
     // Load privacy settings and apply to data
     await loadPrivacySettings()
-    
+
     // Add privacy settings to each item
     education.value = (data.education || []).map(edu => ({
       ...edu,
       visibility: getItemPrivacy('education', edu.id) || 'connections_only'
     }))
-    
+
     workHistories.value = (data.work_histories || []).map(work => ({
       ...work,
       visibility: getItemPrivacy('experience', work.id) || 'connections_only'
     }))
-    
+
     achievements.value = (data.achievements || []).map(achievement => ({
       ...achievement,
       visibility: getItemPrivacy('achievement', achievement.id) || 'connections_only'
     }))
-    
+
     // Load user skills separately
     await loadUserSkills()
-    
+
     // Set social data
     if (profile.value) {
       connectionsCount.value = profile.value.connections_count || 0
@@ -296,7 +298,7 @@ const loadUserSkills = async () => {
   try {
     const endpoint = isOwnProfile.value ? '/user-skills/' : `/user-skills/user/${profileUserId.value}/`
     const response = await api.get(`/auth${endpoint}`)
-    
+
     // Apply privacy settings to each skill
     skills.value = (response.data || []).map(skill => ({
       ...skill,
@@ -311,7 +313,7 @@ const loadUserSkills = async () => {
 const toggleFollow = async () => {
   try {
     followLoading.value = true
-    
+
     if (isFollowing.value) {
       await api.delete(`/auth/follow/${profileUserId.value}/`)
       isFollowing.value = false
@@ -319,7 +321,7 @@ const toggleFollow = async () => {
       await api.post(`/auth/follow/${profileUserId.value}/`)
       isFollowing.value = true
     }
-    
+
     // Refresh connections count
     await fetchProfile()
   } catch (error) {
@@ -355,7 +357,7 @@ const editProfilePicture = () => {
     if (file) {
       const formData = new FormData()
       formData.append('profile_picture', file)
-      
+
       try {
         await api.patch('/auth/enhanced-profile/', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
@@ -383,7 +385,7 @@ const updateCoverPhoto = async (file) => {
   try {
     const formData = new FormData()
     formData.append('cover_photo', file)
-    
+
     await api.patch('/auth/enhanced-profile/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
@@ -414,7 +416,7 @@ const deleteEducation = async (educationId) => {
   if (!confirm('Are you sure you want to delete this education record?')) {
     return
   }
-  
+
   try {
     await api.delete(`/auth/education/${educationId}/`)
     await fetchProfile() // Refresh data
@@ -433,7 +435,7 @@ const saveEducation = async (educationData) => {
   try {
     console.log('🔍 Saving education data:', educationData)
     console.log('🔍 API endpoint:', selectedEducation.value ? `/auth/education/${selectedEducation.value.id}/` : '/auth/education/')
-    
+
     if (selectedEducation.value) {
       // Update existing education
       const response = await api.put(`/auth/education/${selectedEducation.value.id}/`, educationData)
@@ -443,7 +445,7 @@ const saveEducation = async (educationData) => {
       const response = await api.post('/auth/education/', educationData)
       console.log('✅ Create response:', response.data)
     }
-    
+
     closeEducationModal()
     await fetchProfile() // Refresh data
   } catch (error) {
@@ -469,7 +471,7 @@ const deleteExperience = async (experienceId) => {
   if (!confirm('Are you sure you want to delete this work experience?')) {
     return
   }
-  
+
   try {
     await api.delete(`/auth/work-history/${experienceId}/`)
     await fetchProfile() // Refresh data
@@ -493,7 +495,7 @@ const saveExperience = async (experienceData) => {
       // Create new experience
       await api.post('/auth/work-history/', experienceData)
     }
-    
+
     closeExperienceModal()
     await fetchProfile() // Refresh data
   } catch (error) {
@@ -517,7 +519,7 @@ const deleteSkill = async (skillId) => {
   if (!confirm('Are you sure you want to remove this skill?')) {
     return
   }
-  
+
   try {
     await api.delete(`/auth/user-skills/${skillId}/`)
     await loadUserSkills() // Reload skills after deletion
@@ -542,7 +544,7 @@ const saveSkill = async (skillData) => {
       // Create new skill
       await api.post('/auth/user-skills/', skillData)
     }
-    
+
     closeSkillModal()
     await loadUserSkills() // Refresh skills data
     alert('Skill saved successfully!')
@@ -567,7 +569,7 @@ const deleteAchievement = async (achievementId) => {
   if (!confirm('Are you sure you want to delete this achievement?')) {
     return
   }
-  
+
   try {
     await api.delete(`/auth/achievements/${achievementId}/`)
     await fetchProfile() // Refresh data
@@ -585,23 +587,23 @@ const closeAchievementModal = () => {
 const saveAchievement = async (achievementData) => {
   try {
     console.log('🔍 Raw achievementData received:', achievementData)
-    
+
     const formData = new FormData()
-    
+
     // Add all fields to FormData with proper handling
     Object.keys(achievementData).forEach(key => {
       const value = achievementData[key]
       console.log(`🔍 Processing field: ${key} = ${value} (type: ${typeof value})`)
-      
+
       // Always add critical fields (type, url, is_featured) even if empty
       const criticalFields = ['type', 'url', 'is_featured']
-      
+
       if (value !== null && value !== undefined) {
         // Handle file uploads
         if (key === 'attachment' && value instanceof File) {
           formData.append(key, value)
           console.log(`📎 Added file: ${key} = ${value.name}`)
-        } 
+        }
         // Handle other fields
         else if (key !== 'attachment') {
           const stringValue = String(value)
@@ -618,13 +620,13 @@ const saveAchievement = async (achievementData) => {
         }
       }
     })
-    
+
     // Log all FormData entries
     console.log('📤 FormData entries:')
     for (let [key, value] of formData.entries()) {
       console.log(`  ${key}: ${value}`)
     }
-    
+
     let response
     if (selectedAchievement.value) {
       // Update existing achievement
@@ -634,24 +636,24 @@ const saveAchievement = async (achievementData) => {
       })
       console.log('✅ Update API response:', response.data)
     } else {
-      // Create new achievement  
+      // Create new achievement
       console.log('🆕 Creating new achievement via API')
       response = await api.post('/auth/achievements/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       console.log('✅ Create API response:', response.data)
     }
-    
+
     // Show success message
     const action = selectedAchievement.value ? 'updated' : 'created'
     console.log(`Achievement ${action} successfully:`, response.data)
-    
+
     closeAchievementModal()
     await fetchProfile() // Refresh data to show changes
-    
+
   } catch (error) {
     console.error('Error saving achievement:', error)
-    
+
     // More specific error handling
     if (error.response?.status === 400) {
       alert('Please check all fields and try again. Make sure required fields are filled.')
@@ -670,13 +672,13 @@ const loadPrivacySettings = async () => {
   try {
     console.log('🔐 Loading privacy settings...')
     const response = await api.get('/auth/profile/field-update/')
-    
+
     // Convert array to lookup object
     privacySettings.value = {}
     response.data.forEach(setting => {
       privacySettings.value[setting.field_name] = setting.visibility
     })
-    
+
     console.log('🔐 Privacy settings loaded:', privacySettings.value)
   } catch (error) {
     console.error('❌ Failed to load privacy settings:', error)
@@ -699,17 +701,17 @@ const handleEducationVisibilityChange = async (educationId, newVisibility) => {
       field_name: `education_${educationId}`,
       visibility: newVisibility
     })
-    
+
     // Update both local state and privacy settings cache
     const edu = education.value.find(e => e.id === educationId)
     if (edu) {
       edu.visibility = newVisibility
       console.log('🔄 Updated local education visibility:', edu)
     }
-    
+
     // Update privacy settings cache
     privacySettings.value[`education_${educationId}`] = newVisibility
-    
+
     console.log('✅ Education privacy updated:', response.data)
   } catch (error) {
     console.error('❌ Failed to update education privacy:', error)
@@ -725,17 +727,17 @@ const handleExperienceVisibilityChange = async (experienceId, newVisibility) => 
       field_name: `experience_${experienceId}`,
       visibility: newVisibility
     })
-    
+
     // Update both local state and privacy settings cache
     const exp = workHistories.value.find(w => w.id === experienceId)
     if (exp) {
       exp.visibility = newVisibility
       console.log('🔄 Updated local experience visibility:', exp)
     }
-    
+
     // Update privacy settings cache
     privacySettings.value[`experience_${experienceId}`] = newVisibility
-    
+
     console.log('✅ Experience privacy updated:', response.data)
   } catch (error) {
     console.error('❌ Failed to update experience privacy:', error)
@@ -751,17 +753,17 @@ const handleSkillVisibilityChange = async (skillId, newVisibility) => {
       field_name: `skill_${skillId}`,
       visibility: newVisibility
     })
-    
+
     // Update both local state and privacy settings cache
     const skill = skills.value.find(s => s.id === skillId)
     if (skill) {
       skill.visibility = newVisibility
       console.log('🔄 Updated local skill visibility:', skill)
     }
-    
+
     // Update privacy settings cache
     privacySettings.value[`skill_${skillId}`] = newVisibility
-    
+
     console.log('✅ Skill privacy updated:', response.data)
   } catch (error) {
     console.error('❌ Failed to update skill privacy:', error)
@@ -777,17 +779,17 @@ const handleAchievementVisibilityChange = async (achievementId, newVisibility) =
       field_name: `achievement_${achievementId}`,
       visibility: newVisibility
     })
-    
+
     // Update both local state and privacy settings cache
     const achievement = achievements.value.find(a => a.id === achievementId)
     if (achievement) {
       achievement.visibility = newVisibility
       console.log('🔄 Updated local achievement visibility:', achievement)
     }
-    
+
     // Update privacy settings cache
     privacySettings.value[`achievement_${achievementId}`] = newVisibility
-    
+
     console.log('✅ Achievement privacy updated:', response.data)
   } catch (error) {
     console.error('❌ Failed to update achievement privacy:', error)
@@ -813,30 +815,44 @@ watch(() => route.params.userIdentifier, () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-amber-50">
+  <div :class="[
+    'min-h-screen transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-900' : 'bg-white'
+  ]">
     <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+    <div v-if="loading" class="flex items-center justify-center h-64">
+      <div class="w-12 h-12 border-b-2 border-green-600 rounded-full animate-spin"></div>
     </div>
 
     <!-- Main Profile Content -->
-    <div v-else class="max-w-6xl mx-auto p-4">
+    <div v-else class="max-w-6xl p-4 mx-auto">
       <!-- Profile Header Section -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+      <div :class="[
+        'rounded-lg shadow-lg overflow-hidden mb-6 transition-colors duration-200',
+        themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+      ]">
         <!-- Cover Photo -->
         <div class="relative h-48 bg-gradient-to-r from-green-400 to-blue-500">
-          <img 
-            v-if="profile?.cover_photo" 
-            :src="profile.cover_photo" 
+          <img
+            v-if="profile?.cover_photo"
+            :src="profile.cover_photo"
             alt="Cover Photo"
-            class="w-full h-full object-cover"
+            class="object-cover w-full h-full"
           />
-          <div 
-            v-if="isOwnProfile" 
-            class="absolute top-4 right-4 bg-white rounded-full p-2 cursor-pointer hover:bg-gray-100"
+          <div
+            v-if="isOwnProfile"
+            :class="[
+              'absolute top-4 right-4 rounded-full p-2 cursor-pointer transition-colors',
+              themeStore.isDarkMode
+                ? 'bg-gray-700 hover:bg-gray-600'
+                : 'bg-white hover:bg-gray-100'
+            ]"
             @click="editCoverPhoto"
           >
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg :class="[
+              'w-5 h-5',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
@@ -848,14 +864,17 @@ watch(() => route.params.userIdentifier, () => {
           <!-- Profile Picture -->
           <div class="absolute -top-16 left-6">
             <div class="relative">
-              <img 
-                :src="profilePictureUrl" 
+              <img
+                :src="profilePictureUrl"
                 alt="Profile Picture"
-                class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                :class="[
+                  'w-32 h-32 rounded-full border-4 shadow-lg object-cover',
+                  themeStore.isDarkMode ? 'border-gray-800' : 'border-white'
+                ]"
               />
-              <div 
-                v-if="isOwnProfile" 
-                class="absolute bottom-2 right-2 bg-orange-500 rounded-full p-2 cursor-pointer hover:bg-orange-600"
+              <div
+                v-if="isOwnProfile"
+                class="absolute p-2 transition-colors bg-orange-500 rounded-full cursor-pointer bottom-2 right-2 hover:bg-orange-600"
                 @click="editProfilePicture"
               >
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -869,32 +888,47 @@ watch(() => route.params.userIdentifier, () => {
           <div class="pt-20">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h1 class="text-3xl font-bold text-gray-900">
+                <h1 :class="[
+                  'text-3xl font-bold',
+                  themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+                ]">
                   {{ user?.first_name }} {{ user?.middle_name }} {{ user?.last_name }}
                 </h1>
-                <p class="text-lg text-gray-600 mt-1">
+                <p :class="[
+                  'text-lg mt-1',
+                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                ]">
                   {{ displayHeadline }}
                 </p>
-                
+
                 <!-- Education Info (derived from Education section) -->
-                <div v-if="displayEducationInfo" class="flex items-center text-gray-500 mt-2">
+                <div v-if="displayEducationInfo" :class="[
+                  'flex items-center mt-2',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                   </svg>
                   {{ displayEducationInfo }}
                 </div>
-                
+
                 <!-- Location -->
-                <div class="flex items-center text-gray-500 mt-2">
+                <div :class="[
+                  'flex items-center mt-2',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   </svg>
                   {{ profile?.location || profile?.present_address || 'Location not specified' }}
                 </div>
-                
+
                 <!-- Connections -->
-                <div class="flex items-center text-gray-500 mt-1">
+                <div :class="[
+                  'flex items-center mt-1',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                   </svg>
@@ -903,31 +937,35 @@ watch(() => route.params.userIdentifier, () => {
               </div>
 
               <!-- Action Buttons -->
-              <div v-if="!isOwnProfile" class="flex space-x-3 mt-4 lg:mt-0">
-                <button 
+              <div v-if="!isOwnProfile" class="flex mt-4 space-x-3 lg:mt-0">
+                <button
                   @click="toggleFollow"
                   :disabled="followLoading"
-                  class="px-6 py-2 rounded-lg font-medium transition-colors"
-                  :class="isFollowing 
-                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
-                    : 'bg-orange-500 text-white hover:bg-orange-600'"
+                  :class="[
+                    'px-6 py-2 rounded-lg font-medium transition-colors',
+                    isFollowing
+                      ? themeStore.isDarkMode
+                        ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
+                  ]"
                 >
-                  <span v-if="followLoading" class="animate-spin mr-2">⟳</span>
+                  <span v-if="followLoading" class="mr-2 animate-spin">⟳</span>
                   {{ isFollowing ? 'Following' : 'Follow' }}
                 </button>
-                <button 
+                <button
                   @click="openMessage"
-                  class="px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                  class="px-6 py-2 font-medium text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-700"
                 >
                   Message
                 </button>
               </div>
-              
+
               <!-- Edit Profile Button for own profile -->
               <div v-else class="mt-4 lg:mt-0">
-                <button 
+                <button
                   @click="editProfile"
-                  class="px-6 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                  class="px-6 py-2 font-medium text-white transition-colors bg-orange-500 rounded-lg hover:bg-orange-600"
                 >
                   Edit Profile
                 </button>
@@ -938,16 +976,23 @@ watch(() => route.params.userIdentifier, () => {
       </div>
 
       <!-- Tab Navigation -->
-      <div class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div :class="[
+        'border-b shadow-sm transition-colors duration-200',
+        themeStore.isDarkMode
+          ? 'bg-gray-800 border-gray-700'
+          : 'bg-white border-gray-200'
+      ]">
+        <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <nav class="flex space-x-8">
             <button
               @click="activeTab = 'about'"
               :class="[
                 'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
                 activeTab === 'about'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-orange-500 ' + (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
+                  : 'border-transparent ' + (themeStore.isDarkMode
+                      ? 'text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300')
               ]"
             >
               About
@@ -957,8 +1002,10 @@ watch(() => route.params.userIdentifier, () => {
               :class="[
                 'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
                 activeTab === 'posts'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-orange-500 ' + (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
+                  : 'border-transparent ' + (themeStore.isDarkMode
+                      ? 'text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300')
               ]"
             >
               Posts
@@ -968,29 +1015,29 @@ watch(() => route.params.userIdentifier, () => {
       </div>
 
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <!-- Left Column - Profile Sections -->
-        <div class="lg:col-span-2 space-y-6">
-          
+        <div class="space-y-6 lg:col-span-2">
+
           <!-- About Tab Content -->
           <div v-show="activeTab === 'about'" class="space-y-6">
             <!-- About Section -->
-            <ProfileAboutSection 
-              :profile="profile" 
+            <ProfileAboutSection
+              :profile="profile"
               :is-own-profile="isOwnProfile"
               @profile-updated="fetchProfile"
             />
-            
+
             <!-- Contact Information Section -->
-            <ProfileContactSection 
-              :profile="profile" 
+            <ProfileContactSection
+              :profile="profile"
               :is-own-profile="isOwnProfile"
               @profile-updated="fetchProfile"
             />
-            
+
             <!-- Education Section -->
-            <ProfileEducationSection 
-              :education="education" 
+            <ProfileEducationSection
+              :education="education"
               :profile="profile"
               :user="user"
               :is-own-profile="isOwnProfile"
@@ -1000,30 +1047,30 @@ watch(() => route.params.userIdentifier, () => {
               @delete="deleteEducation"
               @education-visibility-changed="handleEducationVisibilityChange"
             />
-            
+
             <!-- Experience Section -->
-            <ProfileExperienceSection 
-              :workHistories="workHistories" 
+            <ProfileExperienceSection
+              :workHistories="workHistories"
               :is-own-profile="isOwnProfile"
               @add="addExperience"
               @edit="editExperience"
               @delete="deleteExperience"
               @experience-visibility-changed="handleExperienceVisibilityChange"
             />
-            
+
             <!-- Skills Section -->
-            <ProfileSkillsSection 
-              :skills="skills" 
+            <ProfileSkillsSection
+              :skills="skills"
               :is-own-profile="isOwnProfile"
               @add="addSkill"
               @edit="editSkill"
               @delete="deleteSkill"
               @skill-visibility-changed="handleSkillVisibilityChange"
             />
-            
+
             <!-- Achievements Section -->
-            <ProfileAchievementsSection 
-              :achievements="achievements" 
+            <ProfileAchievementsSection
+              :achievements="achievements"
               :is-own-profile="isOwnProfile"
               @add="addAchievement"
               @edit="editAchievement"
@@ -1043,26 +1090,26 @@ watch(() => route.params.userIdentifier, () => {
         <div class="space-y-6">
           <!-- People You May Know -->
           <SuggestedConnectionsWidget @connect="handleConnect" />
-          
+
           <!-- Recent Activity (if own profile) -->
           <RecentActivityWidget v-if="isOwnProfile" />
-          
 
-          
+
+
         </div>
       </div>
     </div>
 
     <!-- Edit Profile Modal -->
-    <EditProfileModal 
+    <EditProfileModal
       v-if="showEditModal"
       :profile="profile"
       @close="showEditModal = false"
       @save="updateProfile"
     />
-    
+
     <!-- Cover Photo Upload Modal -->
-    <CoverPhotoModal 
+    <CoverPhotoModal
       v-if="showCoverModal"
       @close="showCoverModal = false"
       @save="updateCoverPhoto"

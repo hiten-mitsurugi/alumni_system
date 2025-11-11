@@ -1,14 +1,29 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+  <div :class="[
+    'rounded-lg shadow-lg p-6',
+    themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+  ]">
+    <h3 :class="[
+      'text-lg font-semibold mb-4',
+      themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
+    ]">Recent Activity</h3>
     
     <div v-if="loading" class="space-y-3">
       <div v-for="i in 3" :key="i" class="animate-pulse">
         <div class="flex items-start space-x-3">
-          <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+          <div :class="[
+            'w-8 h-8 rounded-full',
+            themeStore.isDarkMode ? 'bg-gray-600' : 'bg-gray-300'
+          ]"></div>
           <div class="flex-1">
-            <div class="h-3 bg-gray-300 rounded w-full mb-2"></div>
-            <div class="h-3 bg-gray-300 rounded w-2/3"></div>
+            <div :class="[
+              'h-3 rounded w-full mb-2',
+              themeStore.isDarkMode ? 'bg-gray-600' : 'bg-gray-300'
+            ]"></div>
+            <div :class="[
+              'h-3 rounded w-2/3',
+              themeStore.isDarkMode ? 'bg-gray-600' : 'bg-gray-300'
+            ]"></div>
           </div>
         </div>
       </div>
@@ -18,7 +33,10 @@
       <div 
         v-for="activity in activities" 
         :key="activity.id"
-        class="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-b-0"
+        :class="[
+          'flex items-start space-x-3 pb-3 border-b last:border-b-0',
+          themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-100'
+        ]"
       >
         <!-- Activity Icon -->
         <div class="flex-shrink-0">
@@ -32,17 +50,26 @@
         
         <!-- Activity Content -->
         <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-900">
+          <p :class="[
+            'text-sm',
+            themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
+          ]">
             {{ getActivityText(activity) }}
           </p>
-          <p class="text-xs text-gray-500 mt-1">
+          <p :class="[
+            'text-xs mt-1',
+            themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          ]">
             {{ formatTime(activity.created_at) }}
           </p>
         </div>
       </div>
       
       <!-- View All Activity -->
-      <div class="pt-3 border-t border-gray-200">
+      <div :class="[
+        'pt-3 border-t',
+        themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-200'
+      ]">
         <button 
           @click="showAllActivity"
           class="text-sm text-green-600 hover:text-green-700 font-medium"
@@ -53,17 +80,26 @@
     </div>
 
     <div v-else class="text-center py-6">
-      <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg :class="[
+        'w-12 h-12 mx-auto mb-3',
+        themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
+      ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
       </svg>
-      <p class="text-gray-500 text-sm">No recent activity</p>
+      <p :class="[
+        'text-sm',
+        themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+      ]">No recent activity</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, h } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 import api from '@/services/api'
+
+const themeStore = useThemeStore()
 
 const loading = ref(true)
 const activities = ref([])
@@ -101,7 +137,7 @@ const fetchActivity = async () => {
 }
 
 const getActivityColor = (type) => {
-  const colorMap = {
+  const lightColors = {
     'profile_update': 'bg-blue-100 text-blue-600',
     'new_connection': 'bg-green-100 text-green-600',
     'achievement_added': 'bg-yellow-100 text-yellow-600',
@@ -109,7 +145,18 @@ const getActivityColor = (type) => {
     'education_added': 'bg-indigo-100 text-indigo-600',
     'post_created': 'bg-pink-100 text-pink-600'
   }
-  return colorMap[type] || 'bg-gray-100 text-gray-600'
+  
+  const darkColors = {
+    'profile_update': 'bg-blue-900/30 text-blue-400',
+    'new_connection': 'bg-green-900/30 text-green-400',
+    'achievement_added': 'bg-yellow-900/30 text-yellow-400',
+    'work_added': 'bg-purple-900/30 text-purple-400',
+    'education_added': 'bg-indigo-900/30 text-indigo-400',
+    'post_created': 'bg-pink-900/30 text-pink-400'
+  }
+  
+  const colors = themeStore.isDarkMode ? darkColors : lightColors
+  return colors[type] || (themeStore.isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
 }
 
 const getActivityIcon = (type) => {

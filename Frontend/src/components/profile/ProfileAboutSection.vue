@@ -1,7 +1,13 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6">
+  <div :class="[
+    'rounded-lg shadow-lg p-6 transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+  ]">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">About</h2>
+      <h2 :class="[
+        'text-2xl font-bold',
+        themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+      ]">About</h2>
       <div v-if="isOwnProfile" class="flex items-center gap-2">
         <!-- Section Privacy Icon -->
         <SectionPrivacyIcon
@@ -16,7 +22,10 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-8">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-      <span class="ml-3 text-gray-600">Loading profile data...</span>
+      <span :class="[
+        'ml-3',
+        themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+      ]">Loading profile data...</span>
     </div>
 
     <!-- About Information List -->
@@ -131,26 +140,46 @@
       />
 
       <!-- Empty state for own profile -->
-      <div v-if="isOwnProfile && !hasAboutInfo" class="text-gray-500 text-center py-8">
+      <div v-if="isOwnProfile && !hasAboutInfo" :class="[
+        'text-center py-8',
+        themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+      ]">
         <div class="mb-4">
-          <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg :class="[
+            'w-12 h-12 mx-auto',
+            themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
+          ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
           </svg>
         </div>
         <p class="mb-3">Tell people about yourself by adding your bio and personal information.</p>
-        <p class="text-sm text-gray-400">Click on any field above to add information.</p>
+        <p :class="[
+          'text-sm',
+          themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
+        ]">Click on any field above to add information.</p>
       </div>
 
       <!-- Empty state for visitors -->
-      <div v-else-if="!hasAboutInfo" class="text-gray-500 text-center py-4">
+      <div v-else-if="!hasAboutInfo" :class="[
+        'text-center py-4',
+        themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+      ]">
         <p>No about information available.</p>
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-      <p class="text-red-600">{{ error }}</p>
-      <button @click="fetchProfileData" class="mt-2 text-red-700 hover:text-red-800 font-medium">
+    <div v-if="error" :class="[
+      'border rounded-lg p-4 text-center transition-colors duration-200',
+      themeStore.isDarkMode
+        ? 'bg-red-900/20 border-red-800 text-red-400'
+        : 'bg-red-50 border-red-200 text-red-600'
+    ]">
+      <p>{{ error }}</p>
+      <button @click="fetchProfileData" :class="[
+        'mt-2 font-medium hover:underline',
+        themeStore.isDarkMode ? 'text-red-300 hover:text-red-200' : 'text-red-700 hover:text-red-800'
+      ]">
         Try Again
       </button>
     </div>
@@ -159,10 +188,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { PlusIcon } from '@heroicons/vue/24/outline'
+import { useThemeStore } from '@/stores/theme'
 import api from '../../services/api'
 import AboutItem from './AboutItem.vue'
 import SectionPrivacyIcon from '../privacy/SectionPrivacyIcon.vue'
+
+const themeStore = useThemeStore()
 
 const props = defineProps({
   profile: Object,
@@ -176,7 +207,6 @@ const emit = defineEmits(['profile-updated'])
 const loading = ref(true)
 const error = ref(null)
 const fieldData = ref({})
-const showAddFieldModal = ref(false)
 const sectionPrivacy = ref({
   about: 'connections_only'
 })

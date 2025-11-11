@@ -1,5 +1,8 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6">
+  <div :class="[
+    'rounded-lg shadow-lg p-6 transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+  ]">
     <SectionPrivacyControl 
       title="Experience"
       :is-own-profile="isOwnProfile"
@@ -174,6 +177,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 import { 
   EyeIcon,
   UsersIcon, 
@@ -181,6 +185,8 @@ import {
   ShieldCheckIcon
 } from '@heroicons/vue/24/outline'
 import SectionPrivacyControl from './SectionPrivacyControl.vue'
+
+const themeStore = useThemeStore()
 
 const props = defineProps({
   workHistories: Array,

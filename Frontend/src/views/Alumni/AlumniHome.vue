@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, nextTick, provide } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useThemeStore } from '@/stores/theme';
 import axios from 'axios';
 
 // Import dedicated CSS file
@@ -21,6 +22,7 @@ import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnection
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const themeStore = useThemeStore();
 
 // State
 const posts = ref([]);
@@ -48,6 +50,20 @@ const currentPostIndex = ref(0);
 // Current user computed
 const currentUser = computed(() => authStore.user);
 
+// Icon component mapper
+const getIconSVG = (iconName) => {
+  const icons = {
+    grid: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>`,
+    chat: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>`,
+    megaphone: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>`,
+    calendar: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`,
+    newspaper: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>`,
+    briefcase: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 002 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2V8a2 2 0 012-2z"></path></svg>`,
+    document: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`
+  };
+  return icons[iconName] || icons.document;
+};
+
 // WebSocket connection
 let postsSocket = null;
 
@@ -63,13 +79,13 @@ const getBackendBaseUrl = () => {
 };
 const BASE_URL = getBackendBaseUrl();
 const categories = [
-  { value: 'all', label: 'All Posts', icon: '📋' },
-  { value: 'discussion', label: 'Discussion', icon: '💬' },
-  { value: 'announcement', label: 'Announcement', icon: '📢' },
-  { value: 'event', label: 'Event', icon: '📅' },
-  { value: 'news', label: 'News', icon: '📰' },
-  { value: 'job', label: 'Job Posting', icon: '💼' },
-  { value: 'others', label: 'Others', icon: '📝' }
+  { value: 'all', label: 'All Posts', icon: 'grid' },
+  { value: 'discussion', label: 'Discussion', icon: 'chat' },
+  { value: 'announcement', label: 'Announcement', icon: 'megaphone' },
+  { value: 'event', label: 'Event', icon: 'calendar' },
+  { value: 'news', label: 'News', icon: 'newspaper' },
+  { value: 'job', label: 'Job Posting', icon: 'briefcase' },
+  { value: 'others', label: 'Others', icon: 'document' }
 ];
 
 const reactionTypes = [
@@ -84,21 +100,21 @@ const reactionTypes = [
 // Computed
 const filteredPosts = computed(() => {
   let filtered = posts.value;
-  
+
   if (activeTab.value !== 'all') {
     filtered = filtered.filter(post => post.content_category === activeTab.value);
   }
-  
+
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    filtered = filtered.filter(post => 
+    filtered = filtered.filter(post =>
       post.title?.toLowerCase().includes(query) ||
       post.content?.toLowerCase().includes(query) ||
       post.user?.first_name?.toLowerCase().includes(query) ||
       post.user?.last_name?.toLowerCase().includes(query)
     );
   }
-  
+
   return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 });
 
@@ -109,37 +125,37 @@ const connectWebSocket = () => {
     console.error('No authentication token available for WebSocket connection');
     return;
   }
-  
+
   // Use ws or wss depending on protocol
   const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const wsHost = window.location.hostname;
   const wsUrl = `${wsProtocol}://${wsHost}:8000/ws/posts/feed/?token=${token}`;
   postsSocket = new WebSocket(wsUrl);
-  
+
   postsSocket.onopen = () => {
     console.log('✅ Connected to posts WebSocket');
     console.log('🔗 WebSocket URL:', wsUrl);
     console.log('👤 Connected as user:', authStore.user?.email);
-    
+
     // Subscribe to post updates if posts are already loaded
     if (posts.value.length > 0) {
       console.log('📡 WebSocket connected, subscribing to existing posts...');
       subscribeToPostUpdates();
     }
   };
-  
+
   postsSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     console.log('📨 Raw WebSocket message received:', data);
-    
+
     // Handle successful post group join
     if (data.type === 'joined_post') {
       console.log('✅ Successfully joined post group:', data.post_id);
     }
-    
+
     handleWebSocketMessage(data);
   };
-  
+
   postsSocket.onclose = () => {
     console.log('Disconnected from posts WebSocket');
     // Only reconnect if user is still authenticated
@@ -147,7 +163,7 @@ const connectWebSocket = () => {
       setTimeout(connectWebSocket, 3000);
     }
   };
-  
+
   postsSocket.onerror = (error) => {
     console.error('WebSocket error:', error);
   };
@@ -179,11 +195,11 @@ const fetchPosts = async () => {
         search: searchQuery.value || null
       }
     });
-    
+
     console.log('✅ Posts response:', response.data);
     posts.value = response.data.results || response.data;
     console.log('📊 Loaded posts:', posts.value.length);
-    
+
     // Initialize selectedReaction from backend user_reaction data
     posts.value.forEach(post => {
       if (post.reactions_summary && post.reactions_summary.user_reaction) {
@@ -194,12 +210,12 @@ const fetchPosts = async () => {
         selectedReaction.value[post.id] = null;
       }
     });
-    
+
     console.log('🎯 Final selectedReaction state:', selectedReaction.value);
-    
+
     // Subscribe to real-time updates for all loaded posts
     subscribeToPostUpdates();
-    
+
   } catch (error) {
     console.error('❌ Failed to fetch posts:', error);
     console.error('Response:', error.response?.data);
@@ -225,42 +241,42 @@ const subscribeToPostUpdates = () => {
 const createPost = async (postData) => {
   try {
     console.log('📝 Creating new post:', postData);
-    
+
     // Create FormData for file upload
     const formData = new FormData();
-    
+
     // Add basic post data
     if (postData.title) {
       formData.append('title', postData.title);
     }
     formData.append('content', postData.content);
     formData.append('content_category', postData.category);
-    
+
     // Add files if any (backend expects 'media_files')
     if (postData.files && postData.files.length > 0) {
       postData.files.forEach((file, index) => {
         formData.append('media_files', file);
       });
     }
-    
+
     const response = await axios.post(`${BASE_URL}/api/posts/posts/create/`, formData, {
-      headers: { 
+      headers: {
         Authorization: `Bearer ${authStore.token}`,
         'Content-Type': 'multipart/form-data'
       }
     });
-    
+
     console.log('✅ Post created successfully:', response.data);
     showNotification('Post created successfully! 🎉', 'success');
     showCreateForm.value = false; // Close the modal
-    
+
     // Clear the form after successful creation
     if (postCreateForm.value?.clearForm) {
       postCreateForm.value.clearForm();
     }
-    
+
     await fetchPosts(); // Refresh posts
-    
+
   } catch (error) {
     console.error('❌ Failed to create post:', error);
     console.error('Error response:', error.response?.data);
@@ -310,37 +326,37 @@ const viewProfile = () => {
 const reactToPost = async (postId, reactionType) => {
   try {
     console.log(`🎯 Reacting to post ${postId} with ${reactionType}`);
-    
+
     const currentUserReaction = selectedReaction.value[postId];
-    
+
     // If clicking the same reaction, remove it
     if (currentUserReaction === reactionType) {
       console.log(`🗑️ Removing reaction ${reactionType} from post ${postId}`);
-      
+
       const response = await axios.delete(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
-      
+
       console.log('✅ Reaction removed:', response.data);
       selectedReaction.value[postId] = null;
-      
+
     } else {
       // Add or change reaction
       console.log(`➕ Adding/changing reaction ${reactionType} for post ${postId}`);
-      
+
       const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
         reaction_type: reactionType
       }, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
-      
+
       console.log('✅ Reaction response:', response.data);
       selectedReaction.value[postId] = reactionType;
     }
-    
+
     // Refresh the specific post data
     await fetchPosts();
-    
+
   } catch (error) {
     console.error('❌ Failed to react to post:', error);
     showNotification('Failed to add reaction. Please try again.', 'error');
@@ -350,21 +366,21 @@ const reactToPost = async (postId, reactionType) => {
 const addComment = async (postId, commentContent, parentId = null) => {
   try {
     console.log(`💬 Adding comment to post ${postId}:`, commentContent);
-    
+
     const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/comment/`, {
       content: commentContent,
       parent_id: parentId
     }, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
-    
+
     console.log('✅ Comment added:', response.data);
     showNotification('Comment added successfully! 💬', 'success');
-    
+
     // Refresh comments for this post
     await fetchCommentsForPost(postId);
     await fetchPosts(); // Also refresh posts to update comment counts
-    
+
   } catch (error) {
     console.error('❌ Failed to add comment:', error);
     showNotification('Failed to add comment. Please try again.', 'error');
@@ -377,10 +393,10 @@ const fetchCommentsForPost = async (postId) => {
     const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/comments/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
-    
+
     console.log('✅ Comments fetched:', response.data);
     comments.value[postId] = response.data.comments || response.data;
-    
+
   } catch (error) {
     console.error('❌ Failed to fetch comments:', error);
   }
@@ -394,11 +410,11 @@ const sharePost = async (postId, shareText = '') => {
     }, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
-    
+
     console.log('✅ Post shared:', response.data);
     showNotification('Post shared successfully! 🚀', 'success');
     await fetchPosts();
-    
+
   } catch (error) {
     console.error('❌ Failed to share post:', error);
     showNotification('Failed to share post. Please try again.', 'error');
@@ -416,7 +432,7 @@ const openPostModal = (post) => {
   selectedPost.value = post;
   currentPostIndex.value = filteredPosts.value.findIndex(p => p.id === post.id);
   showModal.value = true;
-  
+
   // Load comments when opening modal
   fetchCommentsForPost(post.id);
 };
@@ -428,10 +444,10 @@ const closePostModal = () => {
 };
 
 const navigateToPost = (direction) => {
-  const newIndex = direction === 'next' 
+  const newIndex = direction === 'next'
     ? Math.min(currentPostIndex.value + 1, filteredPosts.value.length - 1)
     : Math.max(currentPostIndex.value - 1, 0);
-  
+
   currentPostIndex.value = newIndex;
   selectedPost.value = filteredPosts.value[newIndex];
   fetchCommentsForPost(selectedPost.value.id);
@@ -440,7 +456,7 @@ const navigateToPost = (direction) => {
 // Real-time update handlers
 const updatePostReaction = (data) => {
   console.log('🔔 Updating post reaction:', data);
-  
+
   // Find the post and update its reaction data
   const postIndex = posts.value.findIndex(p => p.id === data.post_id);
   if (postIndex !== -1) {
@@ -451,12 +467,12 @@ const updatePostReaction = (data) => {
 
 const addNewComment = (data) => {
   console.log('🔔 Adding new comment via WebSocket:', data);
-  
+
   // Add comment to the comments array for this post
   if (!comments.value[data.post_id]) {
     comments.value[data.post_id] = [];
   }
-  
+
   // Check if comment already exists to avoid duplicates
   const existingComment = comments.value[data.post_id].find(c => c.id === data.comment_id);
   if (!existingComment) {
@@ -473,10 +489,10 @@ const addNewComment = (data) => {
       likes_count: 0,
       replies_count: 0
     });
-    
+
     console.log('✅ New comment added via WebSocket');
   }
-  
+
   // Also refresh posts to update comment counts
   fetchPosts();
 };
@@ -494,7 +510,7 @@ const showNotification = (message, type = 'info') => {
     type,
     timestamp: new Date().toISOString()
   });
-  
+
   // Auto-remove notification after 5 seconds
   setTimeout(() => {
     dismissNotification(notifications.value[notifications.value.length - 1]);
@@ -533,7 +549,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="alumni-home-container min-h-screen bg-amber-50 dark:bg-gray-900">
+  <div :class="[
+    'min-h-screen alumni-home-container',
+    themeStore.isDarkMode ? 'bg-gray-900' : 'bg-white'
+  ]">
     <!-- Responsive Grid Layout -->
     <div class="alumni-home-grid">
       <!-- Left Sidebar: Profile Card -->
@@ -551,20 +570,55 @@ onUnmounted(() => {
         <div class="main-content-wrapper">
           <div class="space-y-4 md:space-y-6">
             <!-- Category Tabs -->
-            <div class="bg-orange-600 rounded-lg sm:rounded-xl border border-orange-600 shadow-sm overflow-hidden">
-              <div class="grid grid-cols-7 border-b border-orange-600">
+            <div :class="[
+              'overflow-hidden border rounded-lg shadow-sm sm:rounded-xl backdrop-blur-sm',
+              themeStore.isDarkMode 
+                ? 'bg-gray-800/95 border-gray-700' 
+                : 'bg-white/95 border-gray-200'
+            ]">
+              <div :class="[
+                'grid grid-cols-7',
+                themeStore.isDarkMode ? 'border-b border-gray-700/50' : 'border-b border-gray-200/50'
+              ]">
                 <button
                   v-for="category in categories"
                   :key="category.value"
                   @click="selectedCategory = category.value; activeTab = category.value"
                   :class="[
-                    'flex items-center justify-center px-2 py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 text-center',
+                    'flex items-center justify-center px-2 py-3 text-xs sm:text-sm font-medium transition-all duration-300 border-b-2 text-center relative overflow-hidden group',
                     selectedCategory === category.value
-                      ? 'text-white border-white bg-orange-300'
-                      : 'text-orange-100 border-transparent hover:text-white hover:bg-orange-300'
+                      ? themeStore.isDarkMode
+                        ? 'text-orange-400 border-orange-400 bg-orange-400/10'
+                        : 'text-orange-600 border-orange-500 bg-orange-50/80'
+                      : themeStore.isDarkMode
+                        ? 'text-gray-400 border-transparent hover:text-orange-400 hover:border-orange-400/50 hover:bg-orange-400/5'
+                        : 'text-gray-600 border-transparent hover:text-orange-600 hover:border-orange-500/50 hover:bg-orange-50/50'
                   ]"
                 >
-                  <span class="truncate">{{ category.label }}</span>
+                  <!-- Subtle animation background -->
+                  <div :class="[
+                    'absolute inset-0 transform transition-transform duration-300 ease-out',
+                    selectedCategory === category.value 
+                      ? 'scale-100 opacity-100' 
+                      : 'scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-50',
+                    themeStore.isDarkMode ? 'bg-gradient-to-r from-orange-400/5 to-orange-500/5' : 'bg-gradient-to-r from-orange-50 to-orange-100/50'
+                  ]"></div>
+                  <div class="flex flex-col items-center space-y-1 relative z-10">
+                    <div :class="[
+                      'transition-transform duration-200',
+                      selectedCategory === category.value ? 'transform scale-110' : 'group-hover:transform group-hover:scale-105',
+                      selectedCategory === category.value 
+                        ? (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
+                        : (themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400')
+                    ]" v-html="getIconSVG(category.icon)"></div>
+                    <span class="hidden text-xs truncate sm:block font-medium">{{ category.label }}</span>
+                    
+                    <!-- Active indicator dot -->
+                    <div v-if="selectedCategory === category.value" :class="[
+                      'absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-300',
+                      themeStore.isDarkMode ? 'bg-orange-400' : 'bg-orange-500'
+                    ]"></div>
+                  </div>
                 </button>
               </div>
             </div>
@@ -572,15 +626,15 @@ onUnmounted(() => {
             <!-- Mobile Post Create Modal -->
             <div
               v-if="showCreateForm"
-              class="md:hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+              class="fixed inset-0 z-50 flex items-center justify-center p-4 md:hidden bg-black/50"
               @click.self="showCreateForm = false"
             >
               <div class="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto" @click.stop>
-                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200">
                   <h2 class="text-lg font-semibold">Create Post</h2>
-                  <button 
-                    @click.stop="showCreateForm = false" 
-                    class="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 flex items-center justify-center"
+                  <button
+                    @click.stop="showCreateForm = false"
+                    class="flex items-center justify-center p-2 transition-colors duration-200 rounded-full hover:bg-gray-100"
                     aria-label="Close"
                   >
                     <svg class="w-5 h-5 text-gray-600 hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -634,7 +688,7 @@ onUnmounted(() => {
             <!-- Loading State -->
             <div v-if="isLoading" class="flex justify-center py-8">
               <div class="flex items-center space-x-2 text-gray-500">
-                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -643,19 +697,33 @@ onUnmounted(() => {
             </div>
 
             <!-- Empty State -->
-            <div v-if="filteredPosts.length === 0 && !isLoading" class="text-center py-12">
-              <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
-                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div v-if="filteredPosts.length === 0 && !isLoading" class="py-12 text-center">
+              <div :class="[
+                'p-8 border shadow-sm rounded-xl',
+                themeStore.isDarkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-white border-gray-200'
+              ]">
+                <svg :class="[
+                  'w-12 h-12 mx-auto mb-4',
+                  themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                 </svg>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">No Posts Yet</h3>
-                <p class="text-sm text-gray-600 mb-4">
+                <h3 :class="[
+                  'mb-2 text-lg font-semibold',
+                  themeStore.isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                ]">No Posts Yet</h3>
+                <p :class="[
+                  'mb-4 text-sm',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                ]">
                   {{ searchQuery ? 'Try different search terms' : 'Be the first to share something!' }}
                 </p>
                 <button
                   v-if="!searchQuery"
                   @click="showCreateForm = true"
-                  class="inline-flex items-center px-4 py-2 bg-orange-600 text-white font-medium text-sm rounded-lg hover:bg-orange-500 transition-colors"
+                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-500"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -677,24 +745,54 @@ onUnmounted(() => {
     </div>
 
     <!-- Mobile Layout: Stacked for mobile/tablet -->
-    <div class="alumni-mobile-layout max-w-sm mx-auto px-2">
-      <div class="mobile-content-wrapper max-w-sm mx-auto px-2">
-  <div class="space-y-4 mt-0">
+    <div class="max-w-sm px-2 mx-auto alumni-mobile-layout">
+      <div class="max-w-sm px-2 mx-auto mobile-content-wrapper">
+  <div class="mt-0 space-y-4">
           <!-- Category Tabs -->
-          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <div class="grid grid-cols-4 sm:grid-cols-7 border-b border-gray-100">
+          <div :class="[
+            'overflow-hidden border rounded-lg shadow-sm backdrop-blur-sm',
+            themeStore.isDarkMode 
+              ? 'bg-gray-800/95 border-gray-700' 
+              : 'bg-white/95 border-gray-200'
+          ]">
+            <div :class="[
+              'grid grid-cols-4 sm:grid-cols-7',
+              themeStore.isDarkMode ? 'border-b border-gray-700/50' : 'border-b border-gray-200/50'
+            ]">
               <button
                 v-for="category in categories"
                 :key="category.value"
                 @click="selectedCategory = category.value; activeTab = category.value"
                 :class="[
-                  'flex items-center justify-center px-1 py-3 text-xs font-medium transition-colors border-b-2 text-center',
+                  'flex items-center justify-center px-1 py-3 text-xs font-medium transition-all duration-300 border-b-2 text-center relative overflow-hidden group',
                   selectedCategory === category.value
-                    ? 'text-orange-600 border-orange-600 bg-orange-50'
-                    : 'text-gray-600 border-transparent hover:text-orange-600 hover:bg-orange-50'
+                    ? themeStore.isDarkMode
+                      ? 'text-orange-400 border-orange-400 bg-orange-400/10'
+                      : 'text-orange-600 border-orange-500 bg-orange-50/80'
+                    : themeStore.isDarkMode
+                      ? 'text-gray-400 border-transparent hover:text-orange-400 hover:border-orange-400/50 hover:bg-orange-400/5'
+                      : 'text-gray-600 border-transparent hover:text-orange-600 hover:border-orange-500/50 hover:bg-orange-50/50'
                 ]"
               >
-                <span class="truncate">{{ category.label }}</span>
+                <!-- Subtle animation background -->
+                <div :class="[
+                  'absolute inset-0 transform transition-transform duration-300 ease-out',
+                  selectedCategory === category.value 
+                    ? 'scale-100 opacity-100' 
+                    : 'scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-50',
+                  themeStore.isDarkMode ? 'bg-gradient-to-r from-orange-400/5 to-orange-500/5' : 'bg-gradient-to-r from-orange-50 to-orange-100/50'
+                ]"></div>
+                
+                <span :class="[
+                  'truncate relative z-10 transition-transform duration-200',
+                  selectedCategory === category.value ? 'transform scale-105 font-semibold' : 'group-hover:transform group-hover:scale-102'
+                ]">{{ category.label }}</span>
+                
+                <!-- Active indicator dot -->
+                <div v-if="selectedCategory === category.value" :class="[
+                  'absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-300',
+                  themeStore.isDarkMode ? 'bg-orange-400' : 'bg-orange-500'
+                ]"></div>
               </button>
             </div>
           </div>
@@ -702,14 +800,17 @@ onUnmounted(() => {
           <!-- Posts Feed Only -->
           <div class="space-y-4">
             <div v-if="isLoading" class="flex justify-center py-8">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+              <div class="w-8 h-8 border-b-2 border-orange-600 rounded-full animate-spin"></div>
             </div>
-            
-            <div v-else-if="filteredPosts.length === 0" class="text-center py-8 text-gray-500">
+
+            <div v-else-if="filteredPosts.length === 0" :class="[
+              'py-8 text-center',
+              themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            ]">
               <p>No posts to show yet.</p>
-              <p class="text-sm mt-2">Be the first to share something!</p>
+              <p class="mt-2 text-sm">Be the first to share something!</p>
             </div>
-            
+
             <template v-else>
               <PostCard
                 v-for="post in filteredPosts"
@@ -732,7 +833,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Notifications -->
-    <div v-if="notification" class="fixed top-20 right-4 z-50 max-w-sm">
+    <div v-if="notification" class="fixed z-50 max-w-sm top-20 right-4">
       <div
         :class="[
           'p-4 rounded-lg shadow-lg border-l-4',
@@ -744,7 +845,7 @@ onUnmounted(() => {
         <div class="flex items-center">
           <span class="flex-1">{{ notification.message }}</span>
           <button @click="notification = null" class="ml-2 text-gray-400 hover:text-gray-600">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -797,7 +898,7 @@ onUnmounted(() => {
     />
 
     <!-- Notifications -->
-    <div v-if="notifications.length > 0" class="fixed top-20 right-4 z-50 space-y-2">
+    <div v-if="notifications.length > 0" class="fixed z-50 space-y-2 top-20 right-4">
       <NotificationToast
         v-for="notif in notifications"
         :key="notif.id"

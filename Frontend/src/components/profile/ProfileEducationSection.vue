@@ -1,5 +1,8 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6">
+  <div :class="[
+    'rounded-lg shadow-lg p-6 transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+  ]">
     <SectionPrivacyControl 
       title="Education"
       :is-own-profile="isOwnProfile"
@@ -11,7 +14,10 @@
 
     <div class="space-y-4">
       <!-- ALWAYS show user profile education (Bachelor's degree from registration) -->
-      <div v-if="user && (user.program || user.year_graduated)" class="flex items-center justify-between py-3 border-b border-gray-100">
+      <div v-if="user && (user.program || user.year_graduated)" :class="[
+        'flex items-center justify-between py-3 border-b',
+        themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-100'
+      ]">
         <div class="flex-1">
           <div class="flex items-center space-x-3">
             <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -20,8 +26,14 @@
               </svg>
             </div>
             <div>
-              <p class="font-medium text-gray-900">{{ user.program || 'Program not specified' }}</p>
-              <p class="text-sm text-gray-500">Caraga State University • {{ user.year_graduated || 'Year not specified' }}</p>
+              <p :class="[
+                'font-medium',
+                themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
+              ]">{{ user.program || 'Program not specified' }}</p>
+              <p :class="[
+                'text-sm',
+                themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              ]">Caraga State University • {{ user.year_graduated || 'Year not specified' }}</p>
             </div>
           </div>
         </div>
@@ -44,7 +56,10 @@
         <div 
           v-for="edu in education" 
           :key="edu.id"
-          class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+          :class="[
+            'flex items-center justify-between py-3 border-b last:border-b-0',
+            themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-100'
+          ]"
         >
           <div class="flex-1">
             <div class="flex items-center space-x-3">
@@ -127,8 +142,14 @@
     </div>
 
     <!-- Help text for adding more education -->
-    <div v-if="isOwnProfile && (!education || education.length === 0)" class="mt-4 p-3 bg-gray-50 rounded-md">
-      <p class="text-sm text-gray-600">Have additional degrees? Click "Add" to include Master's, PhD, or other qualifications.</p>
+    <div v-if="isOwnProfile && (!education || education.length === 0)" :class="[
+      'mt-4 p-3 rounded-md',
+      themeStore.isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+    ]">
+      <p :class="[
+        'text-sm',
+        themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+      ]">Have additional degrees? Click "Add" to include Master's, PhD, or other qualifications.</p>
     </div>
 
   </div>
@@ -136,6 +157,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 import { 
   EyeIcon,
   UsersIcon, 
@@ -143,6 +165,8 @@ import {
   ShieldCheckIcon
 } from '@heroicons/vue/24/outline'
 import SectionPrivacyControl from './SectionPrivacyControl.vue'
+
+const themeStore = useThemeStore()
 
 const props = defineProps({
   education: Array,

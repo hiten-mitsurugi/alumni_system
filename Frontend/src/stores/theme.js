@@ -8,13 +8,17 @@ export const useThemeStore = defineStore('theme', () => {
   // Initialize theme from localStorage (no system preference fallback)
   const initializeTheme = () => {
     const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      isDarkMode.value = true
-    } else {
-      // Default to light mode if no saved preference
-      isDarkMode.value = false
-    }
-    applyTheme()
+    
+    // Sync reactive state with localStorage
+    isDarkMode.value = savedTheme === 'dark'
+    
+    console.log('🔄 Initializing theme store', {
+      savedTheme,
+      isDarkMode: isDarkMode.value
+    })
+    
+    // Don't apply theme here - HTML script and interval already handle it
+    // Just ensure reactive state is correct
   }
 
   // Apply theme to document
@@ -33,8 +37,17 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Toggle theme
   const toggleTheme = () => {
+    console.log('🔄 Toggle theme clicked, current state:', isDarkMode.value)
+    
+    // Toggle the reactive state
     isDarkMode.value = !isDarkMode.value
+    
+    // Persist to localStorage immediately
     localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
+    
+    console.log('✅ Theme toggled to:', isDarkMode.value ? 'dark' : 'light')
+    
+    // Apply theme immediately (watcher might not trigger in some cases)
     applyTheme()
   }
 
@@ -142,10 +155,11 @@ export const useThemeStore = defineStore('theme', () => {
     // fallback: do nothing
   }
 
-  // Watch for changes and apply them
-  watch(isDarkMode, () => {
+    // Watch for changes to the isDarkMode state and apply theme
+  watch(isDarkMode, (newValue) => {
+    console.log('🔄 Theme changed via reactive state:', newValue)
     applyTheme()
-  })
+  }, { immediate: false }) // Don't run on initial setup
 
   return {
     isDarkMode,

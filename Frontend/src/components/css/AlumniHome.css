@@ -9,7 +9,7 @@
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-  background: #fef7e0; /* amber-50 fallback */
+  background: #ffffff; /* white fallback */
   transition: background-color 0.3s ease;
 }
 

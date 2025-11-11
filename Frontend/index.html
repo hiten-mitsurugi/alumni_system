@@ -2,9 +2,76 @@
 <html lang="">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" href="/logo3.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alumni Mates</title>
+    <style>
+      /* CRITICAL: Inline styles to prevent flash - applied before any JS */
+      html, body {
+        margin: 0;
+        padding: 0;
+        transition: none !important; /* Disable transition during initial load */
+      }
+      /* Default to light mode colors */
+      html:not(.dark), body:not(.dark) {
+        background-color: #fef7e0 !important; /* amber-50 */
+      }
+      /* Force dark mode colors when class is present */
+      html.dark, html.dark body {
+        background-color: #111827 !important; /* gray-900 */
+        color: #f9fafb !important;
+      }
+    </style>
+    <script>
+      // ULTRA-AGGRESSIVE: Apply and maintain theme
+      (function() {
+        const theme = localStorage.getItem('theme');
+        
+        // IMMEDIATE application before anything else
+        if (theme === 'dark') {
+          document.documentElement.className = 'dark';
+        }
+        
+        // Function to force dark mode
+        const enforceDarkMode = () => {
+          const currentTheme = localStorage.getItem('theme');
+          if (currentTheme === 'dark') {
+            if (!document.documentElement.classList.contains('dark')) {
+              console.warn('🚨 ENFORCING DARK MODE');
+              document.documentElement.classList.add('dark');
+            }
+            if (document.body && !document.body.classList.contains('dark')) {
+              document.body.classList.add('dark');
+            }
+          }
+        };
+        
+        // Apply on DOMContentLoaded
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', enforceDarkMode);
+        } else {
+          enforceDarkMode();
+        }
+        
+        // VERY aggressive interval - check every 16ms (60fps)
+        setInterval(enforceDarkMode, 16);
+        
+        // MutationObserver to immediately reapply if removed
+        const observer = new MutationObserver(() => {
+          enforceDarkMode();
+        });
+        
+        // Start observing ASAP
+        setTimeout(() => {
+          observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+            subtree: false
+          });
+        }, 0);
+        
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

@@ -1,5 +1,8 @@
 <template>
-  <div class="flex h-screen bg-amber-50 dark:bg-gray-900 relative transition-colors duration-200">
+  <div :class="[
+    'flex h-screen relative transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-900' : 'bg-white'
+  ]">
     <!-- Transparent overlay when sidebar is expanded on mobile -->
     <div 
       v-if="sidebarExpanded && isMobile"
@@ -16,8 +19,15 @@
 
     <!-- Main content area: Offset only on desktop when sidebar is visible -->
     <div :class="['flex-1 flex flex-col w-full transition-all duration-200', !isMobile ? 'ml-20' : '']">
-      <AlumniNavbar @openSidebar="sidebarExpanded = true" />
-      <main class="p-4 overflow-auto flex-1 bg-amber-50 dark:bg-gray-900 transition-colors duration-200">
+      <AlumniNavbar 
+        :sidebar-expanded="sidebarExpanded"
+        :is-mobile="isMobile"
+        @openSidebar="sidebarExpanded = true" 
+      />
+      <main :class="[
+        'p-4 overflow-auto flex-1 transition-colors duration-200',
+        themeStore.isDarkMode ? 'bg-gray-900' : 'bg-white'
+      ]">
         <router-view />
       </main>
     </div>
@@ -26,8 +36,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 import AlumniSidebar from '@/components/alumni/AlumniSidebar.vue'
 import AlumniNavbar from '@/components/alumni/AlumniNavbar.vue'
+
+const themeStore = useThemeStore()
 
 const sidebarExpanded = ref(false)
 

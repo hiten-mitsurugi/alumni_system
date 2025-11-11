@@ -128,6 +128,10 @@ const routes = [
     meta: { requiresAuth: true, role: 3 },
     children: [
       {
+        path: '',
+        redirect: 'home',
+      },
+      {
         path: 'home',
         name: 'AlumniHome',
         component: () => import('@/views/Alumni/AlumniHome.vue'),
@@ -229,6 +233,15 @@ router.beforeEach(async (to, from, next) => {
   }
 
   next();
+});
+
+// Ensure theme persists after route navigation
+router.afterEach(() => {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+  }
 });
 
 export default router;

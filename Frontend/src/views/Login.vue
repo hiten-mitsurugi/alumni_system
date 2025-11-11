@@ -44,18 +44,15 @@ const login = async () => {
     // Set user data immediately
     authStore.setToken(response.data.token, null);
     authStore.setUser(response.data.user);
-    // Show brief loading screen then redirect
-    ui.start('Signing in...');
-    setTimeout(() => {
-      ui.stop(); // Stop loading before redirect
-      if (response.data.user.user_type === 1) {
-        router.push('/super-admin');
-      } else if (response.data.user.user_type === 2) {
-        router.push('/admin');
-      } else if (response.data.user.user_type === 3) {
-        router.push('/alumni');
-      }
-    }, 1000);
+    
+    // Redirect immediately based on user type
+    if (response.data.user.user_type === 1) {
+      router.push('/super-admin');
+    } else if (response.data.user.user_type === 2) {
+      router.push('/admin');
+    } else if (response.data.user.user_type === 3) {
+      router.push('/alumni/home');
+    }
   } catch (err) {
     // Show error immediately without loading
     error.value = err.response?.data?.detail || 'Invalid email or password';
@@ -66,7 +63,7 @@ const login = async () => {
 
 <template>
   <div
-    class="min-h-screen bg-cover bg-center flex flex-col"
+    class="min-h-screen bg-cover bg-center flex flex-col login-container"
     :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
     <!-- Main Content -->
@@ -78,18 +75,18 @@ const login = async () => {
           <p class="text-4xl mt-4">Connecting Alumni, Building Futures</p>
           <div class="flex space-x-8 mt-10">
             <img src="@/assets/CSU Icon.png" alt="Logo 2" class="h-68" />
-            <img src="@/assets/ARO_logo-removebg-preview.png" alt="Logo 1" class="h-68" />
+            <img src="@/assets/CCIS.png" alt="Logo 1" class="h-68" />
           </div>
         </div>
       </div>
 
       <!-- Right Section (Login Form) -->
       <div class="w-full md:w-1/2 flex justify-center">
-        <div class="bg-white bg-opacity-90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full">
+        <div class="login-form bg-white bg-opacity-90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full">
           <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">Alumni Mates</h2>
           <div class="flex justify-center items-center space-x-4 mb-6">
             <img src="@/assets/CSU Icon.png" alt="Logo 1" class="h-12" />
-            <img src="@/assets/ARO_logo-removebg-preview.png" alt="Logo 2" class="h-12" />
+            <img src="@/assets/CCIS.png" alt="Logo 2" class="h-12" />
           </div>
           <h3 class="text-xl font-semibold text-center mb-6 text-black">Login</h3>
 
@@ -99,7 +96,7 @@ const login = async () => {
               v-model="email"
               type="email"
               placeholder="Email"
-              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 placeholder-gray-500"
+              class="login-input w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 placeholder-gray-500"
               style="background-color: #ffffff; color: #111827;"
               required
               @keydown.enter="login"
@@ -109,7 +106,7 @@ const login = async () => {
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="Password"
-                class="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 placeholder-gray-500"
+                class="login-input w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 placeholder-gray-500"
                 style="background-color: #ffffff; color: #111827;"
                 required
                 @keydown.enter="login"
@@ -149,6 +146,32 @@ const login = async () => {
 </template>
 
 <style scoped>
+/* Force login page to always stay in light mode */
+.login-container {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+.login-container * {
+  color: inherit !important;
+}
+
+.login-form {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  color: #111827 !important;
+}
+
+.login-form h2,
+.login-form h3 {
+  color: #111827 !important;
+}
+
+.login-form span {
+  color: #4b5563 !important;
+}
+
+.login-input,
 input[type="email"],
 input[type="password"] {
   background-color: #ffffff !important;
@@ -161,11 +184,13 @@ input[type="password"] {
   -webkit-text-fill-color: #111827 !important;
 }
 
+.login-input::placeholder,
 input[type="email"]::placeholder,
 input[type="password"]::placeholder {
   color: #9ca3af !important;
 }
 
+.login-input:focus,
 input[type="email"]:focus,
 input[type="password"]:focus {
   outline: none !important;
@@ -173,6 +198,7 @@ input[type="password"]:focus {
   -webkit-box-shadow: 0 0 0 2px #f97316, inset 0 0 0 50px #ffffff !important;
   border-color: #f97316 !important;
   -webkit-text-fill-color: #111827 !important;
+  background-color: #ffffff !important;
 }
 
 input[type="email"]:-webkit-autofill,
@@ -187,5 +213,55 @@ input[type="password"]:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 2px #f97316, 0 0 0 30px white inset !important;
   -webkit-text-fill-color: #111827 !important;
   background-color: #ffffff !important;
+}
+
+/* Override any potential dark mode styles */
+html.dark .login-container,
+.dark .login-container {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+html.dark .login-form,
+.dark .login-form {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #111827 !important;
+}
+
+html.dark .login-form *,
+.dark .login-form * {
+  color: #111827 !important;
+}
+
+html.dark .login-input,
+.dark .login-input,
+html.dark input[type="email"],
+.dark input[type="email"],
+html.dark input[type="password"],
+.dark input[type="password"] {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+/* Ensure router-links stay correct colors */
+.login-form a {
+  color: #ea580c !important;
+}
+
+.login-form span {
+  color: #4b5563 !important;
+}
+
+/* Override any global dark theme */
+:global(.dark) .login-container {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+:global(.dark) .login-form {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #111827 !important;
 }
 </style>

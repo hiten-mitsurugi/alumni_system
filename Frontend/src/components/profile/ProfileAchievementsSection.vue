@@ -1,5 +1,8 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6">
+  <div :class="[
+    'rounded-lg shadow-lg p-6 transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+  ]">
     <SectionPrivacyControl 
       title="Achievements"
       :is-own-profile="isOwnProfile"
@@ -89,11 +92,17 @@
           </svg>
         </div>
       </div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">No achievements yet</h3>
-      <p class="mb-4">Showcase your accomplishments, certifications, awards, and recognition.</p>
+      <h3 :class="[
+        'text-lg font-medium mb-2',
+        themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
+      ]">No achievements yet</h3>
+      <p :class="[
+        'mb-4',
+        themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+      ]">Showcase your accomplishments, certifications, awards, and recognition.</p>
       <button 
         @click="$emit('add')"
-        class="inline-flex items-center px-4 py-2 bg-white text-green-600 hover:text-green-700"
+        class="inline-flex items-center px-4 py-2 text-green-600 hover:text-green-700"
       >
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -102,7 +111,10 @@
       </button>
     </div>
 
-    <div v-else class="text-gray-500 text-center py-4">
+    <div v-else :class="[
+      'text-center py-4',
+      themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+    ]">
       <p>No achievements information available.</p>
     </div>
   </div>
@@ -110,8 +122,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 import AchievementCard from './AchievementCard.vue'
 import SectionPrivacyControl from './SectionPrivacyControl.vue'
+
+const themeStore = useThemeStore()
 
 const props = defineProps({
   achievements: Array,

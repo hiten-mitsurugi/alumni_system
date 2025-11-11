@@ -1,7 +1,13 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6">
+  <div :class="[
+    'rounded-lg shadow-lg p-6 transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+  ]">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Contact Information</h2>
+      <h2 :class="[
+        'text-2xl font-bold',
+        themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+      ]">Contact Information</h2>
       <div v-if="isOwnProfile" class="flex items-center gap-2">
         <!-- Section Privacy Icon -->
         <SectionPrivacyIcon
@@ -16,7 +22,10 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-8">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-      <span class="ml-3 text-gray-600">Loading contact information...</span>
+      <span :class="[
+        'ml-3',
+        themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+      ]">Loading contact information...</span>
     </div>
 
     <!-- Contact Information List -->
@@ -124,9 +133,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 import api from '../../services/api'
 import AboutItem from './AboutItem.vue'
 import SectionPrivacyIcon from '../privacy/SectionPrivacyIcon.vue'
+
+const themeStore = useThemeStore()
 
 const props = defineProps({
   profile: Object,
