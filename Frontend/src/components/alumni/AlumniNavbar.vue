@@ -101,7 +101,7 @@
              :class="[
                'absolute right-0 z-50 w-96 mt-2 rounded-lg border max-h-96 overflow-y-auto',
                themeStore.isDarkMode
-                 ? 'bg-gray-800 border-gray-600 shadow-2xl shadow-black/20'
+                 ? 'bg-gray-800 border-gray-600 shadow-xl shadow-gray-900/50'
                  : 'bg-white border-gray-200 shadow-lg shadow-gray-300/20'
              ]">
           <!-- Header -->
@@ -148,8 +148,14 @@
                    @click="markAsRead(notification.id)"
                    :class="[
                      'px-4 py-3 border-b cursor-pointer transition-colors',
-                     !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : '',
-                     'hover:bg-gray-50 dark:hover:bg-gray-700',
+                     !notification.read 
+                       ? themeStore.isDarkMode 
+                         ? 'bg-blue-900/30' 
+                         : 'bg-blue-50' 
+                       : '',
+                     themeStore.isDarkMode 
+                       ? 'hover:bg-gray-700' 
+                       : 'hover:bg-gray-50',
                      themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-100'
                    ]">
                 <div class="flex items-start space-x-3">
@@ -223,7 +229,7 @@
           :class="[
             'absolute right-0 z-50 w-48 py-1 mt-2 rounded-lg border',
             themeStore.isDarkMode 
-              ? 'bg-slate-800 border-slate-700 shadow-2xl shadow-black/20'
+              ? 'bg-slate-800 border-slate-700 shadow-xl shadow-gray-900/50'
               : 'bg-white border-gray-200 shadow-lg shadow-gray-300/20'
           ]">
           <router-link to="/alumni/my-profile"
@@ -537,8 +543,12 @@ onMounted(() => {
 
 <style scoped>
 /* Ensure proper dark mode shadows and prevent white shadow bleed */
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
 .dark .shadow-2xl {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
 
 .shadow-lg {
@@ -546,8 +556,8 @@ onMounted(() => {
 }
 
 /* Dark mode specific shadow for dropdowns */
-.dark .shadow-2xl.shadow-black\/20 {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+.dark .shadow-gray-900\/50 {
+  box-shadow: 0 20px 25px -5px rgba(17, 24, 39, 0.5), 0 10px 10px -5px rgba(17, 24, 39, 0.04);
 }
 
 /* Enhanced text contrast in dark mode */
@@ -570,5 +580,44 @@ onMounted(() => {
 
 .dark .text-blue-400:hover {
   color: #93c5fd !important;
+}
+
+/* Prevent any white highlights in dark mode */
+.dark * {
+  text-shadow: none !important;
+}
+
+/* Remove any potential white backgrounds from notification items */
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #374151 !important;
+}
+
+/* Ensure dropdown backgrounds are solid in dark mode */
+.dark .bg-gray-800 {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-slate-800 {
+  background-color: #1e293b !important;
+}
+
+/* Reapply specific shadows for dropdowns only */
+.dark .shadow-xl.shadow-gray-900\/50 {
+  box-shadow: 0 20px 25px -5px rgba(17, 24, 39, 0.5), 0 10px 10px -5px rgba(17, 24, 39, 0.04) !important;
+}
+
+/* Force dark backgrounds for notification dropdown content */
+.dark [class*="bg-blue-"]:not(.bg-blue-500):not(.bg-blue-600):not(.bg-blue-700) {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Ensure notification unread indicator doesn't have white backgrounds */
+.dark .bg-blue-900\/20,
+.dark .bg-blue-900\/30 {
+  background-color: rgba(30, 58, 138, 0.3) !important;
 }
 </style>
