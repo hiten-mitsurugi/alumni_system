@@ -2,50 +2,50 @@
  <!-- 📱 RESPONSIVE: Simplified layout that works with AlumniLayout -->
  <div :class="[
    'h-full flex rounded-xl shadow-lg overflow-hidden border',
-   themeStore.isDarkMode 
-     ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' 
+   themeStore.isDarkMode
+     ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'
      : 'bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200/60'
  ]">
- 
+
  <!--  DESKTOP / 📱 MOBILE: Conversations Panel -->
  <div :class="[
  'border-r flex flex-col backdrop-blur-sm',
  'w-full md:w-80 lg:w-96',
- themeStore.isDarkMode 
-   ? 'border-gray-700 bg-gray-800/90' 
+ themeStore.isDarkMode
+   ? 'border-gray-700 bg-gray-800/90'
    : 'border-slate-300/60 bg-white/80',
  // Mobile responsive visibility
- { 
+ {
  'block': !isMobile || currentMobileView === 'list',
  'hidden': isMobile && currentMobileView !== 'list'
  }
  ]">
  <div :class="[
    'p-4 md:p-6 backdrop-blur-sm border-b shadow-sm',
-   themeStore.isDarkMode 
-     ? 'bg-gray-800/95 border-gray-700' 
+   themeStore.isDarkMode
+     ? 'bg-gray-800/95 border-gray-700'
      : 'bg-white/90 border-slate-200/60'
  ]">
  <div class="flex items-center justify-between mb-4">
  <h2 :class="[
    'text-xl md:text-2xl font-bold',
-   themeStore.isDarkMode 
-     ? 'text-gray-100' 
+   themeStore.isDarkMode
+     ? 'text-gray-100'
      : 'text-slate-800'
  ]">Messages</h2>
  <div class="flex gap-2">
  <button @click="showPendingMessages = true"
  :class="[
  'relative p-2.5 md:p-3 rounded-xl transition-all duration-200 hover:scale-105',
- pendingMessages.length > 0 
- ? 'text-amber-600 bg-amber-50 hover:text-amber-700 hover:bg-amber-100 shadow-sm' 
+ pendingMessages.length > 0
+ ? 'text-amber-600 bg-amber-50 hover:text-amber-700 hover:bg-amber-100 shadow-sm'
  : 'text-slate-500 hover:text-amber-600 hover:bg-amber-50'
  ]"
  title="Pending Message Requests">
  <!-- Message bubble icon with pending indicator -->
  <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
  :class="pendingMessages.length > 0 ? 'animate-pulse' : ''">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+ <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
  </svg>
  <!-- Notification badge -->
@@ -74,7 +74,7 @@
  </div>
  <div class="relative">
  <svg @click="focusSearch"
- class="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" fill="none"
+ class="absolute w-4 h-4 transition-colors transform -translate-y-1/2 cursor-pointer left-4 top-1/2 md:w-5 md:h-5 text-slate-400 hover:text-slate-600" fill="none"
  stroke="currentColor" viewBox="0 0 24 24">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -83,25 +83,25 @@
  placeholder="Search conversations..."
  :class="[
    'w-full pl-10 md:pl-12 pr-4 py-3 md:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/60 transition-all duration-200 text-sm md:text-base backdrop-blur-sm',
-   themeStore.isDarkMode 
-     ? 'bg-gray-700/80 border-gray-600 text-gray-100 placeholder-gray-400 focus:bg-gray-700' 
+   themeStore.isDarkMode
+     ? 'bg-gray-700/80 border-gray-600 text-gray-100 placeholder-gray-400 focus:bg-gray-700'
      : 'bg-slate-50/80 border-slate-200/60 text-gray-900 placeholder-gray-500 focus:bg-white'
  ]" />
  <div v-if="searchQuery && searchResults.length"
  :class="[
    'absolute top-full left-0 right-0 mt-2 backdrop-blur-sm border rounded-xl shadow-xl z-10 max-h-80 md:max-h-96 overflow-y-auto',
-   themeStore.isDarkMode 
-     ? 'bg-gray-800/95 border-gray-600' 
+   themeStore.isDarkMode
+     ? 'bg-gray-800/95 border-gray-600'
      : 'bg-white/95 border-slate-200/60'
  ]">
  <div v-for="result in searchResults" :key="result.id" @click="selectSearchResult(result)"
  :class="[
    'flex items-center p-3 md:p-4 cursor-pointer transition-all duration-200',
-   themeStore.isDarkMode 
-     ? 'hover:bg-gray-700/80' 
+   themeStore.isDarkMode
+     ? 'hover:bg-gray-700/80'
      : 'hover:bg-slate-50/80'
  ]">
- <img :src="getProfilePictureUrl(result)" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-sm" />
+ <img :src="getProfilePictureUrl(result)" class="object-cover w-10 h-10 rounded-full shadow-sm md:w-12 md:h-12" />
 
  <div class="ml-3">
  <p :class="[
@@ -129,29 +129,29 @@
  :class="[
  'relative flex items-center p-3 md:p-4 cursor-pointer border-b transition-all duration-200 conversation-item panel-transition touch-manipulation group',
  themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-100/60',
- selectedConversation?.id === conversation.id 
- ? (themeStore.isDarkMode 
-   ? 'bg-gradient-to-r from-blue-900/50 to-indigo-900/50 border-r-4 border-blue-400 shadow-sm' 
+ selectedConversation?.id === conversation.id
+ ? (themeStore.isDarkMode
+   ? 'bg-gradient-to-r from-blue-900/50 to-indigo-900/50 border-r-4 border-blue-400 shadow-sm'
    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-r-4 border-blue-500 shadow-sm')
- : conversation.unreadCount > 0 
-   ? (themeStore.isDarkMode 
-     ? 'bg-gradient-to-r from-green-900/50 to-emerald-900/50 hover:from-green-800/50 hover:to-emerald-800/50 shadow-sm border-l-4 border-green-400' 
+ : conversation.unreadCount > 0
+   ? (themeStore.isDarkMode
+     ? 'bg-gradient-to-r from-green-900/50 to-emerald-900/50 hover:from-green-800/50 hover:to-emerald-800/50 shadow-sm border-l-4 border-green-400'
      : 'bg-gradient-to-r from-green-50 to-emerald-50/80 hover:from-green-100 hover:to-emerald-100 shadow-sm border-l-4 border-green-400')
-   : (themeStore.isDarkMode 
-     ? 'bg-gray-800/50 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/50 hover:shadow-sm' 
+   : (themeStore.isDarkMode
+     ? 'bg-gray-800/50 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/50 hover:shadow-sm'
      : 'bg-white hover:bg-gradient-to-r hover:from-slate-50 hover:to-white hover:shadow-sm')
  ]"
  style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
- 
+
  <div v-if="conversation.type === 'private'" class="relative flex-shrink-0 mr-3 md:mr-4">
- <img :src="getProfilePictureUrl(conversation.mate)" 
+ <img :src="getProfilePictureUrl(conversation.mate)"
       @error="$event.target.src = '/default-avatar.png'"
-      class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-md ring-2 ring-white group-hover:ring-slate-200 transition-all duration-200" 
+      class="object-cover w-12 h-12 transition-all duration-200 rounded-full shadow-md md:w-14 md:h-14 ring-2 ring-white group-hover:ring-slate-200"
       :alt="`${conversation.mate.first_name} ${conversation.mate.last_name}`" />
  <!-- Blocked indicator -->
- <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem" 
- class="absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
- <svg class="w-3 h-3 md:w-4 md:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+ <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem"
+ class="absolute flex items-center justify-center w-5 h-5 bg-red-500 border-2 border-white rounded-full shadow-sm -bottom-1 -right-1 md:w-6 md:h-6">
+ <svg class="w-3 h-3 text-white md:w-4 md:h-4" fill="currentColor" viewBox="0 0 20 20">
  <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
  </svg>
  </div>
@@ -161,23 +161,23 @@
  </div>
 
  <div v-else class="relative flex-shrink-0 mr-3 md:mr-4">
- <img :src="getProfilePictureUrl(conversation.group) || '/default-avatar.png'" 
+ <img :src="getProfilePictureUrl(conversation.group) || '/default-avatar.png'"
       @error="$event.target.src = '/default-avatar.png'"
       alt="Group Avatar"
-      class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-md group-hover:shadow-lg transition-all duration-200" />
+      class="object-cover w-12 h-12 transition-all duration-200 border-2 border-white rounded-full shadow-md md:w-14 md:h-14 group-hover:shadow-lg" />
  </div>
  <div class="flex-1 min-w-0">
  <div class="flex items-center justify-between mb-1">
  <h3 :class="[
    'truncate text-base md:text-lg leading-tight',
-   conversation.unreadCount > 0 
+   conversation.unreadCount > 0
      ? (themeStore.isDarkMode ? 'font-bold text-gray-100' : 'font-bold text-gray-900')
      : (themeStore.isDarkMode ? 'font-semibold text-gray-200' : 'font-semibold text-gray-800')
  ]">{{ conversation.type === 'private' ?
  `${conversation.mate.first_name} ${conversation.mate.last_name}` : conversation.group?.name || 'Unnamed Group' }}</h3>
  <div class="flex items-center gap-2">
  <!-- Block status indicators -->
- <span v-if="conversation.isBlockedByMe" 
+ <span v-if="conversation.isBlockedByMe"
  :class="[
    'text-xs px-2 py-1 rounded-full font-medium',
    themeStore.isDarkMode ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600'
@@ -185,7 +185,7 @@
  title="You have blocked this user">
  Blocked
  </span>
- <span v-else-if="conversation.isBlockedByThem" 
+ <span v-else-if="conversation.isBlockedByThem"
  :class="[
    'text-xs px-2 py-1 rounded-full font-medium',
    themeStore.isDarkMode ? 'bg-orange-900/50 text-orange-400' : 'bg-orange-100 text-orange-600'
@@ -209,14 +209,14 @@
  <div class="flex items-center justify-between">
  <p :class="[
    'text-sm truncate pr-2 leading-relaxed',
-   conversation.isBlockedByMe || conversation.isBlockedByThem 
+   conversation.isBlockedByMe || conversation.isBlockedByThem
      ? (themeStore.isDarkMode ? 'italic text-gray-500' : 'italic text-gray-400')
-     : conversation.unreadCount > 0 
+     : conversation.unreadCount > 0
        ? (themeStore.isDarkMode ? 'font-medium text-gray-300' : 'font-medium text-gray-700')
        : (themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600')
  ]">
- {{ conversation.isBlockedByMe ? 'Messages blocked' : 
- conversation.isBlockedByThem ? 'You are blocked by this user' : 
+ {{ conversation.isBlockedByMe ? 'Messages blocked' :
+ conversation.isBlockedByThem ? 'You are blocked by this user' :
  conversation.lastMessage }}
  </p>
  <div class="flex items-center gap-2">
@@ -234,7 +234,7 @@
  </div>
  </div>
  </div>
- <div v-if="filteredConversations.length === 0 && !searchQuery" class="text-center py-12 px-4">
+ <div v-if="filteredConversations.length === 0 && !searchQuery" class="px-4 py-12 text-center">
  <svg :class="[
    'w-16 h-16 mx-auto mb-4',
    themeStore.isDarkMode ? 'text-gray-600' : 'text-gray-300'
@@ -247,8 +247,8 @@
  ]">No conversations found</p>
  <div v-if="pendingMessages.length > 0" :class="[
    'mt-4 p-3 rounded-lg border',
-   themeStore.isDarkMode 
-     ? 'bg-orange-900/30 border-orange-800' 
+   themeStore.isDarkMode
+     ? 'bg-orange-900/30 border-orange-800'
      : 'bg-orange-50 border-orange-200'
  ]">
  <p :class="[
@@ -257,11 +257,11 @@
  ]">
  📬 You have {{ pendingMessages.length }} pending message {{ pendingMessages.length === 1 ? 'request' : 'requests' }}
  </p>
- <button @click="showPendingMessages = true" 
+ <button @click="showPendingMessages = true"
  :class="[
    'mt-2 text-sm underline',
-   themeStore.isDarkMode 
-     ? 'text-orange-400 hover:text-orange-300' 
+   themeStore.isDarkMode
+     ? 'text-orange-400 hover:text-orange-300'
      : 'text-orange-600 hover:text-orange-700'
  ]">
  View pending requests
@@ -270,49 +270,49 @@
  </div>
  </div>
  </div>
- 
+
  <!-- 💻 DESKTOP / 📱 MOBILE: Main Content Area -->
  <div :class="[
  'flex flex-1',
  // Mobile responsive visibility
- { 
+ {
  'block': !isMobile || (currentMobileView === 'chat' || currentMobileView === 'chat-info'),
  'hidden': isMobile && currentMobileView === 'list'
  }
  ]">
- 
+
  <!-- 📱 MOBILE / 💻 DESKTOP: Chat Area -->
  <div :class="[
  'flex flex-col flex-1',
  // Mobile responsive visibility
- { 
+ {
  'block': !isMobile || currentMobileView === 'chat',
  'hidden': isMobile && currentMobileView === 'chat-info'
  }
  ]">
  <ChatArea v-if="selectedConversation" :conversation="selectedConversation" :messages="messages"
- :current-user="currentUser" :private-ws="privateWs" :group-ws="groupWs" 
- @send-message="sendMessage" @message-action="handleMessageAction" @message-read="handleMessageRead" 
+ :current-user="currentUser" :private-ws="privateWs" :group-ws="groupWs"
+ @send-message="sendMessage" @message-action="handleMessageAction" @message-read="handleMessageRead"
  @toggle-chat-info="toggleChatInfo" @back-to-conversations="handleBackToConversations" />
  <EmptyState v-else />
  </div>
- 
+
  <!--  Chat Info Panel -->
- <div v-if="showChatInfo && selectedConversation" 
+ <div v-if="showChatInfo && selectedConversation"
  :class="[
  'w-80 border-l',
- themeStore.isDarkMode 
-   ? 'bg-gray-800 border-gray-700' 
+ themeStore.isDarkMode
+   ? 'bg-gray-800 border-gray-700'
    : 'bg-white border-gray-200',
  // Mobile responsive visibility
- { 
+ {
  'block': !isMobile || currentMobileView === 'chat-info',
  'hidden': isMobile && currentMobileView !== 'chat-info'
  }
  ]">
- <ChatInfoPanel 
- v-if="selectedConversation && showChatInfo" 
- :conversation="selectedConversation" 
+ <ChatInfoPanel
+ v-if="selectedConversation && showChatInfo"
+ :conversation="selectedConversation"
  :messages="messages"
  :current-user="currentUser"
  :member-request-notification-trigger="memberRequestNotificationTrigger"
@@ -328,16 +328,16 @@
  />
  </div>
  </div>
- 
+
  <!-- 📱 MOBILE / 💻 DESKTOP: Modals (unchanged) -->
  <PendingMessagesModal v-if="showPendingMessages" :pending-messages="pendingMessages"
  @close="showPendingMessages = false" @accept="acceptPendingMessage" @reject="rejectPendingMessage" />
  <CreateGroupModal v-if="showCreateGroup" :available-mates="availableMates" @close="showCreateGroup = false"
  @create-group="createGroup" />
- <BlockedUsersModal 
- v-if="showBlockedUsers" 
+ <BlockedUsersModal
+ v-if="showBlockedUsers"
  :show="showBlockedUsers"
- @close="showBlockedUsers = false" 
+ @close="showBlockedUsers = false"
  @user-unblocked="handleUserUnblocked" />
  <ForwardModal
  v-if="showForwardModal"
@@ -429,10 +429,10 @@ function startTypedHeartbeat(ws, wsType) {
  heartbeatIntervals.delete(intervalId);
  }
  }, 30000);
- 
+
  heartbeatIntervals.add(intervalId);
  connectionStates.set(wsType, 'connected');
- 
+
  if (isDev) debugLog(`Heartbeat setup for ${wsType} WebSocket`);
  return intervalId;
 }
@@ -461,10 +461,10 @@ const debugError = console.error; // Always log errors
 // === Helper to always return correct avatar URL for user/group (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
  const BASE_URL = 'http://127.0.0.1:8000'
- 
+
  // Handle different entity types
  let pic = null;
- 
+
  if (entity?.profile_picture) {
    // For users (private conversations)
    pic = entity.profile_picture;
@@ -472,14 +472,14 @@ const getProfilePictureUrl = (entity) => {
    // For groups (group conversations)
    pic = entity.group_picture;
  }
- 
+
  // Debug logging
  console.log('🖼️ Avatar Debug:', {
    entity,
    pic,
    finalUrl: pic ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`) : '/default-avatar.png'
  });
- 
+
  return pic
    ? (pic.startsWith('http') ? pic : `${BASE_URL}${pic}`)
    : '/default-avatar.png'
@@ -511,14 +511,14 @@ async function validateToken() {
  // For 403 errors, check if it's actually an auth issue by examining the error message
  if (error.response?.status === 403) {
  const errorMessage = error.response?.data?.error || error.response?.data?.detail || '';
- const isAuthError = errorMessage.toLowerCase().includes('token') || 
+ const isAuthError = errorMessage.toLowerCase().includes('token') ||
  errorMessage.toLowerCase().includes('authentication') ||
  errorMessage.toLowerCase().includes('credential');
- 
+
  if (isAuthError && await authStore.tryRefreshToken()) {
  return (isAuthenticated.value = true);
  }
- 
+
  // If it's not an auth error (likely blocking), don't log out
  if (!isAuthError) {
  console.log('403 error not related to authentication, keeping user logged in');
@@ -561,7 +561,7 @@ const fetchConversations = async () => {
  return [];
  })
  ]);
- 
+
  // Transform private conversations
  const transformedPrivateConversations = (Array.isArray(privateConversations) ? privateConversations : []).map(conv => ({
  ...conv,
@@ -569,7 +569,7 @@ const fetchConversations = async () => {
  type: 'private',
  timestamp: conv.timestamp || conv.lastMessageTime || new Date().toISOString()
  }));
- 
+
  // Transform group conversations to match the expected format
  const transformedGroupConversations = (Array.isArray(groupConversations) ? groupConversations : []).map(group => ({
  id: group.id,
@@ -579,15 +579,15 @@ const fetchConversations = async () => {
  timestamp: group.timestamp || group.updated_at || group.created_at || new Date().toISOString(),
  unreadCount: group.unreadCount || 0 // Use backend-provided unreadCount
  }));
- 
+
  // Combine and sort by timestamp
  const allConversations = [...transformedPrivateConversations, ...transformedGroupConversations];
  conversations.value = allConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
- 
+
  console.log('Messaging.vue: Fetched conversations:', conversations.value);
  console.log('Messaging.vue: Private conversations:', transformedPrivateConversations.length);
  console.log('Messaging.vue: Group conversations:', transformedGroupConversations.length);
- } catch (e) { 
+ } catch (e) {
  console.error('Conv fetch error', e);
  // Handle blocking-related errors gracefully
  if (e.response?.status === 403) {
@@ -604,19 +604,19 @@ const prefetchedConversations = new Set();
 const prefetchMessages = async (conv) => {
  // Skip prefetch on mobile to save bandwidth and battery
  if (isMobile.value) return;
- 
+
  const cacheKey = conv.type === 'private' ? `private_${conv.mate.id}` : `group_${conv.group?.id}`;
- 
+
  // Skip if already prefetched or currently selected
  if (prefetchedConversations.has(cacheKey) || selectedConversation.value?.id === conv.id) {
    return;
  }
- 
+
  try {
    const data = conv.type === 'private'
      ? await messagingService.getMessages(conv.mate.id)
      : await messagingService.getGroupMessages(conv.group?.id);
-   
+
    messageCache.set(cacheKey, data);
    prefetchedConversations.add(cacheKey);
    console.log(`🚀 Prefetched messages for ${cacheKey}`);
@@ -628,19 +628,19 @@ const prefetchMessages = async (conv) => {
 // 🚀 SPEED: Enhanced fetchMessages with cache support
 const fetchMessages = async conv => {
  const cacheKey = conv.type === 'private' ? `private_${conv.mate.id}` : `group_${conv.group?.id}`;
- 
+
  // Check cache first for instant loading
  if (messageCache.has(cacheKey)) {
    console.log(`🚀 Cache HIT: Loading messages from cache for ${cacheKey}`);
    messages.value = messageCache.get(cacheKey);
-   
+
    // Refresh in background and update cache
    setTimeout(async () => {
      try {
        const freshData = conv.type === 'private'
          ? await messagingService.getMessages(conv.mate.id)
          : await messagingService.getGroupMessages(conv.group?.id);
-       
+
        messageCache.set(cacheKey, freshData);
        // Only update UI if this conversation is still selected
        if (selectedConversation.value?.id === conv.id) {
@@ -650,21 +650,21 @@ const fetchMessages = async conv => {
        console.log('Background refresh failed:', e);
      }
    }, 100);
-   
+
    return;
  }
- 
+
  // Cache miss - fetch normally
  try {
    console.log(`🚀 Cache MISS: Fetching messages for ${cacheKey}`);
    const data = conv.type === 'private'
      ? await messagingService.getMessages(conv.mate.id)
      : await messagingService.getGroupMessages(conv.group?.id);
-   
+
    messages.value = data;
    messageCache.set(cacheKey, data);
    prefetchedConversations.add(cacheKey);
- } catch (e) { 
+ } catch (e) {
    console.error('Messages fetch error', e);
    // Handle blocking-related errors
    if (e.response?.status === 403) {
@@ -720,9 +720,9 @@ async function search() {
  const groups = (data.groups || []).map(g => ({ type: 'group', ...g }));
  searchResults.value = [...users, ...groups];
  console.log('🔍 Search results:', searchResults.value);
- } catch (e) { 
+ } catch (e) {
  console.error('🔍 Search error:', e);
- searchResults.value = []; 
+ searchResults.value = [];
  }
 }
 const debouncedSearch = debounce(search, 300);
@@ -738,7 +738,7 @@ const selectLastConversation = () => {
  const timestampB = new Date(b.timestamp || 0).getTime();
  return timestampB - timestampA; // Descending order (newest first)
  });
- 
+
  // Select the most recent conversation
  const lastConversation = sortedConversations[0];
  if (lastConversation) {
@@ -762,7 +762,7 @@ async function selectSearchResult(r) {
  if (!group) {
  // Check if user is already a member of this group (admin/creator check)
  const isUserMember = r.members && r.members.some(member => member.id === currentUser.value.id);
- 
+
  if (isUserMember) {
  // User is already a member (admin/creator), just fetch conversations to get the group
  console.log('User is already a member of this group, fetching conversations');
@@ -774,7 +774,7 @@ async function selectSearchResult(r) {
  await api.post(`/message/group/${r.id}/manage/`, { action: 'add_member', user_id: currentUser.value.id });
  await fetchConversations();
  group = conversations.value.find(c => c.type === 'group' && c.group.id === r.id);
- } catch (e) { 
+ } catch (e) {
  console.error('Join group error', e);
  // Show error message to user if join fails
  if (e.response?.data?.error) {
@@ -795,21 +795,21 @@ function updateConversation(msg) {
  (c.type === 'private' && c.mate.id === msg.sender.id) ||
  (c.type === 'group' && c.group.id === msg.group)
  );
- 
+
  if (conv) {
  // 🔧 FIX: Only update if values actually changed to prevent unnecessary re-renders
  let hasChanges = false;
- 
+
  if (conv.lastMessage !== msg.content) {
  conv.lastMessage = msg.content;
  hasChanges = true;
  }
- 
+
  if (conv.timestamp !== msg.timestamp) {
  conv.timestamp = msg.timestamp;
  hasChanges = true;
  }
- 
+
  // 📋 REFERENCE: Apply private message logic to groups
  // Private logic: if (selectedConversation.value?.id !== conv.id) conv.unreadCount++;
  // Group logic: Same logic - increment unread count if conversation not selected
@@ -821,7 +821,7 @@ function updateConversation(msg) {
  hasChanges = true;
  }
  }
- 
+
  // 🔧 FIX: Only trigger reactivity if something actually changed
  if (hasChanges && isDev) {
  debugLog('Conversation updated:', conv.id, 'unread:', conv.unreadCount);
@@ -868,30 +868,30 @@ async function selectConversation(conv) {
  console.log('Messaging.vue: Same conversation already selected, skipping');
  return;
  }
- 
+
  console.log('Messaging.vue: Selecting conversation:', conv.id);
- 
+
  // � IMMEDIATE FEEDBACK: Set loading state and show selected conversation immediately
 
  selectedConversation.value = conv;
- 
+
  // 📱 MOBILE: Switch to chat view immediately for faster perceived performance
  if (isMobile.value) {
  currentMobileView.value = 'chat';
  }
- 
+
  // Clear messages immediately to prevent showing wrong messages during load
  messages.value = [];
- 
+
  try {
  // � INSTANT: Fetch messages with aggressive timeout
  const fetchPromise = fetchMessages(conv);
- const timeoutPromise = new Promise((_, reject) => 
+ const timeoutPromise = new Promise((_, reject) =>
  setTimeout(() => reject(new Error('Message fetch timeout')), 2000)
  );
- 
+
  await Promise.race([fetchPromise, timeoutPromise]);
- 
+
  // Setup WebSocket and mark as read properly
  if (conv.type === 'group') {
  // 🔧 FIX: Ensure group WebSocket setup doesn't block UI
@@ -904,7 +904,7 @@ async function selectConversation(conv) {
  groupWs.value.close();
  groupWs.value = null;
  }
- 
+
  // For private messages, mark as read immediately since private WS is already connected
  if (privateWs.value?.readyState === WebSocket.OPEN) {
  privateWs.value.send(JSON.stringify({ action: 'mark_as_read', receiver_id: conv.mate.id }));
@@ -931,13 +931,13 @@ async function selectConversation(conv) {
  console.error('🔔 Messaging.vue: Failed to refresh notification counts:', error);
  }
  }, 1); // Instant notification refresh
- 
+
  } catch (error) {
  console.error('Error selecting conversation:', error);
  // Don't break the UI if conversation selection fails
  } finally {
  }
- 
+
  // 📱 MOBILE: Switch to chat view when a conversation is selected
  if (isMobile.value) {
  currentMobileView.value = 'chat';
@@ -949,7 +949,7 @@ async function selectConversation(conv) {
 // === MESSAGE ACTIONS ===
 async function sendMessage(data) {
  console.log('Messaging.vue: sendMessage called with:', data);
- 
+
  try {
  // Prevent double sending by checking if already processing
  if (data._processing) {
@@ -957,7 +957,7 @@ async function sendMessage(data) {
  return;
  }
  data._processing = true;
- 
+
  // Upload attachments
  const attachmentIds = await uploadAttachments(data.attachments);
  console.log('Messaging.vue: Attachment IDs:', attachmentIds);
@@ -974,7 +974,7 @@ async function sendMessage(data) {
 
  // Create unique temporary message ID to prevent duplicates
  const tempId = `temp-${Date.now()}-${Math.random()}`;
- 
+
  // Create temporary message for UI
  const newMessage = {
  id: tempId,
@@ -992,7 +992,7 @@ async function sendMessage(data) {
  reply_to_id: data.reply_to_id || null,
  _isTemporary: true // Mark as temporary
  };
- 
+
  console.log('Messaging.vue: Optimistically adding message to UI:', newMessage);
  messages.value.push(newMessage);
 
@@ -1071,21 +1071,21 @@ async function uploadAttachments(attachments) {
 async function handleMessageAction(actionData) {
  console.log('Messaging: Message action received:', actionData)
  const { action, message, newContent } = actionData
- 
+
  try {
  switch (action) {
  case 'reply':
  // TODO: Set reply state in MessageInput
  console.log('Messaging: Reply to message:', message.id)
  break
- 
+
  case 'forward':
  // Open forward modal
  console.log('Messaging: Forward message:', message.id)
  messageToForward.value = message
  showForwardModal.value = true
  break
- 
+
  case 'pin':
  case 'unpin':
  // Pin/unpin message via WebSocket for real-time updates
@@ -1111,7 +1111,7 @@ async function handleMessageAction(actionData) {
  }
  }
  break
- 
+
  case 'bump':
  // Bump message via WebSocket for real-time delivery
  if (selectedConversation.value?.type === 'private') {
@@ -1137,11 +1137,11 @@ async function handleMessageAction(actionData) {
  }
  }
  break
- 
+
  case 'edit':
  // Get the original content for potential rollback
  const originalContent = message.content;
- 
+
  // Optimistically update the message content immediately for the sender
  const editMessageIndex = messages.value.findIndex(m => m.id === message.id);
  if (editMessageIndex !== -1) {
@@ -1151,14 +1151,14 @@ async function handleMessageAction(actionData) {
  edited_at: new Date().toISOString()
  };
  messages.value.splice(editMessageIndex, 1, optimisticUpdate);
- 
+
  // Force reactivity
  nextTick(() => {
  messages.value = [...messages.value];
  console.log('✅ Optimistic edit: Updated message locally for immediate feedback');
  });
  }
- 
+
  // Send edit via WebSocket for real-time delivery to other participants
  try {
  if (selectedConversation.value?.type === 'private') {
@@ -1188,7 +1188,7 @@ async function handleMessageAction(actionData) {
  }
  } catch (error) {
  console.error('Messaging: Error sending edit via WebSocket:', error)
- 
+
  // Rollback optimistic update on error
  if (editMessageIndex !== -1) {
  const rollbackUpdate = {
@@ -1203,7 +1203,7 @@ async function handleMessageAction(actionData) {
  }
  }
  break
- 
+
  case 'delete':
  // Delete message via WebSocket for real-time delivery
  if (selectedConversation.value?.type === 'private') {
@@ -1228,22 +1228,22 @@ async function handleMessageAction(actionData) {
  }
  }
  break
- 
+
  case 'select':
  // TODO: Add to selection state for bulk actions
  console.log('Messaging: Selected message:', message.id)
  break
- 
+
  case 'reaction_added':
  case 'reaction_updated':
  case 'reaction_removed':
  // Handle reaction updates - refresh the specific message reactions
  console.log('Messaging: Handling reaction update for message:', actionData.messageId)
- 
+
  // The API call was already made by MessageBubble, just refresh the message
  // in a real app, this might fetch updated reaction stats from backend
  break
- 
+
  default:
  console.warn('Messaging: Unknown message action:', action)
  }
@@ -1256,23 +1256,23 @@ async function handleMessageAction(actionData) {
 // Handle immediate message read feedback from ChatArea
 function handleMessageRead(data) {
  console.log('📖 Handling immediate message read feedback:', data);
- 
+
  const { messageId, readBy } = data;
- 
+
  // Find the message and immediately update its read_by
  const messageIndex = messages.value.findIndex(m => m.id === messageId);
  if (messageIndex !== -1) {
  const message = messages.value[messageIndex];
- 
+
  // Create a new message object with updated read_by to force reactivity
  const updatedMessage = {
  ...message,
  read_by: readBy || message.read_by
  };
- 
+
  // Replace the message in the array
  messages.value[messageIndex] = updatedMessage;
- 
+
  // Force Vue reactivity
  nextTick(() => {
  messages.value = [...messages.value];
@@ -1284,36 +1284,36 @@ function handleMessageRead(data) {
 // Handle back to conversations button for mobile view
 function handleBackToConversations() {
  console.log('📱 Back to conversations button clicked');
- 
+
  // Handle different mobile view transitions
  if (currentMobileView.value === 'chat-info') {
  currentMobileView.value = 'chat';
  } else if (currentMobileView.value === 'chat') {
  // Clear selected conversation to show conversation list in mobile view
  selectedConversation.value = null;
- 
+
  // Reset mobile view to conversation list
  currentMobileView.value = 'list';
- 
+
  // Close chat info when going back to list
  showChatInfo.value = false;
- 
+
  // Clear chat messages to prevent stale data
  messages.value = [];
- 
+
  // Close any active WebSocket connections
  if (privateWs.value) {
  console.log('🔌 Closing private WebSocket connection');
  privateWs.value.close();
  privateWs.value = null;
  }
- 
+
  if (groupWs.value) {
  console.log('🔌 Closing group WebSocket connection');
  groupWs.value.close();
  groupWs.value = null;
  }
- 
+
  console.log('📱 Successfully returned to conversation list');
  }
 }
@@ -1327,9 +1327,9 @@ function sendReaction(messageId, reactionType, isRemoving = false) {
  message_id: messageId,
  reaction_type: reactionType
  };
- 
+
  console.log(`Messaging: Sending ${action} via WebSocket:`, payload);
- 
+
  if (selectedConversation.value?.type === 'private') {
  if (privateWs.value?.readyState === WebSocket.OPEN) {
  privateWs.value.send(JSON.stringify(payload));
@@ -1352,7 +1352,7 @@ const createGroup = async (groupData) => {
  try {
  let requestData;
  let config = {};
- 
+
  // Check if it's FormData (new format with file upload support)
  if (groupData instanceof FormData) {
  requestData = groupData;
@@ -1363,9 +1363,9 @@ const createGroup = async (groupData) => {
  requestData = { name: groupData.name, members: groupData.members };
  config.headers = { 'Content-Type': 'application/json' };
  }
- 
+
  const { data } = await api.post('/message/group/create/', requestData, config);
- 
+
  // Transform the group data into the conversation format expected by the frontend
  const groupConversation = {
  id: data.id,
@@ -1375,16 +1375,16 @@ const createGroup = async (groupData) => {
  timestamp: data.created_at || new Date().toISOString(),
  unreadCount: 0
  };
- 
+
  conversations.value.unshift(groupConversation);
  showCreateGroup.value = false;
  selectConversation(groupConversation);
- } catch (e) { 
+ } catch (e) {
  console.error('Group create error', e);
  console.error('Error response:', e.response);
  console.error('Error status:', e.response?.status);
  console.error('Error data:', e.response?.data);
- 
+
  // Show error to user
  if (e.response?.data?.error) {
  alert(e.response.data.error);
@@ -1413,7 +1413,7 @@ const rejectPendingMessage = async (id) => {
 // === BLOCK/UNBLOCK HANDLERS ===
 const handleUserUnblocked = (user) => {
  console.log('🔓 User unblocked from BlockedUsersModal:', user);
- 
+
  // Immediately update conversations to remove blocking status
  conversations.value.forEach(conv => {
  if (conv.type === 'private' && conv.mate.id === user.id) {
@@ -1426,21 +1426,21 @@ const handleUserUnblocked = (user) => {
  }
  }
  });
- 
+
  // Update selected conversation if it matches the unblocked user
- if (selectedConversation.value?.type === 'private' && 
+ if (selectedConversation.value?.type === 'private' &&
  selectedConversation.value.mate.id === user.id) {
  console.log('🔓 Immediately updating selected conversation blocking status');
  selectedConversation.value.isBlockedByMe = false;
  selectedConversation.value.canSendMessage = true;
  }
- 
+
  // Force Vue reactivity to update the UI immediately
  nextTick(() => {
  conversations.value = [...conversations.value];
  console.log('✅ Real-time: Conversation blocking status updated immediately for:', user.first_name, user.last_name);
  });
- 
+
  // Still refresh conversations to ensure data consistency, but UI already updated
  fetchConversations();
 };
@@ -1477,17 +1477,17 @@ const handleBlock = () => {
 
 const handleUnblock = () => {
  console.log('🔓 User unblocked from ChatInfoPanel');
- 
+
  // Immediately update selected conversation blocking status
  if (selectedConversation.value) {
  console.log('🔓 Immediately updating selected conversation after unblock');
  selectedConversation.value.isBlockedByMe = false;
  selectedConversation.value.canSendMessage = true;
  }
- 
+
  // Update the conversation in the conversations list as well
  if (selectedConversation.value) {
- const conv = conversations.value.find(c => 
+ const conv = conversations.value.find(c =>
  c.type === 'private' && c.mate.id === selectedConversation.value.mate.id
  );
  if (conv) {
@@ -1499,37 +1499,37 @@ const handleUnblock = () => {
  }
  }
  }
- 
+
  // Force Vue reactivity to update UI immediately
  nextTick(() => {
  conversations.value = [...conversations.value];
  console.log('✅ Real-time: Conversation unblocked immediately via ChatInfoPanel');
  });
- 
+
  // Refresh conversations to ensure data consistency
  fetchConversations();
 };
 
 const scrollToMessage = (messageId) => {
  console.log('Messaging: Scrolling to pinned message:', messageId);
- 
+
  // Find the message element and scroll to it
  const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
  if (messageElement) {
  // Scroll to the message
- messageElement.scrollIntoView({ 
- behavior: 'smooth', 
- block: 'center' 
+ messageElement.scrollIntoView({
+ behavior: 'smooth',
+ block: 'center'
  });
- 
+
  // Add visual highlight effect specifically for pinned messages
  messageElement.classList.add('highlight-pinned-message');
- 
+
  // Remove highlight after 3 seconds
  setTimeout(() => {
  messageElement.classList.remove('highlight-pinned-message');
  }, 3000);
- 
+
  console.log('Messaging: Successfully scrolled to and highlighted pinned message');
  } else {
  console.warn('Messaging: Message element not found for ID:', messageId);
@@ -1538,22 +1538,22 @@ const scrollToMessage = (messageId) => {
 
 const handleGroupPhotoUpdated = (data) => {
  console.log('Messaging: Group photo updated:', data);
- 
+
  // Update the conversation in the conversations list
- const conversationIndex = conversations.value.findIndex(conv => 
+ const conversationIndex = conversations.value.findIndex(conv =>
  conv.type === 'group' && conv.group.id === data.groupId
  );
- 
+
  if (conversationIndex !== -1) {
  conversations.value[conversationIndex].group.group_picture = data.newPhotoUrl;
- 
+
  // Also update the selected conversation if it's the same group
- if (selectedConversation.value && 
- selectedConversation.value.type === 'group' && 
+ if (selectedConversation.value &&
+ selectedConversation.value.type === 'group' &&
  selectedConversation.value.group.id === data.groupId) {
  selectedConversation.value.group.group_picture = data.newPhotoUrl;
  }
- 
+
  // Force reactivity update
  nextTick(() => {
  conversations.value = [...conversations.value];
@@ -1564,24 +1564,24 @@ const handleGroupPhotoUpdated = (data) => {
 
 const handleLeaveGroup = (data) => {
  console.log('Messaging: User left group:', data);
- 
+
  // Remove the conversation from the list
- const conversationIndex = conversations.value.findIndex(conv => 
+ const conversationIndex = conversations.value.findIndex(conv =>
  conv.type === 'group' && conv.group.id === data.groupId
  );
- 
+
  if (conversationIndex !== -1) {
  conversations.value.splice(conversationIndex, 1);
- 
+
  // If this was the selected conversation, clear it
- if (selectedConversation.value && 
- selectedConversation.value.type === 'group' && 
+ if (selectedConversation.value &&
+ selectedConversation.value.type === 'group' &&
  selectedConversation.value.group.id === data.groupId) {
  selectedConversation.value = null;
  messages.value = [];
  showChatInfo.value = false;
  }
- 
+
  console.log('✅ Messaging: Group removed from conversation list');
  }
 };
@@ -1590,7 +1590,7 @@ const handleLeaveGroup = (data) => {
 function setupWebSockets() {
  getValidToken().then(token => {
  if (!token) return (isAuthenticated.value = false);
- 
+
  // Set up private messaging WebSocket
  privateWs.value = new WebSocket(`ws://localhost:8000/ws/private/?token=${token}`);
 
@@ -1614,7 +1614,7 @@ function setupWebSockets() {
  privateWs.value.onmessage = (e) => {
  const data = JSON.parse(e.data);
  console.log('🔵 WebSocket RECEIVED:', data);
- 
+
  // 👁️ WebSocket DEBUG: Special logging for message_read_update events
  if (data.type === 'message_read_update') {
  console.log('👁️ WebSocket DEBUG: Received message_read_update event!');
@@ -1623,7 +1623,7 @@ function setupWebSockets() {
  console.log('👁️ WebSocket DEBUG: Read By Data:', data.read_by);
  console.log('👁️ WebSocket DEBUG: Full Event:', data);
  }
- 
+
  // Special debugging for message_read_update events
  if (data.type === 'message_read_update') {
  console.log('👁️ WEBSOCKET: Received message_read_update event!');
@@ -1632,13 +1632,13 @@ function setupWebSockets() {
  console.log('👁️ WEBSOCKET: Read by data:', data.read_by);
  console.log('👁️ WEBSOCKET: Full event data:', data);
  }
- 
+
  // Handle pong responses
  if (data.action === 'pong') {
  console.log('Messaging.vue: Received pong from server');
  return;
  }
- 
+
  // ✅ Special debugging for edit events
  if (data.type === 'message_edited') {
  console.log('🔴 EDIT EVENT: Received message_edited via private WebSocket');
@@ -1646,7 +1646,7 @@ function setupWebSockets() {
  console.log('🔴 EDIT EVENT: New content:', data.new_content);
  console.log('🔴 EDIT EVENT: Event data:', data);
  }
- 
+
  // ✅ FIX: Special handling for messages with reply_to data
  if (data.type === 'chat_message' && data.message) {
  if (data.message.reply_to) {
@@ -1659,10 +1659,10 @@ function setupWebSockets() {
  console.log('🔵 WebSocket: Incoming message has NO reply data');
  }
  }
- 
+
  handleWsMessage(data, 'private');
  };
- 
+
  // Set up notification WebSocket for real-time blocking/unblocking events
  setupNotificationWebSocket(token);
  });
@@ -1671,33 +1671,33 @@ function setupWebSockets() {
 function setupNotificationWebSocket(token) {
  console.log('🔔 Setting up notification WebSocket...');
  notificationWs.value = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${token}`);
- 
+
  notificationWs.value.onopen = () => {
  console.log('🔔 Messaging.vue: Notification WS connected successfully!');
  };
- 
+
  notificationWs.value.onclose = () => {
  console.log('🔔 Messaging.vue: Notification WS closed');
  };
- 
+
  notificationWs.value.onerror = (error) => {
  console.error('🔔 Messaging.vue: Notification WS error:', error);
  };
- 
+
  notificationWs.value.onmessage = (e) => {
  const data = JSON.parse(e.data);
  console.log('🔔 Notification WebSocket RECEIVED:', data);
- 
+
  // Handle blocking/unblocking notifications
  if (data.type === 'user_unblocked' || data.type === 'user_blocked') {
  console.log('🔔 Processing blocking/unblocking event:', data.type);
  handleWsMessage(data, 'notification');
- } 
+ }
  // Handle status update notifications
  else if (data.type === 'status_update') {
  console.log('🔔 Processing status update event:', data);
  handleWsMessage(data, 'notification');
- } 
+ }
  // Handle group creation notifications
  else if (data.type === 'group_created') {
  console.log('🔔 Processing group creation event:', data);
@@ -1717,10 +1717,10 @@ function setupNotificationWebSocket(token) {
  // Instead of duplicate logic, use the standardized updateConversation function
  console.log('🔔 Processing group_message_preview:', data);
  const msg = data.message;
- 
+
  // Use the same updateConversation function that handles both private and group messages
  updateConversation(msg);
- 
+
  console.log('📬 Real-time: Group conversation updated using private message reference logic');
  } else {
  console.log('🔔 Received other notification:', data.type);
@@ -1735,43 +1735,43 @@ function setupGroupWebSocket(conv) {
  groupWs.value.close();
  groupWs.value = null;
  }
- 
+
  return new Promise((resolve) => {
  getValidToken().then(token => {
  if (!token) {
  resolve();
  return;
  }
- 
+
  console.log('Messaging.vue: Setting up group WebSocket for group:', conv.group.id);
  groupWs.value = new WebSocket(`ws://localhost:8000/ws/group/${conv.group.id}/?token=${token}`);
- 
+
  groupWs.value.onopen = () => {
  console.log('Messaging.vue: Group WS connected');
  startHeartbeat(groupWs.value);
- 
+
  // 📋 REFERENCE: Apply private message logic - mark as read when connection opens
  // Send mark_as_read immediately when WebSocket connects (same timing as private messages)
  console.log('🔥 Messaging.vue: Sending group mark_as_read on connection for group:', conv.group.id);
- const markReadPayload = { 
- action: 'mark_as_read', 
- group_id: conv.group.id 
+ const markReadPayload = {
+ action: 'mark_as_read',
+ group_id: conv.group.id
  };
  console.log('🔥 Group mark_as_read payload:', markReadPayload);
  groupWs.value.send(JSON.stringify(markReadPayload));
- 
+
  resolve(); // Resolve promise when connected and marked as read
  };
- 
+
  groupWs.value.onclose = () => {
  console.log('Messaging.vue: Group WS closed');
  stopHeartbeat();
  };
- 
+
  groupWs.value.onmessage = e => {
  const data = JSON.parse(e.data);
  console.log('🟢 Group WebSocket RECEIVED:', data);
- 
+
  // Special debugging for message_read_update events
  if (data.type === 'message_read_update') {
  console.log('👁️ GROUP WEBSOCKET: Received message_read_update event!');
@@ -1780,13 +1780,13 @@ function setupGroupWebSocket(conv) {
  console.log('👁️ GROUP WEBSOCKET: Read by data:', data.read_by);
  console.log('👁️ GROUP WEBSOCKET: Full event data:', data);
  }
- 
+
  // Handle pong responses
  if (data.action === 'pong') {
  console.log('Messaging.vue: Received pong from group server');
  return;
  }
- 
+
  // ✅ Special debugging for edit events
  if (data.type === 'message_edited') {
  console.log('🔴 GROUP EDIT EVENT: Received message_edited via group WebSocket');
@@ -1794,14 +1794,14 @@ function setupGroupWebSocket(conv) {
  console.log('🔴 GROUP EDIT EVENT: New content:', data.new_content);
  console.log('🔴 GROUP EDIT EVENT: Event data:', data);
  }
- 
+
  // 🔧 FIX: Additional validation to ensure message belongs to current group
  if (data.type === 'chat_message' && data.message) {
  if (data.message.group !== conv.group.id) {
  console.log('❌ Group WebSocket: Message not for current group, ignoring');
  return;
  }
- 
+
  if (data.message.reply_to) {
  console.log('🟢 Group WebSocket: Incoming message HAS reply_to data');
  console.log('🟢 Group WebSocket: Reply content:', data.message.reply_to.content);
@@ -1809,10 +1809,10 @@ function setupGroupWebSocket(conv) {
  console.log('🟢 Group WebSocket: Incoming message has reply_to_id:', data.message.reply_to_id);
  }
  }
- 
+
  handleWsMessage(data, 'group');
  };
- 
+
  groupWs.value.onerror = async (error) => {
  console.error('Messaging.vue: Group WS error:', error);
  stopHeartbeat();
@@ -1829,21 +1829,21 @@ function setupGroupWebSocket(conv) {
 
 function handleWsMessage(data, scope) {
  console.log('Messaging.vue: Handling WebSocket message:', data, 'scope:', scope);
- 
+
  // Special debugging for message_read_update events
  if (data.type === 'message_read_update') {
  console.log('🎯 HANDLER: Processing message_read_update event in handleWsMessage');
  console.log('🎯 HANDLER: Event data:', data);
  }
- 
+
  // Handle error messages from backend
  if (data.error) {
  console.error('🔴 WebSocket Error:', data.error);
- 
+
  // Handle blocking errors specifically
  if (data.blocked) {
  console.log('🚫 User is blocked, showing blocking message in chat area');
- 
+
  // Add a system message to show the blocking error in chat
  const blockingMessage = {
  id: `system-${Date.now()}`,
@@ -1851,15 +1851,15 @@ function handleWsMessage(data, scope) {
  timestamp: new Date().toISOString(),
  isSystemMessage: true,
  blockingType: data.type, // 'blocked_by_me' or 'blocked_by_them'
- sender: { 
- id: 'system', 
- first_name: 'System', 
- last_name: '' 
+ sender: {
+ id: 'system',
+ first_name: 'System',
+ last_name: ''
  }
  };
- 
+
  messages.value.push(blockingMessage);
- 
+
  // Update conversation blocking status
  if (selectedConversation.value && data.type) {
  if (data.type === 'blocked_by_me') {
@@ -1870,19 +1870,19 @@ function handleWsMessage(data, scope) {
  selectedConversation.value.canSendMessage = false;
  }
  }
- 
+
  // Remove any temporary messages on error
  if (data.temp_id) {
  messages.value = messages.value.filter(m => m.id !== data.temp_id);
  }
- 
+
  return;
  }
- 
+
  const actions = {
  chat_message: (data) => {
  console.log('Messaging.vue: Processing chat_message:', data);
- 
+
  // DEBUG: Log reply information in detail
  if (data.message.reply_to) {
  console.log('🔵 WebSocket: Message HAS reply_to data:', data.message.reply_to)
@@ -1894,7 +1894,7 @@ function handleWsMessage(data, scope) {
  } else {
  console.log('🔴 WebSocket: Message has NO reply_to data')
  }
- 
+
  // Remove temporary messages (both generic temp and specific temp_id)
  if (data.temp_id) {
  messages.value = messages.value.filter(m => m.id !== data.temp_id);
@@ -1904,48 +1904,48 @@ function handleWsMessage(data, scope) {
  messages.value = messages.value.filter(m => !m._isTemporary && !m.id.startsWith('temp-'));
  console.log('✅ Removed generic temporary messages');
  }
- 
+
  // Add message to current conversation if it's selected
  if (scope === 'private' && selectedConversation.value?.type === 'private') {
  const senderId = data.message.sender.id;
  const receiverId = data.message.receiver.id;
  const currentUserId = currentUser.value.id;
  const selectedUserId = selectedConversation.value.mate.id;
- 
+
  console.log('Messaging.vue: Message participants - sender:', senderId, 'receiver:', receiverId, 'current:', currentUserId, 'selected:', selectedUserId);
- 
+
  // 🔧 FIX: More strict message filtering to prevent cross-contamination
- const isMessageForCurrentConversation = 
- (senderId === currentUserId && receiverId === selectedUserId) || 
+ const isMessageForCurrentConversation =
+ (senderId === currentUserId && receiverId === selectedUserId) ||
  (senderId === selectedUserId && receiverId === currentUserId);
- 
+
  // 🔧 FIX: Additional validation to ensure message belongs to this conversation
  if (isMessageForCurrentConversation && data.message.receiver && data.message.sender) {
  console.log('✅ Messaging.vue: Adding message to conversation (REAL-TIME)');
- 
+
  // 🔧 FIX: Prevent duplicate messages with more comprehensive check
- const existingMessage = messages.value.find(m => 
- m.id === data.message.id || 
- (m.content === data.message.content && 
+ const existingMessage = messages.value.find(m =>
+ m.id === data.message.id ||
+ (m.content === data.message.content &&
  Math.abs(new Date(m.timestamp) - new Date(data.message.timestamp)) < 1000)
  );
  if (existingMessage) {
  console.log('� ️ Message already exists or duplicate detected, skipping:', data.message.id);
  return;
  }
- 
+
  // ✅ FIX: Create a deep copy to ensure reactivity
  const newMessage = JSON.parse(JSON.stringify(data.message));
- 
+
  // ✅ FIX: Ensure reply_to data is preserved
  if (data.message.reply_to) {
  console.log('✅ WebSocket: Preserving reply_to data for real-time display');
  newMessage.reply_to = data.message.reply_to;
  }
- 
+
  // Add the new message
  messages.value.push(newMessage);
- 
+
  // 🚀 SPEED: Invalidate cache when new message arrives
  const cacheKey = `private_${data.message.sender.id === userId.value ? data.message.receiver.id : data.message.sender.id}`;
  if (messageCache.has(cacheKey)) {
@@ -1953,14 +1953,14 @@ function handleWsMessage(data, scope) {
    prefetchedConversations.delete(cacheKey);
    console.log(`🚀 Cache invalidated for ${cacheKey} due to new message`);
  }
- 
+
  // 🔧 FIX: Optimized reactivity update to reduce lag
  nextTick(() => {
  // Only trigger reactivity if needed - reduced frequency to prevent lag
  if (newMessage.reply_to) {
  console.log('✅ Real-time: Message with reply_to added to UI:', newMessage.id);
  }
- 
+
  // 🔧 FIX: Debounced auto-scroll to reduce performance impact
  clearTimeout(window.autoScrollTimeout);
  window.autoScrollTimeout = setTimeout(() => {
@@ -1974,15 +1974,15 @@ function handleWsMessage(data, scope) {
  console.log('❌ Messaging.vue: Message NOT for current conversation - filtering out');
  }
  }
- 
- if (scope === 'group' && selectedConversation.value?.type === 'group' && 
+
+ if (scope === 'group' && selectedConversation.value?.type === 'group' &&
  selectedConversation.value?.group.id === data.message.group) {
  console.log('Messaging.vue: Adding group message to conversation');
- 
+
  // 🔧 FIX: Enhanced duplicate detection for group messages
- const existingMessage = messages.value.find(m => 
- m.id === data.message.id || 
- (m.content === data.message.content && 
+ const existingMessage = messages.value.find(m =>
+ m.id === data.message.id ||
+ (m.content === data.message.content &&
  m.sender.id === data.message.sender.id &&
  Math.abs(new Date(m.timestamp) - new Date(data.message.timestamp)) < 1000)
  );
@@ -1990,15 +1990,15 @@ function handleWsMessage(data, scope) {
  console.log('� ️ Group message already exists or duplicate detected, skipping:', data.message.id);
  return;
  }
- 
+
  // 🔧 FIX: Ensure message belongs to current group
  if (data.message.group !== selectedConversation.value.group.id) {
  console.log('❌ Group message not for current group - filtering out');
  return;
  }
- 
+
  messages.value.push(data.message);
- 
+
  // 🚀 SPEED: Invalidate group cache when new message arrives
  const groupCacheKey = `group_${data.message.group}`;
  if (messageCache.has(groupCacheKey)) {
@@ -2006,7 +2006,7 @@ function handleWsMessage(data, scope) {
    prefetchedConversations.delete(groupCacheKey);
    console.log(`🚀 Cache invalidated for ${groupCacheKey} due to new group message`);
  }
- 
+
  // 🔧 FIX: Optimized reactivity for group messages
  nextTick(() => {
  // Debounced auto-scroll for performance
@@ -2017,7 +2017,7 @@ function handleWsMessage(data, scope) {
  }, 100);
  });
  }
- 
+
  // Always update conversation list with latest message
  updateConversation(data.message);
  },
@@ -2027,9 +2027,9 @@ function handleWsMessage(data, scope) {
  const userId = data.user_id;
  const newStatus = data.status;
  const lastSeen = data.last_seen;
- 
+
  console.log(`🟢 Status update: User ${userId} → ${newStatus} at ${lastSeen}`);
- 
+
  // Update conversations list
  let conversationUpdated = false;
  conversations.value.forEach(conv => {
@@ -2043,9 +2043,9 @@ function handleWsMessage(data, scope) {
  console.log(`🟢 Updated conversation ${conv.mate.first_name} ${conv.mate.last_name} status to ${newStatus}`);
  }
  });
- 
+
  // Update selected conversation if it matches
- if (selectedConversation.value?.type === 'private' && 
+ if (selectedConversation.value?.type === 'private' &&
  selectedConversation.value.mate.id === userId) {
  if (!selectedConversation.value.mate.profile) {
  selectedConversation.value.mate.profile = {};
@@ -2054,7 +2054,7 @@ function handleWsMessage(data, scope) {
  selectedConversation.value.mate.profile.last_seen = lastSeen;
  console.log(`🟢 Updated selected conversation status to ${newStatus}`);
  }
- 
+
  // Update available mates list if needed
  if (availableMates.value.some(mate => mate.id === userId)) {
  availableMates.value.forEach(mate => {
@@ -2068,7 +2068,7 @@ function handleWsMessage(data, scope) {
  }
  });
  }
- 
+
  // Force Vue reactivity to update UI immediately
  if (conversationUpdated) {
  nextTick(() => {
@@ -2087,17 +2087,17 @@ function handleWsMessage(data, scope) {
  if (messageIndex !== -1) {
  console.log(`🔴 REAL-TIME EDIT: Found message at index ${messageIndex}`)
  console.log(`🔴 REAL-TIME EDIT: Updating content from "${messages.value[messageIndex].content}" to "${data.new_content}"`)
- 
+
  // Create a new object to trigger Vue reactivity
  const updatedMessage = {
  ...messages.value[messageIndex],
  content: data.new_content,
  edited_at: data.edited_at || new Date().toISOString()
  };
- 
+
  // Replace the message at the specific index to trigger reactivity
  messages.value.splice(messageIndex, 1, updatedMessage);
- 
+
  // Force Vue reactivity with multiple strategies
  nextTick(() => {
  // Force array reactivity
@@ -2121,16 +2121,16 @@ function handleWsMessage(data, scope) {
  if (messageIndex !== -1) {
  console.log(`📌 Messaging: Found message at index ${messageIndex}`)
  console.log(`📌 Messaging: Updating pin status to ${data.is_pinned}`)
- 
+
  // Create a new object to trigger Vue reactivity
  const updatedMessage = {
  ...messages.value[messageIndex],
  is_pinned: data.is_pinned
  }
- 
+
  // Replace the message at the specific index to trigger reactivity
  messages.value.splice(messageIndex, 1, updatedMessage)
- 
+
  // Force Vue reactivity
  nextTick(() => {
  messages.value = [...messages.value]
@@ -2143,25 +2143,25 @@ function handleWsMessage(data, scope) {
  },
  messages_read: (data) => {
  // 📋 REFERENCE: Private message read logic
- messages.value.forEach(m => { 
- if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true; 
+ messages.value.forEach(m => {
+ if (m.sender.id === selectedConversation.value?.mate.id) m.is_read = true;
  });
  },
  group_messages_read: (data) => {
  console.log('🔄 Messaging.vue: Group messages marked as read by user:', data.user_id, 'in group:', data.group_id);
- 
+
  // Handle two scenarios for real-time updates:
  // 1. If I'm in the same group chat - mark messages as read locally
  // 2. Mark messages I SENT as "read" when others mark them as read (real-time feedback)
- 
- if (selectedConversation.value?.type === 'group' && 
+
+ if (selectedConversation.value?.type === 'group' &&
  selectedConversation.value.group.id === parseInt(data.group_id)) {
- 
+
  // Scenario 1: I'm viewing this group chat - mark incoming messages as read
  if (data.user_id === currentUser.value.id) {
  // This is me marking messages as read - mark messages from others
  console.log('✅ I marked group messages as read - updating my local view');
- messages.value.forEach(m => { 
+ messages.value.forEach(m => {
  if (m.sender.id !== currentUser.value.id) {
  m.is_read = true;
  console.log('✅ Group message marked as read:', m.id);
@@ -2177,14 +2177,14 @@ function handleWsMessage(data, scope) {
  }
  });
  }
- 
+
  // Force Vue reactivity update
  nextTick(() => {
  messages.value = [...messages.value];
  console.log('✅ Real-time: Updated message read status in UI');
  });
  }
- 
+
  // Always refresh conversation list to sync unread counts from backend
  console.log('🔄 Refreshing group conversations to sync unread count from backend');
  fetchConversations();
@@ -2206,7 +2206,7 @@ function handleWsMessage(data, scope) {
  console.error('Messaging.vue: WebSocket error received:', data);
  // Remove the temporary message if there was an error
  messages.value = messages.value.filter(m => !m.id.startsWith('temp-'));
- 
+
  // If this was an edit error, we might need to revert optimistic updates
  if (data.error && data.error.includes('edit')) {
  console.error('Edit failed, consider reverting optimistic update');
@@ -2235,7 +2235,7 @@ function handleWsMessage(data, scope) {
  },
  user_unblocked: (data) => {
  console.log('🔓 Real-time: User unblocked event received:', data);
- 
+
  // This handler is for when the CURRENT USER gets unblocked by someone else
  // Update conversations to remove "Blocked you" status
  conversations.value.forEach(conv => {
@@ -2249,15 +2249,15 @@ function handleWsMessage(data, scope) {
  }
  }
  });
- 
+
  // Update selected conversation if it matches
- if (selectedConversation.value?.type === 'private' && 
+ if (selectedConversation.value?.type === 'private' &&
  selectedConversation.value.mate.id === data.unblocked_by) {
  console.log('🔓 Real-time: Removing "blocked you" status from selected conversation');
  selectedConversation.value.isBlockedByThem = false;
  selectedConversation.value.canSendMessage = true;
  }
- 
+
  // Force Vue reactivity to update UI immediately
  nextTick(() => {
  conversations.value = [...conversations.value];
@@ -2266,7 +2266,7 @@ function handleWsMessage(data, scope) {
  },
  user_blocked: (data) => {
  console.log('🚫 Real-time: User blocked event received:', data);
- 
+
  // This handler is for when the CURRENT USER gets blocked by someone else
  // Update conversations to show "Blocked you" status
  conversations.value.forEach(conv => {
@@ -2277,29 +2277,29 @@ function handleWsMessage(data, scope) {
  conv.lastMessage = 'You are blocked by this user';
  }
  });
- 
+
  // Update selected conversation if it matches
- if (selectedConversation.value?.type === 'private' && 
+ if (selectedConversation.value?.type === 'private' &&
  selectedConversation.value.mate.id === data.blocked_by) {
  console.log('🚫 Real-time: Adding "blocked you" status to selected conversation');
  selectedConversation.value.isBlockedByThem = true;
  selectedConversation.value.canSendMessage = false;
- 
+
  // Add a system message to the chat to notify the user
  const blockingMessage = {
  id: `system-${Date.now()}`,
  content: 'You have been blocked by this user. You cannot send messages.',
  timestamp: new Date().toISOString(),
  isSystemMessage: true,
- sender: { 
- id: 'system', 
- first_name: 'System', 
- last_name: '' 
+ sender: {
+ id: 'system',
+ first_name: 'System',
+ last_name: ''
  }
  };
  messages.value.push(blockingMessage);
  }
- 
+
  // Force Vue reactivity to update UI immediately
  nextTick(() => {
  conversations.value = [...conversations.value];
@@ -2308,9 +2308,9 @@ function handleWsMessage(data, scope) {
  },
  member_request_notification: (data) => {
  console.log('🔔 Real-time: Member request notification received:', data);
- 
+
  // Trigger reactive update for ChatInfoPanel
- if (selectedConversation.value?.type === 'group' && 
+ if (selectedConversation.value?.type === 'group' &&
  selectedConversation.value.group.id === data.group_id) {
  console.log('🔔 Real-time: Triggering pending requests refresh for current group');
  memberRequestNotificationTrigger.value++;
@@ -2318,27 +2318,27 @@ function handleWsMessage(data, scope) {
  },
  group_added_notification: (data) => {
  console.log('🔔 Real-time: Group added notification received:', data);
- 
+
  // Add system message to the chat if this is the current group
- if (selectedConversation.value?.type === 'group' && 
+ if (selectedConversation.value?.type === 'group' &&
  selectedConversation.value.group.id === data.group_id) {
  const systemMessage = {
  id: `system-${Date.now()}`,
  content: `${data.added_user_name} was added to the group`,
  timestamp: new Date().toISOString(),
  isSystemMessage: true,
- sender: { 
- id: 'system', 
- first_name: 'System', 
- last_name: '' 
+ sender: {
+ id: 'system',
+ first_name: 'System',
+ last_name: ''
  }
  };
  messages.value.push(systemMessage);
- 
+
  // Trigger group members refresh
  groupMemberUpdateTrigger.value++;
  }
- 
+
  // If the current user was added to a new group, refresh conversations
  if (data.added_user_id === authStore.user.id) {
  console.log('🔔 Real-time: Current user was added to a group, refreshing conversations');
@@ -2347,7 +2347,7 @@ function handleWsMessage(data, scope) {
  },
  request_response_notification: (data) => {
  console.log('🔔 Real-time: Request response notification received:', data);
- 
+
  // Show notification to requester about approval/rejection
  if (data.requester_id === authStore.user.id) {
  const action = data.status === 'approved' ? 'approved' : 'rejected';
@@ -2356,27 +2356,27 @@ function handleWsMessage(data, scope) {
  content: `Your request to add ${data.target_user_name} to the group was ${action}`,
  timestamp: new Date().toISOString(),
  isSystemMessage: true,
- sender: { 
- id: 'system', 
- first_name: 'System', 
- last_name: '' 
+ sender: {
+ id: 'system',
+ first_name: 'System',
+ last_name: ''
  }
  };
- 
+
  // Add to current conversation if it's the same group
- if (selectedConversation.value?.type === 'group' && 
+ if (selectedConversation.value?.type === 'group' &&
  selectedConversation.value.group.id === data.group_id) {
  messages.value.push(systemMessage);
  }
- 
+
  // Refresh conversations if user was approved (new member will show)
  if (data.status === 'approved') {
  fetchConversations();
  }
  }
- 
+
  // If current user is admin in the group, trigger refresh of pending requests
- if (selectedConversation.value?.type === 'group' && 
+ if (selectedConversation.value?.type === 'group' &&
  selectedConversation.value.group.id === data.group_id &&
  selectedConversation.value.group?.admins?.some(admin => admin.id === authStore.user.id)) {
  console.log('🔔 Real-time: Admin received request response, refreshing pending requests');
@@ -2385,23 +2385,23 @@ function handleWsMessage(data, scope) {
  },
  message_reaction: (data) => {
  console.log('👍 Real-time: Message reaction received:', data);
- 
+
  // Find and update the message with the new reaction data
  const messageToUpdate = messages.value.find(m => m.id === data.message_id);
  if (messageToUpdate) {
  console.log('👍 Real-time: Updating message reactions for:', data.message_id);
- 
+
  // Update the reaction_stats on the message
  if (data.reaction_stats) {
  messageToUpdate.reaction_stats = data.reaction_stats;
  }
- 
+
  // Force reactivity update
  nextTick(() => {
  messages.value = [...messages.value];
  console.log('✅ Real-time: Message reactions updated in UI');
  });
- 
+
  // Update conversation last activity (optional)
  updateConversation({
  sender: { id: data.user_id, first_name: data.user_name },
@@ -2416,30 +2416,30 @@ function handleWsMessage(data, scope) {
  console.log('👁️ Real-time: Received message_read_update:', data);
  console.log('👁️ Real-time: Current messages count:', messages.value.length);
  console.log('👁️ Real-time: Looking for message_id:', data.message_id);
- 
+
  // Find the message and update its read_by array
  const messageIndex = messages.value.findIndex(m => m.id === data.message_id);
  console.log('👁️ Real-time: Found message at index:', messageIndex);
- 
+
  if (messageIndex !== -1) {
  const message = messages.value[messageIndex];
  console.log('👁️ Real-time: Current message read_by:', message.read_by);
- 
+
  // Use the complete read_by array from the backend
  if (data.read_by) {
  // Create a completely new read_by array to ensure reactivity
  const newReadBy = [...data.read_by];
  console.log('👁️ Real-time: Updated complete read_by array for message:', data.message_id, 'with users:', newReadBy.map(r => r.first_name));
- 
+
  // Create a completely new message object to force Vue reactivity
  const updatedMessage = {
  ...message,
  read_by: newReadBy
  };
- 
+
  // Replace the message in the array
  messages.value[messageIndex] = updatedMessage;
- 
+
  // Force Vue reactivity with multiple approaches
  nextTick(() => {
  // Force re-render by creating new array reference
@@ -2447,21 +2447,21 @@ function handleWsMessage(data, scope) {
  console.log('✅ Real-time: Message read status FORCEFULLY updated in UI');
  console.log('✅ Real-time: New read_by count:', updatedMessage.read_by.length);
  });
- 
+
  } else {
  // Fallback to old format for backwards compatibility
  const currentReadBy = message.read_by ? [...message.read_by] : [];
- 
+
  const reader = data.reader || {
  id: data.user_id,
  first_name: data.user_name?.split(' ')[0] || 'Unknown',
  last_name: data.user_name?.split(' ')[1] || '',
  profile_picture: data.user_profile_picture
  };
- 
+
  // Check if this user has already read this message
  const existingReadIndex = currentReadBy.findIndex(r => r.id === reader.id);
- 
+
  if (existingReadIndex === -1) {
  // Add new read record
  currentReadBy.push({
@@ -2471,23 +2471,23 @@ function handleWsMessage(data, scope) {
  profile_picture: reader.profile_picture,
  read_at: data.read_at
  });
- 
+
  console.log('👁️ Real-time: Added read status for user:', reader.first_name, 'to message:', data.message_id);
  } else {
  // Update existing read record
  currentReadBy[existingReadIndex].read_at = data.read_at;
  console.log('👁️ Real-time: Updated read status for user:', reader.first_name, 'on message:', data.message_id);
  }
- 
+
  // Create a completely new message object to force Vue reactivity
  const updatedMessage = {
  ...message,
  read_by: currentReadBy
  };
- 
+
  // Replace the message in the array
  messages.value[messageIndex] = updatedMessage;
- 
+
  // Force Vue reactivity
  nextTick(() => {
  messages.value = [...messages.value];
@@ -2500,7 +2500,7 @@ function handleWsMessage(data, scope) {
  }
  }
  };
- 
+
  const action = actions[data.type || data.status];
  if (action) {
  console.log('🎯 Messaging.vue: Executing action for type:', data.type || data.status);
@@ -2519,7 +2519,7 @@ function updateConversationWithRequest(messageRequest) {
 // Function to handle real-time group creation notifications
 function handleGroupCreatedNotification(data) {
  console.log('🎉 Real-time: Group created notification received:', data);
- 
+
  try {
  // Transform the group data to match the conversation format
  const newGroupConversation = {
@@ -2530,26 +2530,26 @@ function handleGroupCreatedNotification(data) {
  timestamp: data.group.created_at || new Date().toISOString(),
  unreadCount: 0
  };
- 
+
  // Check if this group is already in the conversations list
- const existingGroupIndex = conversations.value.findIndex(conv => 
+ const existingGroupIndex = conversations.value.findIndex(conv =>
  conv.type === 'group' && conv.group.id === data.group.id
  );
- 
+
  if (existingGroupIndex === -1) {
  // Add the new group to the top of the conversations list
  conversations.value.unshift(newGroupConversation);
- 
+
  // Force Vue reactivity
  nextTick(() => {
  conversations.value = [...conversations.value];
  console.log('✅ Real-time: New group added to conversation list:', data.group.name);
  });
- 
+
  } else {
  console.log('Group already exists in conversations, skipping duplicate');
  }
- 
+
  } catch (error) {
  console.error('Error handling group created notification:', error);
  }
@@ -2558,52 +2558,52 @@ function handleGroupCreatedNotification(data) {
 // Function to handle real-time group member left notifications
 function handleGroupMemberLeftNotification(data) {
  console.log('👋 Real-time: Group member left notification received:', data);
- 
+
  try {
  // Check if this is for the current user (they left the group or were removed)
  if (data.user_left_group || data.group_id) {
  // Find the group conversation
- const conversationIndex = conversations.value.findIndex(conv => 
+ const conversationIndex = conversations.value.findIndex(conv =>
  conv.type === 'group' && conv.group.id === data.group_id
  );
- 
+
  if (conversationIndex !== -1) {
  // Remove the group from the conversation list (user left or was removed from group)
  conversations.value.splice(conversationIndex, 1);
- 
+
  // If this was the selected conversation, clear it
- if (selectedConversation.value && 
- selectedConversation.value.type === 'group' && 
+ if (selectedConversation.value &&
+ selectedConversation.value.type === 'group' &&
  selectedConversation.value.group.id === data.group_id) {
  selectedConversation.value = null;
  messages.value = [];
  showChatInfo.value = false;
  }
- 
+
  console.log('✅ Real-time: Removed group from conversation list after leaving/being removed');
  }
- } 
+ }
  // Handle system message for remaining members
  else if (data.system_message && data.left_user) {
  // Find the group conversation
- const conversationIndex = conversations.value.findIndex(conv => 
+ const conversationIndex = conversations.value.findIndex(conv =>
  conv.type === 'group' && conv.group.id === data.group_id
  );
- 
+
  if (conversationIndex !== -1) {
  const conversation = conversations.value[conversationIndex];
- 
+
  // Update the last message to show the system message
  conversation.lastMessage = data.system_message.content;
  conversation.timestamp = data.system_message.timestamp;
- 
+
  console.log('✅ Real-time: Updated group conversation with member left message');
- 
+
  // If this conversation is currently selected, add the system message to messages
- if (selectedConversation.value && 
- selectedConversation.value.type === 'group' && 
+ if (selectedConversation.value &&
+ selectedConversation.value.type === 'group' &&
  selectedConversation.value.group.id === data.group_id) {
- 
+
  const systemMessage = {
  id: data.system_message.id,
  content: data.system_message.content,
@@ -2612,10 +2612,10 @@ function handleGroupMemberLeftNotification(data) {
  group: data.group_id,
  isSystemMessage: true
  };
- 
+
  // Add the system message to the current messages
  messages.value.push(systemMessage);
- 
+
  // Scroll to bottom to show the new message
  nextTick(() => {
  scrollToBottom();
@@ -2623,7 +2623,7 @@ function handleGroupMemberLeftNotification(data) {
  }
  }
  }
- 
+
  } catch (error) {
  console.error('Error handling group member left notification:', error);
  }
@@ -2632,29 +2632,29 @@ function handleGroupMemberLeftNotification(data) {
 // Function to handle real-time group member added notifications
 function handleGroupMemberAddedNotification(data) {
  console.log('➕ Real-time: Group member added notification received:', data);
- 
+
  try {
  // Handle system message for existing members seeing the addition
  if (data.system_message && data.added_user) {
  // Find the group conversation
- const conversationIndex = conversations.value.findIndex(conv => 
+ const conversationIndex = conversations.value.findIndex(conv =>
  conv.type === 'group' && conv.group.id === data.group_id
  );
- 
+
  if (conversationIndex !== -1) {
  const conversation = conversations.value[conversationIndex];
- 
+
  // Update the last message to show the system message
  conversation.lastMessage = data.system_message.content;
  conversation.timestamp = data.system_message.timestamp;
- 
+
  console.log('✅ Real-time: Updated group conversation with member added message');
- 
+
  // If this conversation is currently selected, add the system message to messages
- if (selectedConversation.value && 
- selectedConversation.value.type === 'group' && 
+ if (selectedConversation.value &&
+ selectedConversation.value.type === 'group' &&
  selectedConversation.value.group.id === data.group_id) {
- 
+
  const systemMessage = {
  id: data.system_message.id,
  content: data.system_message.content,
@@ -2663,24 +2663,24 @@ function handleGroupMemberAddedNotification(data) {
  group: data.group_id,
  isSystemMessage: true
  };
- 
+
  // Add the system message to the current messages
  messages.value.push(systemMessage);
- 
+
  // Scroll to bottom to show the new message
  nextTick(() => {
  scrollToBottom();
  });
  }
- 
+
  // Move this conversation to the top of the list
  conversations.value.splice(conversationIndex, 1);
  conversations.value.unshift(conversation);
- 
+
  console.log('✅ Real-time: Group member added message processed');
  }
  }
- 
+
  } catch (error) {
  console.error('Error handling group member added notification:', error);
  }
@@ -2718,34 +2718,34 @@ const isRecentlyActive = (user) => {
  console.log(`isRecentlyActive: User ${user?.id} has no profile`);
  return false;
  }
- 
+
  // If backend status is explicitly offline, user is offline
  if (user.profile.status === 'offline') {
  console.log(`isRecentlyActive: User ${user.id} is offline per backend status`);
  return false;
  }
- 
+
  // If backend status is online, check if last_seen is reasonable
  if (user.profile.status === 'online') {
  if (!user.profile.last_seen) {
  console.log(`isRecentlyActive: User ${user.id} is online but no last_seen`);
  return true; // Trust backend status
  }
- 
+
  const lastSeen = new Date(user.profile.last_seen);
  const now = new Date();
  const diffMinutes = (now - lastSeen) / (1000 * 60);
- 
+
  // If backend says online but last seen is over 10 minutes ago, something's wrong
  if (diffMinutes > 10) {
  console.log(`isRecentlyActive: User ${user.id} backend says online but last_seen ${diffMinutes.toFixed(2)} min ago - treating as offline`);
  return false;
  }
- 
+
  console.log(`isRecentlyActive: User ${user.id} is online per backend, last_seen ${diffMinutes.toFixed(2)} min ago`);
  return true;
  }
- 
+
  // Default to offline for unknown status
  console.log(`isRecentlyActive: User ${user.id} has unknown status: ${user.profile.status}`);
  return false;
@@ -2753,20 +2753,20 @@ const isRecentlyActive = (user) => {
 
 const formatLastSeen = (user) => {
  if (!user?.profile?.last_seen) return 'Never seen';
- 
+
  const lastSeen = new Date(user.profile.last_seen);
  const now = new Date();
  const diffMinutes = (now - lastSeen) / (1000 * 60);
- 
+
  if (diffMinutes < 1) return 'Just now';
  if (diffMinutes < 60) return `${Math.floor(diffMinutes)} minutes ago`;
- 
+
  const diffHours = diffMinutes / 60;
  if (diffHours < 24) return `${Math.floor(diffHours)} hours ago`;
- 
+
  const diffDays = diffHours / 24;
  if (diffDays < 7) return `${Math.floor(diffDays)} days ago`;
- 
+
  return lastSeen.toLocaleDateString();
 };
 
@@ -2776,11 +2776,11 @@ const handleGlobalStatusUpdate = (event) => {
  console.log('Messaging.vue: Received global status update from window event:', data);
  console.log('Messaging.vue: Current conversations before update:', conversations.value);
  console.log('Messaging.vue: Selected conversation before update:', selectedConversation.value);
- 
+
  if (data.type === 'status_update') {
  const { user_id, status, last_seen } = data;
  console.log(`Messaging.vue: Processing status update for user ${user_id} to ${status}`);
- 
+
  triggerRef(availableMates);
  }
 };
@@ -2789,7 +2789,7 @@ const handleGlobalStatusUpdate = (event) => {
 function handleForwardComplete(result) {
  showForwardModal.value = false
  messageToForward.value = null
- 
+
  if (result.success) {
  // Show success toast/notification
  console.log('✅ Message forwarded successfully:', result.message)
@@ -2804,7 +2804,7 @@ function handleForwardComplete(result) {
 // === LIFECYCLE ===
 onMounted(async () => {
  console.log('Messaging.vue: Component mounted');
- 
+
  if (await validateToken()) {
  await fetchCurrentUser();
  await Promise.all([
@@ -2812,10 +2812,10 @@ onMounted(async () => {
  fetchPendingMessages(),
  fetchAvailableMates()
  ]);
- 
+
  setupWebSockets();
  selectLastConversation();
- 
+
  // 🔔 NOTIFICATION: Initialize messaging notification store
  // This ensures notification counts are ready when the messaging view is loaded
  try {
@@ -2824,10 +2824,10 @@ onMounted(async () => {
  } catch (error) {
  console.error('🔔 Messaging.vue: Failed to initialize notification store:', error);
  }
- 
+
  // Listen for global status updates
  window.addEventListener('statusUpdate', handleGlobalStatusUpdate);
- 
+
  // 📱 MOBILE: Initialize screen size detection
  checkScreenSize();
  window.addEventListener('resize', checkScreenSize);
@@ -2838,28 +2838,28 @@ onMounted(async () => {
 
 onUnmounted(() => {
  if (isDev) debugLog('Messaging.vue: Component unmounting - cleaning up resources');
- 
+
  // 🔧 FIX: Comprehensive cleanup to prevent memory leaks and lag
- 
+
  // Stop all heartbeat intervals (enhanced system)
  stopAllHeartbeats();
- 
+
  // Close all WebSocket connections with proper close codes
  if (privateWs.value) {
  privateWs.value.close(1000, 'Component unmounting');
  privateWs.value = null;
  }
- 
+
  if (groupWs.value) {
  groupWs.value.close(1000, 'Component unmounting');
  groupWs.value = null;
  }
- 
+
  if (notificationWs.value) {
  notificationWs.value.close(1000, 'Component unmounting');
  notificationWs.value = null;
  }
- 
+
  // Clear timeouts to prevent memory leaks
  clearTimeout(window.autoScrollTimeout);
  clearTimeout(window.groupAutoScrollTimeout);
@@ -2867,21 +2867,21 @@ onUnmounted(() => {
  clearTimeout(window.fetchConversationsTimeout);
  clearTimeout(window.scrollTimeout);
  clearTimeout(window.selectConversationTimeout);
- 
+
  // Remove global event listeners
  window.removeEventListener('statusUpdate', handleGlobalStatusUpdate);
  window.removeEventListener('user-status-update', handleGlobalStatusUpdate);
- 
+
  // 📱 MOBILE: Remove screen size detection listener
  window.removeEventListener('resize', checkScreenSize);
- 
+
  // Clear reactive data to free memory
  conversations.value = [];
  messages.value = [];
  searchResults.value = [];
  pendingMessages.value = [];
  selectedConversation.value = null;
- 
+
  if (isDev) debugLog('Messaging.vue: Cleanup completed - all resources freed');
 });
 </script>
@@ -2907,19 +2907,19 @@ onUnmounted(() => {
  .mobile-panel {
  min-width: 0;
  }
- 
+
  /* Mobile-specific back button styling */
  .mobile-back-button {
  backdrop-filter: blur(10px);
  background-color: rgba(255, 255, 255, 0.95);
  }
- 
+
  /* Mobile optimization for conversation list */
  .conversation-item:active {
  background-color: #f3f4f6;
  transform: scale(0.98);
  }
- 
+
  /* Mobile touch targets */
  .conversation-item {
  min-height: 72px;
@@ -2930,13 +2930,13 @@ onUnmounted(() => {
  user-select: none;
  -webkit-user-select: none;
  }
- 
+
  /* Fast mobile response - enhanced active state */
  .conversation-item:active {
  background-color: #e2e8f0;
  transform: scale(0.98);
  }
- 
+
  /* Mobile header adjustments */
  .mobile-header {
  padding-left: 60px; /* Space for back button */
@@ -2945,7 +2945,7 @@ onUnmounted(() => {
 
 /* Smooth panel transitions - faster for better mobile experience */
 .panel-transition {
- transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
+ transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1),
  opacity 0.15s ease-in-out,
  transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2956,16 +2956,16 @@ onUnmounted(() => {
  ::-webkit-scrollbar {
  width: 4px;
  }
- 
+
  ::-webkit-scrollbar-track {
  background: transparent;
  }
- 
+
  ::-webkit-scrollbar-thumb {
  background: rgba(156, 163, 175, 0.5);
  border-radius: 2px;
  }
- 
+
  /* Improve text selection on mobile */
  .conversation-item {
  -webkit-touch-callout: none;

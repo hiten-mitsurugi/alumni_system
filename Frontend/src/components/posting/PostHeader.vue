@@ -15,7 +15,7 @@
           <span :class="themeStore.isDarkMode ? 'text-gray-500' : 'text-slate-400'">•</span>
           <span
             :class="themeStore.isDarkMode ? 'capitalize font-medium cursor-pointer hover:bg-gray-600 transition-colors flex items-center space-x-1' : 'capitalize font-medium cursor-pointer hover:bg-slate-200 transition-colors flex items-center space-x-1'">
-            <span :class="themeStore.isDarkMode ? 'text-gray-400' : 'text-slate-500'" 
+            <span :class="themeStore.isDarkMode ? 'text-gray-400' : 'text-slate-500'"
                   v-html="getIconSVG(categories.find(c => c.value === post.content_category)?.icon || 'document')"></span>
             <span>{{ post.content_category }}</span>
           </span>
@@ -28,8 +28,8 @@
     </div>
 
     <!-- Post Menu -->
-    <PostMenu 
-      :post="post" 
+    <PostMenu
+      :post="post"
       @deleted="handlePostDeleted"
       @pinned="handlePostPinned"
       @reported="handlePostReported"

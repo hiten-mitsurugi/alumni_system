@@ -102,8 +102,8 @@
 }
 
 .alumni-sidebar-left {
-  left: 100px; /* Moved a little bit to the right */
   width: 330px; /* Moderately reduced width for balanced display */
+  /* Remove fixed left position to allow dynamic positioning */
 }
 
 .alumni-sidebar-right {

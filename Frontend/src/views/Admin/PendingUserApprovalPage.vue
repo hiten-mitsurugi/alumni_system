@@ -47,37 +47,42 @@ const closeModal = () => {
 
 const approveUser = async () => {
   if (!selectedUser.value) return;
-  
+
   // Store user details before potential modal close
   const userEmail = selectedUser.value.email;
   const userId = selectedUser.value.id;
-  
+
   try {
   console.log('Attempting to approve user:', userId);
   // Backend mounts auth_app under /api/auth/, our api client prefixes /api
   const response = await api.post(`/auth/approve-user/${userId}/`);
     console.log('Approval response:', response.data);
     console.log('Response status:', response.status);
-    
+
     // Check if response is successful (200-299 range)
     if (response.status >= 200 && response.status < 300) {
       // Remove from pending list immediately
       pendingUsers.value = pendingUsers.value.filter(u => u.id !== userId);
       closeModal();
-      
-      // Show success message - email is queued in background
+
+      // Show success message based on backend response
       const message = response.data.message || 'User approved successfully';
-      alert(`✅ ${message}\\n📧 Confirmation email is being sent to ${userEmail}\\n⚡ The approval was instant!`);
+      if (response.data.email_sent) {
+        alert(`✅ ${message}\n📧 Confirmation email sent to ${userEmail}`);
+      } else {
+        const emailError = response.data.email_error ? `\n\nEmail error: ${response.data.email_error}` : '';
+        alert(`✅ ${message}\n⚠️ Email notification failed to send.${emailError}`);
+      }
     } else {
       throw new Error(`Unexpected response status: ${response.status}`);
     }
-    
+
   } catch (error) {
     console.error('Failed to approve user:', error);
     console.error('Error response:', error.response?.data);
     console.error('Error status:', error.response?.status);
     console.error('Full error object:', error);
-    
+
     // More detailed error message
     let errorMessage = 'Failed to approve user. Please try again.';
     if (error.response?.data?.error) {
@@ -87,29 +92,33 @@ const approveUser = async () => {
     } else if (error.response?.status === 500) {
       errorMessage = 'Server error occurred. Please try again later.';
     }
-    
+
     alert(`❌ ${errorMessage}`);
   }
 };
 
 const rejectUser = async () => {
   if (!selectedUser.value) return;
-  
+
   if (!confirm(`Are you sure you want to reject ${selectedUser.value.first_name} ${selectedUser.value.last_name}'s application?\n\nThis will:\n- Delete their account permanently\n- Send them an email notification\n- They will need to reapply`)) {
     return;
   }
-  
+
   // Store user details before closeModal() sets selectedUser to null
   const userEmail = selectedUser.value.email;
   const userId = selectedUser.value.id;
-  
+
   try {
   const response = await api.post(`/auth/reject-user/${userId}/`);
     pendingUsers.value = pendingUsers.value.filter(u => u.id !== userId);
     closeModal();
-    
-    // Show success message - email is queued in background
-    alert(`✅ User application rejected.\\n📧 Notification email is being sent to ${userEmail}\\n⚡ The rejection was instant!`);
+
+    // Show success message with email status
+    if (response.data.email_sent) {
+      alert(`✅ User application rejected.\n📧 Notification email sent to ${userEmail}`);
+    } else {
+      alert(`✅ User application rejected.\n⚠️ Email notification failed to send.`);
+    }
   } catch (error) {
     console.error('Failed to reject user:', error);
     alert('❌ Failed to reject user. Please try again.');
@@ -127,7 +136,7 @@ const handleWebSocketMessage = (data) => {
       console.log('PendingUserApprovalPage: Invalid WebSocket data received:', data);
       return;
     }
-    
+
     // Try multiple ways to extract the message
     let message = '';
     if (data.message && typeof data.message === 'string') {
@@ -137,7 +146,7 @@ const handleWebSocketMessage = (data) => {
     } else if (typeof data === 'string') {
       message = data;
     }
-    
+
     // Only proceed if we have a valid string message
     if (message && typeof message === 'string') {
       if (message.includes('New alumni registered') ||

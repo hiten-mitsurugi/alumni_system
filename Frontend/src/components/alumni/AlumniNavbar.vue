@@ -1,19 +1,17 @@
 <template>
   <div :class="[
     'flex items-center justify-between px-4 py-3 transition-colors duration-200 border-b shadow-sm',
-    themeStore.isDarkMode 
-      ? 'bg-slate-800 border-slate-700' 
+    themeStore.isDarkMode
+      ? 'bg-slate-800 border-slate-700'
       : 'bg-white border-gray-200'
   ]">
     <LogoutLoading v-if="loggingOut" />
-    <!-- Left Section: Logo, Menu Button, and Search -->
-    <div :class="[
-      'flex items-center flex-1 gap-4 transition-all duration-200',
-      navbarLeftMargin
-    ]">
-      <!-- Mobile Menu Button -->
+    <!-- Left Section: Logo and Mobile Menu Button - Fixed Position -->
+    <div class="flex items-center gap-4">
+      <!-- Mobile/Tablet Menu Button - Hidden on mobile when showBurgerMenu is false -->
       <button
-        class="p-2 mr-2 text-gray-600 transition-colors rounded-lg lg:hidden dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
+        v-if="showBurgerMenu && (isMobile || isTablet)"
+        class="p-2 mr-2 text-gray-600 transition-colors rounded-lg hover:text-gray-900 dark:text-slate-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
         @click="$emit('openSidebar')"
         aria-label="Open menu"
       >
@@ -23,8 +21,12 @@
       </button>
       <img src="@/assets/logo3-removebg-preview.png" alt="Alumni System Logo" class="w-auto h-10" />
 
-      <!-- Search Bar -->
-      <div v-if="isHomePage" class="hidden md:flex w-72">
+      <!-- Search Bar - Positioned with margin when sidebar expands -->
+      <div v-if="isHomePage" :class="[
+        'hidden transition-all duration-200',
+        isMobile ? 'md:hidden' : 'md:flex w-72',
+        searchBarMargin
+      ]">
         <div class="relative w-full">
           <input :value="injectedSearchQuery" @input="injectedSearchQuery = $event.target.value" type="text"
             placeholder="Search alumni, posts..."
@@ -39,11 +41,14 @@
     </div>
 
 
-    <div class="flex items-center gap-3 mr-5">
-      <!-- Mobile Search Button -->
-            <!-- Mobile Search Button -->
-      <button v-if="isHomePage" @click="injectedToggleMobileSearch"
-        class="p-2 text-gray-600 transition-colors rounded-lg md:hidden dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
+    <!-- Right Section: Profile Card - Shifts with sidebar -->
+    <div :class="[
+      'flex items-center gap-3 mr-5 transition-all duration-200',
+      profileSectionMargin
+    ]">
+      <!-- Mobile Search Button - Show on mobile and tablet -->
+      <button v-if="isHomePage && (isMobile || isTablet)" @click="injectedToggleMobileSearch"
+        class="p-2 text-gray-600 transition-colors rounded-lg dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
         title="Search">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -75,17 +80,17 @@
         <button @click="notificationOpen = !notificationOpen"
           :class="[
             'relative p-2 transition-colors duration-200 rounded-lg',
-            themeStore.isDarkMode 
-              ? 'hover:bg-slate-700 text-slate-300' 
+            themeStore.isDarkMode
+              ? 'hover:bg-slate-700 text-slate-300'
               : 'hover:bg-gray-100 text-gray-600'
-          ]" 
+          ]"
           title="Notifications">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
           <!-- Notification Badge -->
-          <span v-if="unreadCount > 0" 
+          <span v-if="unreadCount > 0"
                 class="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-red-500 rounded-full">
             {{ unreadCount > 99 ? '99+' : unreadCount }}
           </span>
@@ -94,10 +99,10 @@
         <!-- Notification Dropdown -->
         <div v-if="notificationOpen"
              :class="[
-               'absolute right-0 z-50 w-96 mt-2 rounded-lg shadow-lg border max-h-96 overflow-y-auto',
-               themeStore.isDarkMode 
-                 ? 'bg-gray-800 border-gray-600' 
-                 : 'bg-white border-gray-200'
+               'absolute right-0 z-50 w-96 mt-2 rounded-lg border max-h-96 overflow-y-auto',
+               themeStore.isDarkMode
+                 ? 'bg-gray-800 border-gray-600 shadow-2xl shadow-black/20'
+                 : 'bg-white border-gray-200 shadow-lg shadow-gray-300/20'
              ]">
           <!-- Header -->
           <div :class="[
@@ -109,8 +114,13 @@
                 'text-lg font-semibold',
                 themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
               ]">Notifications</h3>
-              <button @click="markAllAsRead" 
-                      class="text-sm text-blue-600 hover:text-blue-700">
+              <button @click="markAllAsRead"
+                      :class="[
+                        'text-sm font-medium transition-colors',
+                        themeStore.isDarkMode 
+                          ? 'text-blue-400 hover:text-blue-300' 
+                          : 'text-blue-600 hover:text-blue-700'
+                      ]">
                 Mark all as read
               </button>
             </div>
@@ -118,7 +128,7 @@
 
           <!-- Notification List -->
           <div class="max-h-80 overflow-y-auto">
-            <div v-if="notifications.length === 0" 
+            <div v-if="notifications.length === 0"
                  class="px-4 py-8 text-center">
               <svg :class="[
                 'w-12 h-12 mx-auto mb-3',
@@ -133,7 +143,7 @@
             </div>
 
             <div v-else>
-              <div v-for="notification in notifications" 
+              <div v-for="notification in notifications"
                    :key="notification.id"
                    @click="markAsRead(notification.id)"
                    :class="[
@@ -164,7 +174,7 @@
                         'text-sm font-medium',
                         themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
                       ]">{{ notification.title }}</p>
-                      <span v-if="!notification.read" 
+                      <span v-if="!notification.read"
                             class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
                     </div>
                     <p :class="[
@@ -186,7 +196,12 @@
             'px-4 py-3 border-t',
             themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-200'
           ]">
-            <button class="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+            <button :class="[
+              'w-full text-center text-sm font-medium transition-colors',
+              themeStore.isDarkMode 
+                ? 'text-blue-400 hover:text-blue-300' 
+                : 'text-blue-600 hover:text-blue-700'
+            ]">
               View all notifications
             </button>
           </div>
@@ -205,7 +220,12 @@
 
         <!-- Dropdown Menu -->
         <div v-if="dropdownOpen"
-          class="absolute right-0 z-50 w-48 py-1 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-slate-800 dark:border-slate-700">
+          :class="[
+            'absolute right-0 z-50 w-48 py-1 mt-2 rounded-lg border',
+            themeStore.isDarkMode 
+              ? 'bg-slate-800 border-slate-700 shadow-2xl shadow-black/20'
+              : 'bg-white border-gray-200 shadow-lg shadow-gray-300/20'
+          ]">
           <router-link to="/alumni/my-profile"
             class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700" @click="dropdownOpen = false">
             <svg class="w-5 h-5 mr-3 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,6 +373,14 @@ const props = defineProps({
   isMobile: {
     type: Boolean,
     default: false
+  },
+  isTablet: {
+    type: Boolean,
+    default: false
+  },
+  showBurgerMenu: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -362,10 +390,16 @@ defineEmits(['toggleNotification', 'toggleMobileSearch', 'update:searchQuery'])
 // Check if we're on the home page to show search
 const isHomePage = computed(() => route.name === 'AlumniHome')
 
-// Compute navbar left margin based on sidebar state
-const navbarLeftMargin = computed(() => {
-  if (props.isMobile) return 'ml-4'
-  return props.sidebarExpanded ? 'ml-48' : 'ml-4'
+// Compute search bar margin based on sidebar state (optional subtle shift)
+const searchBarMargin = computed(() => {
+  if (props.isMobile || props.isTablet) return 'ml-0'
+  return props.sidebarExpanded ? 'ml-8' : 'ml-0'
+})
+
+// Compute profile section margin to shift right when sidebar expands
+const profileSectionMargin = computed(() => {
+  if (props.isMobile || props.isTablet) return 'mr-0'
+  return props.sidebarExpanded ? '-mr-44' : 'mr-0'
 })
 
 // Compute profile picture URL with cache-busting and better fallback
@@ -500,3 +534,41 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 })
 </script>
+
+<style scoped>
+/* Ensure proper dark mode shadows and prevent white shadow bleed */
+.dark .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode specific shadow for dropdowns */
+.dark .shadow-2xl.shadow-black\/20 {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* Enhanced text contrast in dark mode */
+.dark .text-gray-100 {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-gray-300 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+/* Ensure blue buttons are visible in dark mode */
+.dark .text-blue-400 {
+  color: #60a5fa !important;
+}
+
+.dark .text-blue-400:hover {
+  color: #93c5fd !important;
+}
+</style>

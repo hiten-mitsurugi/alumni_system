@@ -1,11 +1,11 @@
 <template>
-  <div :class="themeStore.isDarkMode ? 
-    (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4') : 
+  <div :class="themeStore.isDarkMode ?
+    (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4') :
     (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4')">
-    <div class="flex items-center gap-0 w-full justify-between">
+    <div class="flex items-center gap-0 w-full justify-center">
       <!-- Reactions -->
-      <div class="flex justify-center flex-1" style="overflow: visible;">
-        <div class="relative group flex justify-center w-full" style="overflow: visible;">
+      <div class="flex justify-center flex-1">
+        <div class="relative group flex justify-center w-full">
           <button
             @click="handleReaction('like')"
             :class="[
@@ -22,25 +22,27 @@
             <!-- Show emoji when reaction is selected -->
             <span v-if="selectedReaction" class="text-xl">{{ currentReactionEmoji }}</span>
 
+            <!-- Text label (hidden on mobile) -->
+            <span class="action-label hidden md:inline">{{ currentReactionLabel }}</span>
             <!-- Tooltip for desktop -->
             <span class="action-tooltip">React</span>
           </button>
 
           <!-- Reaction picker buttons -->
-          <div :class="['absolute bottom-full left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-300 flex gap-2 rounded-xl shadow-2xl p-3', isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100']" style="margin-bottom: -0.5rem; padding-bottom: 1rem;">
+          <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-200 flex gap-1 bg-white rounded-lg shadow-lg p-2">
             <button
               v-for="reaction in reactionTypes"
               :key="reaction.type"
               @click="handleReaction(reaction.type)"
-              :class="['reaction-emoji-btn flex items-center justify-center rounded-lg transition-all duration-200', isDark ? 'hover:bg-gray-700' : 'hover:bg-orange-50', size === 'small' ? 'w-12 h-12' : 'w-14 h-14']"
+              :class="['flex items-center justify-center rounded-md transition-all duration-150', isDark ? 'hover:bg-gray-600' : 'hover:bg-orange-100', size === 'small' ? 'w-8 h-8 text-base' : 'w-9 h-9 text-lg']"
               :title="reaction.label"
             >
-              <span :class="['reaction-emoji', size === 'small' ? 'text-3xl' : 'text-4xl']">{{ reaction.emoji }}</span>
+              <span :class="size === 'small' ? 'text-base filter drop-shadow-sm' : 'text-lg filter drop-shadow-sm'">{{ reaction.emoji }}</span>
             </button>
           </div>
         </div>
       </div>
-      
+
       <!-- Comment -->
       <div class="flex justify-center flex-1">
         <button
@@ -51,8 +53,9 @@
           <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
+          <!-- Text label (hidden on mobile) -->
+          <span class="action-label hidden md:inline">Comment</span>
           <span class="action-tooltip">Comment</span>
-          <span class="action-label sm:hidden">Comment</span>
         </button>
       </div>
 
@@ -66,23 +69,9 @@
           <svg class="action-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
           </svg>
+          <!-- Text label (hidden on mobile) -->
+          <span class="action-label hidden md:inline">Repost</span>
           <span class="action-tooltip">Repost</span>
-          <span class="action-label sm:hidden">Repost</span>
-        </button>
-      </div>
-
-      <!-- Copy Link -->
-      <div class="flex justify-center flex-1">
-        <button
-          @click="$emit('copy-link')"
-          class="action-btn action-neutral action-compact flex-1"
-          aria-label="Copy link"
-        >
-          <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-          <span class="action-tooltip">Copy Link</span>
-          <span class="action-label sm:hidden">Copy Link</span>
         </button>
       </div>
     </div>
@@ -90,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 
 // Theme store
@@ -115,7 +104,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['react-to-post', 'comment-clicked', 'copy-link', 'share-post'])
+const emit = defineEmits(['react-to-post', 'comment-clicked', 'share-post'])
 
 // Reaction types - LinkedIn style
 const reactionTypes = [
@@ -344,50 +333,6 @@ button:focus {
 .group:hover .group-hover\:opacity-100 {
   opacity: 1;
   transform: translateY(-5px);
-  z-index: 9999; /* Ensure it appears above everything */
-}
-
-/* Add invisible bridge between button and picker to maintain hover state */
-.group::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3rem; /* Creates hover bridge */
-  z-index: 1;
-  pointer-events: none;
-}
-
-.group:hover::before {
-  pointer-events: auto;
-}
-
-/* Reaction emoji button styling */
-.reaction-emoji-btn {
-  position: relative;
-  cursor: pointer;
-  border: 2px solid transparent;
-}
-
-.reaction-emoji-btn:hover {
-  transform: scale(1.3);
-  border-color: rgba(249, 115, 22, 0.3); /* orange-500 with transparency */
-}
-
-.dark .reaction-emoji-btn:hover,
-:is([data-theme="dark"]) .reaction-emoji-btn:hover {
-  border-color: rgba(251, 146, 60, 0.3); /* orange-400 with transparency */
-}
-
-.reaction-emoji {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.reaction-emoji-btn:hover .reaction-emoji {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-  transform: translateY(-2px);
 }
 
 /* Enhanced card shadows */
@@ -410,42 +355,59 @@ button:focus {
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
-  /* Ensure buttons are evenly spaced on mobile */
-  .justify-between {
+  /* Ensure 3 buttons are evenly spaced on mobile */
+  .justify-center {
     justify-content: space-around;
   }
-  
+
   /* Compact button sizing on mobile */
   .space-x-1 > :not([hidden]) ~ :not([hidden]) {
     margin-left: 0.25rem;
   }
-  
+
   /* Make sure all buttons fit within mobile viewport */
   button {
     min-width: 0;
     flex-shrink: 1;
   }
-  
+
   /* Reduce padding on very small screens */
   .px-2 {
     padding-left: 0.375rem;
     padding-right: 0.375rem;
   }
-  
+
   .py-1\.5 {
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
   }
-  
+
   /* Ensure text doesn't wrap */
   span {
     white-space: nowrap;
   }
-  
+
   /* Mobile-specific button adjustments */
   .text-xs {
     font-size: 0.7rem;
     line-height: 1rem;
+  }
+
+  /* Hide text labels on mobile - icons only */
+  .action-label {
+    display: none !important;
+  }
+
+  /* Increase icon size slightly on mobile for better touch targets */
+  .action-icon {
+    width: 1.375rem; /* 22px */
+    height: 1.375rem; /* 22px */
+  }
+
+  /* Better spacing for 3-column layout on mobile */
+  .flex-1 {
+    flex: 1 1 33.333333%;
+    max-width: 33.333333%;
   }
 }
 </style>

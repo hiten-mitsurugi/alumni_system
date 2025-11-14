@@ -5,14 +5,14 @@
     // Mobile: Always show collapsed (w-20), expand to w-64 when toggled
     isExpanded ? 'w-64' : 'w-20',
     // Theme-aware classes
-    themeStore.isDarkMode 
-      ? 'bg-gray-800 text-white border-gray-700' 
+    themeStore.isDarkMode
+      ? 'bg-gray-800 text-white border-gray-700'
       : 'bg-white text-gray-800 border-gray-200'
   ]">
     <div :class="[
       'flex items-center justify-between p-4 border-b',
-      themeStore.isDarkMode 
-        ? 'bg-gray-800 border-gray-700' 
+      themeStore.isDarkMode
+        ? 'bg-gray-800 border-gray-700'
         : 'bg-white border-gray-200'
     ]">
       <span v-if="isExpanded" :class="[
@@ -52,7 +52,7 @@ import {
   Users,
   MessageCircle,
   FileText,
-  Settings
+  //Settings
 } from 'lucide-vue-next'
 
 const messagingNotificationStore = useMessagingNotificationStore()

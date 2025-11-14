@@ -68,7 +68,7 @@
             class="w-full h-full object-cover"
             muted
           />
-          
+
           <!-- "+X more" overlay ONLY on 4th image when there are more than 4 images -->
           <div
             v-if="index === 3 && mediaFiles.length > 4"
@@ -118,14 +118,14 @@ const handleImageError = (event) => {
     clientWidth: event.target.clientWidth,
     clientHeight: event.target.clientHeight
   })
-  
+
   // Try to diagnose the issue
   if (event.target.src.includes('blob:')) {
     console.error('❌ Blob URL detected - this usually means the URL was revoked or invalid')
   } else if (!event.target.src.startsWith('http')) {
     console.error('❌ Relative URL detected - might need absolute URL')
   }
-  
+
   event.target.src = '/default-avatar.png' // Fallback image
   event.target.alt = 'Image not available'
 }
@@ -138,7 +138,7 @@ const handleImageLoad = (event) => {
     clientWidth: event.target.clientWidth,
     clientHeight: event.target.clientHeight
   })
-  
+
   const computedStyles = window.getComputedStyle(event.target)
   console.log('🎨 Critical CSS properties:', {
     display: computedStyles.display,
@@ -151,14 +151,14 @@ const handleImageLoad = (event) => {
     mixBlendMode: computedStyles.mixBlendMode,
     zIndex: computedStyles.zIndex
   })
-  
+
   // Check if image is actually visible
   const rect = event.target.getBoundingClientRect()
   console.log('📍 Image position:', rect)
-  
+
   // Store reference to avoid null errors
   const imageElement = event.target
-  
+
   // Force visibility and remove any potential issues
   if (imageElement && imageElement.style) {
     imageElement.style.filter = 'none'
@@ -187,7 +187,7 @@ onMounted(() => {
         thumbnail_url: media.thumbnail_url,
         full_object: media
       })
-      
+
       // Test if the URL is accessible
       if (media.file_url) {
         fetch(media.file_url, { method: 'HEAD' })
@@ -271,7 +271,7 @@ img {
     grid-template-rows: auto auto !important;
     width: 100% !important;
   }
-  
+
   .media-item {
     display: block !important;
     width: 100% !important;
@@ -279,42 +279,42 @@ img {
     min-height: 120px !important;
     max-height: 200px !important;
   }
-  
+
   /* Reduce max height for mobile */
   .max-h-\[400px\] {
     max-height: 300px !important;
   }
-  
+
   /* Adjust fixed heights for mobile */
   img[style*="height: 400px"] {
     height: 250px !important;
   }
-  
+
   img[style*="height: 199px"] {
     height: 124px !important;
   }
-  
+
   /* Better gap spacing on mobile */
   .gap-0\.5 {
     gap: 2px;
   }
-  
+
   .gap-1 {
     gap: 4px;
   }
-  
+
   /* Ensure proper aspect ratio on mobile */
   .aspect-square {
     aspect-ratio: 1 / 1;
     min-height: 120px;
   }
-  
+
   /* More overlay text size for mobile */
   .text-xl {
     font-size: 1rem !important;
     line-height: 1.5rem !important;
   }
-  
+
   .text-2xl {
     font-size: 1.25rem !important;
     line-height: 1.75rem !important;
@@ -356,7 +356,7 @@ img {
   .cursor-pointer {
     touch-action: manipulation;
   }
-  
+
   /* Better touch targets */
   .absolute.inset-0 {
     min-height: 44px;

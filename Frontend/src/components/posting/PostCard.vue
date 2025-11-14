@@ -1,42 +1,77 @@
 <template>
   <div
-    :class="themeStore.isDarkMode ? 'bg-gray-700 border border-gray-600 text-gray-100 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-visible mb-3 md:mb-4 lg:mb-6 w-full mx-auto' : 'bg-white border border-slate-100 text-slate-900 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-visible mb-3 md:mb-4 lg:mb-6 w-full mx-auto'">
+    :class="[
+      'transition-all duration-300 hover:shadow-md overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full',
+      'border border-l-0 border-r-0 md:border-l md:border-r md:rounded-lg md:shadow-sm lg:rounded-xl lg:shadow-lg',
+      'md:mx-auto md:hover:shadow-lg lg:hover:shadow-xl',
+      themeStore.isDarkMode
+        ? 'bg-gray-700 border-gray-600 text-gray-100'
+        : 'bg-white border-slate-100 text-slate-900'
+    ]"
+  >
     <!-- Post Header -->
-    <PostHeader 
-      :post="post" 
-      :categories="categories" 
+    <PostHeader
+      :post="post"
+      :categories="categories"
       @deleted="handlePostDeleted"
       @pinned="handlePostPinned"
       @reported="handlePostReported"
     />
 
     <!-- Post Content -->
-    <div :class="themeStore.isDarkMode ? 'px-3 md:px-4 lg:px-6 cursor-pointer' : 'px-3 md:px-4 lg:px-6 cursor-pointer'" @click="openPostModal">
-      <h2 v-if="post.title" :class="themeStore.isDarkMode ? 'text-sm md:text-base lg:text-lg font-semibold text-gray-100 mb-2 leading-snug' : 'text-sm md:text-base lg:text-lg font-semibold text-slate-900 mb-2 leading-snug'">{{ post.title }}</h2>
-      <div :class="themeStore.isDarkMode ? 'text-sm md:text-base text-gray-300 whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed' : 'text-sm md:text-base text-slate-800 whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed'">{{ post.content }}</div>
+    <div :class="[
+      'px-3 md:px-4 lg:px-6 cursor-pointer',
+      themeStore.isDarkMode ? '' : ''
+    ]" @click="openPostModal">
+      <h2 v-if="post.title" :class="[
+        'font-semibold mb-2 leading-snug text-clamp-base md:text-base lg:text-lg',
+        themeStore.isDarkMode ? 'text-gray-100' : 'text-slate-900'
+      ]">{{ post.title }}</h2>
+      <div :class="[
+        'whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed text-clamp-sm md:text-sm lg:text-base',
+        themeStore.isDarkMode ? 'text-gray-300' : 'text-slate-800'
+      ]">{{ post.content }}</div>
 
       <!-- Shared Post Display -->
-      <div v-if="post.shared_post" :class="themeStore.isDarkMode ? 'border border-gray-600 rounded-lg p-2 md:p-3 mb-3 md:mb-4 bg-gray-600' : 'border border-slate-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4 bg-slate-50'">
+      <div v-if="post.shared_post" :class="[
+        'border rounded-lg p-2 md:p-3 mb-3 md:mb-4',
+        themeStore.isDarkMode ? 'border-gray-600 bg-gray-600' : 'border-slate-200 bg-slate-50'
+      ]">
         <div class="flex items-center space-x-2 mb-2">
           <img :src="post.shared_post.user?.profile_picture || '/default-avatar.png'" alt="Profile"
-            :class="themeStore.isDarkMode ? 'w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border border-gray-700' : 'w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border border-slate-300'" />
-          <span :class="themeStore.isDarkMode ? 'text-xs md:text-sm font-medium text-gray-200' : 'text-xs md:text-sm font-medium text-slate-700'">
+            :class="[
+              'w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full object-cover border',
+              themeStore.isDarkMode ? 'border-gray-700' : 'border-slate-300'
+            ]" />
+          <span :class="[
+            'font-medium text-clamp-xs md:text-xs lg:text-sm',
+            themeStore.isDarkMode ? 'text-gray-200' : 'text-slate-700'
+          ]">
             {{ post.shared_post.user?.first_name }} {{ post.shared_post.user?.last_name }}
           </span>
-          <span :class="themeStore.isDarkMode ? 'text-xs text-gray-300' : 'text-xs text-slate-500'">{{ formatTimeAgo(post.shared_post.created_at) }}</span>
+          <span :class="[
+            'text-clamp-xs md:text-xs',
+            themeStore.isDarkMode ? 'text-gray-300' : 'text-slate-500'
+          ]">{{ formatTimeAgo(post.shared_post.created_at) }}</span>
         </div>
-        <h3 v-if="post.shared_post.title" :class="themeStore.isDarkMode ? 'text-sm md:text-base font-semibold text-gray-100 mb-2' : 'text-sm md:text-base font-semibold text-slate-900 mb-2'">{{ post.shared_post.title }}
+        <h3 v-if="post.shared_post.title" :class="[
+          'font-semibold mb-2 text-clamp-sm md:text-sm lg:text-base',
+          themeStore.isDarkMode ? 'text-gray-100' : 'text-slate-900'
+        ]">{{ post.shared_post.title }}
         </h3>
-        <p :class="themeStore.isDarkMode ? 'text-xs md:text-sm text-gray-200 leading-relaxed' : 'text-xs md:text-sm text-slate-700 leading-relaxed'">{{ post.shared_post.content }}</p>
+        <p :class="[
+          'leading-relaxed text-clamp-xs md:text-xs lg:text-sm',
+          themeStore.isDarkMode ? 'text-gray-200' : 'text-slate-700'
+        ]">{{ post.shared_post.content }}</p>
       </div>
 
       <!-- Media Files (Clickable to open modal) -->
       <div v-if="hasMedia" class="cursor-pointer relative rounded-lg overflow-hidden" @click="openPostModal">
-        <MediaDisplay 
-          :media-files="post.media_files" 
+        <MediaDisplay
+          :media-files="post.media_files"
           :alt-text="post.title || 'Post image'"
           display-mode="card"
-          @media-click="openPostModal" 
+          @media-click="openPostModal"
         />
       </div>
     </div>
@@ -51,7 +86,7 @@
             :post-id="post.id"
             @open-reactions-modal="openReactionsModal"
           />
-          
+
           <!-- Legacy reaction display (fallback) -->
           <span v-if="!post.reactions_summary && post.likes_count > 0" class="flex items-center space-x-1 font-medium">
             <div class="flex -space-x-1 text-sm md:text-base">
@@ -64,7 +99,7 @@
             <span class="text-blue-600">{{ post.likes_count }} reactions</span>
           </span>
         </div>
-        
+
         <div class="flex items-center space-x-1 md:space-x-2 lg:space-x-3">
           <button v-if="post.comments_count > 0" @click="openPostModal"
             class="font-medium text-green-600 hover:text-green-800 transition-colors text-xs">
@@ -83,10 +118,8 @@
     </div>
 
     <!-- Action Buttons -->
-    <div style="overflow: visible; position: relative; z-index: 10;">
-      <PostActions :post-id="post.id" :selected-reaction="selectedReaction" @react-to-post="handleReaction"
-        @comment-clicked="openPostModal" @copy-link="$emit('copy-link', post.id)" />
-    </div>
+    <PostActions :post-id="post.id" :selected-reaction="selectedReaction" @react-to-post="handleReaction"
+      @comment-clicked="openPostModal" @share-post="handleShare" />
 
     <!-- Quick Comment Preview (if comments exist) -->
     <div v-if="previewComments.length > 0" :class="themeStore.isDarkMode ? 'px-3 md:px-4 lg:px-6 pb-2 bg-gray-700' : 'px-3 md:px-4 lg:px-6 pb-2 bg-white'">
@@ -185,7 +218,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['react-to-post', 'add-comment', 'copy-link', 'open-modal', 'reaction-updated', 'deleted', 'pinned', 'reported'])
+const emit = defineEmits(['react-to-post', 'add-comment', 'share-post', 'open-modal', 'reaction-updated', 'deleted', 'pinned', 'reported'])
 
 // Local state
 const showReactionsModal = ref(false)
@@ -201,8 +234,8 @@ const previewComments = computed(() => {
 })
 
 const hasEngagement = computed(() => {
-  return props.post.likes_count > 0 || 
-         props.post.comments_count > 0 || 
+  return props.post.likes_count > 0 ||
+         props.post.comments_count > 0 ||
          props.post.shares_count > 0 ||
          (props.post.reactions_summary && props.post.reactions_summary.total_count > 0)
 })
@@ -217,7 +250,11 @@ const handleReaction = (postId, reactionType) => {
   emit('react-to-post', postId, reactionType)
 }
 
-const openReactionsModal = (postId) => {
+const handleShare = (postId) => {
+  emit('share-post', postId)
+}
+
+const openReactionsModal = () => {
   showReactionsModal.value = true
 }
 

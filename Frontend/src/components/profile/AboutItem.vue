@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center py-3 hover:bg-gray-50 rounded-lg px-2 -mx-2 group">
+  <div :class="[
+    'flex items-center px-2 py-3 -mx-2 rounded-lg group transition-colors',
+    themeStore.isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+  ]">
     <!-- Icon -->
     <div class="flex-shrink-0 mr-4">
       <!-- Inline SVGs for social media brand icons -->
@@ -16,8 +19,8 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5 text-pink-500"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.974.974 1.246 2.242 1.308 3.608.058 1.266.069 1.646.069 4.85s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.308 3.608-.974.974-2.242 1.246-3.608 1.308-1.266.058-1.646.069-4.85.069s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.308-.974-.974-1.246-2.242-1.308-3.608-.058-1.266-.069-1.646-.069-4.85s.012-3.584.07-4.85c.062-1.366.334-2.633 1.308-3.608.974-.974 2.242-1.246 3.608-1.308 1.266-.058 1.646-.069 4.85-.069zm0-2.163c-3.259 0-3.667.012-4.947.07-1.276.058-2.687.334-3.678 1.325-.991.991-1.267 2.402-1.325 3.678-.058 1.28-.07 1.688-.07 4.947s.012 3.667.07 4.947c.058 1.276.334 2.687 1.325 3.678.991.991 2.402 1.267 3.678 1.325 1.28.058 1.688.07 4.947.07s3.667-.012 4.947-.07c1.276-.058 2.687-.334 3.678-1.325.991-.991 1.267-2.402 1.325-3.678.058-1.28.07-1.688.07-4.947s-.012-3.667-.07-4.947c-.058-1.276-.334-2.687-1.325-3.678-.991-.991-2.402-1.267-3.678-1.325-1.28-.058-1.688-.07-4.947-.07zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a3.999 3.999 0 1 1 0-7.998 3.999 3.999 0 0 1 0 7.998zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
       </template>
       <template v-else>
-        <component 
-          :is="iconComponent" 
+        <component
+          :is="iconComponent"
           class="w-5 h-5 text-gray-600"
         />
       </template>
@@ -33,31 +36,41 @@
           v-model="editValue"
           @keydown.enter="saveField"
           @keydown.escape="cancelEdit"
-          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          :class="[
+            'w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            themeStore.isDarkMode 
+              ? 'bg-gray-700 border-gray-600 text-gray-100' 
+              : 'bg-white border-gray-300 text-gray-900'
+          ]"
           auto-focus
         >
           <option value="">Select {{ fieldLabel }}</option>
-          <option 
-            v-for="option in choiceOptions" 
-            :key="option.value" 
+          <option
+            v-for="option in choiceOptions"
+            :key="option.value"
             :value="option.value"
           >
             {{ option.label }}
           </option>
         </select>
-        
+
         <!-- Textarea for text areas -->
         <textarea
           v-else-if="isTextArea"
           v-model="editValue"
           @keydown.enter.ctrl="saveField"
           @keydown.escape="cancelEdit"
-          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          :class="[
+            'w-full p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500',
+            themeStore.isDarkMode 
+              ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' 
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+          ]"
           :rows="3"
           :placeholder="`Enter ${fieldLabel}...`"
           auto-focus
         />
-        
+
         <!-- Regular input -->
         <input
           v-else
@@ -65,22 +78,32 @@
           @keydown.enter="saveField"
           @keydown.escape="cancelEdit"
           :type="inputType"
-          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          :class="[
+            'w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            themeStore.isDarkMode 
+              ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' 
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+          ]"
           :placeholder="`Enter ${fieldLabel}...`"
           auto-focus
         />
-        
+
         <!-- Edit Controls -->
         <div class="flex justify-end gap-2">
           <button
             @click="cancelEdit"
-            class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+            :class="[
+              'px-3 py-1 text-sm transition-colors',
+              themeStore.isDarkMode 
+                ? 'text-gray-300 hover:text-gray-100' 
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
           >
             Cancel
           </button>
           <button
             @click="saveField"
-            class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            class="px-3 py-1 text-sm text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             Save
           </button>
@@ -91,80 +114,110 @@
       <div v-else class="flex items-center justify-between">
         <div class="flex-grow">
           <!-- URL fields (show as links) -->
-          <a 
+          <a
             v-if="isUrl && displayValue"
             :href="displayValue"
             target="_blank"
-            class="text-blue-600 hover:text-blue-700 hover:underline break-all"
+            class="text-blue-600 break-all hover:text-blue-700 hover:underline"
           >
             {{ displayValue }}
           </a>
-          
+
           <!-- Regular fields -->
-          <div v-else-if="displayValue" class="text-gray-900">
-            <div class="font-medium text-sm text-gray-600 mb-1">{{ fieldLabel }}</div>
+          <div v-else-if="displayValue" :class="[
+            themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
+          ]">
+            <div :class="[
+              'mb-1 text-sm font-medium',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            ]">{{ fieldLabel }}</div>
             <div :class="isTextArea ? 'whitespace-pre-wrap' : ''">
               {{ formatValue(displayValue) }}
             </div>
           </div>
-          
+
           <!-- Empty state for own profile -->
-          <div v-else-if="isOwnProfile" class="text-gray-400">
-            <div class="font-medium text-sm text-gray-600 mb-1">{{ fieldLabel }}</div>
-            <button @click="startEditing" class="text-blue-600 hover:text-blue-700 text-sm">
+          <div v-else-if="isOwnProfile" :class="[
+            themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-400'
+          ]">
+            <div :class="[
+              'mb-1 text-sm font-medium',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            ]">{{ fieldLabel }}</div>
+            <button @click="startEditing" class="text-sm text-blue-600 hover:text-blue-700">
               Add {{ fieldLabel.toLowerCase() }}
             </button>
           </div>
         </div>
 
         <!-- Edit/Privacy controls for own profile -->
-        <div v-if="isOwnProfile" class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div v-if="isOwnProfile" class="flex items-center gap-2 transition-opacity opacity-0 group-hover:opacity-100">
           <!-- Privacy indicator -->
           <div class="relative">
-            <button 
+            <button
               @click="toggleVisibilityMenu"
               :class="visibilityButtonClass"
-              class="p-1 rounded transition-colors"
+              class="p-1 transition-colors rounded"
               :title="`Privacy: ${visibilityDisplay}`"
             >
               <EyeIcon v-if="(fieldData?.visibility || 'connections_only') === 'everyone'" class="w-4 h-4" />
               <LockClosedIcon v-else-if="(fieldData?.visibility || 'connections_only') === 'only_me'" class="w-4 h-4" />
               <ShieldCheckIcon v-else class="w-4 h-4" />
             </button>
-            
+
             <!-- Privacy Menu - positioned relative to the privacy button -->
-            <div 
-              v-if="showVisibilityMenu" 
-              class="absolute right-0 top-8 z-10 w-48 bg-white border border-gray-200 rounded-lg shadow-lg"
+            <div
+              v-if="showVisibilityMenu"
+              :class="[
+                'absolute right-0 z-10 w-48 border rounded-lg shadow-lg top-8',
+                themeStore.isDarkMode 
+                  ? 'bg-gray-800 border-gray-600' 
+                  : 'bg-white border-gray-200'
+              ]"
               @click.stop
             >
               <div class="p-2">
-                <div class="text-xs font-medium text-gray-500 mb-2">Who can see this?</div>
+                <div :class="[
+                  'mb-2 text-xs font-medium',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">Who can see this?</div>
                 <button
                   v-for="option in visibilityOptions"
                   :key="option.value"
                   @click="changeVisibility(option.value)"
                   :class="[
                     'w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left',
-                    fieldData?.visibility === option.value 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'hover:bg-gray-50 text-gray-700'
+                    fieldData?.visibility === option.value
+                      ? themeStore.isDarkMode 
+                        ? 'bg-blue-900/30 text-blue-300' 
+                        : 'bg-blue-50 text-blue-700'
+                      : themeStore.isDarkMode
+                        ? 'hover:bg-gray-700 text-gray-300'
+                        : 'hover:bg-gray-50 text-gray-700'
                   ]"
                 >
                   <component :is="option.icon" class="w-4 h-4 mr-2" />
                   <div>
                     <div class="font-medium">{{ option.label }}</div>
-                    <div class="text-xs text-gray-500">{{ option.description }}</div>
+                    <div :class="[
+                      'text-xs',
+                      themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                    ]">{{ option.description }}</div>
                   </div>
                 </button>
               </div>
             </div>
           </div>
-          
+
           <!-- Edit button -->
-          <button 
+          <button
             @click="startEditing"
-            class="p-1 text-gray-500 hover:text-blue-600 rounded transition-colors"
+            :class="[
+              'p-1 transition-colors rounded',
+              themeStore.isDarkMode 
+                ? 'text-gray-400 hover:text-blue-400' 
+                : 'text-gray-500 hover:text-blue-600'
+            ]"
             title="Edit"
           >
             <PencilIcon class="w-4 h-4" />
@@ -177,15 +230,16 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { 
+import { useThemeStore } from '@/stores/theme'
+import {
   PencilIcon,
-  GlobeAltIcon, 
-  UserGroupIcon, 
-  UsersIcon, 
+  GlobeAltIcon,
+  // UserGroupIcon,
+  UsersIcon,
   LockClosedIcon,
   EyeIcon,
   ShieldCheckIcon,
-  PlusIcon,
+  // PlusIcon,
   // Content icons
   DocumentTextIcon,
   BriefcaseIcon,
@@ -199,6 +253,8 @@ import {
   UserIcon,
   HeartIcon
 } from '@heroicons/vue/24/outline'
+
+const themeStore = useThemeStore()
 
 // Inline SVGs for brand icons
 const LinkedInIcon = {
@@ -306,18 +362,18 @@ const choiceOptions = computed(() => {
 
 const displayValue = computed(() => {
   if (!props.fieldData?.value) return null
-  
+
         // If backend sends { value, display }, always show display in view mode
         if (typeof props.fieldData.value === 'object' && props.fieldData.value.display) {
           return props.fieldData.value.display
         }
-        
+
         // If just a string, try to map to label for choice fields
         if (isChoiceField.value) {
           const choice = choiceOptions.value.find(option => option.value === props.fieldData.value)
           return choice ? choice.label : props.fieldData.value
         }
-        
+
         return props.fieldData.value
 })
 
@@ -333,11 +389,6 @@ const visibilityDisplay = computed(() => {
   return option?.label || 'For Connections'
 })
 
-const visibilityIcon = computed(() => {
-  const option = visibilityOptions.find(opt => opt.value === props.fieldData?.visibility)
-  return option?.icon || UsersIcon
-})
-
 const visibilityButtonClass = computed(() => {
   const visibility = props.fieldData?.visibility || 'connections_only'
   const classes = {
@@ -351,7 +402,7 @@ const visibilityButtonClass = computed(() => {
 // Methods
 function formatValue(value) {
   if (!value) return ''
-  
+
   // Format dates
   if (props.fieldName === 'birth_date' && typeof value === 'string') {
     try {
@@ -364,22 +415,22 @@ function formatValue(value) {
       return value
     }
   }
-  
+
   return value
 }
 
 function startEditing() {
   if (!props.isOwnProfile) return
-  
+
   isEditing.value = true
-  
+
   // For choice fields, use the raw value
   if (isChoiceField.value) {
     editValue.value = props.fieldData?.value || ''
   } else {
     // For other fields, handle object values
-    editValue.value = typeof props.fieldData?.value === 'object' 
-      ? props.fieldData.value?.value || '' 
+    editValue.value = typeof props.fieldData?.value === 'object'
+      ? props.fieldData.value?.value || ''
       : props.fieldData?.value || ''
   }
 }
@@ -394,7 +445,7 @@ function saveField() {
     cancelEdit()
     return
   }
-  
+
   emit('update-field', props.fieldName, editValue.value)
   isEditing.value = false
   editValue.value = ''

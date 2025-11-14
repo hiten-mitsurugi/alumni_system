@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, nextTick, provide } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, onMounted, onUnmounted, computed, provide } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useThemeStore } from '@/stores/theme';
 import axios from 'axios';
@@ -10,7 +10,6 @@ import '@/components/css/AlumniHome.css';
 
 // Import posting components
 import PostCreateForm from '@/components/posting/PostCreateForm.vue';
-import CategoryTabs from '@/components/posting/CategoryTabs.vue';
 import PostCard from '@/components/posting/PostCard.vue';
 import PostModal from '@/components/posting/PostModal.vue';
 import NotificationToast from '@/components/posting/NotificationToast.vue';
@@ -19,8 +18,15 @@ import NotificationToast from '@/components/posting/NotificationToast.vue';
 import ProfileCard from '@/components/alumni/ProfileCard.vue';
 import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnectionsWidget.vue';
 
+// Props
+const props = defineProps({
+  sidebarExpanded: {
+    type: Boolean,
+    default: false
+  }
+})
+
 const router = useRouter();
-const route = useRoute();
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
 
@@ -31,9 +37,7 @@ const activeTab = ref('all');
 const selectedCategory = ref('all');
 const selectedReaction = ref({});
 const comments = ref({});
-const showComments = ref({});
 const notifications = ref([]);
-const notification = ref(null);
 const showCreateForm = ref(false);
 const showMobileSearch = ref(false);
 const isLoading = ref(false);
@@ -50,16 +54,19 @@ const currentPostIndex = ref(0);
 // Current user computed
 const currentUser = computed(() => authStore.user);
 
+// Sidebar state computed
+const sidebarExpanded = computed(() => props.sidebarExpanded);
+
 // Icon component mapper
 const getIconSVG = (iconName) => {
   const icons = {
-    grid: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>`,
-    chat: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>`,
-    megaphone: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>`,
-    calendar: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`,
-    newspaper: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>`,
-    briefcase: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 002 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2V8a2 2 0 012-2z"></path></svg>`,
-    document: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`
+    grid: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>`,
+    chat: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>`,
+    megaphone: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>`,
+    calendar: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`,
+    newspaper: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>`,
+    briefcase: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 002 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2V8a2 2 0 012-2z"></path></svg>`,
+    document: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`
   };
   return icons[iconName] || icons.document;
 };
@@ -77,6 +84,18 @@ const getBackendBaseUrl = () => {
   const host = (hostname === 'localhost' || hostname === '127.0.0.1') ? hostname : hostname;
   return `${protocol}//${host}:8000`;
 };
+
+const getProfilePictureUrl = (profilePicture) => {
+  if (!profilePicture) return null;
+  // If already a full URL, return as is
+  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
+    return profilePicture;
+  }
+  // If relative path, prepend dynamic base URL
+  const BASE_URL = getBackendBaseUrl();
+  return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`;
+};
+
 const BASE_URL = getBackendBaseUrl();
 const categories = [
   { value: 'all', label: 'All Posts', icon: 'grid' },
@@ -86,15 +105,6 @@ const categories = [
   { value: 'news', label: 'News', icon: 'newspaper' },
   { value: 'job', label: 'Job Posting', icon: 'briefcase' },
   { value: 'others', label: 'Others', icon: 'document' }
-];
-
-const reactionTypes = [
-  { type: 'like', emoji: '👍', label: 'Like' },
-  { type: 'love', emoji: '❤️', label: 'Love' },
-  { type: 'laugh', emoji: '😂', label: 'Laugh' },
-  { type: 'wow', emoji: '😮', label: 'Wow' },
-  { type: 'sad', emoji: '😢', label: 'Sad' },
-  { type: 'angry', emoji: '😠', label: 'Angry' }
 ];
 
 // Computed
@@ -254,7 +264,7 @@ const createPost = async (postData) => {
 
     // Add files if any (backend expects 'media_files')
     if (postData.files && postData.files.length > 0) {
-      postData.files.forEach((file, index) => {
+      postData.files.forEach((file) => {
         formData.append('media_files', file);
       });
     }
@@ -553,39 +563,195 @@ onUnmounted(() => {
     'min-h-screen alumni-home-container',
     themeStore.isDarkMode ? 'bg-gray-900' : 'bg-white'
   ]">
-    <!-- Responsive Grid Layout -->
-    <div class="alumni-home-grid">
-      <!-- Left Sidebar: Profile Card -->
-      <aside class="alumni-sidebar alumni-sidebar-left">
-        <div class="sidebar-content">
-          <ProfileCard
-            @edit-profile="editProfile"
-            @view-profile="viewProfile"
-          />
-        </div>
-      </aside>
+    <!-- Desktop Layout (md and up) -->
+    <div class="hidden md:block">
+      <!-- Responsive Grid Layout -->
+      <div class="alumni-home-grid">
+        <!-- Left Sidebar: Profile Card -->
+        <aside :class="[
+          'alumni-sidebar alumni-sidebar-left transition-all duration-200',
+          sidebarExpanded ? 'left-72' : 'left-24'
+        ]">
+          <div class="sidebar-content">
+            <ProfileCard
+              @edit-profile="editProfile"
+              @view-profile="viewProfile"
+            />
+          </div>
+        </aside>
 
-      <!-- Center Column: Main Feed -->
-      <main class="alumni-main-content">
-        <div class="main-content-wrapper">
-          <div class="space-y-4 md:space-y-6">
-            <!-- Category Tabs -->
+        <!-- Center Column: Main Feed -->
+        <main class="alumni-main-content">
+          <div class="main-content-wrapper">
+            <div class="space-y-4 md:space-y-6">
+              <!-- Category Tabs -->
+              <div :class="[
+                'overflow-hidden border rounded-lg shadow-sm sm:rounded-xl backdrop-blur-sm',
+                themeStore.isDarkMode
+                  ? 'bg-gray-800/95 border-gray-700'
+                  : 'bg-white/95 border-gray-200'
+              ]">
+                <div :class="[
+                  'flex w-full',
+                  themeStore.isDarkMode ? 'border-b border-gray-700/50' : 'border-b border-gray-200/50'
+                ]">
+                  <button
+                    v-for="category in categories"
+                    :key="category.value"
+                    @click="selectedCategory = category.value; activeTab = category.value"
+                    :class="[
+                      'flex items-center justify-center px-3 py-3 text-xs sm:text-sm font-medium transition-all duration-300 border-b-2 text-center relative overflow-hidden group flex-1',
+                      selectedCategory === category.value
+                        ? themeStore.isDarkMode
+                          ? 'text-orange-400 border-orange-400 bg-orange-400/10'
+                          : 'text-orange-600 border-orange-500 bg-orange-50/80'
+                        : themeStore.isDarkMode
+                          ? 'text-gray-400 border-transparent hover:text-orange-400 hover:border-orange-400/50 hover:bg-orange-400/5'
+                          : 'text-gray-600 border-transparent hover:text-orange-600 hover:border-orange-500/50 hover:bg-orange-50/50'
+                    ]"
+                  >
+                    <!-- Subtle animation background -->
+                    <div :class="[
+                      'absolute inset-0 transform transition-transform duration-300 ease-out',
+                      selectedCategory === category.value
+                        ? 'scale-100 opacity-100'
+                        : 'scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-50',
+                      themeStore.isDarkMode ? 'bg-gradient-to-r from-orange-400/5 to-orange-500/5' : 'bg-gradient-to-r from-orange-50 to-orange-100/50'
+                    ]"></div>
+                    <div class="flex flex-col items-center space-y-1 relative z-10">
+                      <div :class="[
+                        'transition-transform duration-200',
+                        selectedCategory === category.value ? 'transform scale-110' : 'group-hover:transform group-hover:scale-105',
+                        selectedCategory === category.value
+                          ? (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
+                          : (themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400')
+                      ]" v-html="getIconSVG(category.icon)"></div>
+                      <span class="hidden text-xs truncate sm:block font-medium">{{ category.label }}</span>
+
+                      <!-- Active indicator dot -->
+                      <div v-if="selectedCategory === category.value" :class="[
+                        'absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-300',
+                        themeStore.isDarkMode ? 'bg-orange-400' : 'bg-orange-500'
+                      ]"></div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Desktop Post Create -->
+              <PostCreateForm
+                :user-profile-picture="currentUser?.profile_picture"
+                :categories="categories"
+                :is-posting="isPosting"
+                @create-post="handleCreatePost"
+                ref="postCreateForm"
+              />
+
+              <!-- Posts Feed -->
+              <div class="space-y-4 md:space-y-6">
+                <PostCard
+                  v-for="post in filteredPosts"
+                  :key="post.id"
+                  :post="post"
+                  :categories="categories"
+                  :selected-reaction="selectedReaction[post.id]"
+                  :comments="comments[post.id] || post.recent_comments || []"
+                  :user-profile-picture="currentUser?.profile_picture"
+                  :current-user-id="currentUser?.id"
+                  @react-to-post="reactToPost"
+                  @add-comment="addComment"
+                  @share-post="sharePost"
+                  @copy-link="copyPostLink"
+                  @open-modal="openPostModal"
+                  @reaction-updated="handleReactionUpdated"
+                />
+              </div>
+
+              <!-- Loading State -->
+              <div v-if="isLoading" class="flex justify-center py-8">
+                <div class="flex items-center space-x-2 text-gray-500">
+                  <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Loading posts...</span>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-if="filteredPosts.length === 0 && !isLoading" class="py-12 text-center">
+                <div :class="[
+                  'p-8 border shadow-sm rounded-xl',
+                  themeStore.isDarkMode
+                    ? 'bg-gray-800 border-gray-700'
+                    : 'bg-white border-gray-200'
+                ]">
+                  <svg :class="[
+                    'w-12 h-12 mx-auto mb-4',
+                    themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
+                  <h3 :class="[
+                    'mb-2 text-lg font-semibold',
+                    themeStore.isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                  ]">No Posts Yet</h3>
+                  <p :class="[
+                    'mb-4 text-sm',
+                    themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  ]">
+                    {{ searchQuery ? 'Try different search terms' : 'Be the first to share something!' }}
+                  </p>
+                  <button
+                    v-if="!searchQuery"
+                    @click="showCreateForm = true"
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-500"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Post
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Sidebar: Suggested Connections -->
+        <aside :class="[
+          'alumni-sidebar alumni-sidebar-right transition-all duration-200',
+          sidebarExpanded ? 'right-6' : 'right-6'
+        ]">
+          <div class="sidebar-content">
+            <SuggestedConnectionsWidget @connect="handleConnect" />
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Mobile Layout (below md) -->
+    <div class="block md:hidden">
+      <div class="w-full min-h-screen overflow-x-hidden">
+        <div class="w-full">
+          <div class="space-y-0 pb-4">
+            <!-- Category Tabs (Mobile) -->
             <div :class="[
-              'overflow-hidden border rounded-lg shadow-sm sm:rounded-xl backdrop-blur-sm',
-              themeStore.isDarkMode 
-                ? 'bg-gray-800/95 border-gray-700' 
+              'w-full shadow-sm backdrop-blur-sm border-t border-b border-l-0 border-r-0',
+              themeStore.isDarkMode
+                ? 'bg-gray-800/95 border-gray-700'
                 : 'bg-white/95 border-gray-200'
             ]">
               <div :class="[
-                'grid grid-cols-7',
-                themeStore.isDarkMode ? 'border-b border-gray-700/50' : 'border-b border-gray-200/50'
-              ]">
+                'flex overflow-x-auto scrollbar-hide px-0',
+                themeStore.isDarkMode ? '' : ''
+              ]" style="scrollbar-width: none; -ms-overflow-style: none;">
                 <button
                   v-for="category in categories"
                   :key="category.value"
                   @click="selectedCategory = category.value; activeTab = category.value"
                   :class="[
-                    'flex items-center justify-center px-2 py-3 text-xs sm:text-sm font-medium transition-all duration-300 border-b-2 text-center relative overflow-hidden group',
+                    'flex items-center justify-center px-4 py-4 text-xs font-medium transition-all duration-300 border-b-2 text-center relative overflow-hidden group touch-manipulation flex-shrink-0 whitespace-nowrap min-w-0',
                     selectedCategory === category.value
                       ? themeStore.isDarkMode
                         ? 'text-orange-400 border-orange-400 bg-orange-400/10'
@@ -594,39 +760,131 @@ onUnmounted(() => {
                         ? 'text-gray-400 border-transparent hover:text-orange-400 hover:border-orange-400/50 hover:bg-orange-400/5'
                         : 'text-gray-600 border-transparent hover:text-orange-600 hover:border-orange-500/50 hover:bg-orange-50/50'
                   ]"
+                  :style="{ minWidth: `${100 / categories.length}vw` }"
+                  :aria-label="category.label"
+                  :title="category.label"
                 >
                   <!-- Subtle animation background -->
                   <div :class="[
                     'absolute inset-0 transform transition-transform duration-300 ease-out',
-                    selectedCategory === category.value 
-                      ? 'scale-100 opacity-100' 
+                    selectedCategory === category.value
+                      ? 'scale-100 opacity-100'
                       : 'scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-50',
                     themeStore.isDarkMode ? 'bg-gradient-to-r from-orange-400/5 to-orange-500/5' : 'bg-gradient-to-r from-orange-50 to-orange-100/50'
                   ]"></div>
-                  <div class="flex flex-col items-center space-y-1 relative z-10">
-                    <div :class="[
-                      'transition-transform duration-200',
-                      selectedCategory === category.value ? 'transform scale-110' : 'group-hover:transform group-hover:scale-105',
-                      selectedCategory === category.value 
-                        ? (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
-                        : (themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400')
-                    ]" v-html="getIconSVG(category.icon)"></div>
-                    <span class="hidden text-xs truncate sm:block font-medium">{{ category.label }}</span>
-                    
-                    <!-- Active indicator dot -->
-                    <div v-if="selectedCategory === category.value" :class="[
-                      'absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-300',
-                      themeStore.isDarkMode ? 'bg-orange-400' : 'bg-orange-500'
-                    ]"></div>
+
+                  <!-- Icon Only for Mobile -->
+                  <div :class="[
+                    'relative z-10 transition-transform duration-200 flex items-center justify-center',
+                    selectedCategory === category.value ? 'transform scale-110' : 'group-hover:transform group-hover:scale-105',
+                    selectedCategory === category.value
+                      ? (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
+                      : (themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400')
+                  ]">
+                    <div class="w-5 h-5" v-html="getIconSVG(category.icon)"></div>
                   </div>
+
+                  <!-- Active indicator dot -->
+                  <div v-if="selectedCategory === category.value" :class="[
+                    'absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-0.5 rounded-full transition-all duration-300',
+                    themeStore.isDarkMode ? 'bg-orange-400' : 'bg-orange-500'
+                  ]"></div>
                 </button>
+              </div>
+            </div>
+
+            <!-- Mobile Post Create Section -->
+            <div :class="[
+              'w-full border-b px-4 py-3',
+              themeStore.isDarkMode
+                ? 'bg-gray-800/95 border-gray-700'
+                : 'bg-white/95 border-gray-200'
+            ]">
+              <button
+                @click="showCreateForm = true"
+                :class="[
+                  'w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 text-left',
+                  themeStore.isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 border border-gray-600'
+                    : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                ]"
+              >
+                <!-- User Avatar -->
+                <img
+                  :src="getProfilePictureUrl(currentUser?.profile_picture) || '/default-avatar.png'"
+                  :alt="`${currentUser?.first_name} ${currentUser?.last_name}`"
+                  class="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
+                  :class="themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-200'"
+                >
+
+                <!-- Share Text -->
+                <div :class="[
+                  'flex-1 text-left',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
+                  <span class="text-base">Share your thoughts...</span>
+                </div>
+
+                <!-- Camera Icon -->
+                <div :class="[
+                  'flex-shrink-0',
+                  themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                ]">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+              </button>
+            </div>
+
+            <!-- Posts Feed (Mobile) -->
+            <div class="w-full">
+              <div v-if="isLoading" class="flex justify-center py-8">
+                <div class="w-8 h-8 border-b-2 border-orange-600 rounded-full animate-spin"></div>
+              </div>
+
+              <div v-else-if="filteredPosts.length === 0" :class="[
+                'py-8 text-center px-4',
+                themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              ]">
+                <p>No posts to show yet.</p>
+                <p class="mt-2 text-sm">Be the first to share something!</p>
+                <button
+                  @click="showCreateForm = true"
+                  class="inline-flex items-center px-4 py-2 mt-4 text-sm font-medium text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-500"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Post
+                </button>
+              </div>
+
+              <div v-else class="divide-y" :class="themeStore.isDarkMode ? 'divide-gray-700' : 'divide-gray-200'">
+                <PostCard
+                  v-for="post in filteredPosts"
+                  :key="post.id"
+                  :post="post"
+                  :current-user-id="currentUser?.id"
+                  :categories="categories"
+                  :selected-reaction="selectedReaction[post.id]"
+                  :comments="comments[post.id] || post.recent_comments || []"
+                  :user-profile-picture="currentUser?.profile_picture"
+                  @react-to-post="reactToPost"
+                  @add-comment="addComment"
+                  @share-post="sharePost"
+                  @copy-link="copyPostLink"
+                  @open-modal="openPostModal"
+                  @reaction-updated="handleReactionUpdated"
+                />
               </div>
             </div>
 
             <!-- Mobile Post Create Modal -->
             <div
               v-if="showCreateForm"
-              class="fixed inset-0 z-50 flex items-center justify-center p-4 md:hidden bg-black/50"
+              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
               @click.self="showCreateForm = false"
             >
               <div class="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto" @click.stop>
@@ -653,207 +911,12 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-
-            <!-- Desktop Post Create -->
-            <div class="hidden md:block">
-              <PostCreateForm
-                :user-profile-picture="currentUser?.profile_picture"
-                :categories="categories"
-                :is-posting="isPosting"
-                @create-post="handleCreatePost"
-                ref="postCreateForm"
-              />
-            </div>
-
-            <!-- Posts Feed -->
-            <div class="space-y-4 md:space-y-6">
-              <PostCard
-                v-for="post in filteredPosts"
-                :key="post.id"
-                :post="post"
-                :categories="categories"
-                :selected-reaction="selectedReaction[post.id]"
-                :comments="comments[post.id] || post.recent_comments || []"
-                :user-profile-picture="currentUser?.profile_picture"
-                :current-user-id="currentUser?.id"
-                @react-to-post="reactToPost"
-                @add-comment="addComment"
-                @share-post="sharePost"
-                @copy-link="copyPostLink"
-                @open-modal="openPostModal"
-                @reaction-updated="handleReactionUpdated"
-              />
-            </div>
-
-            <!-- Loading State -->
-            <div v-if="isLoading" class="flex justify-center py-8">
-              <div class="flex items-center space-x-2 text-gray-500">
-                <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Loading posts...</span>
-              </div>
-            </div>
-
-            <!-- Empty State -->
-            <div v-if="filteredPosts.length === 0 && !isLoading" class="py-12 text-center">
-              <div :class="[
-                'p-8 border shadow-sm rounded-xl',
-                themeStore.isDarkMode 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-white border-gray-200'
-              ]">
-                <svg :class="[
-                  'w-12 h-12 mx-auto mb-4',
-                  themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                </svg>
-                <h3 :class="[
-                  'mb-2 text-lg font-semibold',
-                  themeStore.isDarkMode ? 'text-gray-200' : 'text-gray-800'
-                ]">No Posts Yet</h3>
-                <p :class="[
-                  'mb-4 text-sm',
-                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                ]">
-                  {{ searchQuery ? 'Try different search terms' : 'Be the first to share something!' }}
-                </p>
-                <button
-                  v-if="!searchQuery"
-                  @click="showCreateForm = true"
-                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-500"
-                >
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  Create Post
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <!-- Right Sidebar: Suggested Connections -->
-      <aside class="alumni-sidebar alumni-sidebar-right">
-        <div class="sidebar-content">
-          <SuggestedConnectionsWidget @connect="handleConnect" />
-        </div>
-      </aside>
-    </div>
-
-    <!-- Mobile Layout: Stacked for mobile/tablet -->
-    <div class="max-w-sm px-2 mx-auto alumni-mobile-layout">
-      <div class="max-w-sm px-2 mx-auto mobile-content-wrapper">
-  <div class="mt-0 space-y-4">
-          <!-- Category Tabs -->
-          <div :class="[
-            'overflow-hidden border rounded-lg shadow-sm backdrop-blur-sm',
-            themeStore.isDarkMode 
-              ? 'bg-gray-800/95 border-gray-700' 
-              : 'bg-white/95 border-gray-200'
-          ]">
-            <div :class="[
-              'grid grid-cols-4 sm:grid-cols-7',
-              themeStore.isDarkMode ? 'border-b border-gray-700/50' : 'border-b border-gray-200/50'
-            ]">
-              <button
-                v-for="category in categories"
-                :key="category.value"
-                @click="selectedCategory = category.value; activeTab = category.value"
-                :class="[
-                  'flex items-center justify-center px-1 py-3 text-xs font-medium transition-all duration-300 border-b-2 text-center relative overflow-hidden group',
-                  selectedCategory === category.value
-                    ? themeStore.isDarkMode
-                      ? 'text-orange-400 border-orange-400 bg-orange-400/10'
-                      : 'text-orange-600 border-orange-500 bg-orange-50/80'
-                    : themeStore.isDarkMode
-                      ? 'text-gray-400 border-transparent hover:text-orange-400 hover:border-orange-400/50 hover:bg-orange-400/5'
-                      : 'text-gray-600 border-transparent hover:text-orange-600 hover:border-orange-500/50 hover:bg-orange-50/50'
-                ]"
-              >
-                <!-- Subtle animation background -->
-                <div :class="[
-                  'absolute inset-0 transform transition-transform duration-300 ease-out',
-                  selectedCategory === category.value 
-                    ? 'scale-100 opacity-100' 
-                    : 'scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-50',
-                  themeStore.isDarkMode ? 'bg-gradient-to-r from-orange-400/5 to-orange-500/5' : 'bg-gradient-to-r from-orange-50 to-orange-100/50'
-                ]"></div>
-                
-                <span :class="[
-                  'truncate relative z-10 transition-transform duration-200',
-                  selectedCategory === category.value ? 'transform scale-105 font-semibold' : 'group-hover:transform group-hover:scale-102'
-                ]">{{ category.label }}</span>
-                
-                <!-- Active indicator dot -->
-                <div v-if="selectedCategory === category.value" :class="[
-                  'absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-300',
-                  themeStore.isDarkMode ? 'bg-orange-400' : 'bg-orange-500'
-                ]"></div>
-              </button>
-            </div>
-          </div>
-
-          <!-- Posts Feed Only -->
-          <div class="space-y-4">
-            <div v-if="isLoading" class="flex justify-center py-8">
-              <div class="w-8 h-8 border-b-2 border-orange-600 rounded-full animate-spin"></div>
-            </div>
-
-            <div v-else-if="filteredPosts.length === 0" :class="[
-              'py-8 text-center',
-              themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            ]">
-              <p>No posts to show yet.</p>
-              <p class="mt-2 text-sm">Be the first to share something!</p>
-            </div>
-
-            <template v-else>
-              <PostCard
-                v-for="post in filteredPosts"
-                :key="post.id"
-                :post="post"
-                :current-user-id="currentUser?.id"
-                :categories="categories"
-                :selected-reaction="selectedReaction[post.id]"
-                @react="(reactionType) => reactToPost(post.id, reactionType)"
-                @comment="() => { fetchCommentsForPost(post.id); showComments[post.id] = !showComments[post.id]; }"
-                @share="sharePost"
-                @copy-link="copyPostLink"
-                @open-modal="openPostModal"
-                @reaction-updated="handleReactionUpdated"
-              />
-            </template>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Notifications -->
-    <div v-if="notification" class="fixed z-50 max-w-sm top-20 right-4">
-      <div
-        :class="[
-          'p-4 rounded-lg shadow-lg border-l-4',
-          notification.type === 'success' ? 'bg-orange-50 border-orange-400 text-orange-600' :
-          notification.type === 'error' ? 'bg-red-50 border-red-400 text-red-800' :
-          'bg-orange-50 border-orange-400 text-orange-800'
-        ]"
-      >
-        <div class="flex items-center">
-          <span class="flex-1">{{ notification.message }}</span>
-          <button @click="notification = null" class="ml-2 text-gray-400 hover:text-gray-600">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Post Modal -->
+    <!-- Post Modal (Single Instance) -->
     <PostModal
       v-if="showModal && selectedPost"
       :is-open="showModal"
@@ -875,29 +938,7 @@ onUnmounted(() => {
       @reaction-updated="handleReactionUpdated"
     />
 
-    <!-- Post Modal -->
-    <PostModal
-      v-if="showModal && selectedPost"
-      :is-open="showModal"
-      :post="selectedPost"
-      :comments="comments[selectedPost.id] || []"
-      :current-index="currentPostIndex"
-      :total-posts="filteredPosts.length"
-      :user-profile-picture="currentUser?.profile_picture"
-      :categories="categories"
-      :selected-reaction="selectedReaction[selectedPost.id]"
-      :current-user-id="currentUser?.id"
-      @close="closePostModal"
-      @react-to-post="reactToPost"
-      @add-comment="addComment"
-      @share-post="sharePost"
-      @copy-link="copyPostLink"
-      @load-comments="fetchCommentsForPost"
-      @navigate="navigateToPost"
-      @reaction-updated="handleReactionUpdated"
-    />
-
-    <!-- Notifications -->
+    <!-- Notifications (Single Instance) -->
     <div v-if="notifications.length > 0" class="fixed z-50 space-y-2 top-20 right-4">
       <NotificationToast
         v-for="notif in notifications"
