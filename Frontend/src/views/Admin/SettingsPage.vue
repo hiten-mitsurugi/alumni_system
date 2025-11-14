@@ -8,13 +8,15 @@ import ProfileSettingsSection from '@/components/admin/ProfileSettingsSection.vu
 import AccountSecuritySection from '@/components/admin/AccountSecuritySection.vue'
 import AppearanceSection from '@/components/admin/AppearanceSection.vue'
 import {
-  Check as CheckIcon
+  Check as CheckIcon,
+  User as UserIcon,
+  Shield as ShieldIcon,
+  Palette as PaletteIcon
 } from 'lucide-vue-next'
 
 // Composables and stores
 const themeStore = useThemeStore()
 const {
-  // keep compatible API but we will derive activeSection from the route param
   isLoading,
   notification,
   hideNotification,
@@ -30,14 +32,11 @@ const activeSection = computed(() => {
   return route.params.section || route.query.section || 'profile'
 })
 
-const { profileForm, initializeProfile, user, getProfilePictureUrl } = useProfile()
+const { initializeProfile, user, getProfilePictureUrl } = useProfile()
 
 // Watch for route changes to ensure proper reactivity
-watch(() => route.params.section, (newSection, oldSection) => {
-  // Force a re-render if needed
-  if (newSection !== oldSection) {
-    // The computed activeSection will automatically update
-  }
+watch(() => route.params.section, () => {
+  // Route section changed - Vue will automatically update activeSection computed property
 }, { immediate: true })
 
 // Helper functions for child components
@@ -45,85 +44,145 @@ const showSuccessMessage = (title, message) => showSuccess(title, message)
 const showErrorMessage = (title, message) => showError(title, message)
 
 // Initialize profile form on mount
-onMounted(() => {
-  initializeProfile()
+onMounted(async () => {
+  try {
+    await initializeProfile()
+  } catch (error) {
+    console.error('Profile initialization failed:', error)
+  }
 })
 
 // Event handlers
-const handleProfileSaved = (result) => {
-  console.log('Profile saved:', result)
+const handleProfileSaved = () => {
+  // Profile saved successfully
 }
 
-const handleAccountSaved = (result) => {
-  console.log('Account saved:', result)
+const handleAccountSaved = () => {
+  // Account saved successfully
+}
+
+const handleSectionChange = (sectionId) => {
+  router.push(`/admin/settings/${sectionId}`)
 }
 </script>
 
 <template>
-  <div class="min-h-screen transition-colors duration-200 relative z-10"
-       style="margin-left: 0; padding: 24px; padding-left: 24px;">
-
-    <!-- Header -->
-    <div class="mb-8">
-      <div class="mb-4">
-        <h1 class="text-3xl font-bold mb-1"
-            :class="themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'">
-          Welcome Back! {{ user?.first_name || 'User' }} {{ user?.last_name || '' }}
-        </h1>
-        <p class="text-lg font-medium text-blue-600 dark:text-blue-400">
-          Admin Settings
+  <div class="min-h-screen transition-colors duration-200"
+       :class="themeStore.isAdminDark() ? 'bg-gray-800' : 'bg-gray-50'">
+    
+    <!-- Main Content Area -->
+    <div class="p-6">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="mb-4">
+          <h1 class="text-3xl font-bold mb-1"
+              :class="themeStore.isAdminDark() ? 'text-white' : 'text-gray-900'">
+            Welcome Back! {{ user?.first_name || 'User' }} {{ user?.last_name || '' }}
+          </h1>
+          <p class="text-lg font-medium text-blue-600 dark:text-blue-400">
+            Admin Settings
+          </p>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400">
+          Manage your account, preferences, and system settings
         </p>
       </div>
-      <p class="text-gray-500 dark:text-gray-400">
-        Manage your account, preferences, and system settings
-      </p>
-    </div>
 
-    <!-- Main Content - Show content based on route -->
-    <div class="max-w-4xl relative z-10">
-      <div class="rounded-xl shadow-sm border transition-colors duration-200"
-           :class="themeStore.isAdminDark() ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'">
+      <!-- Settings Navigation Tabs -->
+      <div class="mb-6">
+        <div class="border-b"
+             :class="themeStore.isAdminDark() ? 'border-gray-600' : 'border-gray-200'">
+          <nav class="flex space-x-8">
+            <button @click="handleSectionChange('profile')"
+                    :class="[
+                      'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                      activeSection === 'profile'
+                        ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                        : 'border-transparent hover:border-gray-300 dark:hover:border-gray-500 ' + (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700')
+                    ]">
+              <UserIcon class="w-5 h-5 inline mr-2" />
+              Profile Settings
+            </button>
+            <button @click="handleSectionChange('account')"
+                    :class="[
+                      'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                      activeSection === 'account'
+                        ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                        : 'border-transparent hover:border-gray-300 dark:hover:border-gray-500 ' + (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700')
+                    ]">
+              <ShieldIcon class="w-5 h-5 inline mr-2" />
+              Account & Security
+            </button>
+            <button @click="handleSectionChange('appearance')"
+                    :class="[
+                      'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                      activeSection === 'appearance'
+                        ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                        : 'border-transparent hover:border-gray-300 dark:hover:border-gray-500 ' + (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700')
+                    ]">
+              <PaletteIcon class="w-5 h-5 inline mr-2" />
+              Appearance
+            </button>
+          </nav>
+        </div>
+      </div>
 
-        <!-- Render the appropriate section based on the route param -->
-        <ProfileSettingsSection 
-          v-show="activeSection === 'profile'"
-          v-if="user"
-          :key="`profile-${activeSection}`"
-          :user="user"
-          :isLoading="isLoading"
-          :getProfilePictureUrl="getProfilePictureUrl"
-          :showSuccessMessage="showSuccessMessage"
-          :showErrorMessage="showErrorMessage"
-          @profile-saved="handleProfileSaved"
-        />
+      <!-- Main Content - Show content based on route -->
+      <div class="max-w-4xl relative z-10">
+        <div class="rounded-xl shadow-sm border transition-colors duration-200"
+             :class="themeStore.isAdminDark() ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'">
 
-        <AccountSecuritySection 
-          v-show="activeSection === 'account'"
-          :key="`account-${activeSection}`"
-          :isLoading="isLoading"
-          :showSuccessMessage="showSuccessMessage"
-          :showErrorMessage="showErrorMessage"
-          @account-saved="handleAccountSaved"
-        />
+          <!-- Loading State -->
+          <div v-if="isLoading" class="p-8 text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-2 text-gray-500">Loading...</p>
+          </div>
 
-        <AppearanceSection 
-          v-show="activeSection === 'appearance'"
-          :key="`appearance-${activeSection}`"
-          :showSuccessMessage="showSuccessMessage"
-          :showErrorMessage="showErrorMessage"
-        />
+          <!-- Content Sections -->
+          <div v-else>
+            <!-- Render the appropriate section based on the route param -->
+            <ProfileSettingsSection 
+              v-if="activeSection === 'profile' && user"
+              :user="user"
+              :isLoading="isLoading"
+              :getProfilePictureUrl="getProfilePictureUrl"
+              :showSuccessMessage="showSuccessMessage"
+              :showErrorMessage="showErrorMessage"
+              @profile-saved="handleProfileSaved"
+            />
 
-        <!-- Fallback content when no section matches -->
-        <ProfileSettingsSection 
-          v-if="!['profile', 'account', 'appearance'].includes(activeSection) && user"
-          :key="`profile-fallback-${activeSection}`"
-          :user="user"
-          :isLoading="isLoading"
-          :getProfilePictureUrl="getProfilePictureUrl"
-          :showSuccessMessage="showSuccessMessage"
-          :showErrorMessage="showErrorMessage"
-          @profile-saved="handleProfileSaved"
-        />
+            <AccountSecuritySection 
+              v-if="activeSection === 'account'"
+              :isLoading="isLoading"
+              :showSuccessMessage="showSuccessMessage"
+              :showErrorMessage="showErrorMessage"
+              @account-saved="handleAccountSaved"
+            />
+
+            <AppearanceSection 
+              v-if="activeSection === 'appearance'"
+              :showSuccessMessage="showSuccessMessage"
+              :showErrorMessage="showErrorMessage"
+            />
+
+            <!-- Fallback content when no section matches -->
+            <div v-if="!['profile', 'account', 'appearance'].includes(activeSection)" 
+                 class="p-8 text-center"
+                 :class="themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600'">
+              <p>Section not found. Please select a valid settings section.</p>
+            </div>
+
+            <!-- No User Loaded State -->
+            <div v-if="!user && !isLoading" class="p-8 text-center">
+              <h3 class="text-lg font-semibold mb-2 text-red-600">User Not Loaded</h3>
+              <p class="text-gray-500">Unable to load user information. Please try refreshing the page.</p>
+              <button @click="initializeProfile" 
+                      class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

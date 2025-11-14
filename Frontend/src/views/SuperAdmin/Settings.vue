@@ -86,9 +86,7 @@ const handleAccountSaved = (result) => {
 
         <!-- Render the appropriate section based on the route param -->
         <ProfileSettingsSection 
-          v-show="activeSection === 'profile'"
-          v-if="user"
-          :key="`profile-${activeSection}`"
+          v-if="activeSection === 'profile' && user"
           :user="user"
           :isLoading="isLoading"
           :getProfilePictureUrl="getProfilePictureUrl"
@@ -98,8 +96,7 @@ const handleAccountSaved = (result) => {
         />
 
         <AccountSecuritySection 
-          v-show="activeSection === 'account'"
-          :key="`account-${activeSection}`"
+          v-if="activeSection === 'account'"
           :isLoading="isLoading"
           :showSuccessMessage="showSuccessMessage"
           :showErrorMessage="showErrorMessage"
@@ -107,23 +104,17 @@ const handleAccountSaved = (result) => {
         />
 
         <AppearanceSection 
-          v-show="activeSection === 'appearance'"
-          :key="`appearance-${activeSection}`"
+          v-if="activeSection === 'appearance'"
           :showSuccessMessage="showSuccessMessage"
           :showErrorMessage="showErrorMessage"
         />
 
         <!-- Fallback content when no section matches -->
-        <ProfileSettingsSection 
-          v-if="!['profile', 'account', 'appearance'].includes(activeSection) && user"
-          :key="`profile-fallback-${activeSection}`"
-          :user="user"
-          :isLoading="isLoading"
-          :getProfilePictureUrl="getProfilePictureUrl"
-          :showSuccessMessage="showSuccessMessage"
-          :showErrorMessage="showErrorMessage"
-          @profile-saved="handleProfileSaved"
-        />
+        <div v-if="!['profile', 'account', 'appearance'].includes(activeSection)" 
+             class="p-8 text-center"
+             :class="themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-600'">
+          <p>Section not found. Please select a valid settings section.</p>
+        </div>
       </div>
     </div>
 
