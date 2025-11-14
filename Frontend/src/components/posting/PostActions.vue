@@ -4,8 +4,8 @@
     (size === 'small' ? 'px-2 sm:px-3 py-3' : 'px-4 py-4')">
     <div class="flex items-center gap-0 w-full justify-between">
       <!-- Reactions -->
-      <div class="flex justify-center flex-1">
-        <div class="relative group flex justify-center w-full">
+      <div class="flex justify-center flex-1" style="overflow: visible;">
+        <div class="relative group flex justify-center w-full" style="overflow: visible;">
           <button
             @click="handleReaction('like')"
             :class="[
@@ -27,15 +27,15 @@
           </button>
 
           <!-- Reaction picker buttons -->
-          <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-200 flex gap-1 bg-white rounded-lg shadow-lg p-2">
+          <div :class="['absolute bottom-full left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-300 flex gap-2 rounded-xl shadow-2xl p-3', isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100']" style="margin-bottom: -0.5rem; padding-bottom: 1rem;">
             <button
               v-for="reaction in reactionTypes"
               :key="reaction.type"
               @click="handleReaction(reaction.type)"
-              :class="['flex items-center justify-center rounded-md transition-all duration-150', isDark ? 'hover:bg-gray-600' : 'hover:bg-orange-100', size === 'small' ? 'w-8 h-8 text-base' : 'w-9 h-9 text-lg']"
+              :class="['reaction-emoji-btn flex items-center justify-center rounded-lg transition-all duration-200', isDark ? 'hover:bg-gray-700' : 'hover:bg-orange-50', size === 'small' ? 'w-12 h-12' : 'w-14 h-14']"
               :title="reaction.label"
             >
-              <span :class="size === 'small' ? 'text-base filter drop-shadow-sm' : 'text-lg filter drop-shadow-sm'">{{ reaction.emoji }}</span>
+              <span :class="['reaction-emoji', size === 'small' ? 'text-3xl' : 'text-4xl']">{{ reaction.emoji }}</span>
             </button>
           </div>
         </div>
@@ -344,6 +344,50 @@ button:focus {
 .group:hover .group-hover\:opacity-100 {
   opacity: 1;
   transform: translateY(-5px);
+  z-index: 9999; /* Ensure it appears above everything */
+}
+
+/* Add invisible bridge between button and picker to maintain hover state */
+.group::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3rem; /* Creates hover bridge */
+  z-index: 1;
+  pointer-events: none;
+}
+
+.group:hover::before {
+  pointer-events: auto;
+}
+
+/* Reaction emoji button styling */
+.reaction-emoji-btn {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.reaction-emoji-btn:hover {
+  transform: scale(1.3);
+  border-color: rgba(249, 115, 22, 0.3); /* orange-500 with transparency */
+}
+
+.dark .reaction-emoji-btn:hover,
+:is([data-theme="dark"]) .reaction-emoji-btn:hover {
+  border-color: rgba(251, 146, 60, 0.3); /* orange-400 with transparency */
+}
+
+.reaction-emoji {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reaction-emoji-btn:hover .reaction-emoji {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transform: translateY(-2px);
 }
 
 /* Enhanced card shadows */

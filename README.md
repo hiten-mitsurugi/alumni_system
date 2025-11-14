@@ -60,8 +60,8 @@ python manage.py runserver 0.0.0.0:8000
 cd Frontend
 npm install
 npm install @vitejs/plugin-vue@5.2.4 axios@1.9.0 globals@16.2.0 lucide-vue-next@0.514.0 pinia-plugin-persistedstate@4.3.0 pinia@3.0.3 vite-plugin-vue-devtools@7.7.6 vite@6.3.5 vue-router@4.5.1 vue@3.5.16
-npm install lodash
 npm install tailwindcss @tailwindcss/vite
+npm install lodash
 npm install @heroicons/vue
 npm run build
 npm run dev

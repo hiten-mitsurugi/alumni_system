@@ -8,84 +8,83 @@ class ApproveUserView(APIView):
 
     def post(self, request, user_id):
         try:
+            # Store user data before transaction
+            user_data = {}
+            
             with transaction.atomic():
                 user = CustomUser.objects.get(id=user_id, user_type=3, is_approved=False)
+                
+                # Store user info for background tasks
+                user_data = {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'username': user.username,
+                    'year_graduated': user.year_graduated,
+                    'program': user.program,
+                }
+                
+                # Approve user
                 user.is_approved = True
                 user.save()
                 
-                # Clear all related caches after approval
+                # Clear only critical caches immediately (fast operation)
                 cache.delete('approved_alumni_list')
                 cache.delete('pending_alumni_list')
-                
-                # Clear all cached variations of approved_alumni_list (comprehensive clearing)
-                # This ensures approved user appears in filtered lists immediately
-                cache_patterns = [
-                    'approved_alumni_list_*',  # All filter combinations
-                    f'user_detail_{user.id}',  # User-specific cache
-                ]
-                
-                # Django cache doesn't support pattern deletion, so we clear key types we know exist
-                # Clear common filter combinations to ensure immediate visibility
-                for emp_status in ['', 'employed_locally', 'employed_internationally', 'self_employed', 'unemployed', 'retired']:
-                    for gender in ['', 'male', 'female']:
-                        for status_filter in ['', 'active', 'blocked']:
-                            cache_key = f"approved_alumni_list_{emp_status}_{gender}_{user.year_graduated or ''}_{user.program or ''}_{status_filter}_"
-                            cache.delete(cache_key)
-                            # Also clear with search terms
-                            cache.delete(f"{cache_key}{user.first_name.lower()}")
-                            cache.delete(f"{cache_key}{user.last_name.lower()}")
+                cache.delete(f'user_detail_{user.id}')
             
-            # Send approval confirmation email
+            # Send immediate WebSocket notification (fast)
             try:
-                subject, html_content, text_content = get_approval_email_template(user)
-                
-                # Create email message with both HTML and text versions
-                email = EmailMultiAlternatives(
-                    subject=subject,
-                    body=text_content,  # Plain text version
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[user.email],
-                )
-                email.attach_alternative(html_content, "text/html")  # HTML version
-                email.send(fail_silently=False)
-                
-                # Log successful email sending
-                logger.info(f"Approval email sent successfully to {user.email} (User ID: {user.id})")
-                
-                # Send WebSocket notification to update admin interfaces
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
                     'admin_group',
                     {
                         'type': 'notification',
-                        'message': f'User {user.first_name} {user.last_name} has been approved.',
+                        'message': f'User {user_data["first_name"]} {user_data["last_name"]} has been approved.',
                     }
                 )
+            except Exception as ws_error:
+                logger.error(f"WebSocket notification failed: {str(ws_error)}")
+            
+            # Queue background tasks for slow operations
+            try:
+                from auth_app.tasks import send_approval_email_task, clear_approval_caches_task
                 
-                return Response({
-                    'message': 'User approved successfully and email notification sent',
-                    'email_sent': True
-                }, status=status.HTTP_200_OK)
-                
-            except Exception as email_error:
-                # User is still approved even if email fails
-                logger.error(f"Failed to send approval email to {user.email}: {str(email_error)}")
-                
-                # Send WebSocket notification even if email failed
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                    'admin_group',
-                    {
-                        'type': 'notification',
-                        'message': f'User {user.first_name} {user.last_name} has been approved.',
-                    }
+                # Send email in background
+                send_approval_email_task.delay(
+                    user_data['id'],
+                    user_data['email'],
+                    user_data['first_name'],
+                    user_data['last_name'],
+                    user_data['username']
                 )
                 
-                return Response({
-                    'message': 'User approved successfully but email notification failed',
-                    'email_sent': False,
-                    'email_error': str(email_error)
-                }, status=status.HTTP_200_OK)
+                # Clear additional caches in background
+                clear_approval_caches_task.delay(
+                    user_data['id'],
+                    user_data['year_graduated'],
+                    user_data['program'],
+                    user_data['first_name'],
+                    user_data['last_name']
+                )
+                
+                logger.info(f"User {user_id} approved - background tasks queued")
+                
+            except Exception as task_error:
+                logger.error(f"Failed to queue background tasks: {str(task_error)}")
+                # Don't fail the request - user is still approved
+            
+            # Return immediately (fast response)
+            return Response({
+                'message': 'User approved successfully',
+                'email_queued': True,
+                'user': {
+                    'id': user_data['id'],
+                    'name': f"{user_data['first_name']} {user_data['last_name']}",
+                    'email': user_data['email']
+                }
+            }, status=status.HTTP_200_OK)
                 
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found or already approved'}, status=status.HTTP_404_NOT_FOUND)
@@ -101,46 +100,58 @@ class RejectUserView(APIView):
         try:
             user = CustomUser.objects.get(id=user_id, user_type=3, is_approved=False)
             
-            # Send rejection notification email before deleting
-            try:
-                subject, html_content, text_content = get_rejection_email_template(user)
-                
-                # Create email message with both HTML and text versions
-                email = EmailMultiAlternatives(
-                    subject=subject,
-                    body=text_content,  # Plain text version
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[user.email],
-                )
-                email.attach_alternative(html_content, "text/html")  # HTML version
-                email.send(fail_silently=True)  # Don't fail if email sending fails
-                
-                logger.info(f"Rejection notification email sent to {user.email} (User ID: {user.id})")
-                
-            except Exception as email_error:
-                logger.error(f"Failed to send rejection email to {user.email}: {str(email_error)}")
+            # Store user data before deletion
+            user_data = {
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'username': user.username,
+            }
             
             # Delete the user account
-            user_email = user.email
             user.delete()
             
-            # Send WebSocket notification
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f'user_{user_id}',
-                {
-                    'type': 'notification',
-                    'message': 'Your account application requires additional review.',
-                }
-            )
+            # Send immediate WebSocket notification (fast)
+            try:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f'user_{user_id}',
+                    {
+                        'type': 'notification',
+                        'message': 'Your account application requires additional review.',
+                    }
+                )
+            except Exception as ws_error:
+                logger.error(f"WebSocket notification failed: {str(ws_error)}")
             
-            # Clear caches
+            # Clear caches immediately
             cache.delete('approved_alumni_list')
             cache.delete('pending_alumni_list')
             
+            # Queue email sending in background
+            try:
+                from auth_app.tasks import send_rejection_email_task
+                
+                send_rejection_email_task.delay(
+                    user_data['email'],
+                    user_data['first_name'],
+                    user_data['last_name'],
+                    user_data['username']
+                )
+                
+                logger.info(f"User {user_id} rejected - email task queued")
+                
+            except Exception as task_error:
+                logger.error(f"Failed to queue rejection email task: {str(task_error)}")
+            
+            # Return immediately (fast response)
             return Response({
-                'message': 'User application rejected and notification email sent',
-                'email_sent': True
+                'message': 'User application rejected',
+                'email_queued': True,
+                'user': {
+                    'email': user_data['email'],
+                    'name': f"{user_data['first_name']} {user_data['last_name']}"
+                }
             }, status=status.HTTP_200_OK)
             
         except CustomUser.DoesNotExist:

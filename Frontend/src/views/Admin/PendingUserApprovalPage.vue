@@ -65,14 +65,9 @@ const approveUser = async () => {
       pendingUsers.value = pendingUsers.value.filter(u => u.id !== userId);
       closeModal();
       
-      // Show success message based on backend response
+      // Show success message - email is queued in background
       const message = response.data.message || 'User approved successfully';
-      if (response.data.email_sent) {
-        alert(`✅ ${message}\n📧 Confirmation email sent to ${userEmail}`);
-      } else {
-        const emailError = response.data.email_error ? `\n\nEmail error: ${response.data.email_error}` : '';
-        alert(`✅ ${message}\n⚠️ Email notification failed to send.${emailError}`);
-      }
+      alert(`✅ ${message}\\n📧 Confirmation email is being sent to ${userEmail}\\n⚡ The approval was instant!`);
     } else {
       throw new Error(`Unexpected response status: ${response.status}`);
     }
@@ -113,12 +108,8 @@ const rejectUser = async () => {
     pendingUsers.value = pendingUsers.value.filter(u => u.id !== userId);
     closeModal();
     
-    // Show success message with email status
-    if (response.data.email_sent) {
-      alert(`✅ User application rejected.\n📧 Notification email sent to ${userEmail}`);
-    } else {
-      alert(`✅ User application rejected.\n⚠️ Email notification failed to send.`);
-    }
+    // Show success message - email is queued in background
+    alert(`✅ User application rejected.\\n📧 Notification email is being sent to ${userEmail}\\n⚡ The rejection was instant!`);
   } catch (error) {
     console.error('Failed to reject user:', error);
     alert('❌ Failed to reject user. Please try again.');

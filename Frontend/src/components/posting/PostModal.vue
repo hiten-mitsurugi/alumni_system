@@ -86,7 +86,7 @@
       </div>
 
       <!-- Modal Content -->
-      <div class="flex-1 overflow-hidden flex flex-col sm:flex-row">
+      <div class="flex-1 overflow-visible flex flex-col sm:flex-row">
         <!-- Desktop-only Left side - Media (if exists) -->
         <div
           v-if="hasMedia"
@@ -151,9 +151,9 @@
         </div>
 
   <!-- Right side - Post Details and Comments -->
-  <div :class="hasMedia ? 'basis-1/3 w-full' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full">
+  <div :class="hasMedia ? 'basis-1/3 w-full' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full" style="overflow-x: visible;">
     <!-- Scrollable Content Area with Fixed Height -->
-    <div class="overflow-y-auto p-0" style="height: calc(100% - 70px);">
+    <div class="overflow-y-auto" style="height: calc(100% - 70px); overflow-x: visible;">
             <!-- Post Header -->
             <div class="p-4 border-b border-gray-200">
               <PostHeader
@@ -175,7 +175,7 @@
             </div>
 
             <!-- Engagement Summary -->
-            <div v-if="hasEngagement" class="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-200 hover-isolation" @mouseenter.stop @mouseover.stop>
+            <div v-if="hasEngagement" class="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-200 hover-isolation" style="overflow: visible; position: relative; z-index: 10;" @mouseenter.stop @mouseover.stop>
               <ReactionSummary
                 :reactions-summary="post.reactions_summary"
                 :post-id="post.id"
@@ -184,7 +184,7 @@
             </div>
 
             <!-- Post Actions -->
-            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50" style="overflow: visible; position: relative; z-index: 10;">
               <PostActions
                 :post-id="post.id"
                 :selected-reaction="selectedReaction"

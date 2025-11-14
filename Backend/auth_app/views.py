@@ -996,40 +996,9 @@ class AlumniDirectoryImportView(APIView):
             
             # Valid programs (from your model)
             valid_programs = [
-                'BA in Sociology',
-                'Bachelor of Agricultural Technology',
-                'Bachelor of Elementary Education',
-                'Bachelor of Secondary Education Major in English',
-                'Bachelor of Secondary Education Major in Filipino',
-                'Bachelor of Secondary Education Major in Mathematics',
-                'Bachelor of Secondary Education Major in Science',
-                'BS in Agroforestry',
-                'BS in Agricultural and Biosystems Engineering',
-                'BS in Agriculture',
-                'BS in Agriculture, Major in Agribusiness Management',
-                'BS in Agriculture, Major in Agricultural Economics',
-                'BS in Agriculture, Major in Agronomy',
-                'BS in Agriculture, Major in Animal Science',
-                'BS in Agriculture, Major in Crop Protection',
-                'BS in Agriculture, Major in Horticulture',
-                'BS in Agriculture, Major in Soil Science',
-                'BS in Applied Mathematics',
-                'BS in Biology',
-                'BS in Chemistry',
-                'BS in Civil Engineering',
                 'BS in Computer Science',
-                'BS in Electronics Engineering',
-                'BS in Environmental Science',
-                'BS in Forestry',
-                'BS in Geodetic Engineering',
-                'BS in Geology',
                 'BS in Information Systems',
-                'BS in Information Technology',
-                'BS in Mathematics',
-                'BS in Mining Engineering',
-                'BS in Physics',
-                'BS in Psychology',
-                'BS in Social Work'
+                'BS in Information Technology'
             ]
             
             with transaction.atomic():

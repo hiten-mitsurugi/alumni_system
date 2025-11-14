@@ -193,41 +193,9 @@ const requiredFields = [
           <label class="block text-sm font-medium text-gray-700 mb-1">Program</label>
           <select v-model="form.program" class="w-full border rounded-lg px-4 py-2">
             <option value="" disabled>Select Program</option>
-            <option value="BA in Sociology">BA in Sociology</option>
-            <option value="Bachelor of Agricultural Technology">Bachelor of Agricultural Technology</option>
-            <option value="Bachelor of Elementary Education">Bachelor of Elementary Education</option>
-            <option value="Bachelor of Secondary Education Major in English">Bachelor of Secondary Education Major in English</option>
-            <option value="Bachelor of Secondary Education Major in Filipino">Bachelor of Secondary Education Major in Filipino</option>
-            <option value="Bachelor of Secondary Education Major in Mathematics">Bachelor of Secondary Education Major in Mathematics</option>
-            <option value="Bachelor of Secondary Education Major in Science">Bachelor of Secondary Education Major in Science</option>
-            <option value="BS in Agroforestry">BS in Agroforestry</option>
-            <option value="BS in Agricultural and Biosystems Engineering">BS in Agricultural and Biosystems Engineering</option>
-            <option value="BS in Agriculture">BS in Agriculture</option>
-            <option value="BS in Agriculture, Major in Agribusiness Management">BS in Agriculture, Major in Agribusiness Management</option>
-            <option value="BS in Agriculture, Major in Agricultural Economics">BS in Agriculture, Major in Agricultural Economics</option>
-            <option value="BS in Agriculture, Major in Agronomy">BS in Agriculture, Major in Agronomy</option>
-            <option value="BS in Agriculture, Major in Animal Science">BS in Agriculture, Major in Animal Science</option>
-            <option value="BS in Agriculture, Major in Crop Protection">BS in Agriculture, Major in Crop Protection</option>
-            <option value="BS in Agriculture, Major in Horticulture">BS in Agriculture, Major in Horticulture</option>
-            <option value="BS in Agriculture, Major in Soil Science">BS in Agriculture, Major in Soil Science</option>
-            <option value="BS in Applied Mathematics">BS in Applied Mathematics</option>
-            <option value="BS in Biology">BS in Biology</option>
-            <option value="BS in Chemistry">BS in Chemistry</option>
-            <option value="BS in Civil Engineering">BS in Civil Engineering</option>
             <option value="BS in Computer Science">BS in Computer Science</option>
-            <option value="BS in Electronics Engineering">BS in Electronics Engineering</option>
-            <option value="BS in Environmental Science">BS in Environmental Science</option>
-            <option value="BS in Forestry">BS in Forestry</option>
-            <option value="BS in Geodetic Engineering">BS in Geodetic Engineering</option>
-            <option value="BS in Geology">BS in Geology</option>
-            <option value="BS in Information System">BS in Information System</option>
             <option value="BS in Information Systems">BS in Information Systems</option>
             <option value="BS in Information Technology">BS in Information Technology</option>
-            <option value="BS in Mathematics">BS in Mathematics</option>
-            <option value="BS in Mining Engineering">BS in Mining Engineering</option>
-            <option value="BS in Physics">BS in Physics</option>
-            <option value="BS in Psychology">BS in Psychology</option>
-            <option value="BS in Social Work">BS in Social Work</option>
           </select>
           <p v-if="errors.program" class="text-red-600 text-sm mt-1">{{ errors.program }}</p>
         </div>

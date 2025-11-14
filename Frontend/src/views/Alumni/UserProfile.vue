@@ -1,21 +1,27 @@
 <template>
-  <div class="min-h-screen bg-amber-50">
+  <div :class="[
+    'min-h-screen transition-colors duration-200',
+    themeStore.isDarkMode ? 'bg-gray-900' : 'bg-white'
+  ]">
     <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+    <div v-if="loading" class="flex items-center justify-center h-64">
+      <div class="w-12 h-12 border-b-2 border-green-600 rounded-full animate-spin"></div>
     </div>
 
     <!-- Main Profile Content -->
-    <div v-else class="max-w-6xl mx-auto p-4">
+    <div v-else class="max-w-6xl p-4 mx-auto">
       <!-- Profile Header Section -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+      <div :class="[
+        'rounded-lg shadow-lg overflow-hidden mb-6 transition-colors duration-200',
+        themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
+      ]">
         <!-- Cover Photo -->
         <div class="relative h-48 bg-gradient-to-r from-green-400 to-blue-500">
-          <img 
-            v-if="profile?.cover_photo" 
-            :src="profile.cover_photo" 
+          <img
+            v-if="profile?.cover_photo"
+            :src="profile.cover_photo"
             alt="Cover Photo"
-            class="w-full h-full object-cover"
+            class="object-cover w-full h-full"
           />
         </div>
 
@@ -24,122 +30,213 @@
           <!-- Profile Picture -->
           <div class="absolute -top-16 left-6">
             <div class="relative">
-              <img 
-                :src="user?.profile_picture || '/default-avatar.png'" 
+              <img
+                :src="user?.profile_picture || '/default-avatar.png'"
                 alt="Profile Picture"
-                class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                :class="[
+                  'w-32 h-32 rounded-full border-4 shadow-lg object-cover',
+                  themeStore.isDarkMode ? 'border-gray-800' : 'border-white'
+                ]"
               />
             </div>
           </div>
 
-          <!-- User Info & Actions -->
-          <div class="pt-20 flex justify-between items-start">
-            <div class="flex-1">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                {{ user?.first_name }} {{ user?.last_name }}
-              </h1>
-              
-              <p v-if="profile?.headline" class="text-lg text-gray-600 mb-2">
-                {{ profile.headline }}
-              </p>
-              
-              <p v-if="profile?.present_occupation" class="text-gray-500 mb-2">
-                {{ profile.present_occupation }}
-              </p>
-              
-              <div class="flex items-center space-x-4 text-sm text-gray-500">
-                <span v-if="user?.program">{{ user.program }}</span>
-                <span v-if="user?.year_graduated">Class of {{ user.year_graduated }}</span>
-                <span v-if="connections > 0">{{ connections }} connections</span>
-              </div>
-            </div>
+          <!-- Name and Basic Info -->
+          <div class="pt-20">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 :class="[
+                  'text-3xl font-bold',
+                  themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+                ]">
+                  {{ user?.first_name }} {{ user?.middle_name }} {{ user?.last_name }}
+                </h1>
+                <p :class="[
+                  'text-lg mt-1',
+                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                ]">
+                  {{ displayHeadline }}
+                </p>
 
-            <!-- Action Buttons -->
-            <div class="flex space-x-3">
-              <button 
-                @click="connectUser"
-                :disabled="isConnecting"
-                class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
-              >
-                <span v-if="isConnecting" class="animate-spin mr-2">⟳</span>
-                {{ isFollowing ? 'Following' : 'Connect' }}
-              </button>
-              
-              <button 
-                @click="sendMessage"
-                class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-              >
-                Message
-              </button>
+                <!-- Education Info -->
+                <div v-if="displayEducationInfo" :class="[
+                  'flex items-center mt-2',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  {{ displayEducationInfo }}
+                </div>
+
+                <!-- Location -->
+                <div :class="[
+                  'flex items-center mt-2',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  {{ profile?.location || profile?.present_address || 'Location not specified' }}
+                </div>
+
+                <!-- Connections -->
+                <div :class="[
+                  'flex items-center mt-1',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  {{ connections }} connections
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex mt-4 space-x-3 lg:mt-0">
+                <button
+                  @click="connectUser"
+                  :disabled="isConnecting"
+                  :class="[
+                    'px-6 py-2 rounded-lg font-medium transition-colors',
+                    isFollowing
+                      ? themeStore.isDarkMode
+                        ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
+                  ]"
+                >
+                  <span v-if="isConnecting" class="mr-2 animate-spin">⟳</span>
+                  {{ isFollowing ? 'Following' : 'Connect' }}
+                </button>
+                <button
+                  @click="sendMessage"
+                  class="px-6 py-2 font-medium text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-700"
+                >
+                  Message
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Tab Navigation -->
+      <div :class="[
+        'border-b shadow-sm transition-colors duration-200',
+        themeStore.isDarkMode
+          ? 'bg-gray-800 border-gray-700'
+          : 'bg-white border-gray-200'
+      ]">
+        <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <nav class="flex space-x-8">
+            <button
+              @click="activeTab = 'about'"
+              :class="[
+                'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                activeTab === 'about'
+                  ? 'border-orange-500 ' + (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
+                  : 'border-transparent ' + (themeStore.isDarkMode
+                      ? 'text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300')
+              ]"
+            >
+              About
+            </button>
+            <button
+              @click="activeTab = 'posts'"
+              :class="[
+                'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                activeTab === 'posts'
+                  ? 'border-orange-500 ' + (themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600')
+                  : 'border-transparent ' + (themeStore.isDarkMode
+                      ? 'text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300')
+              ]"
+            >
+              Posts
+            </button>
+          </nav>
+        </div>
+      </div>
+
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <!-- Left Column - Profile Sections -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- About Section -->
-          <ProfileAboutSection 
-            :profile="profile" 
-            :is-own-profile="false"
-            :user-id="user?.id"
-            @profile-updated="fetchUserProfile"
-          />
-          
-          <!-- Contact Information Section -->
-          <ProfileContactSection 
-            :profile="profile" 
-            :is-own-profile="false"
-            :user-id="user?.id"
-            @profile-updated="fetchUserProfile"
-          />
-          
-          <!-- Education Section -->
-          <ProfileEducationSection 
-            :education="education" 
-            :profile="profile"
-            :user="user"
-            :is-own-profile="false"
-            @add="() => {}"
-            @edit="() => {}"
-            @edit-profile="() => {}"
-            @delete="() => {}"
-          />
-          
-          <!-- Experience Section -->
-          <ProfileExperienceSection 
-            :workHistories="workHistories" 
-            :is-own-profile="false"
-            @add="() => {}"
-            @edit="() => {}"
-            @delete="() => {}"
-          />
-          
-          <!-- Skills Section -->
-          <ProfileSkillsSection 
-            :skills="skills" 
-            :is-own-profile="false"
-            @add="() => {}"
-            @edit="() => {}"
-            @delete="() => {}"
-          />
-          
-          <!-- Achievements Section -->
-          <ProfileAchievementsSection 
-            :achievements="achievements" 
-            :is-own-profile="false"
-            @add="() => {}"
-            @edit="() => {}"
-            @delete="() => {}"
-          />
+        <div class="space-y-6 lg:col-span-2">
+
+          <!-- About Tab Content -->
+          <div v-show="activeTab === 'about'" class="space-y-6">
+            <!-- About Section -->
+            <ProfileAboutSection
+              :profile="profile"
+              :is-own-profile="false"
+              :user-id="user?.id"
+              @profile-updated="fetchUserProfile"
+            />
+
+            <!-- Contact Information Section -->
+            <ProfileContactSection
+              :profile="profile"
+              :is-own-profile="false"
+              :user-id="user?.id"
+              @profile-updated="fetchUserProfile"
+            />
+
+            <!-- Education Section -->
+            <ProfileEducationSection
+              :education="education"
+              :profile="profile"
+              :user="user"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @edit-profile="() => {}"
+              @delete="() => {}"
+            />
+
+            <!-- Experience Section -->
+            <ProfileExperienceSection
+              :workHistories="workHistories"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @delete="() => {}"
+            />
+
+            <!-- Skills Section -->
+            <ProfileSkillsSection
+              :skills="skills"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @delete="() => {}"
+            />
+
+            <!-- Achievements Section -->
+            <ProfileAchievementsSection
+              :achievements="achievements"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @delete="() => {}"
+            />
+          </div>
+
+          <!-- Posts Tab Content -->
+          <div v-show="activeTab === 'posts'">
+            <PostsTab :user-id="user?.id" />
+          </div>
+
         </div>
 
         <!-- Right Column - Sidebar -->
         <div class="space-y-6">
-          <!-- Suggestions Widget -->
-          <UserSuggestionsWidget @connect="handleConnect" />
+          <!-- People You May Know -->
+          <SuggestedConnectionsWidget @connect="handleConnect" />
+
+          <!-- Recent Activity Widget (optional for user profile) -->
         </div>
       </div>
     </div>
@@ -147,9 +244,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import api from '@/services/api'
 
 // Components
@@ -159,11 +257,13 @@ import ProfileEducationSection from '@/components/profile/ProfileEducationSectio
 import ProfileExperienceSection from '@/components/profile/ProfileExperienceSection.vue'
 import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
 import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
-import UserSuggestionsWidget from '@/components/user-profile/UserSuggestionsWidget.vue'
+import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnectionsWidget.vue'
+import PostsTab from '@/components/profile/tabs/PostsTab.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 // State
 const loading = ref(true)
@@ -177,8 +277,88 @@ const connections = ref(0)
 const isFollowing = ref(false)
 const isConnecting = ref(false)
 
+// Tab state
+const activeTab = ref('about')
+
 // Get user identifier from route
 const userIdentifier = computed(() => route.params.userIdentifier)
+
+// Computed properties to derive profile info (like MyProfile)
+const currentEducation = computed(() => {
+  if (!education.value || education.value.length === 0) return null
+
+  // Find current education (is_current = true) or most recent one
+  const current = education.value.find(edu => edu.is_current)
+  if (current) return current
+
+  // If no current, get the most recent one by end_date or start_date
+  const sorted = [...education.value].sort((a, b) => {
+    const dateA = new Date(a.end_date || a.start_date || '1900-01-01')
+    const dateB = new Date(b.end_date || b.start_date || '1900-01-01')
+    return dateB - dateA
+  })
+
+  return sorted[0]
+})
+
+const currentJob = computed(() => {
+  if (!workHistories.value || workHistories.value.length === 0) return null
+
+  // Find current job (job_type = 'current_job') or most recent one
+  const current = workHistories.value.find(work => work.job_type === 'current_job')
+  if (current) return current
+
+  // If no current job, get the most recent one by end_date or start_date
+  const sorted = [...workHistories.value].sort((a, b) => {
+    const dateA = new Date(a.end_date || a.start_date || '1900-01-01')
+    const dateB = new Date(b.end_date || b.start_date || '1900-01-01')
+    return dateB - dateA
+  })
+
+  return sorted[0]
+})
+
+const displayHeadline = computed(() => {
+  // Priority: Profile headline > Current job title > Current education > Default
+  if (profile.value?.headline) {
+    return profile.value.headline
+  }
+
+  if (currentJob.value) {
+    return `${currentJob.value.occupation} at ${currentJob.value.employing_agency}`
+  }
+
+  if (currentEducation.value) {
+    const degree = currentEducation.value.degree_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Student'
+    const field = currentEducation.value.field_of_study ? ` in ${currentEducation.value.field_of_study}` : ''
+    return `${degree}${field}`
+  }
+
+  return 'Alumni'
+})
+
+const displayEducationInfo = computed(() => {
+  if (currentEducation.value) {
+    const degree = currentEducation.value.degree_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''
+    const field = currentEducation.value.field_of_study || ''
+    const institution = currentEducation.value.institution || ''
+
+    if (degree && field && institution) {
+      return `${degree} in ${field} from ${institution}`
+    } else if (degree && institution) {
+      return `${degree} from ${institution}`
+    } else if (institution) {
+      return institution
+    }
+  }
+
+  // Fallback to user basic info if available
+  if (user.value?.program && user.value?.year_graduated) {
+    return `${user.value.program} (Class of ${user.value.year_graduated})`
+  }
+
+  return null
+})
 
 // Add refresh function for privacy changes
 const refreshProfileData = async () => {
@@ -454,7 +634,6 @@ onMounted(() => {
 })
 
 // Cleanup interval on unmount
-import { onUnmounted } from 'vue'
 onUnmounted(() => {
   if (refreshInterval) {
     clearInterval(refreshInterval)

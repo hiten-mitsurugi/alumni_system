@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="themeStore.isDarkMode ? 'bg-gray-700 border border-gray-600 text-gray-100 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full mx-auto' : 'bg-white border border-slate-100 text-slate-900 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-hidden mb-3 md:mb-4 lg:mb-6 w-full mx-auto'">
+    :class="themeStore.isDarkMode ? 'bg-gray-700 border border-gray-600 text-gray-100 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-visible mb-3 md:mb-4 lg:mb-6 w-full mx-auto' : 'bg-white border border-slate-100 text-slate-900 rounded-lg md:rounded-xl lg:rounded-2xl shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl transition-all duration-300 overflow-visible mb-3 md:mb-4 lg:mb-6 w-full mx-auto'">
     <!-- Post Header -->
     <PostHeader 
       :post="post" 
@@ -83,8 +83,10 @@
     </div>
 
     <!-- Action Buttons -->
-    <PostActions :post-id="post.id" :selected-reaction="selectedReaction" @react-to-post="handleReaction"
-      @comment-clicked="openPostModal" @copy-link="$emit('copy-link', post.id)" />
+    <div style="overflow: visible; position: relative; z-index: 10;">
+      <PostActions :post-id="post.id" :selected-reaction="selectedReaction" @react-to-post="handleReaction"
+        @comment-clicked="openPostModal" @copy-link="$emit('copy-link', post.id)" />
+    </div>
 
     <!-- Quick Comment Preview (if comments exist) -->
     <div v-if="previewComments.length > 0" :class="themeStore.isDarkMode ? 'px-3 md:px-4 lg:px-6 pb-2 bg-gray-700' : 'px-3 md:px-4 lg:px-6 pb-2 bg-white'">
