@@ -23,9 +23,35 @@
           <input v-model="localTitle" type="text" placeholder="Add a title (optional)..."
             :class="themeStore.isDarkMode ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl mb-2 md:mb-3 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'" />
 
-          <!-- Content Textarea -->
-          <textarea v-model="localContent" placeholder="What would you like to share?" rows="3"
-            :class="themeStore.isDarkMode ? 'w-full p-2 md:p-3 text-sm md:text-base border border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm' : 'w-full p-2 md:p-3 text-sm md:text-base border border-slate-300 rounded-lg md:rounded-xl resize-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 shadow-sm'"></textarea>
+          <!-- Content with Mention Support -->
+          <MentionTextarea
+            v-model="localContent"
+            @mention="handleMention"
+            :placeholder="'What would you like to share? Use @ to mention alumni...'"
+            :rows="3"
+            :class="[
+              'mb-3',
+              themeStore.isDarkMode 
+                ? 'bg-gray-700 border-gray-600' 
+                : 'bg-white border-slate-300'
+            ]"
+          />
+
+          <!-- Mentioned users display -->
+          <div v-if="mentionedUsers.length > 0" class="mb-3">
+            <p class="text-xs md:text-sm font-medium mb-2" :class="themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'">
+              Mentioning:
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="user in mentionedUsers"
+                :key="user.id"
+                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+              >
+                @{{ user.username }}
+              </span>
+            </div>
+          </div>
 
           <!-- File Preview -->
           <div v-if="selectedFiles.length > 0" class="mt-3 md:mt-4">
@@ -144,13 +170,15 @@
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
+import MentionTextarea from '@/components/common/MentionTextarea.vue'
+import { extractMentionsForBackend, convertMentionsForStorage } from '@/utils/mentionUtils'
 
 // Theme store
 const themeStore = useThemeStore()
 const isDark = computed(() => themeStore.isDarkMode || false)
 
 // Props
-const props = defineProps({
+defineProps({
   userProfilePicture: String,
   categories: {
     type: Array,
@@ -171,8 +199,15 @@ const localContent = ref('')
 const localCategory = ref('discussion')
 const selectedFiles = ref([])
 const filePreviewUrls = ref([])
+const mentionedUsers = ref([])
 
 // Methods
+const handleMention = (mentionData) => {
+  const existingUser = mentionedUsers.value.find(u => u.id === mentionData.user.id)
+  if (!existingUser) {
+    mentionedUsers.value.push(mentionData.user)
+  }
+}
 const handleFileSelect = (event) => {
   // Clean up previous URLs
   filePreviewUrls.value.forEach(url => {
@@ -235,14 +270,23 @@ const getProfilePictureUrl = (profilePicture) => {
   return profilePicture.startsWith('/') ? `${BASE_URL}${profilePicture}` : `${BASE_URL}/${profilePicture}`
 }
 
+const extractMentions = (content) => {
+  // Use the utility function to extract mentions for backend processing
+  return extractMentionsForBackend(content, mentionedUsers.value)
+}
+
 const createPost = () => {
   if (!localContent.value.trim()) return
 
+  // Convert full name mentions to username mentions for backend storage
+  const storageContent = convertMentionsForStorage(localContent.value, mentionedUsers.value)
+
   const postData = {
     title: localTitle.value,
-    content: localContent.value,
+    content: storageContent, // Send converted content to backend
     category: localCategory.value,
-    files: selectedFiles.value
+    files: selectedFiles.value,
+    mentions: extractMentions(localContent.value) // Extract mentions for backend
   }
 
   emit('create-post', postData)
@@ -254,6 +298,7 @@ const clearForm = () => {
   localTitle.value = ''
   localContent.value = ''
   localCategory.value = 'discussion'
+  mentionedUsers.value = []
   clearAllFiles()
 }
 

@@ -29,7 +29,7 @@ import uuid
 from auth_app.models import (
     CustomUser, Skill, WorkHistory, AlumniDirectory, Profile, Address, 
     SkillsRelevance, CurriculumRelevance, PerceptionFurtherStudies, 
-    FeedbackRecommendations, UserSkill
+    FeedbackRecommendations, UserSkill, Following
 )
 from auth_app.status_cache import set_user_online, set_user_offline, get_user_status
 from auth_app.serializers import (

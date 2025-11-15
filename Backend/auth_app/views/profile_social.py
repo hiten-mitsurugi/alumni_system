@@ -165,28 +165,55 @@ class FollowUserView(APIView):
     
     def delete(self, request, user_id):
         """Disconnect from a user (removes mutual connection)"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Unfollow request: User {request.user.id} wants to unfollow User {user_id}")
+        
         try:
             target_user = CustomUser.objects.get(id=user_id)
         except CustomUser.DoesNotExist:
+            logger.error(f"Target user {user_id} not found")
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
             from auth_app.models import Following
-            # Remove the connection from current user to target user
+            
+            # Check if the following relationship exists
             following = Following.objects.get(follower=request.user, following=target_user)
+            logger.info(f"Found following relationship: {following.id} (status: {following.status})")
+            
+            # Remove the connection from current user to target user
             following.delete()
+            logger.info(f"Deleted following relationship: {request.user.id} → {target_user.id}")
             
             # Remove the reverse connection (mutual disconnection)
             reverse_following = Following.objects.filter(
                 follower=target_user, 
                 following=request.user
             ).first()
+            
             if reverse_following:
                 reverse_following.delete()
+                logger.info(f"Deleted reverse following relationship: {target_user.id} → {request.user.id}")
+            else:
+                logger.info("No reverse following relationship found")
             
-            return Response({'message': 'Successfully disconnected from user'}, status=status.HTTP_200_OK)
+            return Response({
+                'message': 'Successfully disconnected from user',
+                'unfollowed_user': {
+                    'id': target_user.id,
+                    'name': f"{target_user.first_name} {target_user.last_name}",
+                    'email': target_user.email
+                }
+            }, status=status.HTTP_200_OK)
+            
         except Following.DoesNotExist:
+            logger.error(f"No following relationship found between {request.user.id} and {target_user.id}")
             return Response({'error': 'Not connected to this user'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error unfollowing user: {str(e)}")
+            return Response({'error': 'An error occurred while unfollowing user'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class UserConnectionsView(APIView):
@@ -478,3 +505,118 @@ class UserByNameView(APIView):
             return Response(serializer.data)
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UserMentionSearchView(APIView):
+    """API endpoint for searching users for @mentions"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            query = request.GET.get('q', '').strip()
+            limit = min(int(request.GET.get('limit', 10)), 20)  # Max 20 results
+            
+            # Debug logging
+            logger.info(f"Mention search request - User: {request.user.id}, Query: '{query}', Limit: {limit}")
+            
+            if len(query) < 2:
+                return Response({
+                    'users': [],
+                    'message': 'Please enter at least 2 characters',
+                    'debug': f'Query too short: {len(query)} characters'
+                })
+            
+            # Get current user's connections first (higher priority)
+            following_ids = Following.objects.filter(
+                follower=request.user,
+                status='accepted'
+            ).values_list('following_id', flat=True)
+            
+            logger.info(f"User {request.user.id} has {len(following_ids)} connections: {list(following_ids)}")
+            
+            # Search in connections first
+            connection_users = CustomUser.objects.filter(
+                id__in=following_ids,
+                is_active=True,
+                is_approved=True
+            ).filter(
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query) |
+                Q(username__icontains=query) |
+                Q(email__icontains=query)
+            ).exclude(id=request.user.id)[:limit]
+            
+            logger.info(f"Found {len(connection_users)} connection matches")
+            
+            # If we need more results, search all users
+            remaining_limit = limit - len(connection_users)
+            other_users = []
+            
+            if remaining_limit > 0:
+                excluded_ids = [request.user.id] + list(following_ids)
+                other_users = CustomUser.objects.filter(
+                    is_active=True,
+                    is_approved=True,
+                    user_type=3  # Only alumni users
+                ).filter(
+                    Q(first_name__icontains=query) |
+                    Q(last_name__icontains=query) |
+                    Q(username__icontains=query) |
+                    Q(email__icontains=query)
+                ).exclude(id__in=excluded_ids)[:remaining_limit]
+                
+                logger.info(f"Found {len(other_users)} other user matches")
+            
+            # Combine results (connections first, then others)
+            all_users = list(connection_users) + list(other_users)
+            
+            # Format the response
+            users_data = []
+            for user in all_users:
+                profile_picture_url = None
+                if user.profile_picture:
+                    profile_picture_url = request.build_absolute_uri(user.profile_picture.url)
+                
+                is_connection = user.id in following_ids
+                
+                users_data.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'full_name': f"{user.first_name} {user.last_name}".strip(),
+                    'email': user.email,
+                    'profile_picture': profile_picture_url,
+                    'program': user.program,
+                    'is_connection': is_connection,
+                    'mention_text': f"@{user.username}"  # The text that will be inserted
+                })
+            
+            logger.info(f"Returning {len(users_data)} users for mention search")
+            
+            return Response({
+                'users': users_data,
+                'query': query,
+                'total': len(users_data),
+                'has_connections': len(connection_users) > 0,
+                'debug': {
+                    'user_id': request.user.id,
+                    'connections_count': len(following_ids),
+                    'connection_matches': len(connection_users),
+                    'other_matches': len(other_users)
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Error in mention search: {str(e)}")
+            return Response({
+                'error': f'An error occurred: {str(e)}',
+                'users': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        except Exception as e:
+            logger.error(f"Error in UserMentionSearchView: {str(e)}")
+            return Response({
+                'error': 'Failed to search users',
+                'users': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

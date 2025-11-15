@@ -27,10 +27,14 @@
         'font-semibold mb-2 leading-snug text-clamp-base md:text-base lg:text-lg',
         themeStore.isDarkMode ? 'text-gray-100' : 'text-slate-900'
       ]">{{ post.title }}</h2>
-      <div :class="[
-        'whitespace-pre-wrap mb-3 md:mb-4 leading-relaxed text-clamp-sm md:text-sm lg:text-base',
-        themeStore.isDarkMode ? 'text-gray-300' : 'text-slate-800'
-      ]">{{ post.content }}</div>
+      <MentionText 
+        :content="post.content"
+        :mentions="post.mentions || []"
+        :className="[
+          'mb-3 md:mb-4 text-clamp-sm md:text-sm lg:text-base',
+          themeStore.isDarkMode ? 'text-gray-300' : 'text-slate-800'
+        ].join(' ')"
+      />
 
       <!-- Shared Post Display -->
       <div v-if="post.shared_post" :class="[
@@ -59,10 +63,14 @@
           themeStore.isDarkMode ? 'text-gray-100' : 'text-slate-900'
         ]">{{ post.shared_post.title }}
         </h3>
-        <p :class="[
-          'leading-relaxed text-clamp-xs md:text-xs lg:text-sm',
-          themeStore.isDarkMode ? 'text-gray-200' : 'text-slate-700'
-        ]">{{ post.shared_post.content }}</p>
+        <MentionText 
+          :content="post.shared_post.content"
+          :mentions="post.shared_post.mentions || []"
+          :className="[
+            'text-clamp-xs md:text-xs lg:text-sm',
+            themeStore.isDarkMode ? 'text-gray-200' : 'text-slate-700'
+          ].join(' ')"
+        />
       </div>
 
       <!-- Media Files (Clickable to open modal) -->
@@ -134,9 +142,14 @@
               <p :class="themeStore.isDarkMode ? 'font-medium text-xs text-gray-100' : 'font-medium text-xs text-gray-900'">
                 {{ comment.user.full_name }}
               </p>
-              <p :class="themeStore.isDarkMode ? 'text-gray-200 text-xs mt-1 line-clamp-2' : 'text-gray-700 text-xs mt-1 line-clamp-2'">
-                {{ comment.content }}
-              </p>
+              <MentionText 
+                :content="comment.content"
+                :mentions="comment.mentions || []"
+                :className="[
+                  'text-xs mt-1 line-clamp-2',
+                  themeStore.isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                ].join(' ')"
+              />
             </div>
           </div>
         </div>
@@ -188,6 +201,7 @@ import MediaDisplay from './MediaDisplay.vue'
 import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
 import ReactionsModal from './ReactionsModal.vue'
+import MentionText from '@/components/common/MentionText.vue'
 
 // Props
 const props = defineProps({

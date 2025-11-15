@@ -46,7 +46,11 @@
         <div class="flex-1">
           <div class="bg-white rounded-2xl px-6 py-4 shadow-md border border-slate-200">
             <div class="font-bold text-lg text-slate-900 mb-1">{{ comment.user?.name || 'Anonymous' }}</div>
-            <div class="text-lg text-slate-800 leading-relaxed">{{ comment.content }}</div>
+            <MentionText 
+              :content="comment.content"
+              :mentions="comment.mentions || []"
+              className="text-lg text-slate-800 leading-relaxed"
+            />
           </div>
           <div class="mt-2 text-sm text-slate-500 px-6 font-medium">
             {{ formatTimeAgo(comment.created_at) }}
@@ -68,6 +72,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import MentionText from '@/components/common/MentionText.vue'
 
 // Props
 const props = defineProps({

@@ -15,9 +15,11 @@
           <div class="font-semibold text-sm text-gray-900 mb-1">
             {{ comment.user?.name || 'Anonymous' }}
           </div>
-          <div class="text-sm text-gray-800 leading-relaxed">
-            {{ comment.content }}
-          </div>
+          <MentionText 
+            :content="comment.content"
+            :mentions="comment.mentions || []"
+            className="text-sm text-gray-800 leading-relaxed"
+          />
         </div>
         
         <!-- Reaction Summary (Facebook-style) -->
@@ -118,6 +120,7 @@
 import { ref, nextTick } from 'vue'
 import CommentReactionPickerSimple from './CommentReactionPickerSimple.vue'
 import CommentReactionSummary from './CommentReactionSummary.vue'
+import MentionText from '@/components/common/MentionText.vue'
 
 // Props
 const props = defineProps({

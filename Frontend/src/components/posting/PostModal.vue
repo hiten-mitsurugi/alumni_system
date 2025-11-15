@@ -224,9 +224,11 @@
                     <p class="font-medium text-gray-900 text-xs sm:text-sm leading-none">
                       {{ comment.user.full_name }}
                     </p>
-                    <p class="text-gray-700 leading-none text-xs sm:text-sm">
-                      {{ comment.content }}
-                    </p>
+                    <MentionText 
+                      :content="comment.content"
+                      :mentions="comment.mentions || []"
+                      className="text-gray-700 leading-none text-xs sm:text-sm"
+                    />
                   </div>
                   <div class="flex items-center space-x-2 text-xs text-gray-500">
                     <span>{{ comment.time_since }}</span>
@@ -267,16 +269,17 @@
                     😀
                   </button>
                   
-                  <!-- Comment Input -->
-                  <input
-                    ref="commentInputRef"
-                    v-model="newComment"
-                    type="text"
-                    placeholder="Write a comment..."
-                    class="flex-1 px-3 sm:px-4 py-1.5 sm:py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
-                    @keyup.enter="addComment"
-                    @focus="closeEmojiPicker"
-                  />
+                  <!-- Comment Input with Mention Support -->
+                  <div class="flex-1">
+                    <MentionTextarea
+                      v-model="newComment"
+                      @mention="handleMention"
+                      @submit="addComment"
+                      :placeholder="'Write a comment... Use @ to mention someone'"
+                      :rows="1"
+                      class="w-full rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
                   
                   <!-- Send Button -->
                   <button
@@ -314,6 +317,8 @@ import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
 import ReactionsModal from './ReactionsModal.vue'
 import EmojiPicker from './EmojiPicker.vue'
+import MentionTextarea from '@/components/common/MentionTextarea.vue'
+import MentionText from '@/components/common/MentionText.vue'
 import '@/components/css/PostModal.css'
 
 // Props
@@ -376,6 +381,15 @@ const focusCommentInput = ref(false) // Add missing property to prevent Vue warn
 const showReactionsModal = ref(false)
 const showEmojiPicker = ref(false)
 const commentInputRef = ref(null)
+const mentionedUsers = ref([])
+
+// Methods
+const handleMention = (mentionData) => {
+  const existingUser = mentionedUsers.value.find(u => u.id === mentionData.user.id)
+  if (!existingUser) {
+    mentionedUsers.value.push(mentionData.user)
+  }
+}
 
 // Computed properties
 const mediaFiles = computed(() => {
@@ -432,12 +446,39 @@ const closeModal = () => {
   emit('close')
 }
 
+const extractMentions = (content) => {
+  const mentionPattern = /@(\w+)/g
+  const mentions = []
+  let match
+  
+  while ((match = mentionPattern.exec(content)) !== null) {
+    const username = match[1]
+    const user = mentionedUsers.value.find(u => u.username === username)
+    if (user) {
+      mentions.push({
+        user_id: user.id,
+        username: user.username,
+        start_position: match.index,
+        end_position: match.index + match[0].length
+      })
+    }
+  }
+  
+  return mentions
+}
+
 const addComment = () => {
   const content = newComment.value?.trim()
   if (!content) return
   
-  emit('add-comment', props.post.id, content)
+  // Extract mentions from the comment
+  const mentions = extractMentions(content)
+  
+  // Emit comment with mention data if backend supports it
+  emit('add-comment', props.post.id, content, null, mentions)
+  
   newComment.value = ''
+  mentionedUsers.value = []
 }
 
 const handleReaction = (postId, reactionType) => {

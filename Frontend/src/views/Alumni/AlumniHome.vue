@@ -262,6 +262,11 @@ const createPost = async (postData) => {
     formData.append('content', postData.content);
     formData.append('content_category', postData.category);
 
+    // Add mentions if any
+    if (postData.mentions && postData.mentions.length > 0) {
+      formData.append('mentions', JSON.stringify(postData.mentions));
+    }
+
     // Add files if any (backend expects 'media_files')
     if (postData.files && postData.files.length > 0) {
       postData.files.forEach((file) => {
@@ -373,14 +378,21 @@ const reactToPost = async (postId, reactionType) => {
   }
 };
 
-const addComment = async (postId, commentContent, parentId = null) => {
+const addComment = async (postId, commentContent, parentId = null, mentions = []) => {
   try {
     console.log(`💬 Adding comment to post ${postId}:`, commentContent);
 
-    const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/comment/`, {
+    const requestData = {
       content: commentContent,
       parent_id: parentId
-    }, {
+    };
+    
+    // Add mentions if provided
+    if (mentions && mentions.length > 0) {
+      requestData.mentions = mentions;
+    }
+
+    const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/comment/`, requestData, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
 

@@ -18,7 +18,7 @@ from .views import (
 )
 
 # Import the working EnhancedProfileView from profile_social module
-from .views.profile_social import EnhancedProfileView
+from .views.profile_social import EnhancedProfileView, UserMentionSearchView
 
 # Import field privacy views
 from .views_field_privacy import ProfileFieldUpdateView, ProfileAboutDataView, UserAddressesView
@@ -86,6 +86,7 @@ urlpatterns = [
     # Search and suggestions
     path('profile-search/', ProfileSearchView.as_view(), name='profile_search'),
     path('suggested-connections/', SuggestedConnectionsView.as_view(), name='suggested_connections'),
+    path('mention-search/', UserMentionSearchView.as_view(), name='user_mention_search'),
     
     # User resolution by name for URL routing
     path('alumni/by-name/<str:user_name>/', UserByNameView.as_view(), name='user_by_name'),
