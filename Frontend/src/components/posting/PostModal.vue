@@ -213,29 +213,15 @@
                 <p class="text-xs sm:text-sm">Be the first to comment!</p>
               </div>
               
-              <div v-for="comment in comments" :key="comment.id" class="flex space-x-2 sm:space-x-3">
-                <img
-                  :src="getProfilePictureUrl(comment.user.profile_picture) || '/default-avatar.png'"
-                  :alt="comment.user.full_name"
-                  class="w-5 h-5 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
+              <div v-for="comment in comments" :key="comment.id">
+                <CommentItem
+                  :comment="comment"
+                  :user-profile-picture="userProfilePicture"
+                  :current-user-id="currentUserId"
+                  @react-to-comment="handleReactToComment"
+                  @reply-to-comment="handleReplyToComment"
+                  @delete-comment="handleDeleteComment"
                 />
-                <div class="flex-1 min-w-0">
-                  <div class="bg-white rounded px-1.5 py-0.5 sm:px-3 sm:py-2 shadow-sm">
-                    <p class="font-medium text-gray-900 text-xs sm:text-sm leading-none">
-                      {{ comment.user.full_name }}
-                    </p>
-                    <MentionText 
-                      :content="comment.content"
-                      :mentions="comment.mentions || []"
-                      className="text-gray-700 leading-none text-xs sm:text-sm"
-                    />
-                  </div>
-                  <div class="flex items-center space-x-2 text-xs text-gray-500">
-                    <span>{{ comment.time_since }}</span>
-                    <button class="hover:text-orange-600">Like</button>
-                    <button class="hover:text-orange-600">Reply</button>
-                  </div>
-                </div>
               </div>
               
               <!-- Add some bottom padding only when there are comments to prevent huge empty space -->
@@ -317,6 +303,7 @@ import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
 import ReactionsModal from './ReactionsModal.vue'
 import EmojiPicker from './EmojiPicker.vue'
+import CommentItem from './CommentItem.vue'
 import MentionTextarea from '@/components/common/MentionTextarea.vue'
 import MentionText from '@/components/common/MentionText.vue'
 import '@/components/css/PostModal.css'
@@ -371,7 +358,10 @@ const emit = defineEmits([
   'copy-link',
   'load-comments',
   'navigate',
-  'reaction-updated'
+  'reaction-updated',
+  'react-to-comment',
+  'reply-to-comment',
+  'delete-comment'
 ])
 
 // Local state
@@ -529,8 +519,21 @@ const onImageError = (event) => {
 }
 
 const onVideoError = (event) => {
-  console.error('Failed to load video:', currentMediaUrl.value);
-  // Handle video error, e.g., show placeholder
+  console.error('Failed to load video:', currentMediaUrl.value)
+  // Could show error message or try different format
+}
+
+// Comment handlers
+const handleReactToComment = (data) => {
+  emit('react-to-comment', data)
+}
+
+const handleReplyToComment = (data) => {
+  emit('reply-to-comment', data)
+}
+
+const handleDeleteComment = (commentId) => {
+  emit('delete-comment', commentId)
 }
 
 const insertEmoji = (emoji) => {

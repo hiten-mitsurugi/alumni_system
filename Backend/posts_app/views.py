@@ -525,9 +525,99 @@ class CommentCreateView(APIView):
             for page in range(1, 6)  # Pages 1-5
         ])
 
-class SharePostView(APIView):
-    """Share/repost functionality"""
+class CommentDeleteView(APIView):
+    """Delete comments with Facebook-like permissions"""
     permission_classes = [IsAuthenticated]
+    
+    def delete(self, request, comment_id):
+        """
+        Delete a comment with permission checks:
+        - Comment author can delete their own comment
+        - Post author can delete any comment on their post
+        - Admins/SuperAdmins can delete any comment
+        """
+        try:
+            comment = Comment.objects.select_related('user', 'post__user').get(id=comment_id)
+            user = request.user
+            
+            # Check permissions
+            can_delete = False
+            deletion_reason = ""
+            
+            if comment.user == user:
+                # User is the comment author
+                can_delete = True
+                deletion_reason = "comment_author"
+            elif comment.post.user == user:
+                # User is the post author
+                can_delete = True
+                deletion_reason = "post_author"
+            elif user.user_type in [1, 2]:  # Admin or SuperAdmin
+                can_delete = True
+                deletion_reason = "admin"
+            
+            if not can_delete:
+                return Response(
+                    {
+                        'error': 'Permission denied. You can only delete your own comments or comments on your posts.',
+                        'code': 'COMMENT_DELETE_FORBIDDEN'
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Store post info before deletion for broadcasting
+            post_id = comment.post.id
+            post = comment.post
+            
+            # Delete comment
+            comment.delete()
+            
+            # Update post comment count
+            post.comments_count = post.comments.count()
+            post.save(update_fields=['comments_count'])
+            
+            # Clear cache
+            cache.delete(f"post_comments_{post_id}")
+            cache.clear()
+            
+            # Broadcast comment deletion
+            self._broadcast_comment_deletion(post_id, comment_id, user, deletion_reason)
+            
+            return Response(
+                {
+                    'message': 'Comment deleted successfully',
+                    'deleted_by': deletion_reason,
+                    'post_id': post_id,
+                    'comment_id': comment_id
+                },
+                status=status.HTTP_200_OK
+            )
+            
+        except Comment.DoesNotExist:
+            return Response(
+                {
+                    'error': 'Comment not found',
+                    'code': 'COMMENT_NOT_FOUND'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    def _broadcast_comment_deletion(self, post_id, comment_id, user, deletion_reason):
+        """Broadcast comment deletion to real-time subscribers"""
+        channel_layer = get_channel_layer()
+        
+        async_to_sync(channel_layer.group_send)(
+            f'post_{post_id}',
+            {
+                'type': 'comment_deleted',
+                'post_id': post_id,
+                'comment_id': comment_id,
+                'deleted_by_user_id': user.id,
+                'deleted_by_name': f"{user.first_name} {user.last_name}",
+                'deletion_reason': deletion_reason,
+                'timestamp': timezone.now().isoformat()
+            }
+        )
     
     def post(self, request, post_id):
         """Share a post with optional text"""

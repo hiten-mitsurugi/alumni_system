@@ -195,7 +195,22 @@ class CommentSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
-        return obj.user == request.user or request.user.user_type in [1, 2]
+        
+        user = request.user
+        
+        # Facebook-like deletion permissions:
+        # 1. Comment author can delete their own comment
+        # 2. Post author can delete any comment on their post
+        # 3. Admins/SuperAdmins can delete any comment
+        
+        if obj.user == user:
+            return True  # Comment author
+        elif obj.post.user == user:
+            return True  # Post author
+        elif user.user_type in [1, 2]:
+            return True  # Admin or SuperAdmin
+        
+        return False
 
 class PostSerializer(serializers.ModelSerializer):
     """Enhanced post serializer with Facebook-like features"""

@@ -449,6 +449,63 @@ const copyPostLink = (postId) => {
   showNotification('Post link copied to clipboard! 📋', 'success');
 };
 
+const deleteComment = async (commentId) => {
+  try {
+    console.log(`🗑️ Deleting comment ${commentId}`);
+    await axios.delete(`${BASE_URL}/api/posts/comments/${commentId}/delete/`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    });
+
+    console.log('✅ Comment deleted successfully');
+    showNotification('Comment deleted successfully! 🗑️', 'success');
+    
+    // Refresh comments for the currently selected post
+    if (selectedPost.value) {
+      await fetchCommentsForPost(selectedPost.value.id);
+      await fetchPosts(); // Also refresh posts to update comment counts
+    }
+
+  } catch (error) {
+    console.error('❌ Failed to delete comment:', error);
+    if (error.response?.status === 403) {
+      showNotification('You do not have permission to delete this comment.', 'error');
+    } else {
+      showNotification('Failed to delete comment. Please try again.', 'error');
+    }
+  }
+};
+
+const reactToComment = async (data) => {
+  try {
+    console.log('👍 Reacting to comment:', data);
+    await axios.post(`${BASE_URL}/api/posts/comments/${data.commentId}/react/`, {
+      reaction_type: data.reactionType
+    }, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    });
+
+    console.log('✅ Comment reaction added');
+    if (selectedPost.value) {
+      await fetchCommentsForPost(selectedPost.value.id);
+    }
+
+  } catch (error) {
+    console.error('❌ Failed to react to comment:', error);
+    showNotification('Failed to react to comment. Please try again.', 'error');
+  }
+};
+
+const replyToComment = async (data) => {
+  try {
+    console.log('💬 Replying to comment:', data);
+    await addComment(selectedPost.value.id, data.content, data.commentId);
+    
+  } catch (error) {
+    console.error('❌ Failed to reply to comment:', error);
+    showNotification('Failed to reply to comment. Please try again.', 'error');
+  }
+};
+
 // Modal functions
 const openPostModal = (post) => {
   selectedPost.value = post;
@@ -930,8 +987,8 @@ onUnmounted(() => {
 
     <!-- Post Modal (Single Instance) -->
     <PostModal
-      v-if="showModal && selectedPost"
-      :is-open="showModal"
+      v-if="selectedPost"
+      :is-open="!!selectedPost"
       :post="selectedPost"
       :comments="comments[selectedPost.id] || []"
       :current-index="currentPostIndex"
@@ -948,6 +1005,9 @@ onUnmounted(() => {
       @load-comments="fetchCommentsForPost"
       @navigate="navigateToPost"
       @reaction-updated="handleReactionUpdated"
+      @react-to-comment="reactToComment"
+      @reply-to-comment="replyToComment"
+      @delete-comment="deleteComment"
     />
 
     <!-- Notifications (Single Instance) -->
