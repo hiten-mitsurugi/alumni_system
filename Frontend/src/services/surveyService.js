@@ -51,6 +51,20 @@ class SurveyService {
     return api.get('/survey/admin/analytics/')
   }
 
+  async getCategoryAnalytics(categoryId) {
+    return api.get('/survey/admin/analytics/category/', {
+      params: { category_id: categoryId }
+    })
+  }
+
+  async exportCategoryPDF(categoryId) {
+    return api.post('/survey/admin/analytics/category/pdf/', {
+      category_id: categoryId
+    }, {
+      responseType: 'blob'
+    })
+  }
+
   async getResponses(filters = {}) {
     return api.get('/survey/admin/responses/', { params: filters })
   }

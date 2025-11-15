@@ -5,15 +5,15 @@ from .models import SurveyCategory, SurveyQuestion, SurveyResponse, SurveyTempla
 
 @admin.register(SurveyCategory)
 class SurveyCategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'order', 'is_active', 'active_questions_count', 'created_by', 'created_at']
-    list_filter = ['is_active', 'created_at']
+    list_display = ['name', 'order', 'is_active', 'include_in_registration', 'active_questions_count', 'created_by', 'created_at']
+    list_filter = ['is_active', 'include_in_registration', 'created_at']
     search_fields = ['name', 'description']
     ordering = ['order', 'name']
     readonly_fields = ['created_by', 'created_at', 'updated_at']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'description', 'order', 'is_active')
+            'fields': ('name', 'description', 'order', 'is_active', 'include_in_registration')
         }),
         ('Audit Information', {
             'fields': ('created_by', 'created_at', 'updated_at'),

@@ -608,6 +608,7 @@ class Command(BaseCommand):
                     'description': category_data['description'],
                     'order': category_data['order'],
                     'is_active': True,
+                    'include_in_registration': False,  # Tracer categories should NOT appear in registration
                     'created_by': admin_user
                 }
             )

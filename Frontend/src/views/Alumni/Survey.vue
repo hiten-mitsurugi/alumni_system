@@ -18,17 +18,45 @@ const themeStore = useThemeStore()
 
 // Reactive data
 const loading = ref(true)
-const currentCategoryIndex = ref(0)
+const currentCategoryIndex = ref(null) // null = show cards, number = show category
 const surveyData = ref([])
 const responses = ref({})
 const progress = ref(null)
 const submitting = ref(false)
 const showResults = ref(false)
+const showCardGrid = ref(true) // Toggle between card grid and category view
 
 // Computed properties
 const currentCategory = computed(() => {
+  if (currentCategoryIndex.value === null) return null
   return surveyData.value[currentCategoryIndex.value] || null
 })
+
+// Get answered questions count for a category
+const getCategoryProgress = (categoryIndex) => {
+  const category = surveyData.value[categoryIndex]
+  if (!category) return { answered: 0, total: 0, percentage: 0 }
+  
+  const totalQuestions = category.questions.length
+  const answeredQuestions = category.questions.filter(q => {
+    const response = responses.value[q.id]
+    return response !== undefined && response !== '' && response !== null
+  }).length
+  
+  return {
+    answered: answeredQuestions,
+    total: totalQuestions,
+    percentage: totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0
+  }
+}
+
+// Get category status
+const getCategoryStatus = (categoryIndex) => {
+  const progress = getCategoryProgress(categoryIndex)
+  if (progress.answered === 0) return 'not-started'
+  if (progress.answered === progress.total) return 'complete'
+  return 'in-progress'
+}
 
 const currentQuestions = computed(() => {
   return currentCategory.value?.questions || []
@@ -95,9 +123,20 @@ const loadExistingResponses = async () => {
 }
 
 // Navigation
+const openCategory = (index) => {
+  currentCategoryIndex.value = index
+  showCardGrid.value = false
+}
+
+const closeCategory = () => {
+  currentCategoryIndex.value = null
+  showCardGrid.value = true
+}
+
 const goToCategory = (index) => {
   if (index >= 0 && index < totalCategories.value) {
     currentCategoryIndex.value = index
+    showCardGrid.value = false
   }
 }
 
@@ -305,46 +344,118 @@ onMounted(async () => {
 
 <template>
   <div :class="themeStore.isDarkMode ? 'min-h-screen bg-gray-900 py-8' : 'min-h-screen bg-gray-50 py-8'">
-    <div class="max-w-4xl mx-auto px-4">
-      <!-- Header -->
-      <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md p-6 mb-6' : 'bg-white rounded-lg shadow-md p-6 mb-6'">
-        <div class="flex items-center justify-between mb-4">
-          <h1 :class="themeStore.isDarkMode ? 'text-3xl font-bold text-white' : 'text-3xl font-bold text-gray-900'">Alumni Tracer Survey</h1>
-          <div :class="themeStore.isDarkMode ? 'flex items-center gap-2 text-sm text-gray-300' : 'flex items-center gap-2 text-sm text-gray-600'">
-            <BarChart3 class="w-4 h-4" />
-            {{ overallProgress }}% Complete
-          </div>
-        </div>
-        
-        <!-- Progress Bar -->
-        <div :class="themeStore.isDarkMode ? 'w-full bg-gray-700 rounded-full h-2 mb-4' : 'w-full bg-gray-200 rounded-full h-2 mb-4'">
-          <div 
-            class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            :style="{ width: `${overallProgress}%` }"
-          ></div>
-        </div>
-        
-        <!-- Category Navigation -->
-        <div v-if="!loading && surveyData.length > 0" class="flex flex-wrap gap-2">
-          <button
-            v-for="(category, index) in surveyData"
-            :key="category.category.id"
-            @click="goToCategory(index)"
-            :class="[
-              'px-3 py-2 text-sm rounded-lg transition-colors',
-              index === currentCategoryIndex 
-                ? 'bg-blue-600 text-white' 
-                : (themeStore.isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-            ]"
-          >
-            {{ category.category.name }}
-          </button>
-        </div>
-      </div>
-
+    <div class="max-w-7xl mx-auto px-4">
       <!-- Loading -->
       <div v-if="loading" class="flex justify-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+
+      <!-- Card Grid View -->
+      <div v-else-if="showCardGrid && surveyData.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          v-for="(category, index) in surveyData"
+          :key="category.category.id"
+          @click="openCategory(index)"
+          :class="[
+            'cursor-pointer rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden',
+            themeStore.isDarkMode ? 'bg-gray-800 hover:bg-gray-750 border border-gray-700' : 'bg-white hover:border-blue-300 border border-gray-200'
+          ]"
+        >
+          <!-- Card Header -->
+          <div :class="[
+            'p-4 border-b',
+            getCategoryStatus(index) === 'complete' ? 'bg-green-50 border-green-200' :
+            getCategoryStatus(index) === 'in-progress' ? 'bg-yellow-50 border-yellow-200' :
+            themeStore.isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-orange-100 border-gray-200'
+          ]">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <h3 :class="[
+                  'font-semibold text-lg mb-1',
+                  themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+                ]">
+                  {{ category.category.name }}
+                </h3>
+                <p :class="[
+                  'text-sm',
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                ]">
+                  {{ category.questions.length }} question{{ category.questions.length !== 1 ? 's' : '' }}
+                </p>
+              </div>
+              
+              <!-- Status Badge -->
+              <div :class="[
+                'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
+                getCategoryStatus(index) === 'complete' ? 'bg-green-100 text-green-700' :
+                getCategoryStatus(index) === 'in-progress' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-gray-100 text-gray-600'
+              ]">
+                <CheckCircle v-if="getCategoryStatus(index) === 'complete'" class="w-3 h-3" />
+                <Clock v-else-if="getCategoryStatus(index) === 'in-progress'" class="w-3 h-3" />
+                <FileText v-else class="w-3 h-3" />
+                <span class="capitalize">{{ getCategoryStatus(index).replace('-', ' ') }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Card Body -->
+          <div class="p-4">
+            <p v-if="category.category.description" :class="[
+              'text-sm mb-4 line-clamp-3',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            ]">
+              {{ category.category.description }}
+            </p>
+            
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-sm">
+                <span :class="themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'">Progress</span>
+                <span :class="[
+                  'font-medium',
+                  getCategoryProgress(index).percentage === 100 ? 'text-green-600' :
+                  getCategoryProgress(index).percentage > 0 ? 'text-yellow-600' :
+                  themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                ]">
+                  {{ getCategoryProgress(index).answered }}/{{ getCategoryProgress(index).total }}
+                </span>
+              </div>
+              
+              <div :class="[
+                'w-full rounded-full h-2',
+                themeStore.isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+              ]">
+                <div
+                  :class="[
+                    'h-2 rounded-full transition-all duration-300',
+                    getCategoryProgress(index).percentage === 100 ? 'bg-green-500' :
+                    getCategoryProgress(index).percentage > 0 ? 'bg-yellow-500' :
+                    'bg-blue-500'
+                  ]"
+                  :style="{ width: `${getCategoryProgress(index).percentage}%` }"
+                ></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Card Footer -->
+          <div :class="[
+            'px-4 py-3 border-t flex items-center justify-between',
+            themeStore.isDarkMode ? 'bg-gray-750 border-gray-700' : 'bg-gray-50 border-gray-200'
+          ]">
+            <span :class="[
+              'text-sm font-medium',
+              themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
+            ]">
+              Click to {{ getCategoryStatus(index) === 'not-started' ? 'start' : 'continue' }}
+            </span>
+            <ChevronRight :class="[
+              'w-4 h-4',
+              themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
+            ]" />
+          </div>
+        </div>
       </div>
 
       <!-- Survey Complete -->
@@ -388,9 +499,26 @@ onMounted(async () => {
       </div>
 
       <!-- Survey Questions -->
-      <div v-else-if="currentCategory" :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md' : 'bg-white rounded-lg shadow-md'">
+      <div v-else-if="currentCategory" class="max-w-3xl mx-auto">
+        <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md' : 'bg-white rounded-lg shadow-md'">
+          <!-- Back to Categories Button -->
+          <div class="p-4 border-b" :class="themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-200'">
+            <button
+              @click="closeCategory"
+              :class="[
+                'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
+                themeStore.isDarkMode 
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+                  : 'bg-orange-600 text-white hover:bg-orange-700'
+              ]"
+            >
+              <ChevronLeft class="w-4 h-4" />
+              Back to Categories
+            </button>
+          </div>
+        
         <!-- Category Header -->
-        <div :class="themeStore.isDarkMode ? 'bg-gray-700 p-6 border-b border-gray-600' : 'bg-blue-50 p-6 border-b'">
+        <div :class="themeStore.isDarkMode ? 'bg-gray-700 p-6 border-b border-gray-600' : 'bg-orange-100 p-6 border-b'">
           <h2 :class="themeStore.isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'">{{ currentCategory.category.name }}</h2>
           <p v-if="currentCategory.category.description" :class="themeStore.isDarkMode ? 'text-gray-300 mt-2' : 'text-gray-600 mt-2'">
             {{ currentCategory.category.description }}
@@ -584,6 +712,7 @@ onMounted(async () => {
             <Send class="w-4 h-4" />
             {{ submitting ? 'Submitting...' : 'Submit Survey' }}
           </button>
+        </div>
         </div>
       </div>
 

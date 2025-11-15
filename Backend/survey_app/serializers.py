@@ -15,7 +15,7 @@ class SurveyCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyCategory
         fields = [
-            'id', 'name', 'description', 'order', 'is_active',
+            'id', 'name', 'description', 'order', 'is_active', 'include_in_registration',
             'depends_on_category', 'depends_on_category_name', 
             'depends_on_question_text', 'depends_on_value',
             'active_questions_count', 'total_questions_count', 'created_by', 'created_by_name',

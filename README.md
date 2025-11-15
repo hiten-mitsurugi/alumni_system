@@ -63,6 +63,7 @@ npm install @vitejs/plugin-vue@5.2.4 axios@1.9.0 globals@16.2.0 lucide-vue-next@
 npm install tailwindcss @tailwindcss/vite
 npm install lodash
 npm install @heroicons/vue
+npm install chart.js vue-chartjs
 npm run build
 npm run dev
 npm run dev -- --host 0.0.0.0

@@ -10,6 +10,10 @@ class SurveyCategory(models.Model):
     description = models.TextField(blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Order for display (lower numbers first)")
     is_active = models.BooleanField(default=True)
+    include_in_registration = models.BooleanField(
+        default=False,
+        help_text="Include this category in the public registration survey"
+    )
     
     # Category-level conditional logic
     depends_on_category = models.ForeignKey(

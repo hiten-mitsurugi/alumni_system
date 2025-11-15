@@ -18,6 +18,8 @@ urlpatterns = [
     
     # Analytics & Responses
     path('admin/analytics/', views.SurveyResponseAnalyticsView.as_view(), name='admin-analytics'),
+    path('admin/analytics/category/', views.CategoryAnalyticsView.as_view(), name='category-analytics'),
+    path('admin/analytics/category/pdf/', views.category_analytics_pdf_export, name='category-analytics-pdf'),
     path('admin/responses/', views.SurveyResponsesView.as_view(), name='admin-responses'),
     
     # Comprehensive Analytics Dashboard

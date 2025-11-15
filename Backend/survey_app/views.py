@@ -229,6 +229,249 @@ class SurveyResponsesView(generics.ListAPIView):
         return queryset.order_by('-submitted_at')
 
 
+class CategoryAnalyticsView(APIView):
+    """
+    Get detailed analytics for a specific category.
+    Returns per-question aggregated statistics ready for charting.
+    """
+    permission_classes = [IsSurveyAdmin]
+    
+    def get(self, request):
+        category_id = request.query_params.get('category_id')
+        
+        if not category_id:
+            return Response(
+                {'error': 'category_id parameter is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            category = SurveyCategory.objects.get(id=category_id)
+        except SurveyCategory.DoesNotExist:
+            return Response(
+                {'error': 'Category not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check cache first
+        cache_key = f'category_analytics_{category_id}'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+        
+        # Get all questions for this category
+        questions = SurveyQuestion.objects.filter(
+            category=category,
+            is_active=True
+        ).order_by('order', 'question_text')
+        
+        # Get all responses for this category
+        responses = SurveyResponse.objects.filter(
+            question__category=category
+        ).select_related('user', 'question')
+        
+        # Get total potential respondents (alumni)
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        total_alumni = User.objects.filter(user_type=3, is_approved=True).count()
+        
+        # Calculate per-question analytics
+        question_analytics = []
+        
+        for question in questions:
+            question_responses = responses.filter(question=question)
+            response_count = question_responses.count()
+            
+            analytics_item = {
+                'question_id': question.id,
+                'question_text': question.question_text,
+                'question_type': question.question_type,
+                'help_text': question.help_text,
+                'is_required': question.is_required,
+                'response_count': response_count,
+                'response_rate': round((response_count / total_alumni * 100) if total_alumni > 0 else 0, 2),
+                'order': question.order
+            }
+            
+            # Type-specific analytics
+            if question.question_type in ['radio', 'select']:
+                # Single choice - calculate distribution
+                distribution = {}
+                for response in question_responses:
+                    value = self._extract_value(response.response_data)
+                    if value:
+                        distribution[str(value)] = distribution.get(str(value), 0) + 1
+                
+                analytics_item['distribution'] = distribution
+                analytics_item['options'] = question.get_options_list()
+                
+            elif question.question_type == 'checkbox':
+                # Multiple choice - calculate distribution (multi-select)
+                distribution = {}
+                for response in question_responses:
+                    values = self._extract_value(response.response_data)
+                    if isinstance(values, list):
+                        for value in values:
+                            distribution[str(value)] = distribution.get(str(value), 0) + 1
+                    elif values:
+                        distribution[str(values)] = distribution.get(str(values), 0) + 1
+                
+                analytics_item['distribution'] = distribution
+                analytics_item['options'] = question.get_options_list()
+                
+            elif question.question_type == 'rating':
+                # Rating scale - calculate distribution and average
+                values = []
+                distribution = {}
+                
+                for response in question_responses:
+                    value = self._extract_value(response.response_data)
+                    if value is not None:
+                        try:
+                            numeric_value = float(value)
+                            values.append(numeric_value)
+                            distribution[str(int(numeric_value))] = distribution.get(str(int(numeric_value)), 0) + 1
+                        except (ValueError, TypeError):
+                            pass
+                
+                analytics_item['distribution'] = distribution
+                analytics_item['average'] = round(sum(values) / len(values), 2) if values else 0
+                analytics_item['min_value'] = question.min_value or 1
+                analytics_item['max_value'] = question.max_value or 5
+                
+            elif question.question_type == 'yes_no':
+                # Yes/No - calculate distribution
+                distribution = {'Yes': 0, 'No': 0}
+                for response in question_responses:
+                    value = self._extract_value(response.response_data)
+                    if value in ['Yes', 'yes', True, 'true', '1', 1]:
+                        distribution['Yes'] += 1
+                    elif value in ['No', 'no', False, 'false', '0', 0]:
+                        distribution['No'] += 1
+                
+                analytics_item['distribution'] = distribution
+                
+            elif question.question_type in ['text', 'textarea', 'email']:
+                # Text responses - provide samples
+                sample_responses = []
+                for response in question_responses[:10]:  # Limit to 10 samples
+                    value = self._extract_value(response.response_data)
+                    if value:
+                        sample_responses.append({
+                            'value': str(value)[:200],  # Truncate long text
+                            'submitted_at': response.submitted_at.isoformat()
+                        })
+                
+                analytics_item['sample_responses'] = sample_responses
+                
+            elif question.question_type == 'number':
+                # Number - calculate statistics and create histogram buckets
+                values = []
+                for response in question_responses:
+                    value = self._extract_value(response.response_data)
+                    if value is not None:
+                        try:
+                            values.append(float(value))
+                        except (ValueError, TypeError):
+                            pass
+                
+                if values:
+                    analytics_item['average'] = round(sum(values) / len(values), 2)
+                    analytics_item['min'] = min(values)
+                    analytics_item['max'] = max(values)
+                    
+                    # Create histogram buckets for bar chart
+                    min_val = min(values)
+                    max_val = max(values)
+                    range_val = max_val - min_val
+                    
+                    if range_val == 0:
+                        # All same value
+                        analytics_item['distribution'] = {str(int(min_val)): len(values)}
+                    else:
+                        # Determine number of buckets (5-10 depending on range)
+                        num_buckets = min(10, max(5, int(range_val / 5) + 1))
+                        bucket_width = range_val / num_buckets
+                        
+                        # Create buckets
+                        distribution = {}
+                        for i in range(num_buckets):
+                            bucket_start = min_val + (i * bucket_width)
+                            bucket_end = bucket_start + bucket_width
+                            
+                            if i == num_buckets - 1:
+                                # Last bucket includes max value
+                                bucket_label = f"{int(bucket_start)}-{int(bucket_end)}"
+                                count = sum(1 for v in values if bucket_start <= v <= bucket_end)
+                            else:
+                                bucket_label = f"{int(bucket_start)}-{int(bucket_end-1)}"
+                                count = sum(1 for v in values if bucket_start <= v < bucket_end)
+                            
+                            if count > 0:  # Only include non-empty buckets
+                                distribution[bucket_label] = count
+                        
+                        analytics_item['distribution'] = distribution
+                else:
+                    analytics_item['average'] = 0
+                    analytics_item['min'] = 0
+                    analytics_item['max'] = 0
+                    analytics_item['distribution'] = {}
+                
+            elif question.question_type == 'date':
+                # Date - provide distribution by year/month
+                dates = []
+                for response in question_responses:
+                    value = self._extract_value(response.response_data)
+                    if value:
+                        dates.append(str(value))
+                
+                analytics_item['sample_dates'] = dates[:10]
+            
+            question_analytics.append(analytics_item)
+        
+        # Category summary
+        category_data = {
+            'category': {
+                'id': category.id,
+                'name': category.name,
+                'description': category.description,
+                'total_questions': questions.count(),
+                'active_questions': questions.count()
+            },
+            'summary': {
+                'total_responses': responses.count(),
+                'unique_respondents': responses.values('user').distinct().count(),
+                'total_potential_respondents': total_alumni,
+                'response_rate': round(
+                    (responses.values('user').distinct().count() / total_alumni * 100) 
+                    if total_alumni > 0 else 0, 
+                    2
+                )
+            },
+            'questions': question_analytics,
+            'generated_at': timezone.now().isoformat()
+        }
+        
+        # Cache for 30 minutes
+        cache.set(cache_key, category_data, 1800)
+        
+        return Response(category_data)
+    
+    def _extract_value(self, response_data):
+        """Extract the actual value from response_data JSON"""
+        if not response_data:
+            return None
+        
+        if isinstance(response_data, dict):
+            # Try common keys
+            for key in ['value', 'answer', 'text', 'rating', 'selected_options']:
+                if key in response_data:
+                    return response_data[key]
+            return response_data
+        
+        return response_data
+
+
 # =============================================================================
 # ALUMNI VIEWS - Survey Taking (Alumni & Authenticated Users)
 # =============================================================================
@@ -727,6 +970,225 @@ def survey_export_view(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsSurveyAdmin])
+def category_analytics_pdf_export(request):
+    """
+    Export category analytics as PDF report with charts and statistics.
+    """
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
+        from reportlab.graphics.shapes import Drawing
+        from reportlab.graphics.charts.barcharts import VerticalBarChart
+        from reportlab.graphics.charts.piecharts import Pie
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from datetime import datetime
+        import io
+        
+        category_id = request.data.get('category_id')
+        
+        if not category_id:
+            return Response({'error': 'category_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            category = SurveyCategory.objects.get(id=category_id)
+        except SurveyCategory.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get analytics data (reuse the analytics view logic)
+        questions = SurveyQuestion.objects.filter(
+            category=category,
+            is_active=True
+        ).order_by('order', 'question_text')
+        
+        responses = SurveyResponse.objects.filter(
+            question__category=category
+        ).select_related('user', 'question')
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        total_alumni = User.objects.filter(user_type=3, is_approved=True).count()
+        
+        # Create PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=16,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=12,
+            spaceBefore=12
+        )
+        
+        # Title
+        story.append(Paragraph(f"Survey Analytics Report", title_style))
+        story.append(Paragraph(f"Category: {category.name}", styles['Heading2']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Summary section
+        story.append(Paragraph("Summary", heading_style))
+        summary_data = [
+            ['Metric', 'Value'],
+            ['Report Generated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+            ['Total Questions', str(questions.count())],
+            ['Total Responses', str(responses.count())],
+            ['Unique Respondents', str(responses.values('user').distinct().count())],
+            ['Total Alumni', str(total_alumni)],
+            ['Response Rate', f"{round((responses.values('user').distinct().count() / total_alumni * 100) if total_alumni > 0 else 0, 2)}%"]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[3*inch, 3*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Question details
+        story.append(Paragraph("Question Analytics", heading_style))
+        story.append(Spacer(1, 0.1*inch))
+        
+        for question in questions:
+            question_responses = responses.filter(question=question)
+            response_count = question_responses.count()
+            
+            # Question header
+            story.append(Paragraph(f"<b>{question.question_text}</b>", styles['Normal']))
+            story.append(Paragraph(f"Type: {question.get_question_type_display()} | Responses: {response_count}", styles['Normal']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            # Question-specific analytics
+            if question.question_type in ['radio', 'select', 'yes_no']:
+                # Distribution table
+                distribution = {}
+                for response in question_responses:
+                    value = self._extract_value_for_pdf(response.response_data)
+                    if value:
+                        distribution[str(value)] = distribution.get(str(value), 0) + 1
+                
+                if distribution:
+                    dist_data = [['Option', 'Count', 'Percentage']]
+                    for option, count in sorted(distribution.items(), key=lambda x: x[1], reverse=True):
+                        percentage = round((count / response_count * 100) if response_count > 0 else 0, 1)
+                        dist_data.append([option, str(count), f"{percentage}%"])
+                    
+                    dist_table = Table(dist_data, colWidths=[3*inch, 1.5*inch, 1.5*inch])
+                    dist_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 10),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ]))
+                    story.append(dist_table)
+            
+            elif question.question_type == 'rating':
+                # Rating statistics
+                values = []
+                for response in question_responses:
+                    value = self._extract_value_for_pdf(response.response_data)
+                    if value is not None:
+                        try:
+                            values.append(float(value))
+                        except (ValueError, TypeError):
+                            pass
+                
+                if values:
+                    avg = round(sum(values) / len(values), 2)
+                    story.append(Paragraph(f"Average Rating: <b>{avg}</b> / {question.max_value or 5}", styles['Normal']))
+                    
+                    # Distribution
+                    distribution = {}
+                    for val in values:
+                        distribution[int(val)] = distribution.get(int(val), 0) + 1
+                    
+                    dist_data = [['Rating', 'Count']]
+                    for rating in range(question.min_value or 1, (question.max_value or 5) + 1):
+                        count = distribution.get(rating, 0)
+                        dist_data.append([str(rating), str(count)])
+                    
+                    dist_table = Table(dist_data, colWidths=[2*inch, 2*inch])
+                    dist_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ]))
+                    story.append(dist_table)
+            
+            elif question.question_type in ['text', 'textarea']:
+                # Sample responses
+                samples = []
+                for response in question_responses[:5]:
+                    value = self._extract_value_for_pdf(response.response_data)
+                    if value:
+                        samples.append(str(value)[:150])
+                
+                if samples:
+                    story.append(Paragraph("<b>Sample Responses:</b>", styles['Normal']))
+                    for i, sample in enumerate(samples, 1):
+                        story.append(Paragraph(f"{i}. {sample}", styles['Normal']))
+            
+            story.append(Spacer(1, 0.2*inch))
+        
+        # Build PDF
+        doc.build(story)
+        
+        # Return response
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'survey_analytics_{category.name}_{timestamp}.pdf'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+        
+    except ImportError:
+        return Response({
+            'error': 'ReportLab library not installed. Run: pip install reportlab'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({'error': f'PDF export failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+def _extract_value_for_pdf(response_data):
+    """Helper function to extract value from response_data"""
+    if not response_data:
+        return None
+    if isinstance(response_data, dict):
+        for key in ['value', 'answer', 'text', 'rating', 'selected_options']:
+            if key in response_data:
+                return response_data[key]
+        return response_data
+    return response_data
+
+
+@api_view(['POST'])
 @permission_classes([IsSuperAdminOnly])
 def clear_survey_cache_view(request):
     """
@@ -752,14 +1214,11 @@ class RegistrationSurveyQuestionsView(APIView):
     def get(self, request):
         print(f"🔄 Loading fresh registration survey data from database (no cache)")
         
-        # Get active categories with their questions
-        # Filter out categories that should not be in registration (e.g., Personal Info, Alumni Verification)
-        excluded_categories = ['Alumni Verification', 'Personal & Demographic Information']
-        
+        # Get active categories that are marked for inclusion in registration
+        # Only return categories where include_in_registration=True
         categories = SurveyCategory.objects.filter(
-            is_active=True
-        ).exclude(
-            name__in=excluded_categories
+            is_active=True,
+            include_in_registration=True
         ).prefetch_related(
             'questions'
         ).order_by('order', 'name')
