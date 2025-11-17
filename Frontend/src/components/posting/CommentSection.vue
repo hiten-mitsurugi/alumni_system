@@ -49,6 +49,7 @@
             <MentionText 
               :content="comment.content"
               :mentions="comment.mentions || []"
+              :available-users="{ [comment.user.username]: { full_name: comment.user.full_name, name: comment.user.name } }"
               className="text-lg text-slate-800 leading-relaxed"
             />
           </div>

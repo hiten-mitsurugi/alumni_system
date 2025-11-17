@@ -153,9 +153,9 @@
   <!-- Right side - Post Details and Comments -->
   <div :class="hasMedia ? 'basis-1/3 w-full' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full" style="overflow-x: visible;">
     <!-- Scrollable Content Area with Fixed Height -->
-    <div class="overflow-y-auto" style="height: calc(100% - 70px); overflow-x: visible;">
+    <div class="flex flex-col h-full" style="height: calc(100% - 70px); overflow-x: visible;">
             <!-- Post Header -->
-            <div class="p-4 border-b border-gray-200">
+            <div class="p-4 border-b border-gray-200 flex-shrink-0">
               <PostHeader
                 :post="post"
                 :categories="categories"
@@ -165,7 +165,7 @@
             </div>
 
             <!-- Post Content -->
-            <div class="p-4 pb-2 border-b border-gray-200">
+            <div class="p-4 pb-2 border-b border-gray-200 flex-shrink-0">
               <h3 v-if="post.title" class="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                 {{ post.title }}
               </h3>
@@ -175,7 +175,7 @@
             </div>
 
             <!-- Engagement Summary -->
-            <div v-if="hasEngagement" class="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-200 hover-isolation" style="overflow: visible; position: relative; z-index: 10;" @mouseenter.stop @mouseover.stop>
+            <div v-if="hasEngagement" class="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-200 hover-isolation flex-shrink-0" style="overflow: visible; position: relative; z-index: 10;" @mouseenter.stop @mouseover.stop>
               <ReactionSummary
                 :reactions-summary="post.reactions_summary"
                 :post-id="post.id"
@@ -197,14 +197,15 @@
             </div>
 
             <!-- Comments Header -->
-            <div class="px-3 sm:px-6 py-2 sm:py-3 bg-gray-50 border-b border-gray-200">
+            <div class="px-3 sm:px-6 py-2 sm:py-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
               <h4 class="font-semibold text-gray-900 text-sm sm:text-lg">
                 Comments ({{ comments.length || 0 }})
               </h4>
             </div>
 
             <!-- Comments List -->
-            <div class="px-4 py-3 space-y-3 bg-gray-50">
+            <div class="px-4 py-3 space-y-3 bg-gray-50 flex-1 overflow-y-auto min-h-0"
+                 style="max-height: 400px;">
               <div v-if="comments.length === 0" class="text-center text-gray-500 py-4 sm:py-8">
                 <svg class="mx-auto h-6 w-6 sm:h-12 sm:w-12 text-gray-400 mb-2 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

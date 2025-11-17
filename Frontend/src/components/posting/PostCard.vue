@@ -30,6 +30,7 @@
       <MentionText 
         :content="post.content"
         :mentions="post.mentions || []"
+        :available-users="post.mentioned_users || {}"
         :className="[
           'mb-3 md:mb-4 text-clamp-sm md:text-sm lg:text-base',
           themeStore.isDarkMode ? 'text-gray-300' : 'text-slate-800'
@@ -66,8 +67,9 @@
         <MentionText 
           :content="post.shared_post.content"
           :mentions="post.shared_post.mentions || []"
+          :available-users="post.shared_post.mentioned_users || {}"
           :className="[
-            'text-clamp-xs md:text-xs lg:text-sm',
+            'text-clamp-sm md:text-sm lg:text-base',
             themeStore.isDarkMode ? 'text-gray-200' : 'text-slate-700'
           ].join(' ')"
         />
@@ -145,6 +147,7 @@
               <MentionText 
                 :content="comment.content"
                 :mentions="comment.mentions || []"
+                :available-users="comment.mentioned_users || {}"
                 :className="[
                   'text-xs mt-1 line-clamp-2',
                   themeStore.isDarkMode ? 'text-gray-200' : 'text-gray-700'

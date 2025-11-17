@@ -94,13 +94,14 @@ class CommentSerializer(serializers.ModelSerializer):
     time_since = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
     can_delete = serializers.SerializerMethodField()
+    mentioned_users = serializers.SerializerMethodField()
     
     class Meta:
         model = Comment
         fields = [
             'id', 'user', 'post', 'content', 'parent', 'likes_count', 'replies_count',
             'created_at', 'updated_at', 'edited_at', 'is_edited', 'time_since',
-            'replies', 'reactions_summary', 'can_edit', 'can_delete'
+            'replies', 'reactions_summary', 'can_edit', 'can_delete', 'mentioned_users'
         ]
         extra_kwargs = {
             'post': {'required': False, 'read_only': True},
@@ -211,6 +212,33 @@ class CommentSerializer(serializers.ModelSerializer):
             return True  # Admin or SuperAdmin
         
         return False
+    
+    def get_mentioned_users(self, obj):
+        """Extract mentioned users from comment content and provide user data"""
+        import re
+        from django.contrib.auth import get_user_model
+        
+        User = get_user_model()
+        mentioned_users = {}
+        
+        # Find all mentions in the format @username
+        mention_pattern = r'@([a-zA-Z0-9._-]+)'
+        mentions = re.findall(mention_pattern, obj.content)
+        
+        if mentions:
+            # Get user data for all mentioned usernames
+            users = User.objects.filter(username__in=mentions).values(
+                'username', 'first_name', 'last_name'
+            )
+            
+            for user in users:
+                full_name = f"{user['first_name']} {user['last_name']}".strip()
+                mentioned_users[user['username']] = {
+                    'full_name': full_name,
+                    'name': full_name
+                }
+        
+        return mentioned_users
 
 class PostSerializer(serializers.ModelSerializer):
     """Enhanced post serializer with Facebook-like features"""
@@ -227,6 +255,7 @@ class PostSerializer(serializers.ModelSerializer):
     can_delete = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     engagement_stats = serializers.SerializerMethodField()
+    mentioned_users = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
@@ -236,7 +265,8 @@ class PostSerializer(serializers.ModelSerializer):
             'media_files', 'likes_count', 'comments_count', 'shares_count',
             'is_approved', 'is_pinned', 'visibility', 'status', 'created_at', 'updated_at',
             'edited_at', 'is_edited', 'time_since', 'reactions_summary',
-            'recent_comments', 'can_edit', 'can_delete', 'is_saved', 'engagement_stats'
+            'recent_comments', 'can_edit', 'can_delete', 'is_saved', 'engagement_stats',
+            'mentioned_users'
         ]
     
     def get_shared_post(self, obj):
@@ -374,6 +404,33 @@ class PostSerializer(serializers.ModelSerializer):
         
         total_engagement = obj.likes_count + obj.comments_count + obj.shares_count
         return round((total_engagement / views_count) * 100, 2)
+    
+    def get_mentioned_users(self, obj):
+        """Extract mentioned users from post content and provide user data"""
+        import re
+        from django.contrib.auth import get_user_model
+        
+        User = get_user_model()
+        mentioned_users = {}
+        
+        # Find all mentions in the format @username
+        mention_pattern = r'@([a-zA-Z0-9._-]+)'
+        mentions = re.findall(mention_pattern, obj.content or '')
+        
+        if mentions:
+            # Get user data for all mentioned usernames
+            users = User.objects.filter(username__in=mentions).values(
+                'username', 'first_name', 'last_name'
+            )
+            
+            for user in users:
+                full_name = f"{user['first_name']} {user['last_name']}".strip()
+                mentioned_users[user['username']] = {
+                    'full_name': full_name,
+                    'name': full_name
+                }
+        
+        return mentioned_users
 
 class PostCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating posts"""

@@ -26,6 +26,10 @@ const props = defineProps({
   className: {
     type: String,
     default: ''
+  },
+  availableUsers: {
+    type: Object,
+    default: () => ({})
   }
 })
 
@@ -34,7 +38,7 @@ const formattedContent = computed(() => {
   if (!props.content) return ''
   
   // First convert backend mentions (@username) to display format (@Full Name) if needed
-  const displayContent = convertMentionsForDisplay(props.content, props.mentions)
+  const displayContent = convertMentionsForDisplay(props.content, props.mentions, props.availableUsers)
   
   // Then parse and format mentions as bold
   return parseMentions(displayContent)

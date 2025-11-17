@@ -3,7 +3,7 @@
     <!-- User Avatar -->
     <img 
       :src="comment.user?.profile_picture || '/default-avatar.png'"
-      :alt="comment.user?.name || 'User'"
+      :alt="comment.user?.full_name || `${comment.user?.first_name} ${comment.user?.last_name}`.trim() || 'User'"
       class="comment-avatar"
     />
     
@@ -13,11 +13,12 @@
       <div class="relative">
         <div class="bg-gray-100 rounded-2xl px-3 py-2 max-w-xs lg:max-w-md">
           <div class="font-semibold text-sm text-gray-900 mb-1">
-            {{ comment.user?.name || 'Anonymous' }}
+            {{ comment.user?.full_name || `${comment.user?.first_name} ${comment.user?.last_name}`.trim() || 'Anonymous' }}
           </div>
           <MentionText 
             :content="comment.content"
             :mentions="comment.mentions || []"
+            :available-users="comment.mentioned_users || {}"
             className="text-sm text-gray-800 leading-relaxed"
           />
         </div>

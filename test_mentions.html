@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Mentions</title>
+    <style>
+        .mention-text {
+            font-weight: bold;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h2>Testing Mention Parsing</h2>
+    
+    <script>
+        // Copy the parseMentions function for testing
+        function parseMentions(content) {
+            if (!content) return ''
+            
+            // Pattern 1: Full names (2-4 capitalized words)
+            let result = content.replace(/@([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})(?=\s|$|[^\w])/g, (match) => {
+                return `<span class="mention-text">${match}</span>`
+            })
+            
+            // Pattern 2: Usernames (lowercase with dots, underscores, numbers)
+            result = result.replace(/@([a-z][a-z0-9._-]*[a-z0-9])(?=\s|$|[^\w.-])/g, (match) => {
+                if (result.includes(`<span class="mention-text">${match}</span>`)) {
+                    return match
+                }
+                return `<span class="mention-text">${match}</span>`
+            })
+            
+            return result
+        }
+
+        // Test cases
+        const testCases = [
+            "Hello @Prince Nino Antigo how are you?",
+            "Hey @prince.antigo what's up?",
+            "Contact @john_doe or @mary.smith",
+            "Email me at test@example.com",
+            "Use @ symbol here but not a mention",
+            "@",
+            "@A single letter",
+            "@123invalid",
+            "Valid @John Doe and invalid @",
+            "Multiple @Prince Nino Antigo and @prince.antigo in one text"
+        ]
+
+        testCases.forEach((test, i) => {
+            const result = parseMentions(test)
+            document.body.innerHTML += `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
+                    <strong>Test ${i + 1}:</strong><br>
+                    <strong>Input:</strong> ${test}<br>
+                    <strong>Output:</strong> ${result}
+                </div>
+            `
+        })
+    </script>
+</body>
+</html>
