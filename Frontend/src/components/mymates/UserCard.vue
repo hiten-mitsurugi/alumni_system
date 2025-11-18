@@ -103,7 +103,7 @@ defineEmits([
   'unfollow'
 ]);
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+const BASE_URL = 'http://localhost:8000';  // Backend server for media files
 
 const getProfilePictureUrl = (profilePicture) => {
   if (!profilePicture) {
@@ -133,7 +133,7 @@ const getAddress = () => {
 };
 
 const handleImageError = (event) => {
-  console.log('Image failed to load, using default avatar');
+  // Silently fallback to default avatar to reduce console flooding
   event.target.src = '/default-avatar.png';
 };
 </script>

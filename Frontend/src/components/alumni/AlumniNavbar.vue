@@ -30,7 +30,7 @@
         <div class="relative w-full">
           <input :value="injectedSearchQuery" @input="injectedSearchQuery = $event.target.value" type="text"
             placeholder="Search alumni, posts..."
-            class="w-full py-2 pl-10 pr-4 text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+            class="search-input w-full py-2 pl-10 pr-4 text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
           <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-slate-400" fill="none" stroke="currentColor"
             viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -542,6 +542,29 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Search Input Specific Styling */
+.search-input {
+  /* Light mode (default) - ensure high specificity */
+  background-color: white !important;
+  color: #111827 !important; /* gray-900 */
+  border-color: #d1d5db !important; /* gray-300 */
+}
+
+.search-input::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+/* Dark mode search input */
+.dark .search-input {
+  background-color: #334155 !important; /* slate-700 */
+  color: #f1f5f9 !important; /* slate-100 */
+  border-color: #475569 !important; /* slate-600 */
+}
+
+.dark .search-input::placeholder {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
 /* Ensure proper dark mode shadows and prevent white shadow bleed */
 .dark .shadow-xl {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.04);

@@ -1267,16 +1267,21 @@ class FollowUserView(APIView):
     
     def delete(self, request, user_id):
         """Disconnect from a user (removes mutual connection)"""
+        print(f"🔄 Unfollow request: User {request.user.id} wants to unfollow User {user_id}")
+        
         try:
             target_user = CustomUser.objects.get(id=user_id)
         except CustomUser.DoesNotExist:
+            print(f"❌ Target user {user_id} not found")
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
             from .models import Following
             # Remove the connection from current user to target user
             following = Following.objects.get(follower=request.user, following=target_user)
+            print(f"✅ Found following relationship: {following.id} (status: {following.status})")
             following.delete()
+            print(f"✅ Deleted following relationship: {request.user.id} → {target_user.id}")
             
             # Remove the reverse connection (mutual disconnection)
             reverse_following = Following.objects.filter(
@@ -1285,9 +1290,18 @@ class FollowUserView(APIView):
             ).first()
             if reverse_following:
                 reverse_following.delete()
+                print(f"✅ Deleted reverse following relationship: {target_user.id} → {request.user.id}")
             
-            return Response({'message': 'Successfully disconnected from user'}, status=status.HTTP_200_OK)
+            return Response({
+                'message': 'Successfully disconnected from user',
+                'unfollowed_user': {
+                    'id': target_user.id,
+                    'name': f"{target_user.first_name} {target_user.last_name}",
+                    'email': target_user.email
+                }
+            }, status=status.HTTP_200_OK)
         except Following.DoesNotExist:
+            print(f"❌ No following relationship found between {request.user.id} and {target_user.id}")
             return Response({'error': 'Not connected to this user'}, status=status.HTTP_400_BAD_REQUEST)
 
 

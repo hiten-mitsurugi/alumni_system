@@ -9,16 +9,16 @@ from .views import (
     AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView, DebugUsersView, ClearCacheView,
     CheckEmailExistsView, AdminAnalyticsView, ForgotPasswordView,
     # LinkedIn-style views
-    FollowUserView, UserConnectionsView, AchievementListCreateView,
+    FollowUserView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
-    SuggestedConnectionsView, UserByNameView, InvitationAcceptView, InvitationRejectView,
+    SuggestedConnectionsView, UserByNameView,
     # Additional views for comprehensive model coverage (temporarily commented out)
     # AddressListCreateView, AddressDetailView, SkillsRelevanceView, CurriculumRelevanceView,
     # PerceptionStudiesView, FeedbackView
 )
 
-# Import the working EnhancedProfileView from profile_social module
-from .views.profile_social import EnhancedProfileView, UserMentionSearchView
+# Import the working EnhancedProfileView and UserConnectionsView from profile_social module
+from .views.profile_social import EnhancedProfileView, UserMentionSearchView, UserConnectionsView, InvitationAcceptView, InvitationRejectView
 
 # Import field privacy views
 from .views_field_privacy import ProfileFieldUpdateView, ProfileAboutDataView, UserAddressesView

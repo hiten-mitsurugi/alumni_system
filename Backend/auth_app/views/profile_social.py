@@ -235,10 +235,22 @@ class UserConnectionsView(APIView):
         from auth_app.models import Following
         
         # Create a simple serializer for Following relationships
-        def serialize_following(following_obj):
+        def serialize_following_relationship(following_obj, perspective='following'):
+            """
+            Serialize a Following relationship from a specific perspective
+            perspective: 'following' = show the person being followed
+                        'follower' = show the person who is following
+            """
+            if perspective == 'following':
+                # Show the person you are following
+                user_data = UserDetailSerializer(following_obj.following).data
+            else:  # perspective == 'follower'
+                # Show the person who is following you
+                user_data = UserDetailSerializer(following_obj.follower).data
+            
             return {
                 'id': following_obj.id,
-                'user': UserDetailSerializer(following_obj.follower if hasattr(following_obj, 'follower') else following_obj.following).data,
+                'user': user_data,
                 'status': following_obj.status,
                 'created_at': following_obj.created_at,
                 'is_mutual': getattr(following_obj, 'is_mutual', False)
@@ -246,31 +258,36 @@ class UserConnectionsView(APIView):
         
         if connection_type == 'followers':
             connections = Following.objects.filter(following=user, status='accepted').select_related('follower')
-            data = [serialize_following(conn) for conn in connections]
+            data = [serialize_following_relationship(conn, 'follower') for conn in connections]
         elif connection_type == 'following':
             connections = Following.objects.filter(follower=user, status='accepted').select_related('following')
-            data = [serialize_following(conn) for conn in connections]
+            data = [serialize_following_relationship(conn, 'following') for conn in connections]
         elif connection_type == 'mutual':
             connections = Following.objects.filter(
                 following=user, is_mutual=True, status='accepted'
             ).select_related('follower')
-            data = [serialize_following(conn) for conn in connections]
+            data = [serialize_following_relationship(conn, 'follower') for conn in connections]
         elif connection_type == 'invitations':
             # Get pending invitations sent TO the current user
             invitations = Following.objects.filter(
                 following=user, status='pending'
             ).select_related('follower')
-            data = [serialize_following(inv) for inv in invitations]
+            data = [serialize_following_relationship(inv, 'follower') for inv in invitations]
             return Response(data)
         else:  # all
             followers = Following.objects.filter(following=user, status='accepted').select_related('follower')
             following = Following.objects.filter(follower=user, status='accepted').select_related('following')
             invitations = Following.objects.filter(following=user, status='pending').select_related('follower')
             
+            # Debug: Log what invitations we're returning
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"User {user.id} invitations query: {[inv.id for inv in invitations]}")
+            
             return Response({
-                'followers': [serialize_following(conn) for conn in followers],
-                'following': [serialize_following(conn) for conn in following],
-                'invitations': [serialize_following(inv) for inv in invitations],
+                'followers': [serialize_following_relationship(conn, 'follower') for conn in followers],
+                'following': [serialize_following_relationship(conn, 'following') for conn in following],
+                'invitations': [serialize_following_relationship(inv, 'follower') for inv in invitations],
                 'followers_count': followers.count(),
                 'following_count': following.count(),
                 'mutual_count': Following.objects.filter(following=user, is_mutual=True, status='accepted').count(),
@@ -341,6 +358,11 @@ class InvitationAcceptView(APIView):
     
     def post(self, request, invitation_id):
         """Accept a connection invitation"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Accepting invitation {invitation_id} for user {request.user.id}")
+        
         try:
             from auth_app.models import Following
             invitation = Following.objects.get(
@@ -349,9 +371,18 @@ class InvitationAcceptView(APIView):
                 status='pending'
             )
             
+            logger.info(f"Found invitation: {invitation.id} from user {invitation.follower.id} to user {invitation.following.id}")
+            
+            # Additional validation to prevent accepting own invitations
+            if invitation.follower == request.user:
+                logger.error(f"User {request.user.id} cannot accept their own invitation {invitation_id}")
+                return Response({'error': 'Cannot accept your own invitation'}, status=status.HTTP_400_BAD_REQUEST)
+            
             # Accept the invitation
             invitation.status = 'accepted'
             invitation.save()
+            
+            logger.info(f"Successfully accepted invitation {invitation_id}")
             
             return Response({
                 'message': f'Connection accepted with {invitation.follower.first_name} {invitation.follower.last_name}!',
@@ -359,6 +390,7 @@ class InvitationAcceptView(APIView):
             }, status=status.HTTP_200_OK)
             
         except Following.DoesNotExist:
+            logger.error(f"Invitation {invitation_id} not found for user {request.user.id}")
             return Response({'error': 'Invitation not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             logger.error(f"Error accepting invitation {invitation_id}: {str(e)}")

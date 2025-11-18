@@ -239,19 +239,29 @@ const handleRemoveConnection = async (connection) => {
 
 const handleAcceptInvitation = async (invitation) => {
   try {
-    const result = await acceptInvitation(invitation);
-    showNotification(result.message, 'success');
+    console.log('🔄 MyMatesContainer: Accepting invitation:', invitation);
+    const invitationId = invitation.invitation_id || invitation.id;
+    console.log('🎯 Using invitation ID:', invitationId);
+    
+    const result = await acceptInvitation(invitationId);
+    showNotification(result.message || 'Invitation accepted successfully!', 'success');
   } catch (error) {
-    showNotification(error.message, 'error');
+    console.error('❌ Error in handleAcceptInvitation:', error);
+    showNotification(error.message || 'Failed to accept invitation', 'error');
   }
 };
 
 const handleIgnoreInvitation = async (invitation) => {
   try {
-    const result = await ignoreInvitation(invitation);
-    showNotification(result.message, 'success');
+    console.log('🔄 MyMatesContainer: Ignoring invitation:', invitation);
+    const invitationId = invitation.invitation_id || invitation.id;
+    console.log('🎯 Using invitation ID for ignore:', invitationId);
+    
+    const result = await ignoreInvitation(invitationId);
+    showNotification(result.message || 'Invitation ignored successfully!', 'success');
   } catch (error) {
-    showNotification(error.message, 'error');
+    console.error('❌ Error in handleIgnoreInvitation:', error);
+    showNotification(error.message || 'Failed to ignore invitation', 'error');
   }
 };
 

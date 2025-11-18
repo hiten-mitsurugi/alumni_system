@@ -28,19 +28,43 @@ export function useNetworking() {
   // const BASE_URL = 'http://127.0.0.1:8000';
 
   // Helper function to format user data
-  const formatUserData = (user, additionalData = {}) => ({
-    id: user.id,
-    name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-    first_name: user.first_name || '',
-    last_name: user.last_name || '',
-    headline: user.profile?.headline || user.profile?.present_occupation || 'Alumni',
-    present_address: user.present_address || user.profile?.location || user.profile?.present_address || '',
-    profile_picture: user.profile_picture,
-    username: user.username,
-    profile: user.profile || {},
-    processing: false,
-    ...additionalData
-  });
+  const formatUserData = (user, additionalData = {}) => {
+    // Helper function to get full profile picture URL
+    const getProfilePictureUrl = (profilePicture) => {
+      if (!profilePicture) {
+        return '/default-avatar.png';
+      }
+      
+      if (profilePicture.startsWith('http')) {
+        return profilePicture;
+      }
+      
+      // Use the backend media server URL (not the API URL)
+      const BASE_URL = 'http://localhost:8000';  // Backend server for media files
+      return `${BASE_URL}${profilePicture}`;
+    };
+
+    // Ensure we have a valid user ID - this is critical for the unfollow functionality
+    const userId = user?.id;
+    if (!userId) {
+      console.error('❌ No user ID found in user data:', user);
+      return null;
+    }
+
+    return {
+      id: userId,  // Make sure this is the actual user ID, not relationship ID
+      name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      headline: user.profile?.headline || user.profile?.present_occupation || 'Alumni',
+      present_address: user.present_address || user.profile?.location || user.profile?.present_address || '',
+      profile_picture: getProfilePictureUrl(user.profile_picture),
+      username: user.username,
+      profile: user.profile || {},
+      processing: false,
+      ...additionalData
+    };
+  };
 
   // API Functions
   const fetchConnections = async () => {
@@ -65,11 +89,32 @@ export function useNetworking() {
       ) || [];
       
       connections.value = mutualConnections.map(connection => {
-        const userInfo = connection.follower_info || connection.follower || connection;
-        return formatUserData(userInfo, { 
+        // Debug: Log the raw data to see what we're getting
+        console.log('🔍 Raw connection data:', connection);
+        
+        // IMPORTANT: Extract the actual user data from the response
+        // The API can return different structures, so we need to check multiple possible locations
+        let userInfo = connection.follower_info || connection.user || connection.follower;
+        
+        // If still no user info found, try to extract from the connection object itself
+        if (!userInfo && connection.id && connection.first_name) {
+          userInfo = connection;
+        }
+        
+        if (!userInfo) {
+          console.error('❌ No user info found in connection:', connection);
+          return null;
+        }
+        
+        console.log('📝 Extracted connection user info:', userInfo);
+        
+        const formattedUser = formatUserData(userInfo, { 
           mutualConnections: 0 // We can calculate this later if needed
         });
-      });
+        console.log('✅ Formatted connection:', formattedUser);
+        
+        return formattedUser;
+      }).filter(Boolean);  // Remove any null entries
       
       // Process followers
       followers.value = (data.followers || []).map(follower => {
@@ -77,22 +122,82 @@ export function useNetworking() {
           f.following?.id === follower.follower?.id
         );
         
-        // Use detailed follower_info if available, otherwise fallback to follower
-        const userInfo = follower.follower_info || follower.follower || follower;
-        return formatUserData(userInfo, { isFollowing });
-      });
+        // Debug: Log the raw data to see what we're getting
+        console.log('🔍 Raw follower data:', follower);
+        
+        // IMPORTANT: Extract the actual user data from the response
+        // The API can return different structures, so we need to check multiple possible locations
+        let userInfo = follower.follower_info || follower.user || follower.follower;
+        
+        // If still no user info found, try to extract from the follower object itself
+        if (!userInfo && follower.id && follower.first_name) {
+          userInfo = follower;
+        }
+        
+        if (!userInfo) {
+          console.error('❌ No user info found in:', follower);
+          return null;
+        }
+        
+        console.log('📝 Extracted user info:', userInfo);
+        
+        const formattedUser = formatUserData(userInfo, { isFollowing });
+        console.log('✅ Formatted follower:', formattedUser);
+        
+        return formattedUser;
+      }).filter(Boolean);  // Remove any null entries
       
       // Process following
       following.value = (data.following || []).map(followedUser => {
-        // Use detailed following_info if available, otherwise fallback to following
-        const userInfo = followedUser.following_info || followedUser.following || followedUser;
-        return formatUserData(userInfo);
-      });
+        // Debug: Log the raw data to see what we're getting
+        console.log('🔍 Raw following data:', followedUser);
+        
+        // IMPORTANT: Extract the actual user data from the response
+        // The API can return different structures, so we need to check multiple possible locations
+        let userInfo = followedUser.following_info || followedUser.user || followedUser.following;
+        
+        // If still no user info found, try to extract from the followedUser object itself
+        if (!userInfo && followedUser.id && followedUser.first_name) {
+          userInfo = followedUser;
+        }
+        
+        if (!userInfo) {
+          console.error('❌ No user info found in:', followedUser);
+          return null;
+        }
+        
+        console.log('📝 Extracted user info:', userInfo);
+        
+        const formattedUser = formatUserData(userInfo);
+        console.log('✅ Formatted user:', formattedUser);
+        
+        return formattedUser;
+      }).filter(Boolean);  // Remove any null entries
       
       // Process pending invitations (real data from backend)
       pendingInvitations.value = (data.invitations || []).map(invitation => {
+        console.log('🔍 Processing invitation:', invitation);
+        
         // Use detailed follower_info if available, otherwise fallback to follower
-        const follower = invitation.follower_info || invitation.follower || {};
+        const follower = invitation.follower_info || invitation.user || invitation.follower || {};
+        
+        console.log('📝 Extracted follower:', follower);
+        
+        // Helper function to get full profile picture URL
+        const getProfilePictureUrl = (profilePicture) => {
+          if (!profilePicture) {
+            return '/default-avatar.png';
+          }
+          
+          if (profilePicture.startsWith('http')) {
+            return profilePicture;
+          }
+          
+          // Use the backend media server URL (not the API URL)
+          const BASE_URL = 'http://localhost:8000';  // Backend server for media files
+          return `${BASE_URL}${profilePicture}`;
+        };
+        
         const processedInvitation = {
           id: follower.id || invitation.id, // Use follower ID for user identification
           invitation_id: invitation.id, // Use invitation ID for API calls
@@ -101,18 +206,15 @@ export function useNetworking() {
           last_name: follower.last_name || '',
           headline: follower.profile?.headline || follower.profile?.present_occupation || 'Alumni',
           present_address: follower.present_address || follower.profile?.location || follower.profile?.present_address || '',
-          profile_picture: follower.profile_picture,
+          profile_picture: getProfilePictureUrl(follower.profile_picture),
           username: follower.username,
           profile: follower.profile || {},
           created_at: invitation.created_at,
           processing: false
         };
         
-        console.log('📨 Processed invitation:', processedInvitation);
         return processedInvitation;
       });
-      
-      console.log('📨 All invitations:', pendingInvitations.value);
       
       return data;
       
@@ -147,76 +249,50 @@ export function useNetworking() {
   };
 
   // Action functions
-  const acceptInvitation = async (invitation) => {
+  const acceptInvitation = async (invitationId) => {
+    console.log('🎯 Attempting to accept invitation ID:', invitationId);
+    
     try {
-      invitation.processing = true;
+      const response = await api.post(`/auth/invitations/${invitationId}/accept/`);
+      console.log('✅ Invitation accepted successfully:', response.data);
       
-      console.log('🔄 Accepting invitation:', {
-        invitation_id: invitation.invitation_id,
-        user_id: invitation.id,
-        name: invitation.name
-      });
+      // Remove from pending invitations
+      pendingInvitations.value = pendingInvitations.value.filter(inv => 
+        inv.invitation_id !== invitationId && inv.id !== invitationId
+      );
       
-      // Call backend API to accept invitation
-      const response = await api.post(`/invitations/${invitation.invitation_id}/accept/`);
+      // Refresh the connections data
+      await fetchConnections();
       
-      console.log('✅ Accept invitation response:', response.data);
-      
-      // Remove from invitations
-      pendingInvitations.value = pendingInvitations.value.filter(i => i.id !== invitation.id);
-      
-      // Add to connections (mutual connection created)
-      connections.value.push({
-        ...invitation,
-        processing: false
-      });
-      
-      // Add to following (you're now following them too due to mutual connection)
-      following.value.push({
-        ...invitation,
-        processing: false
-      });
-      
-      // Add to followers if not already there (they were already following you)
-      const existingFollower = followers.value.find(f => f.id === invitation.id);
-      if (!existingFollower) {
-        followers.value.push({
-          ...invitation,
-          processing: false,
-          isFollowing: true  // Mark as following back
-        });
-      } else {
-        // Update existing follower to show you're following back
-        existingFollower.isFollowing = true;
-      }
-      
-      return { success: true, message: response.data.message || `You are now connected with ${invitation.name}!` };
-      
+      return response.data;
     } catch (error) {
       console.error('❌ Error accepting invitation:', error);
       console.error('Error response:', error.response?.data);
-      throw new Error(error.response?.data?.error || 'Failed to accept invitation. Please try again.');
-    } finally {
-      invitation.processing = false;
+      console.error('Error status:', error.response?.status);
+      console.error('Full error object:', error);
+      throw error;
     }
   };
 
-  const ignoreInvitation = async (invitation) => {
+  const ignoreInvitation = async (invitationId) => {
+    console.log('🎯 Attempting to ignore invitation ID:', invitationId);
+    
     try {
-      invitation.processing = true;
+      // Call backend API to reject invitation (using DELETE method)
+      const response = await api.delete(`/auth/invitations/${invitationId}/reject/`);
+      console.log('✅ Invitation ignored successfully:', response.data);
       
-      // Call backend API to reject invitation (using POST method)
-      const response = await api.post(`/invitations/${invitation.invitation_id}/reject/`);
+      // Remove from pending invitations
+      pendingInvitations.value = pendingInvitations.value.filter(inv => 
+        inv.invitation_id !== invitationId && inv.id !== invitationId
+      );
       
-      pendingInvitations.value = pendingInvitations.value.filter(i => i.id !== invitation.id);
-      
-      return { success: true, message: response.data.message || 'Invitation ignored.' };
-      
+      return response.data;
     } catch (error) {
-      console.error('Error ignoring invitation:', error);
-      throw new Error(error.response?.data?.error || 'Failed to ignore invitation. Please try again.');
-    } finally {
-      invitation.processing = false;
+      console.error('❌ Error ignoring invitation:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      throw error;
     }
   };
 
@@ -224,7 +300,7 @@ export function useNetworking() {
     try {
       suggestion.processing = true;
       
-      await api.post(`/follow/${suggestion.id}/`);
+      await api.post(`/auth/follow/${suggestion.id}/`);
       
       // Remove from suggestions (connection request sent)
       suggestions.value = suggestions.value.filter(s => s.id !== suggestion.id);
@@ -247,7 +323,7 @@ export function useNetworking() {
       connection.processing = true;
       
       // Call API to disconnect (removes mutual connection)
-      await api.delete(`/follow/${connection.id}/`);
+      await api.delete(`/auth/follow/${connection.id}/`);
       
       // Remove from connections
       connections.value = connections.value.filter(c => c.id !== connection.id);
@@ -273,7 +349,7 @@ export function useNetworking() {
       follower.processing = true;
       
       // Send connection request (will create mutual connection when accepted)
-      await api.post(`/follow/${follower.id}/`);
+      await api.post(`/auth/follow/${follower.id}/`);
       
       // Note: In LinkedIn-style, this would send a connection request
       // For immediate mutual connection, we could create a different endpoint
@@ -295,8 +371,25 @@ export function useNetworking() {
     try {
       user.processing = true;
       
+      console.log('🔄 Unfollowing user - DETAILED DEBUG:', {
+        user_object: user,
+        user_id: user.id,
+        user_name: user.name,
+        user_keys: Object.keys(user),
+        context: context,
+        endpoint: `/auth/follow/${user.id}/`,
+        full_url: `${import.meta.env.VITE_API_BASE_URL || window.location.origin.replace(window.location.port, '8000')}/api/auth/follow/${user.id}/`
+      });
+      
+      // Validate user ID exists
+      if (!user.id) {
+        throw new Error('User ID is missing or invalid');
+      }
+      
       // Use DELETE method to unfollow
-      await api.delete(`/follow/${user.id}/`);
+      const response = await api.delete(`/auth/follow/${user.id}/`);
+      
+      console.log('✅ Unfollow response:', response.data);
       
       if (context === 'following') {
         following.value = following.value.filter(u => u.id !== user.id);
@@ -307,8 +400,11 @@ export function useNetworking() {
       return { success: true, message: `You have unfollowed ${user.name}.` };
       
     } catch (error) {
-      console.error('Error unfollowing user:', error);
-      throw new Error('Failed to unfollow user. Please try again.');
+      console.error('❌ Error unfollowing user:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Full error object:', error);
+      throw new Error(`Failed to unfollow user: ${error.response?.data?.error || error.message}`);
     } finally {
       user.processing = false;
     }
