@@ -116,7 +116,7 @@ class SurveyResponseAdmin(admin.ModelAdmin):
 
 @admin.register(SurveyTemplate)
 class SurveyTemplateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_active', 'is_default', 'categories_count', 'created_by', 'created_at']
+    list_display = ['name', 'is_active', 'is_default', 'is_published', 'accepting_responses', 'categories_count', 'created_by', 'created_at']
     list_filter = ['is_active', 'is_default', 'created_at']
     search_fields = ['name', 'description']
     readonly_fields = ['created_by', 'created_at', 'updated_at']
@@ -126,7 +126,7 @@ class SurveyTemplateAdmin(admin.ModelAdmin):
             'fields': ('name', 'description')
         }),
         ('Settings', {
-            'fields': ('is_active', 'is_default')
+            'fields': ('is_active', 'is_default', 'is_published', 'accepting_responses', 'start_at', 'end_at', 'confirmation_message')
         }),
         ('Audit Information', {
             'fields': ('created_by', 'created_at', 'updated_at'),

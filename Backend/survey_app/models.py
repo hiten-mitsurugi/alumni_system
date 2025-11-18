@@ -6,13 +6,28 @@ import json
 
 class SurveyCategory(models.Model):
     """Categories to organize survey questions (e.g., Personal Info, Work History)"""
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Order for display (lower numbers first)")
     is_active = models.BooleanField(default=True)
     include_in_registration = models.BooleanField(
         default=False,
         help_text="Include this category in the public registration survey"
+    )
+    
+    # Google Forms-like page semantics
+    page_break = models.BooleanField(
+        default=True,
+        help_text="Treat this category as a separate page/section in multi-page surveys"
+    )
+    page_title = models.CharField(
+        max_length=200, 
+        blank=True,
+        help_text="Optional page title (defaults to category name if blank)"
+    )
+    page_description = models.TextField(
+        blank=True,
+        help_text="Optional description shown at the top of this page/section"
     )
     
     # Category-level conditional logic
@@ -113,6 +128,20 @@ class SurveyQuestion(models.Model):
         help_text="Value that triggers display of this question (JSON for multiple values)"
     )
     
+    # Branching configuration: map option/value -> target category id or action
+    branching = models.JSONField(
+        null=True,
+        blank=True,
+        default=dict,
+        help_text="JSON mapping for branching (option -> target_category_id or action)"
+    )
+    # Google Forms-like branching (go-to-section based on answer)
+    branching = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="Branching logic: map answer options to target categories. Example: {'option_1': {'action': 'goto', 'target_category_id': 5}, 'default': {'action': 'continue'}}"
+    )
+    
     # Audit fields
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -180,6 +209,14 @@ class SurveyResponse(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
+    # Optional reference to the form/template this response belongs to
+    form = models.ForeignKey(
+        'SurveyTemplate',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='form_responses'
+    )
 
     class Meta:
         unique_together = ['user', 'question']  # One response per user per question
@@ -222,12 +259,44 @@ class SurveyResponse(models.Model):
 
 
 class SurveyTemplate(models.Model):
-    """Templates for different types of surveys (e.g., Registration Survey, Alumni Tracer)"""
+    """Templates for different types of surveys (e.g., Registration Survey, Alumni Tracer)
+    Now also acts as a Form with Google Forms-like publishing and response settings"""
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     categories = models.ManyToManyField(SurveyCategory, through='SurveyTemplateCategory')
     is_active = models.BooleanField(default=True)
     is_default = models.BooleanField(default=False, help_text="Default template for new registrations")
+    
+    # Google Forms-like form publishing settings
+    is_published = models.BooleanField(
+        default=False,
+        help_text="Whether this form is published and accepting responses"
+    )
+    accepting_responses = models.BooleanField(
+        default=True,
+        help_text="Whether responses are currently accepted"
+    )
+    start_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Optional start datetime for accepting responses"
+    )
+    end_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Optional end datetime for accepting responses"
+    )
+    confirmation_message = models.TextField(
+        blank=True,
+        default='',
+        help_text="Message shown to respondents after submission"
+    )
+    form_settings = models.JSONField(
+        default=dict,
+        blank=True,
+        null=True,
+        help_text="Flexible JSON settings for the form"
+    )
     
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -248,6 +317,15 @@ class SurveyTemplate(models.Model):
         if self.is_default:
             SurveyTemplate.objects.filter(is_default=True).update(is_default=False)
         super().save(*args, **kwargs)
+
+
+    # New form-like settings (additive, nullable/defaulted for safe migrations)
+    is_published = models.BooleanField(default=False, help_text="Whether this form is published and accepting responses")
+    accepting_responses = models.BooleanField(default=True, help_text="Whether responses are currently accepted")
+    start_at = models.DateTimeField(null=True, blank=True, help_text="Optional start datetime for accepting responses")
+    end_at = models.DateTimeField(null=True, blank=True, help_text="Optional end datetime for accepting responses")
+    confirmation_message = models.TextField(blank=True, default='', help_text="Message shown to respondents after submission")
+    form_settings = models.JSONField(null=True, blank=True, default=dict, help_text="Flexible JSON settings for the form")
 
 
 class SurveyTemplateCategory(models.Model):

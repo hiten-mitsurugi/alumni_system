@@ -14,7 +14,8 @@ cd Backend
 python -m venv env
 source env/Scripts/activate  # On Windows PowerShell use: env\Scripts\activate
 pip install django
-pip install -r requirements.txt
+
+
 
 
 CREATE DATABASE alumni_system;

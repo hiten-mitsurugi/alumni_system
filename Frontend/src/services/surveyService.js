@@ -96,6 +96,27 @@ class SurveyService {
     return api.post('/survey/admin/clear-cache/')
   }
 
+  // Forms (SurveyTemplate) as top-level forms
+  async getForms() {
+    return api.get('/survey/admin/forms/')
+  }
+
+  async getForm(id) {
+    return api.get(`/survey/admin/forms/${id}/`)
+  }
+
+  async createForm(data) {
+    return api.post('/survey/admin/forms/', data)
+  }
+
+  async updateForm(id, data) {
+    return api.patch(`/survey/admin/forms/${id}/`, data)
+  }
+
+  async publishForm(id, data) {
+    return api.post(`/survey/admin/forms/${id}/publish/`, data)
+  }
+
   // ============= ALUMNI/USER ENDPOINTS =============
   
   // Get survey questions for alumni to answer

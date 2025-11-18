@@ -18,6 +18,9 @@ from .serializers import (
 )
 from .permissions import IsSurveyAdmin, IsSuperAdminOnly, CanRespondToSurveys, IsSurveyOwnerOrAdmin
 
+from rest_framework import generics
+from django.shortcuts import get_object_or_404
+
 
 # =============================================================================
 # UTILITY FUNCTIONS
@@ -126,6 +129,77 @@ class SurveyQuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
         """Delete question"""
         super().perform_destroy(instance)
         # No cache clearing needed - registration endpoint doesn't use cache
+
+
+# -----------------------------------------------------------------------------
+# Form (SurveyTemplate) Management - Treat SurveyTemplate as top-level Form
+# -----------------------------------------------------------------------------
+
+
+class SurveyFormListCreateView(generics.ListCreateAPIView):
+    """List all forms (templates) or create a new form.
+    Uses SurveyTemplate as the Form model.
+    """
+    serializer_class = SurveyTemplateSerializer
+    permission_classes = [IsSurveyAdmin]
+
+    def get_queryset(self):
+        return SurveyTemplate.objects.all().order_by('name')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+
+class SurveyFormDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a form/template."""
+    serializer_class = SurveyTemplateSerializer
+    queryset = SurveyTemplate.objects.all()
+
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsSuperAdminOnly()]
+        return [IsSurveyAdmin()]
+
+    def retrieve(self, request, *args, **kwargs):
+        # Return nested form -> categories -> questions structure
+        instance = self.get_object()
+        form_data = SurveyTemplateSerializer(instance).data
+
+        # Attach categories with their questions
+        categories = instance.categories.all().order_by('order', 'name')
+        categories_data = []
+        for cat in categories:
+            questions = SurveyQuestion.objects.filter(category=cat).order_by('order', 'question_text')
+            qdata = SurveyQuestionListSerializer(questions, many=True).data
+            categories_data.append({
+                'category': SurveyCategorySerializer(cat).data,
+                'questions': qdata
+            })
+
+        form_data['sections'] = categories_data
+        return Response(form_data)
+
+    def perform_update(self, serializer):
+        # Allow updating template fields and categories (category_ids handled in serializer)
+        serializer.save()
+
+
+class SurveyFormPublishView(APIView):
+    """Toggle publish or accepting responses for a form."""
+    permission_classes = [IsSurveyAdmin]
+
+    def post(self, request, pk):
+        form = get_object_or_404(SurveyTemplate, pk=pk)
+        is_published = request.data.get('is_published')
+        accepting = request.data.get('accepting_responses')
+
+        if is_published is not None:
+            form.is_published = bool(is_published)
+        if accepting is not None:
+            form.accepting_responses = bool(accepting)
+        form.save()
+
+        return Response({'message': 'Form updated', 'is_published': form.is_published, 'accepting_responses': form.accepting_responses})
 
 
 class SurveyResponseAnalyticsView(APIView):

@@ -38,6 +38,10 @@ urlpatterns = [
     # Utility endpoints
     path('admin/export/', views.survey_export_view, name='admin-export'),
     path('admin/clear-cache/', views.clear_survey_cache_view, name='admin-clear-cache'),
+    # Form (Template) management
+    path('admin/forms/', views.SurveyFormListCreateView.as_view(), name='admin-form-list'),
+    path('admin/forms/<int:pk>/', views.SurveyFormDetailView.as_view(), name='admin-form-detail'),
+    path('admin/forms/<int:pk>/publish/', views.SurveyFormPublishView.as_view(), name='admin-form-publish'),
     
     # =============================================================================
     # ALUMNI ENDPOINTS - Survey Taking (Alumni & Authenticated Users)

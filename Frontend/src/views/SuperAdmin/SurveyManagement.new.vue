@@ -32,7 +32,7 @@
           :form="selectedForm"
           @back="selectedForm = null"
           @save="handleSaveForm"
-          @refresh="handleRefresh"
+          @refresh="loadForms"
         />
       </div>
     </div>
@@ -42,7 +42,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useForms } from '@/components/SurveyManagement/composables/useForms'
-import surveyService from '@/services/surveyService'
 import FormList from '@/components/SurveyManagement/FormList.vue'
 import FormEditor from '@/components/SurveyManagement/FormEditor.vue'
 
@@ -61,15 +60,8 @@ const handleCreateForm = async (formData) => {
   }
 }
 
-const handleEditForm = async (form) => {
-  // Fetch full form details including sections
-  try {
-    const response = await surveyService.getForm(form.id)
-    selectedForm.value = response.data
-  } catch (err) {
-    console.error('Error loading form details:', err)
-    selectedForm.value = form // Fallback to the basic form data
-  }
+const handleEditForm = (form) => {
+  selectedForm.value = form
 }
 
 const handleDeleteForm = async (formId) => {
@@ -83,18 +75,5 @@ const handleSaveForm = async (formData) => {
   await updateForm(selectedForm.value.id, formData)
   await loadForms()
   selectedForm.value = null
-}
-
-const handleRefresh = async () => {
-  await loadForms()
-  // Reload the full form details with sections
-  if (selectedForm.value) {
-    try {
-      const response = await surveyService.getForm(selectedForm.value.id)
-      selectedForm.value = response.data
-    } catch (err) {
-      console.error('Error refreshing form:', err)
-    }
-  }
 }
 </script>

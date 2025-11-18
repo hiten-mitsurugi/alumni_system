@@ -41,7 +41,7 @@ class SurveyQuestionSerializer(serializers.ModelSerializer):
             'id', 'category', 'category_name', 'question_text', 'question_type',
             'placeholder_text', 'help_text', 'options', 'is_required',
             'min_value', 'max_value', 'max_length', 'order', 'is_active',
-            'depends_on_question', 'depends_on_question_id', 'depends_on_value',
+            'depends_on_question', 'depends_on_question_id', 'depends_on_value', 'branching',
             'response_count', 'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
@@ -100,7 +100,7 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'question', 'question_text', 'question_type',
             'category_name', 'response_data', 'display_value',
-            'submitted_at', 'updated_at'
+            'submitted_at', 'updated_at', 'form'
         ]
         read_only_fields = ['user', 'submitted_at', 'updated_at']
 
@@ -216,6 +216,8 @@ class SurveyTemplateSerializer(serializers.ModelSerializer):
         many=True, 
         queryset=SurveyCategory.objects.filter(is_active=True),
         write_only=True,
+        required=False,
+        allow_empty=True,
         source='categories'
     )
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
@@ -224,19 +226,44 @@ class SurveyTemplateSerializer(serializers.ModelSerializer):
         model = SurveyTemplate
         fields = [
             'id', 'name', 'description', 'categories', 'category_ids',
-            'is_active', 'is_default', 'created_by', 'created_by_name',
+            'is_active', 'is_default', 'is_published', 'accepting_responses',
+            'start_at', 'end_at', 'confirmation_message', 'form_settings',
+            'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_by', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        validated_data['created_by'] = self.context['request'].user
+        # created_by is set in the view's perform_create method
+        # Only set it here if not already set
+        if 'created_by' not in validated_data:
+            validated_data['created_by'] = self.context.get('request').user
+        
         categories = validated_data.pop('categories', [])
         
         template = super().create(validated_data)
         
         # Set categories with order
-        for i, category in enumerate(categories):
-            template.surveytemplategory_set.create(category=category, order=i)
+        if categories:
+            for i, category in enumerate(categories):
+                template.surveytemplatecategory_set.create(category=category, order=i)
         
         return template
+
+    def update(self, instance, validated_data):
+        # Handle categories separately
+        categories = validated_data.pop('categories', None)
+        
+        # Update other fields
+        instance = super().update(instance, validated_data)
+        
+        # Update categories if provided
+        if categories is not None:
+            # Clear existing categories
+            instance.surveytemplatecategory_set.all().delete()
+            
+            # Add new categories with order
+            for i, category in enumerate(categories):
+                instance.surveytemplatecategory_set.create(category=category, order=i)
+        
+        return instance
