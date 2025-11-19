@@ -48,10 +48,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            
+
             <!-- Spacer to push next button to the right -->
             <div class="flex-1 pointer-events-none"></div>
-            
+
             <button
               v-if="currentMediaIndex < mediaFiles.length - 1"
               @click="nextMedia"
@@ -128,10 +128,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              
+
               <!-- Spacer to push next button to the right -->
               <div class="flex-1 pointer-events-none"></div>
-              
+
               <button
                 v-if="currentMediaIndex < mediaFiles.length - 1"
                 @click="nextMedia"
@@ -190,7 +190,7 @@
                 :selected-reaction="selectedReaction"
                 size="small"
                 @react-to-post="handleReaction"
-                @comment-clicked="() => {}" 
+                @comment-clicked="() => {}"
                 @share-post="handleShare"
                 @copy-link="handleCopyLink"
               />
@@ -213,7 +213,7 @@
                 <p class="text-sm sm:text-lg">No comments yet</p>
                 <p class="text-xs sm:text-sm">Be the first to comment!</p>
               </div>
-              
+
               <div v-for="comment in comments" :key="comment.id">
                 <CommentItem
                   :comment="comment"
@@ -224,7 +224,7 @@
                   @delete-comment="handleDeleteComment"
                 />
               </div>
-              
+
               <!-- Add some bottom padding only when there are comments to prevent huge empty space -->
               <div v-if="comments.length > 0" class="pb-2"></div>
             </div>
@@ -240,12 +240,12 @@
               />
               <div class="flex-1 relative">
                 <!-- Emoji Picker -->
-                <EmojiPicker 
+                <EmojiPicker
                   :isVisible="showEmojiPicker"
                   @emoji-selected="insertEmoji"
                   @close="closeEmojiPicker"
                 />
-                
+
                 <div class="flex space-x-1 sm:space-x-2">
                   <!-- Emoji Button -->
                   <button
@@ -255,20 +255,20 @@
                   >
                     😀
                   </button>
-                  
+
                   <!-- Comment Input with Mention Support -->
                   <div class="flex-1">
                     <!-- Reply indicator -->
                     <div v-if="isReplying" class="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
                       <span class="text-blue-600">📝 Replying to {{ replyContext?.authorName }}</span>
-                      <button 
+                      <button
                         @click="cancelReply"
                         class="ml-2 text-blue-500 hover:text-blue-700 font-medium"
                       >
                         Cancel
                       </button>
                     </div>
-                    
+
                     <MentionTextarea
                       v-model="newComment"
                       @mention="handleMention"
@@ -279,7 +279,7 @@
                       ref="commentInputRef"
                     />
                   </div>
-                  
+
                   <!-- Send Button -->
                   <button
                     @click="addComment"
@@ -400,7 +400,7 @@ const handleMention = (mentionData) => {
 // Computed properties
 const mediaFiles = computed(() => {
   const files = []
-  
+
   // Add main image if exists
   if (props.post.image_url) {
     files.push({
@@ -409,7 +409,7 @@ const mediaFiles = computed(() => {
       caption: props.post.title
     })
   }
-  
+
   // Add media files if exists
   if (props.post.media_files && props.post.media_files.length > 0) {
     props.post.media_files.forEach(media => {
@@ -420,7 +420,7 @@ const mediaFiles = computed(() => {
       })
     })
   }
-  
+
   return files
 })
 
@@ -441,8 +441,8 @@ const currentMediaType = computed(() => {
 })
 
 const hasEngagement = computed(() => {
-  return props.post.likes_count > 0 || 
-         props.post.comments_count > 0 || 
+  return props.post.likes_count > 0 ||
+         props.post.comments_count > 0 ||
          props.post.shares_count > 0 ||
          (props.post.reactions_summary && props.post.reactions_summary.total_count > 0)
 })
@@ -456,7 +456,7 @@ const extractMentions = (content) => {
   const mentionPattern = /@(\w+)/g
   const mentions = []
   let match
-  
+
   while ((match = mentionPattern.exec(content)) !== null) {
     const username = match[1]
     const user = mentionedUsers.value.find(u => u.username === username)
@@ -469,7 +469,7 @@ const extractMentions = (content) => {
       })
     }
   }
-  
+
   return mentions
 }
 
@@ -487,10 +487,10 @@ const cancelReply = () => {
 const addComment = () => {
   const content = newComment.value?.trim()
   if (!content) return
-  
+
   // Extract mentions from the comment
   const mentions = extractMentions(content)
-  
+
   if (isReplying.value && replyContext.value) {
     // This is a reply to a specific comment
     emit('reply-to-comment', {
@@ -502,7 +502,7 @@ const addComment = () => {
     // This is a new top-level comment - emit with same signature as expected by AlumniHome
     emit('add-comment', props.post.id, content, null, mentions)
   }
-  
+
   // Reset form
   newComment.value = ''
   mentionedUsers.value = []
@@ -573,7 +573,7 @@ const handleReplyToComment = (data) => {
     authorName: data.authorName
   }
   isReplying.value = true
-  
+
   // Focus the main comment input
   nextTick(() => {
     if (commentInputRef.value) {
@@ -592,9 +592,9 @@ const insertEmoji = (emoji) => {
     const start = input.selectionStart
     const end = input.selectionEnd
     const currentValue = newComment.value
-    
+
     newComment.value = currentValue.slice(0, start) + emoji + currentValue.slice(end)
-    
+
     // Set cursor position after emoji
     setTimeout(() => {
       input.focus()
@@ -603,7 +603,7 @@ const insertEmoji = (emoji) => {
   } else {
     newComment.value += emoji
   }
-  
+
   // Don't close picker automatically - let user pick multiple emojis
 }
 
@@ -634,11 +634,11 @@ const getProfilePictureUrl = (profilePicture) => {
 
 const getMediaUrl = (url) => {
   if (!url) return '/default-placeholder.png'; // Fallback if null
-  
+
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  
+
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
   return url.startsWith('/') ? `${BASE_URL}${url}` : `${BASE_URL}/${url}`;
 }
@@ -666,12 +666,12 @@ watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     // Reset media index when opening
     currentMediaIndex.value = 0
-    
+
     // Load comments if not already loaded
     if (props.comments.length === 0) {
       emit('load-comments', props.post.id)
     }
-    
+
     // Prevent body scroll
     document.body.style.overflow = 'hidden'
   } else {

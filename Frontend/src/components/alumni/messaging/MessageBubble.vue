@@ -2,8 +2,8 @@
   <div :class="['flex gap-3 md:gap-4', isSystemMessage ? 'justify-center' : isOwnMessage && 'flex-row-reverse']" :data-message-id="message.id">
     <!-- Avatar for other user's messages (enhanced styling) -->
     <div v-if="!isOwnMessage && !isSystemMessage" class="flex-shrink-0">
-      <img 
-        :src="getProfilePictureUrl(message.sender)" 
+      <img
+        :src="getProfilePictureUrl(message.sender)"
         :alt="`${message.sender.first_name} ${message.sender.last_name}`"
         class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover shadow-sm ring-2 ring-white hover:ring-slate-200 transition-all duration-200"
       />
@@ -65,8 +65,8 @@
         <!-- Render Image Attachments with better styling -->
         <template v-if="hasImageAttachment">
           <div class="space-y-2">
-            <div 
-              v-for="(attachment, index) in imageAttachments" 
+            <div
+              v-for="(attachment, index) in imageAttachments"
               :key="index"
               class="relative group/image"
             >
@@ -109,8 +109,8 @@
         <!-- Render File Attachments (PDF, DOC, etc.) -->
         <template v-else-if="hasFileAttachment">
           <div class="space-y-2">
-            <div 
-              v-for="(attachment, index) in fileAttachments" 
+            <div
+              v-for="(attachment, index) in fileAttachments"
               :key="index"
               class="flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all"
               :class="isOwnMessage ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'"
@@ -161,7 +161,7 @@
         <template v-else>
           <!-- Edit mode -->
           <div v-if="isEditing" class="p-2">
-            <textarea 
+            <textarea
               v-model="editContent"
               class="w-full bg-transparent border border-gray-300 rounded p-2 text-sm resize-none"
               rows="2"
@@ -169,13 +169,13 @@
               @keydown.escape="cancelEdit"
             ></textarea>
             <div class="flex gap-2 mt-2">
-              <button 
+              <button
                 @click="saveEdit"
                 class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 cursor-pointer"
               >
                 Save
               </button>
-              <button 
+              <button
                 @click="cancelEdit"
                 class="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 cursor-pointer"
               >
@@ -193,7 +193,7 @@
               </div>
               <p v-else-if="replyMessage" class="text-sm" v-html="formatMessageContent(replyMessage.content)" @click="handleMentionClick"></p>
             </div>
-            
+
             <!-- Special styling for forwarded messages - show original content cleanly -->
             <div v-else-if="isForwardedMessage && message.forwarded_from">
               <!-- Display original message content directly (clean style) -->
@@ -202,7 +202,7 @@
               </div>
               <p v-else-if="message.forwarded_from" class="text-sm" v-html="formatMessageContent(message.forwarded_from.content)" @click="handleMentionClick"></p>
             </div>
-            
+
             <!-- Regular message content (non-bump, non-forward) -->
             <div v-else>
               <!-- Facebook Messenger style reply preview inside the bubble -->
@@ -210,8 +210,8 @@
                 <!-- Inline preview box inside the bubble with better visibility -->
                 <div :class="[
                   'p-2 rounded-lg border-l-2 cursor-pointer transition-all',
-                  isOwnMessage 
-                    ? 'bg-blue-400 bg-opacity-30 border-l-white border-opacity-80 hover:bg-opacity-40' 
+                  isOwnMessage
+                    ? 'bg-blue-400 bg-opacity-30 border-l-white border-opacity-80 hover:bg-opacity-40'
                     : 'bg-gray-50 border-l-gray-400 hover:bg-gray-100'
                 ]" @click="scrollToOriginalMessage">
                   <div :class="[
@@ -230,11 +230,11 @@
               <p v-else class="text-sm" v-html="formatMessageContent(message.content)" @click="handleMentionClick"></p>
               <!-- Edit indicator -->
               <span v-if="message.edited_at" class="text-xs opacity-75 ml-1">(edited)</span>
-              
+
               <!-- Link Previews -->
               <div v-if="message.link_previews && message.link_previews.length > 0" class="mt-3 space-y-2">
-                <div 
-                  v-for="preview in message.link_previews" 
+                <div
+                  v-for="preview in message.link_previews"
                   :key="preview.id"
                   class="border rounded-lg overflow-hidden cursor-pointer hover:bg-opacity-90 transition-all"
                   :class="isOwnMessage ? 'border-blue-300 bg-blue-50' : 'border-gray-300 bg-white'"
@@ -242,24 +242,24 @@
                 >
                   <!-- Link preview header with image -->
                   <div v-if="preview.image_url" class="aspect-video bg-gray-100 overflow-hidden">
-                    <img 
-                      :src="preview.image_url" 
+                    <img
+                      :src="preview.image_url"
                       :alt="preview.title"
                       class="w-full h-full object-cover"
                       @error="handleImageError"
                     />
                   </div>
-                  
+
                   <!-- Link preview content -->
                   <div class="p-3">
                     <div class="flex items-start justify-between">
                       <div class="flex-1 min-w-0">
-                        <h4 v-if="preview.title" 
+                        <h4 v-if="preview.title"
                             class="font-medium text-sm line-clamp-2 mb-1"
                             :class="isOwnMessage ? 'text-blue-900' : 'text-gray-900'">
                           {{ preview.title }}
                         </h4>
-                        <p v-if="preview.description" 
+                        <p v-if="preview.description"
                            class="text-xs line-clamp-2 mb-2"
                            :class="isOwnMessage ? 'text-blue-700' : 'text-gray-600'">
                           {{ preview.description }}
@@ -268,7 +268,7 @@
                           <svg class="w-3 h-3" :class="isOwnMessage ? 'text-blue-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
-                          <span class="text-xs font-medium truncate" 
+                          <span class="text-xs font-medium truncate"
                                 :class="isOwnMessage ? 'text-blue-700' : 'text-gray-700'">
                             {{ preview.domain }}
                           </span>
@@ -355,7 +355,7 @@
         @toggle-reaction="handleToggleReaction"
         class="mt-1 -mb-1"
       />
-      
+
       <!-- Seen Indicators - Show who has read the message -->
       <SeenIndicators
         v-if="message.read_by && message.read_by.length > 0"
@@ -363,7 +363,7 @@
         :currentUserId="currentUser.id"
         class="mt-1"
       />
-      
+
       <!-- Reaction Picker Popup (positioned absolutely) -->
       <MessageReactionPicker
         :showPicker="showReactionPicker"
@@ -375,9 +375,9 @@
     </div>
 
     <!-- Invisible overlay to close reaction picker when clicking outside -->
-    <div 
-      v-if="showReactionPicker" 
-      class="fixed inset-0 z-10" 
+    <div
+      v-if="showReactionPicker"
+      class="fixed inset-0 z-10"
       @click="showReactionPicker = false"
     ></div>
 
@@ -437,7 +437,7 @@ const isOwnMessage = computed(() => {
 
 // Check if this is a system message
 const isSystemMessage = computed(() => {
-  const result = props.message.isSystemMessage || 
+  const result = props.message.isSystemMessage ||
          props.message.sender?.id === 'system' ||
          props.message.message_type === 'system' ||
          props.message.sender === null ||
@@ -448,11 +448,11 @@ const isSystemMessage = computed(() => {
            props.message.content.includes(' was added to the group') ||
            props.message.content.includes(' was removed from the group')
          ))
-  
+
   if (result) {
     console.log('🔍 System message detected:', props.message.content, props.message);
   }
-  
+
   return result;
 })
 
@@ -470,37 +470,37 @@ const isForwardedMessage = computed(() => {
 const replyMessage = computed(() => {
   const message = props.message;
   const messagesArray = props.messages;
-  
+
   if (!message) return null;
-  
+
   // STEP 1: Check if the message has reply_to object directly from backend (most reliable)
   if (message.reply_to && typeof message.reply_to === 'object' && message.reply_to.id) {
     return message.reply_to
   }
-  
+
   // STEP 2: Check for reply_to_id field and look it up in messages array
   const replyId = message.reply_to_id || (typeof message.reply_to === 'string' ? message.reply_to : null)
   if (replyId && messagesArray && Array.isArray(messagesArray) && messagesArray.length > 0) {
     // Try both exact match and string conversion
     const foundMessage = messagesArray.find(msg => {
       if (!msg || !msg.id) return false;
-      return msg.id === replyId || 
-             msg.id === String(replyId) || 
+      return msg.id === replyId ||
+             msg.id === String(replyId) ||
              String(msg.id) === String(replyId);
     });
-    
+
     if (foundMessage) {
       return foundMessage
     }
   }
-  
+
   return null
 })
 
 // Debug: Watch for message changes to see the structure (reduced logging)
 watch(() => props.message, (newMessage) => {
   if (!newMessage) return
-  
+
   if (newMessage.reply_to || newMessage.reply_to_id) {
     console.log('MessageBubble: Message with reply detected:', {
       id: newMessage.id,
@@ -510,7 +510,7 @@ watch(() => props.message, (newMessage) => {
   }
 }, { immediate: true })
 
-// Format time display  
+// Format time display
 const formatTime = computed(() => {
   if (!props.message.timestamp) return ''
   return formatTimestamp(props.message.timestamp)
@@ -546,46 +546,46 @@ const getProfilePictureUrl = (entity) => {
 // Format timestamp like messenger apps
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return ''
-  
+
   const messageDate = new Date(timestamp)
   const now = new Date()
   const diffInMilliseconds = now - messageDate
   const diffInHours = diffInMilliseconds / (1000 * 60 * 60)
   const diffInDays = Math.floor(diffInHours / 24)
-  
+
   // Same day - show just time (e.g., "8:44 AM")
   if (diffInDays === 0) {
-    return messageDate.toLocaleTimeString([], { 
-      hour: 'numeric', 
+    return messageDate.toLocaleTimeString([], {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     })
   }
-  
+
   // Yesterday - show "Yesterday" + time
   if (diffInDays === 1) {
-    return `Yesterday ${messageDate.toLocaleTimeString([], { 
-      hour: 'numeric', 
+    return `Yesterday ${messageDate.toLocaleTimeString([], {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     })}`
   }
-  
+
   // This week (2-6 days ago) - show day + time (e.g., "Mon 10:13 PM")
   if (diffInDays < 7) {
     const dayName = messageDate.toLocaleDateString([], { weekday: 'short' })
-    const time = messageDate.toLocaleTimeString([], { 
-      hour: 'numeric', 
+    const time = messageDate.toLocaleTimeString([], {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     })
     return `${dayName} ${time}`
   }
-  
+
   // More than a week - show full date + time (e.g., "Jul 26, 2025, 12:18 PM")
   return messageDate.toLocaleDateString([], {
     month: 'short',
-    day: 'numeric', 
+    day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
@@ -612,7 +612,7 @@ const imageAttachments = computed(() => {
 })
 
 const fileAttachments = computed(() => {
-  return props.message.attachments?.filter(att => 
+  return props.message.attachments?.filter(att =>
     att.file && !imageAttachments.value.includes(att)
   ) || []
 })
@@ -626,7 +626,7 @@ const isEmojiOnlyMessage = computed(() => {
   // For forwarded messages, check the forwarded_from content
   // For regular messages, check the message content
   let contentToCheck
-  
+
   if (isBumpMessage.value && replyMessage.value) {
     contentToCheck = replyMessage.value.content
   } else if (isForwardedMessage.value && props.message.forwarded_from) {
@@ -634,12 +634,12 @@ const isEmojiOnlyMessage = computed(() => {
   } else {
     contentToCheck = props.message.content
   }
-    
+
   if (!contentToCheck) return false
-  
+
   // Remove all emoji characters and check if anything remains
   const textWithoutEmojis = contentToCheck.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
-  
+
   // Consider it emoji-only if no text remains and original message has content
   return textWithoutEmojis.length === 0 && contentToCheck.trim().length > 0
 })
@@ -660,30 +660,30 @@ const handleMentionClick = (event) => {
 // Format message content with enhanced emoji rendering, link detection, and mention highlighting
 const formatMessageContent = (content) => {
   if (!content) return ''
-  
+
   // 🔔 MENTIONS: Highlight mentions for group messages
   let formattedContent = content
   if (props.conversation?.type === 'group' && props.conversation.group?.members) {
     formattedContent = highlightMentions(content, props.conversation.group.members)
   }
-  
+
   // Enhanced URL regex pattern to match various URL formats
   const urlRegex = /(https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?)/gi
-  
+
   // Replace URLs with clickable links - different colors for sender vs receiver
   formattedContent = formattedContent.replace(urlRegex, (url) => {
-    const linkClasses = isOwnMessage.value 
+    const linkClasses = isOwnMessage.value
       ? "text-white hover:text-gray-200 underline break-all" // White for sender (blue bubble)
       : "text-blue-600 hover:text-blue-800 underline break-all" // Blue for receiver (gray bubble)
     return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="${linkClasses}">${url}</a>`
   })
-  
+
   // Enhanced emoji regex to match more emoji ranges
   const emojiRegex = /([\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}])/gu
-  
+
   // Replace emojis with larger styled versions
   formattedContent = formattedContent.replace(emojiRegex, '<span class="inline-block text-lg">$1</span>')
-  
+
   // Replace line breaks with <br> tags
   return formattedContent.replace(/\n/g, '<br>')
 }
@@ -701,11 +701,11 @@ const getFileType = (attachment) => {
     // Return the subtype (e.g., 'pdf' from 'application/pdf')
     return attachment.file_type.split('/').pop() || 'file'
   }
-  
+
   // Fallback: extract from filename
   const fileName = attachment.file_name || attachment.name || attachment.file || ''
   if (!fileName) return 'file'
-  
+
   const extension = fileName.split('.').pop()?.toLowerCase()
   return extension || 'file'
 }
@@ -713,9 +713,9 @@ const getFileType = (attachment) => {
 const getFileSize = (attachment) => {
   // Use file_size from backend first
   const bytes = attachment.file_size || attachment.size || 0
-  
+
   if (bytes === 0) return 'Unknown size'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
@@ -725,7 +725,7 @@ const getFileSize = (attachment) => {
 // Image modal functionality
 const openImageModal = (imageUrl) => {
   console.log('Opening image modal for:', imageUrl)
-  
+
   // Create a simple modal to view full-size image
   const modal = document.createElement('div')
   modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'
@@ -736,14 +736,14 @@ const openImageModal = (imageUrl) => {
       <button class="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer">&times;</button>
     </div>
   `
-  
+
   // Close modal on click
   modal.addEventListener('click', (e) => {
     if (e.target === modal || e.target.textContent === '×' || e.target.tagName === 'BUTTON') {
       document.body.removeChild(modal)
     }
   })
-  
+
   // Close modal on Escape key
   const handleEscape = (e) => {
     if (e.key === 'Escape') {
@@ -752,7 +752,7 @@ const openImageModal = (imageUrl) => {
     }
   }
   document.addEventListener('keydown', handleEscape)
-  
+
   document.body.appendChild(modal)
 }
 
@@ -787,7 +787,7 @@ const handleClick = () => {
 const toggleMenu = (event) => {
   event.preventDefault()
   event.stopPropagation()
-  
+
   const rect = event.currentTarget.getBoundingClientRect()
   contextMenuPosition.value = {
     x: rect.left + rect.width / 2,
@@ -800,7 +800,7 @@ const toggleMenu = (event) => {
 const handleReply = (event) => {
   event.preventDefault()
   event.stopPropagation()
-  
+
   console.log('MessageBubble: Reply button clicked for message', props.message.id)
   emit('message-action', {
     action: 'reply',
@@ -811,7 +811,7 @@ const handleReply = (event) => {
 const handleAction = (actionData) => {
   console.log('MessageBubble: Action triggered:', actionData)
   const { action, message } = actionData
-  
+
   switch (action) {
     case 'edit':
       startEdit()
@@ -842,7 +842,7 @@ const saveEdit = () => {
     cancelEdit()
     return
   }
-  
+
   console.log('MessageBubble: Saving edit for message', props.message.id, 'new content:', editContent.value)
   emit('message-action', {
     action: 'edit',
@@ -873,7 +873,7 @@ const copyMessage = () => {
 // Delete functionality with confirmation
 const confirmDelete = () => {
   if (!isOwnMessage.value) return
-  
+
   const confirmed = window.confirm('Are you sure you want to delete this message? This action cannot be undone.')
   if (confirmed) {
     console.log('MessageBubble: Deleting message', props.message.id)
@@ -900,19 +900,19 @@ const handleReactionSelected = async (data) => {
       message_id: data.messageId,
       reaction_type: data.reactionType
     })
-    
+
     console.log('Reaction added successfully:', response.data)
-    
+
     // Close the picker
     showReactionPicker.value = false
-    
+
     // Emit message action to update the parent component
     emit('message-action', {
       action: 'reaction_added',
       messageId: data.messageId,
       reactionData: response.data
     })
-    
+
   } catch (error) {
     console.error('Failed to add reaction:', error)
   }
@@ -921,10 +921,10 @@ const handleReactionSelected = async (data) => {
 // Handle reaction button click with smart positioning
 const handleReactionButtonClick = (event) => {
   event.stopPropagation()
-  
+
   // Toggle the picker
   showReactionPicker.value = !showReactionPicker.value
-  
+
   // If we're opening the picker, adjust positioning if needed
   if (showReactionPicker.value) {
     // Small delay to let the picker render, then check positioning
@@ -938,16 +938,16 @@ const handleReactionButtonClick = (event) => {
 const adjustReactionPickerPosition = (buttonElement) => {
   const picker = buttonElement.closest('.relative').querySelector('.reaction-picker-positioned')
   if (!picker) return
-  
+
   const pickerRect = picker.getBoundingClientRect()
   const viewportWidth = window.innerWidth
-  
+
   // If picker goes off the left edge, adjust positioning
   if (pickerRect.left < 10) {
     picker.style.right = 'auto'
     picker.style.left = '0px'
   }
-  // If picker goes off the right edge, adjust positioning  
+  // If picker goes off the right edge, adjust positioning
   else if (pickerRect.right > viewportWidth - 10) {
     picker.style.left = 'auto'
     picker.style.right = '0px'
@@ -962,7 +962,7 @@ const handleToggleReaction = async (data) => {
       await api.delete('/message/reactions/', {
         data: { message_id: data.messageId }
       })
-      
+
       console.log('Reaction removed successfully')
     } else {
       // Add reaction
@@ -970,16 +970,16 @@ const handleToggleReaction = async (data) => {
         message_id: data.messageId,
         reaction_type: data.reactionType
       })
-      
+
       console.log('Reaction updated successfully:', response.data)
     }
-    
+
     // Emit message action to update the parent component
     emit('message-action', {
       action: data.isRemoving ? 'reaction_removed' : 'reaction_updated',
       messageId: data.messageId
     })
-    
+
   } catch (error) {
     console.error('Failed to toggle reaction:', error)
   }
@@ -1067,7 +1067,7 @@ const handleImageError = (event) => {
   .reaction-picker-positioned {
     right: 0px; /* Align with message edge on mobile */
   }
-  
+
   .flex-row-reverse .reaction-picker-positioned {
     left: 0px; /* Align with message edge for own messages */
     right: auto;
@@ -1079,20 +1079,20 @@ const handleImageError = (event) => {
   .reaction-picker-positioned {
     right: 10px; /* Move further right on very small screens */
   }
-  
+
   .flex-row-reverse .reaction-picker-positioned {
     left: 10px; /* Move further left for own messages */
     right: auto;
   }
-  
+
   .reaction-picker-positioned .reaction-picker {
     min-width: 320px; /* Smaller min-width on very small screens */
   }
-  
+
   .reaction-picker-positioned .reaction-buttons {
     gap: 4px; /* Even smaller gap on tiny screens */
   }
-  
+
   .reaction-picker-positioned .reaction-btn {
     width: 32px;
     height: 32px;

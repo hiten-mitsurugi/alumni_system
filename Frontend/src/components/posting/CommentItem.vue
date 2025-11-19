@@ -1,12 +1,12 @@
 <template>
   <div class="comment-item flex space-x-3 py-2 group">
     <!-- User Avatar -->
-    <img 
+    <img
       :src="comment.user?.profile_picture || '/default-avatar.png'"
       :alt="comment.user?.full_name || `${comment.user?.first_name} ${comment.user?.last_name}`.trim() || 'User'"
       class="comment-avatar"
     />
-    
+
     <!-- Comment Content -->
     <div class="flex-1 min-w-0">
       <!-- Comment Bubble -->
@@ -15,14 +15,14 @@
           <div class="font-semibold text-sm text-gray-900 mb-1">
             {{ comment.user?.full_name || `${comment.user?.first_name} ${comment.user?.last_name}`.trim() || 'Anonymous' }}
           </div>
-          <MentionText 
+          <MentionText
             :content="comment.content"
             :mentions="comment.mentions || []"
             :available-users="comment.mentioned_users || {}"
             className="text-sm text-gray-800 leading-relaxed"
           />
         </div>
-        
+
         <!-- Reaction Summary (Facebook-style) -->
         <CommentReactionSummary
           v-if="comment.reactions_summary && comment.reactions_summary.total_count > 0"
@@ -32,7 +32,7 @@
           class="mt-1"
         />
       </div>
-      
+
       <!-- Comment Actions -->
       <div class="flex items-center space-x-4 mt-1 ml-3">
         <!-- Like Button -->
@@ -47,7 +47,7 @@
         >
           Like
         </button>
-        
+
         <!-- Reply Button -->
         <button
           @click="toggleReply"
@@ -55,7 +55,7 @@
         >
           Reply
         </button>
-        
+
         <!-- Delete Button (Facebook-style permissions) -->
         <button
           v-if="comment.can_delete"
@@ -64,12 +64,12 @@
         >
           Delete
         </button>
-        
+
         <!-- Time -->
         <span class="text-xs text-gray-400">
           {{ formatTimeAgo(comment.created_at) }}
         </span>
-        
+
         <!-- Reaction Picker Trigger -->
         <button
           @click="toggleReactionPicker"
@@ -78,7 +78,7 @@
           <span class="text-sm">😊</span>
         </button>
       </div>
-      
+
       <!-- Reaction Picker -->
       <CommentReactionPickerSimple
         :show-picker="showReactionPicker"
@@ -87,7 +87,7 @@
         @close="showReactionPicker = false"
         class="relative"
       />
-      
+
       <!-- Replies -->
       <div v-if="comment.replies && comment.replies.length > 0" class="mt-2 ml-3 space-y-2">
         <CommentItem
@@ -170,12 +170,12 @@ const formatTimeAgo = (dateString) => {
   const date = new Date(dateString)
   const now = new Date()
   const diffInSeconds = Math.floor((now - date) / 1000)
-  
+
   if (diffInSeconds < 60) return 'Just now'
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`
-  
+
   return date.toLocaleDateString()
 }
 

@@ -27,7 +27,7 @@
         'font-semibold mb-2 leading-snug text-clamp-base md:text-base lg:text-lg',
         themeStore.isDarkMode ? 'text-gray-100' : 'text-slate-900'
       ]">{{ post.title }}</h2>
-      <MentionText 
+      <MentionText
         :content="post.content"
         :mentions="post.mentions || []"
         :available-users="post.mentioned_users || {}"
@@ -64,7 +64,7 @@
           themeStore.isDarkMode ? 'text-gray-100' : 'text-slate-900'
         ]">{{ post.shared_post.title }}
         </h3>
-        <MentionText 
+        <MentionText
           :content="post.shared_post.content"
           :mentions="post.shared_post.mentions || []"
           :available-users="post.shared_post.mentioned_users || {}"
@@ -144,7 +144,7 @@
               <p :class="themeStore.isDarkMode ? 'font-medium text-xs text-gray-100' : 'font-medium text-xs text-gray-900'">
                 {{ comment.user.full_name }}
               </p>
-              <MentionText 
+              <MentionText
                 :content="comment.content"
                 :mentions="comment.mentions || []"
                 :available-users="comment.mentioned_users || {}"
@@ -192,7 +192,7 @@
       @close="showReactionsModal = false"
       @reaction-updated="handleReactionUpdated"
     />
-    
+
     <!-- Repost Modal -->
     <RepostModal
       :is-visible="showRepostModal"
@@ -285,11 +285,11 @@ const handleShare = (postId) => {
 
 const handleRepostSuccess = (repostData) => {
   console.log('✅ PostCard: Repost successful:', repostData)
-  
+
   // Show success message
   // You can replace this with a toast notification
   alert(`Post reposted successfully with ${repostData.visibility} visibility!`)
-  
+
   // Emit repost event to parent (for feed refresh)
   emit('repost', {
     originalPostId: props.post.id,

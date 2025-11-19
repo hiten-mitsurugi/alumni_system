@@ -7,8 +7,8 @@
           <div class="flex items-center space-x-3">
             <button
               @click="$router.go(-1)"
-              :class="themeStore.isDarkMode 
-                ? 'p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded-lg transition-colors' 
+              :class="themeStore.isDarkMode
+                ? 'p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded-lg transition-colors'
                 : 'p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors'"
             >
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,7 +17,7 @@
             </button>
             <h1 :class="themeStore.isDarkMode ? 'text-sm sm:text-lg md:text-xl font-bold text-white' : 'text-sm sm:text-lg md:text-xl font-bold text-gray-900'">My Network</h1>
           </div>
-          
+
           <!-- Network Stats - Hide on very small screens -->
           <div class="hidden sm:block">
             <NetworkStats :stats="stats" />
@@ -28,7 +28,7 @@
 
     <!-- Main Content - Account for sidebar margin and constrain width on mobile -->
     <div class="px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-      
+
       <!-- Mobile Stats (shown only on small screens) -->
       <div class="sm:hidden mb-6">
         <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-3' : 'bg-white rounded-lg shadow-sm border border-gray-200 p-3'">
@@ -48,7 +48,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Navigation Tabs - Mobile optimized with better spacing -->
       <div class="mb-4 sm:mb-6">
         <div :class="themeStore.isDarkMode ? 'flex space-x-2 sm:space-x-6 border-b border-gray-700 overflow-x-auto' : 'flex space-x-2 sm:space-x-6 border-b border-gray-200 overflow-x-auto'">
@@ -60,8 +60,8 @@
               'py-2 sm:py-3 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors flex-shrink-0',
               activeTab === tab.id
                 ? 'border-green-500 text-green-600'
-                : (themeStore.isDarkMode 
-                  ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600' 
+                : (themeStore.isDarkMode
+                  ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')
             ]"
           >
@@ -74,7 +74,7 @@
       </div>
 
       <!-- Dynamic Content Based on Active Tab -->
-      <component 
+      <component
         :is="currentComponent"
         v-bind="currentComponentProps"
         @view-profile="handleViewProfile"
@@ -156,30 +156,30 @@ const notification = ref(null);
 
 // Tab configuration
 const tabs = computed(() => [
-  { 
-    id: 'connections', 
-    label: 'Connections', 
-    count: connections.value.length 
+  {
+    id: 'connections',
+    label: 'Connections',
+    count: connections.value.length
   },
-  { 
-    id: 'invitations', 
-    label: 'Invitations', 
-    count: pendingInvitations.value.length 
+  {
+    id: 'invitations',
+    label: 'Invitations',
+    count: pendingInvitations.value.length
   },
-  { 
-    id: 'suggestions', 
-    label: 'Suggestions', 
-    count: suggestions.value.length 
+  {
+    id: 'suggestions',
+    label: 'Suggestions',
+    count: suggestions.value.length
   },
-  { 
-    id: 'followers', 
-    label: 'Followers', 
-    count: followers.value.length 
+  {
+    id: 'followers',
+    label: 'Followers',
+    count: followers.value.length
   },
-  { 
-    id: 'following', 
-    label: 'Following', 
-    count: following.value.length 
+  {
+    id: 'following',
+    label: 'Following',
+    count: following.value.length
   }
 ]);
 
@@ -202,7 +202,7 @@ const currentComponentProps = computed(() => {
     followers: { followers: followers.value },
     following: { following: following.value }
   };
-  
+
   return propsMap[activeTab.value] || {};
 });
 
@@ -220,7 +220,7 @@ const handleViewProfile = (user) => {
 
 const handleMessage = (connection) => {
   console.log('🔄 Navigating to messaging for user:', connection);
-  
+
   // Navigate to messaging with user parameter
   router.push({
     name: 'AlumniMessaging',
@@ -230,7 +230,7 @@ const handleMessage = (connection) => {
       name: connection.name || `${connection.first_name} ${connection.last_name}`
     }
   });
-  
+
   showNotification(`Opening conversation with ${connection.name}`, 'success');
 };
 
@@ -238,7 +238,7 @@ const handleRemoveConnection = async (connection) => {
   if (!confirm(`Are you sure you want to remove ${connection.name} from your connections?`)) {
     return;
   }
-  
+
   try {
     const result = await removeConnection(connection);
     showNotification(result.message, 'success');
@@ -252,7 +252,7 @@ const handleAcceptInvitation = async (invitation) => {
     console.log('🔄 MyMatesContainer: Accepting invitation:', invitation);
     const invitationId = invitation.invitation_id || invitation.id;
     console.log('🎯 Using invitation ID:', invitationId);
-    
+
     const result = await acceptInvitation(invitationId);
     showNotification(result.message || 'Invitation accepted successfully!', 'success');
   } catch (error) {
@@ -266,7 +266,7 @@ const handleIgnoreInvitation = async (invitation) => {
     console.log('🔄 MyMatesContainer: Ignoring invitation:', invitation);
     const invitationId = invitation.invitation_id || invitation.id;
     console.log('🎯 Using invitation ID for ignore:', invitationId);
-    
+
     const result = await ignoreInvitation(invitationId);
     showNotification(result.message || 'Invitation ignored successfully!', 'success');
   } catch (error) {
@@ -297,7 +297,7 @@ const handleUnfollow = async (user) => {
   if (!confirm(`Are you sure you want to unfollow ${user.name}?`)) {
     return;
   }
-  
+
   try {
     const context = activeTab.value === 'followers' ? 'followers' : 'following';
     const result = await unfollowUser(user, context);
@@ -310,7 +310,7 @@ const handleUnfollow = async (user) => {
 // Utility functions
 const showNotification = (message, type = 'info') => {
   notification.value = { message, type };
-  
+
   // Auto-dismiss after 5 seconds
   setTimeout(() => {
     notification.value = null;
@@ -320,7 +320,7 @@ const showNotification = (message, type = 'info') => {
 // Lifecycle
 onMounted(async () => {
   console.log('🚀 MyMates container mounted, loading network data...');
-  
+
   try {
     await refreshAllData();
     console.log('✅ Network data loaded successfully');

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isVisible" 
+  <div v-if="isVisible"
        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
        @click="closeModal">
     <div
@@ -11,7 +11,7 @@
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           Repost to your profile
         </h3>
-        <button 
+        <button
           @click="closeModal"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
@@ -25,8 +25,8 @@
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">
         <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
           <div class="flex items-center space-x-3 mb-2">
-            <img 
-              :src="originalPost.user?.profile_picture || '/default-avatar.png'" 
+            <img
+              :src="originalPost.user?.profile_picture || '/default-avatar.png'"
               :alt="originalPost.user?.first_name"
               class="w-8 h-8 rounded-full object-cover"
             />
@@ -70,7 +70,7 @@
             Who can see this repost?
           </label>
           <div class="space-y-2">
-            <label v-for="option in privacyOptions" 
+            <label v-for="option in privacyOptions"
                    :key="option.value"
                    class="flex items-center space-x-3 cursor-pointer">
               <input
@@ -179,23 +179,23 @@ const closeModal = () => {
 
 const handleRepost = async () => {
   if (isLoading.value) return
-  
+
   try {
     isLoading.value = true
-    
+
     const response = await postsService.repostPost(
       props.originalPost.id,
       repostText.value,
       selectedVisibility.value
     )
-    
+
     emit('reposted', {
       originalPost: props.originalPost,
       repost: response.repost,
       visibility: selectedVisibility.value,
       message: response.message
     })
-    
+
     closeModal()
   } catch (error) {
     console.error('Error reposting:', error)
@@ -213,7 +213,7 @@ const formatTimeAgo = (dateString) => {
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
-  
+
   if (minutes < 1) return 'just now'
   if (minutes < 60) return `${minutes}m ago`
   if (hours < 24) return `${hours}h ago`

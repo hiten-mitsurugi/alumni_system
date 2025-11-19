@@ -228,8 +228,8 @@
  ]">{{ formatLastSeen(conversation.mate) }}</span>
  </div>
  <!-- Pending message indicator -->
- <div v-if="conversation.isPending" 
-      class="flex items-center text-orange-500" 
+ <div v-if="conversation.isPending"
+      class="flex items-center text-orange-500"
       title="Message pending approval">
    <svg class="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
      <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -668,7 +668,7 @@ const fetchMessages = async conv => {
  // Cache miss - fetch normally
  try {
    console.log(`🚀 Cache MISS: Fetching messages for ${cacheKey}`);
-   
+
    // Handle pending conversations (where only message request exists)
    if (conv.isPending) {
      console.log('📩 Handling pending conversation - showing placeholder message');
@@ -692,7 +692,7 @@ const fetchMessages = async conv => {
      messageCache.set(cacheKey, messages.value);
      return;
    }
-   
+
    const data = conv.type === 'private'
      ? await messagingService.getMessages(conv.mate.id)
      : await messagingService.getGroupMessages(conv.group?.id);
@@ -797,45 +797,45 @@ async function handleUserFromQuery() {
   const userId = route.query.userId;
   const username = route.query.user;
   const userName = route.query.name;
-  
+
   if (!userId && !username) return;
-  
+
   console.log('🔄 Messaging: Handling user from query params:', { userId, username, userName });
-  
+
   try {
     // 🚀 FIRST: Refresh conversations to get latest data including pending requests
     console.log('🔄 Refreshing conversations to check for pending requests...');
     await fetchConversations();
-    
+
     // Now try to find existing conversation (including pending ones)
-    let existingConv = conversations.value.find(c => 
+    let existingConv = conversations.value.find(c =>
       c.type === 'private' && (
-        c.mate.id == userId || 
+        c.mate.id == userId ||
         c.mate.username === username
       )
     );
-    
+
     if (existingConv) {
       console.log('✅ Found existing conversation:', existingConv);
       selectConversation(existingConv);
       return;
     }
-    
+
     // If no existing conversation, try to find user in available mates
-    let user = availableMates.value.find(mate => 
+    let user = availableMates.value.find(mate =>
       mate.id == userId || mate.username === username
     );
-    
+
     // If not found in available mates, search for the user
     if (!user && (userId || username)) {
       try {
         console.log('🔍 Searching for user:', { userId, username });
         const searchResponse = await api.get(`/message/search/?q=${encodeURIComponent(username || userId)}`);
-        
+
         if (searchResponse.data && searchResponse.data.length > 0) {
-          user = searchResponse.data.find(result => 
+          user = searchResponse.data.find(result =>
             result.type === 'user' && (
-              result.id == userId || 
+              result.id == userId ||
               result.username === username
             )
           );
@@ -844,7 +844,7 @@ async function handleUserFromQuery() {
         console.error('❌ Error searching for user:', error);
       }
     }
-    
+
     // If still no user found, create a minimal user object for the conversation
     if (!user && userId) {
       user = {
@@ -856,7 +856,7 @@ async function handleUserFromQuery() {
       };
       console.log('🔧 Created minimal user object:', user);
     }
-    
+
     if (user) {
       // Create a new conversation
       const newConversation = {
@@ -867,14 +867,14 @@ async function handleUserFromQuery() {
         timestamp: new Date().toISOString(),
         unreadCount: 0
       };
-      
+
       console.log('✅ Creating new conversation:', newConversation);
-      
+
       // Add to conversations if not already there
       if (!conversations.value.find(c => c.type === 'private' && c.mate.id === user.id)) {
         conversations.value.unshift(newConversation);
       }
-      
+
       // Select the conversation
       selectConversation(newConversation);
     } else {
@@ -1113,15 +1113,15 @@ async function sendMessage(data) {
  const tempId = `temp-${Date.now()}-${Math.random()}`;
 
  // 🚀 NEW: Check if this is a new conversation (no messages and not pending)
- const isNewConversation = !selectedConversation.value.isPending && 
-                          messages.value.length === 0 && 
+ const isNewConversation = !selectedConversation.value.isPending &&
+                          messages.value.length === 0 &&
                           selectedConversation.value.type === 'private';
 
  if (isNewConversation) {
    console.log('🆕 New conversation detected - using REST API instead of WebSocket');
    console.log('🆕 Sending to receiver ID:', selectedConversation.value.mate.id);
    console.log('🆕 Message content:', data.content);
-   
+
    try {
      // Use REST API for new conversations to create MessageRequest
      const response = await api.post('/message/send/', {
@@ -1130,22 +1130,22 @@ async function sendMessage(data) {
        attachment_ids: attachmentIds,
        reply_to_id: data.reply_to_id
      });
-     
+
      console.log('✅ Message request created:', response.data);
      console.log('✅ Response status:', response.status);
-     
+
      // Add a small delay to ensure backend processing is complete
      await new Promise(resolve => setTimeout(resolve, 500));
-     
+
      // Refresh conversations to get the new pending conversation
      console.log('🔄 Refreshing conversations after message send...');
      await fetchConversations();
-     
+
      // Find and select the updated conversation
-     const updatedConv = conversations.value.find(c => 
+     const updatedConv = conversations.value.find(c =>
        c.type === 'private' && c.mate.id === selectedConversation.value.mate.id
      );
-     
+
      if (updatedConv) {
        console.log('✅ Found updated conversation:', updatedConv);
        selectConversation(updatedConv);
@@ -1158,7 +1158,7 @@ async function sendMessage(data) {
          lastMessage: c.lastMessage
        })));
      }
-     
+
      return;
    } catch (error) {
      console.error('❌ Error creating message request:', error);
@@ -3006,10 +3006,10 @@ onMounted(async () => {
  ]);
 
  setupWebSockets();
- 
+
  // Check for user query parameter before selecting last conversation
  await handleUserFromQuery();
- 
+
  // Only select last conversation if no user was specified in query
  if (!route.query.userId && !route.query.user) {
    selectLastConversation();

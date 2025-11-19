@@ -8,12 +8,12 @@ const getApiBaseURL = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  
+
   // Then check for base URL and add /api suffix
   if (import.meta.env.VITE_API_BASE_URL) {
     return `${import.meta.env.VITE_API_BASE_URL}/api`;
   }
-  
+
   // Auto-detect based on current location (works with any IP)
   const { protocol, hostname } = window.location;
   return `${protocol}//${hostname}:8000/api`;
@@ -41,7 +41,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const authStore = useAuthStore();
-    
+
     // Only handle 401 for EXISTING authenticated users (token is already set)
     // Don't redirect on login failures (which also return 401)
     if (error.response?.status === 401 && !error.config._retry && authStore.token) {
@@ -60,12 +60,12 @@ api.interceptors.response.use(
     } else if (error.response?.status === 403 && !error.config._retry) {
       // Handle 403 errors - check if it's actually an auth issue
       const errorMessage = error.response?.data?.error || error.response?.data?.detail || '';
-      const isAuthError = errorMessage.toLowerCase().includes('token') || 
+      const isAuthError = errorMessage.toLowerCase().includes('token') ||
                          errorMessage.toLowerCase().includes('authentication') ||
                          errorMessage.toLowerCase().includes('credential') ||
                          errorMessage.toLowerCase().includes('signature') ||
                          errorMessage.toLowerCase().includes('expired');
-      
+
       if (isAuthError && authStore.token) {
         // Only try refresh for actual auth-related 403 errors WITH existing token
         error.config._retry = true;

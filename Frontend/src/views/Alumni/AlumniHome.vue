@@ -386,7 +386,7 @@ const addComment = async (postId, commentContent, parentId = null, mentions = []
       content: commentContent,
       parent_id: parentId
     };
-    
+
     // Add mentions if provided
     if (mentions && mentions.length > 0) {
       requestData.mentions = mentions;
@@ -446,16 +446,16 @@ const sharePost = async (postId, shareText = '') => {
 const handleRepost = async (repostData) => {
   try {
     console.log('🔄 Post reposted successfully:', repostData);
-    
+
     // Show success notification with privacy info
-    const privacyText = repostData.visibility === 'public' ? 'publicly' : 
+    const privacyText = repostData.visibility === 'public' ? 'publicly' :
                        repostData.visibility === 'alumni_only' ? 'to alumni only' :
                        'privately';
     showNotification(`Post reposted ${privacyText}! 🚀`, 'success');
-    
+
     // Refresh the feed to show the new repost
     await fetchPosts();
-    
+
   } catch (error) {
     console.error('❌ Failed to handle repost:', error);
     showNotification('Failed to process repost. Please try again.', 'error');
@@ -477,7 +477,7 @@ const deleteComment = async (commentId) => {
 
     console.log('✅ Comment deleted successfully');
     showNotification('Comment deleted successfully! 🗑️', 'success');
-    
+
     // Refresh comments for the currently selected post
     if (selectedPost.value) {
       await fetchCommentsForPost(selectedPost.value.id);
@@ -519,7 +519,7 @@ const replyToComment = async (data) => {
     console.log('💬 Replying to comment:', data);
     // Use the commentId as the parent_id for nested replies
     await addComment(selectedPost.value.id, data.content, data.commentId, data.mentions || []);
-    
+
   } catch (error) {
     console.error('❌ Failed to reply to comment:', error);
     showNotification('Failed to reply to comment. Please try again.', 'error');
