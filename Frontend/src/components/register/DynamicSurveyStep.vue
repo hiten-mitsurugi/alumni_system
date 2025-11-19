@@ -6,8 +6,8 @@
       <p v-if="category.description" class="text-sm text-gray-600">{{ category.description }}</p>
     </div>
 
-    <!-- Questions Grid - 2 columns layout like PersonalInfo -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Questions Grid - Single column layout -->
+    <div class="space-y-4">
       <div
         v-for="question in props.questions"
         :key="question.id"

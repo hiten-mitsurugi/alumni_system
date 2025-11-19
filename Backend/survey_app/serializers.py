@@ -104,6 +104,48 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['user', 'submitted_at', 'updated_at']
 
+
+class SurveyResponseDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for survey responses with nested user and question data"""
+    user = serializers.SerializerMethodField()
+    question = serializers.SerializerMethodField()
+    display_value = serializers.CharField(source='get_display_value', read_only=True)
+
+    class Meta:
+        model = SurveyResponse
+        fields = [
+            'id', 'user', 'question', 'response_data', 'display_value',
+            'submitted_at', 'updated_at', 'form'
+        ]
+        read_only_fields = ['submitted_at', 'updated_at']
+
+    def get_user(self, obj):
+        """Return user details"""
+        if obj.user:
+            return {
+                'id': obj.user.id,
+                'email': obj.user.email,
+                'full_name': obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else f"{obj.user.first_name} {obj.user.last_name}".strip(),
+                'first_name': obj.user.first_name,
+                'last_name': obj.user.last_name
+            }
+        return None
+
+    def get_question(self, obj):
+        """Return question details with category"""
+        if obj.question:
+            return {
+                'id': obj.question.id,
+                'question_text': obj.question.question_text,
+                'question_type': obj.question.question_type,
+                'is_required': obj.question.is_required,
+                'category': {
+                    'id': obj.question.category.id,
+                    'name': obj.question.category.name
+                } if obj.question.category else None
+            }
+        return None
+
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         # Get IP address from request

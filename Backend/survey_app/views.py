@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.http import HttpResponse
 from django.db.models import Count, Q
 from django.utils import timezone
 from django.core.cache import cache
@@ -12,7 +13,7 @@ from django.utils.decorators import method_decorator
 from .models import SurveyCategory, SurveyQuestion, SurveyResponse, SurveyTemplate
 from .serializers import (
     SurveyCategorySerializer, SurveyQuestionSerializer, SurveyQuestionListSerializer,
-    SurveyResponseSerializer, SurveyResponseSubmissionSerializer,
+    SurveyResponseSerializer, SurveyResponseDetailSerializer, SurveyResponseSubmissionSerializer,
     ActiveSurveyQuestionsSerializer, SurveyAnalyticsSerializer,
     SurveyTemplateSerializer
 )
@@ -277,7 +278,7 @@ class SurveyResponsesView(generics.ListAPIView):
     List all survey responses for admin review.
     Supports filtering by user, question, and category.
     """
-    serializer_class = SurveyResponseSerializer
+    serializer_class = SurveyResponseDetailSerializer
     permission_classes = [IsSurveyAdmin]
     
     def get_queryset(self):
@@ -726,16 +727,21 @@ def survey_export_view(request):
     try:
         # Get parameters from request body
         export_format = request.data.get('format', 'xlsx')
-        category_id = request.data.get('category_id')
+        category_id = request.data.get('category_id')  # Single category (backward compatibility)
+        category_ids = request.data.get('category_ids', [])  # Multiple categories (new)
         date_from = request.data.get('date_from')
         date_to = request.data.get('date_to')
         
-        print(f"🔍 Starting DYNAMIC export with filters: category={category_id}, date_from={date_from}, date_to={date_to}")
+        # Support both single category_id and multiple category_ids
+        if category_id and not category_ids:
+            category_ids = [category_id]
+        
+        print(f"🔍 Starting DYNAMIC export with filters: categories={category_ids}, date_from={date_from}, date_to={date_to}")
         
         # ===== STEP 1: Get ALL survey questions dynamically (not hardcoded) =====
         all_questions = SurveyQuestion.objects.all().select_related('category').order_by('category__name', 'order')
-        if category_id:
-            all_questions = all_questions.filter(category_id=category_id)
+        if category_ids:
+            all_questions = all_questions.filter(category_id__in=category_ids)
         
         print(f"📊 Found {all_questions.count()} questions to include")
         
@@ -749,8 +755,8 @@ def survey_export_view(request):
             all_responses = all_responses.filter(submitted_at__lte=date_to)
         
         # Apply category filter
-        if category_id:
-            all_responses = all_responses.filter(question__category_id=category_id)
+        if category_ids:
+            all_responses = all_responses.filter(question__category_id__in=category_ids)
         
         print(f"📝 Found {all_responses.count()} responses to include")
         
@@ -1047,7 +1053,7 @@ def survey_export_view(request):
 @permission_classes([IsSurveyAdmin])
 def category_analytics_pdf_export(request):
     """
-    Export category analytics as PDF report with charts and statistics.
+    Export category analytics as comprehensive PDF report with charts, graphs and statistics.
     """
     try:
         from reportlab.lib import colors
@@ -1056,7 +1062,7 @@ def category_analytics_pdf_export(request):
         from reportlab.lib.units import inch
         from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
         from reportlab.graphics.shapes import Drawing
-        from reportlab.graphics.charts.barcharts import VerticalBarChart
+        from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
         from reportlab.graphics.charts.piecharts import Pie
         from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
         from datetime import datetime
@@ -1088,7 +1094,14 @@ def category_analytics_pdf_export(request):
         
         # Create PDF
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        doc = SimpleDocTemplate(
+            buffer, 
+            pagesize=letter, 
+            topMargin=0.5*inch, 
+            bottomMargin=0.5*inch,
+            leftMargin=0.75*inch,
+            rightMargin=0.75*inch
+        )
         story = []
         styles = getSampleStyleSheet()
         
@@ -1096,9 +1109,19 @@ def category_analytics_pdf_export(request):
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=24,
+            fontSize=26,
             textColor=colors.HexColor('#1e40af'),
-            spaceAfter=30,
+            spaceAfter=12,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Heading2'],
+            fontSize=18,
+            textColor=colors.HexColor('#3b82f6'),
+            spaceAfter=20,
             alignment=TA_CENTER
         )
         
@@ -1108,27 +1131,44 @@ def category_analytics_pdf_export(request):
             fontSize=16,
             textColor=colors.HexColor('#1e40af'),
             spaceAfter=12,
-            spaceBefore=12
+            spaceBefore=16,
+            fontName='Helvetica-Bold'
         )
         
-        # Title
-        story.append(Paragraph(f"Survey Analytics Report", title_style))
-        story.append(Paragraph(f"Category: {category.name}", styles['Heading2']))
-        story.append(Spacer(1, 0.2*inch))
+        question_heading_style = ParagraphStyle(
+            'QuestionHeading',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#1f2937'),
+            spaceAfter=8,
+            spaceBefore=12,
+            fontName='Helvetica-Bold'
+        )
         
-        # Summary section
-        story.append(Paragraph("Summary", heading_style))
+        # Header Section
+        story.append(Paragraph("Survey Analytics Report", title_style))
+        story.append(Paragraph(f"{category.name}", subtitle_style))
+        story.append(Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %H:%M')}", styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Summary Section with styled box
+        story.append(Paragraph("Executive Summary", heading_style))
+        
+        unique_respondents = responses.values('user').distinct().count()
+        response_rate = round((unique_respondents / total_alumni * 100) if total_alumni > 0 else 0, 2)
+        
         summary_data = [
             ['Metric', 'Value'],
-            ['Report Generated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+            ['Category', category.name],
+            ['Report Date', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
             ['Total Questions', str(questions.count())],
-            ['Total Responses', str(responses.count())],
-            ['Unique Respondents', str(responses.values('user').distinct().count())],
-            ['Total Alumni', str(total_alumni)],
-            ['Response Rate', f"{round((responses.values('user').distinct().count() / total_alumni * 100) if total_alumni > 0 else 0, 2)}%"]
+            ['Total Responses Received', str(responses.count())],
+            ['Unique Respondents', str(unique_respondents)],
+            ['Total Alumni Population', str(total_alumni)],
+            ['Overall Response Rate', f"{response_rate}%"]
         ]
         
-        summary_table = Table(summary_data, colWidths=[3*inch, 3*inch])
+        summary_table = Table(summary_data, colWidths=[3*inch, 3.5*inch])
         summary_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -1136,98 +1176,460 @@ def category_analytics_pdf_export(request):
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#eff6ff')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f0f9ff')]),
+            ('GRID', (0, 0), (-1, -1), 1.5, colors.HexColor('#93c5fd')),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
         ]))
         story.append(summary_table)
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.4*inch))
         
-        # Question details
-        story.append(Paragraph("Question Analytics", heading_style))
-        story.append(Spacer(1, 0.1*inch))
+        # Question Analytics Section
+        story.append(Paragraph("Detailed Question Analytics", heading_style))
+        story.append(Spacer(1, 0.15*inch))
         
-        for question in questions:
+        for idx, question in enumerate(questions, 1):
             question_responses = responses.filter(question=question)
             response_count = question_responses.count()
             
-            # Question header
-            story.append(Paragraph(f"<b>{question.question_text}</b>", styles['Normal']))
-            story.append(Paragraph(f"Type: {question.get_question_type_display()} | Responses: {response_count}", styles['Normal']))
+            # Question header with number
+            question_text = f"{idx}. {question.question_text}"
+            story.append(Paragraph(question_text, question_heading_style))
+            
+            # Question metadata
+            meta_text = f"<i>Type: {question.get_question_type_display()} | Responses: {response_count}"
+            if response_count > 0:
+                q_response_rate = round((response_count / total_alumni * 100) if total_alumni > 0 else 0, 1)
+                meta_text += f" | Response Rate: {q_response_rate}%"
+            meta_text += "</i>"
+            story.append(Paragraph(meta_text, styles['Normal']))
             story.append(Spacer(1, 0.1*inch))
             
-            # Question-specific analytics
-            if question.question_type in ['radio', 'select', 'yes_no']:
-                # Distribution table
+            # Question-specific analytics with CHARTS
+            if question.question_type == 'checkbox':
+                # Multiple choice - BAR CHART
                 distribution = {}
+                options = question.get_options_list()
+                
                 for response in question_responses:
-                    value = self._extract_value_for_pdf(response.response_data)
-                    if value:
-                        distribution[str(value)] = distribution.get(str(value), 0) + 1
+                    values = _extract_value_for_pdf(response.response_data)
+                    if isinstance(values, list):
+                        for value in values:
+                            distribution[str(value)] = distribution.get(str(value), 0) + 1
+                    elif values:
+                        distribution[str(values)] = distribution.get(str(values), 0) + 1
+                
+                # Ensure all options are shown (even with 0)
+                for option in options:
+                    if option not in distribution:
+                        distribution[option] = 0
                 
                 if distribution:
+                    # Create horizontal bar chart
+                    drawing = Drawing(500, len(distribution) * 30 + 50)
+                    chart = HorizontalBarChart()
+                    chart.x = 50
+                    chart.y = 20
+                    chart.height = len(distribution) * 25
+                    chart.width = 400
+                    
+                    sorted_items = sorted(distribution.items(), key=lambda x: x[1], reverse=True)
+                    chart.data = [[item[1] for item in sorted_items]]
+                    chart.categoryAxis.categoryNames = [item[0] for item in sorted_items]
+                    
+                    chart.bars[0].fillColor = colors.HexColor('#3b82f6')
+                    chart.valueAxis.valueMin = 0
+                    chart.valueAxis.valueStep = max(1, max([v for v in distribution.values()] or [1]) // 5)
+                    chart.categoryAxis.labels.boxAnchor = 'e'
+                    chart.categoryAxis.labels.dx = -5
+                    chart.categoryAxis.labels.fontSize = 9
+                    chart.valueAxis.labels.fontSize = 8
+                    
+                    drawing.add(chart)
+                    story.append(drawing)
+                    story.append(Spacer(1, 0.1*inch))
+                    
+                    # Data table
                     dist_data = [['Option', 'Count', 'Percentage']]
-                    for option, count in sorted(distribution.items(), key=lambda x: x[1], reverse=True):
+                    for option, count in sorted_items:
                         percentage = round((count / response_count * 100) if response_count > 0 else 0, 1)
                         dist_data.append([option, str(count), f"{percentage}%"])
                     
-                    dist_table = Table(dist_data, colWidths=[3*inch, 1.5*inch, 1.5*inch])
+                    dist_table = Table(dist_data, colWidths=[3.5*inch, 1*inch, 1.2*inch])
                     dist_table.setStyle(TableStyle([
                         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
                         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), 10),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                    ]))
+                    story.append(dist_table)
+            
+            elif question.question_type in ['radio', 'select']:
+                # Single choice - PIE CHART
+                distribution = {}
+                options = question.get_options_list()
+                
+                for response in question_responses:
+                    value = _extract_value_for_pdf(response.response_data)
+                    if value:
+                        distribution[str(value)] = distribution.get(str(value), 0) + 1
+                
+                # Ensure all options are shown
+                for option in options:
+                    if option not in distribution:
+                        distribution[option] = 0
+                
+                if distribution:
+                    # Create pie chart
+                    drawing = Drawing(450, 200)
+                    pie = Pie()
+                    pie.x = 150
+                    pie.y = 20
+                    pie.width = 150
+                    pie.height = 150
+                    
+                    pie.data = list(distribution.values())
+                    pie.labels = [f"{k}\n({v})" for k, v in distribution.items()]
+                    pie.slices.strokeWidth = 0.5
+                    
+                    # Color palette
+                    pie_colors = [
+                        colors.HexColor('#8b5cf6'),
+                        colors.HexColor('#6366f1'),
+                        colors.HexColor('#3b82f6'),
+                        colors.HexColor('#0ea5e9'),
+                        colors.HexColor('#14b8a6'),
+                        colors.HexColor('#22c55e'),
+                        colors.HexColor('#eab308'),
+                        colors.HexColor('#f97316'),
+                        colors.HexColor('#ef4444'),
+                        colors.HexColor('#ec4899'),
+                    ]
+                    for i, color in enumerate(pie_colors[:len(pie.data)]):
+                        pie.slices[i].fillColor = color
+                    
+                    drawing.add(pie)
+                    story.append(drawing)
+                    story.append(Spacer(1, 0.1*inch))
+                    
+                    # Data table
+                    dist_data = [['Option', 'Count', 'Percentage']]
+                    for option, count in distribution.items():
+                        percentage = round((count / response_count * 100) if response_count > 0 else 0, 1)
+                        dist_data.append([option, str(count), f"{percentage}%"])
+                    
+                    dist_table = Table(dist_data, colWidths=[3.5*inch, 1*inch, 1.2*inch])
+                    dist_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                    ]))
+                    story.append(dist_table)
+            
+            elif question.question_type == 'yes_no':
+                # Yes/No - PIE CHART with green/red colors
+                distribution = {'Yes': 0, 'No': 0}
+                for response in question_responses:
+                    value = _extract_value_for_pdf(response.response_data)
+                    if value in ['Yes', 'yes', True, 'true', '1', 1]:
+                        distribution['Yes'] += 1
+                    elif value in ['No', 'no', False, 'false', '0', 0]:
+                        distribution['No'] += 1
+                
+                if response_count > 0:
+                    # Create pie chart
+                    drawing = Drawing(450, 200)
+                    pie = Pie()
+                    pie.x = 150
+                    pie.y = 20
+                    pie.width = 150
+                    pie.height = 150
+                    
+                    pie.data = [distribution['Yes'], distribution['No']]
+                    pie.labels = [f"Yes\n({distribution['Yes']})", f"No\n({distribution['No']})"]
+                    pie.slices.strokeWidth = 0.5
+                    pie.slices[0].fillColor = colors.HexColor('#22c55e')  # Green
+                    pie.slices[1].fillColor = colors.HexColor('#ef4444')  # Red
+                    
+                    drawing.add(pie)
+                    story.append(drawing)
+                    story.append(Spacer(1, 0.1*inch))
+                    
+                    # Data table
+                    dist_data = [
+                        ['Option', 'Count', 'Percentage'],
+                        ['Yes', str(distribution['Yes']), f"{round((distribution['Yes'] / response_count * 100), 1)}%"],
+                        ['No', str(distribution['No']), f"{round((distribution['No'] / response_count * 100), 1)}%"]
+                    ]
+                    
+                    dist_table = Table(dist_data, colWidths=[3.5*inch, 1*inch, 1.2*inch])
+                    dist_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
                         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                     ]))
                     story.append(dist_table)
             
             elif question.question_type == 'rating':
-                # Rating statistics
+                # Rating scale - BAR CHART with average
                 values = []
+                distribution = {}
+                
                 for response in question_responses:
-                    value = self._extract_value_for_pdf(response.response_data)
+                    value = _extract_value_for_pdf(response.response_data)
                     if value is not None:
                         try:
-                            values.append(float(value))
+                            numeric_value = float(value)
+                            values.append(numeric_value)
+                            rating_key = int(numeric_value)
+                            distribution[rating_key] = distribution.get(rating_key, 0) + 1
                         except (ValueError, TypeError):
                             pass
                 
                 if values:
                     avg = round(sum(values) / len(values), 2)
-                    story.append(Paragraph(f"Average Rating: <b>{avg}</b> / {question.max_value or 5}", styles['Normal']))
+                    min_val = question.min_value or 1
+                    max_val = question.max_value or 5
                     
-                    # Distribution
-                    distribution = {}
-                    for val in values:
-                        distribution[int(val)] = distribution.get(int(val), 0) + 1
+                    # Average box
+                    avg_data = [[f'Average Rating: {avg} out of {max_val}']]
+                    avg_table = Table(avg_data, colWidths=[5.7*inch])
+                    avg_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fef3c7')),
+                        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#92400e')),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 14),
+                        ('TOPPADDING', (0, 0), (-1, -1), 12),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                        ('BOX', (0, 0), (-1, -1), 2, colors.HexColor('#fbbf24')),
+                    ]))
+                    story.append(avg_table)
+                    story.append(Spacer(1, 0.15*inch))
                     
-                    dist_data = [['Rating', 'Count']]
-                    for rating in range(question.min_value or 1, (question.max_value or 5) + 1):
-                        count = distribution.get(rating, 0)
-                        dist_data.append([str(rating), str(count)])
+                    # Ensure all ratings are shown
+                    for rating in range(min_val, max_val + 1):
+                        if rating not in distribution:
+                            distribution[rating] = 0
                     
-                    dist_table = Table(dist_data, colWidths=[2*inch, 2*inch])
+                    # Create bar chart
+                    drawing = Drawing(500, 200)
+                    chart = VerticalBarChart()
+                    chart.x = 50
+                    chart.y = 20
+                    chart.height = 150
+                    chart.width = 400
+                    
+                    sorted_ratings = sorted(distribution.items())
+                    chart.data = [[item[1] for item in sorted_ratings]]
+                    chart.categoryAxis.categoryNames = [f"{item[0]} {'star' if item[0] == 1 else 'stars'}" for item in sorted_ratings]
+                    
+                    chart.bars[0].fillColor = colors.HexColor('#fbbf24')
+                    chart.valueAxis.valueMin = 0
+                    chart.categoryAxis.labels.angle = 0
+                    chart.categoryAxis.labels.fontSize = 8
+                    chart.valueAxis.labels.fontSize = 8
+                    
+                    drawing.add(chart)
+                    story.append(drawing)
+                    story.append(Spacer(1, 0.1*inch))
+                    
+                    # Distribution table
+                    dist_data = [['Rating', 'Count', 'Percentage']]
+                    for rating, count in sorted_ratings:
+                        percentage = round((count / len(values) * 100), 1)
+                        dist_data.append([f"{rating} {'star' if rating == 1 else 'stars'}", str(count), f"{percentage}%"])
+                    dist_data.append(['Average', str(avg), ''])
+                    
+                    dist_table = Table(dist_data, colWidths=[2.5*inch, 1.5*inch, 1.7*inch])
                     dist_table.setStyle(TableStyle([
                         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#fef3c7')),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
                         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#eff6ff')]),
                     ]))
                     story.append(dist_table)
             
-            elif question.question_type in ['text', 'textarea']:
-                # Sample responses
-                samples = []
-                for response in question_responses[:5]:
-                    value = self._extract_value_for_pdf(response.response_data)
-                    if value:
-                        samples.append(str(value)[:150])
+            elif question.question_type == 'number':
+                # Number questions - BAR CHART with statistics
+                values = []
+                distribution = {}
                 
-                if samples:
-                    story.append(Paragraph("<b>Sample Responses:</b>", styles['Normal']))
-                    for i, sample in enumerate(samples, 1):
-                        story.append(Paragraph(f"{i}. {sample}", styles['Normal']))
+                for response in question_responses:
+                    value = _extract_value_for_pdf(response.response_data)
+                    if value is not None:
+                        try:
+                            num_value = float(value)
+                            values.append(num_value)
+                            distribution[num_value] = distribution.get(num_value, 0) + 1
+                        except (ValueError, TypeError):
+                            pass
+                
+                if values:
+                    avg = round(sum(values) / len(values), 2)
+                    min_val = round(min(values), 2)
+                    max_val = round(max(values), 2)
+                    
+                    # Statistics box
+                    stats_data = [
+                        ['Average', 'Minimum', 'Maximum'],
+                        [str(avg), str(min_val), str(max_val)]
+                    ]
+                    stats_table = Table(stats_data, colWidths=[1.9*inch, 1.9*inch, 1.9*inch])
+                    stats_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#14b8a6')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#ccfbf1')),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 11),
+                        ('TOPPADDING', (0, 0), (-1, -1), 10),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#14b8a6')),
+                    ]))
+                    story.append(stats_table)
+                    story.append(Spacer(1, 0.15*inch))
+                    
+                    # Value distribution bar chart (if not too many unique values)
+                    if len(distribution) <= 15:
+                        drawing = Drawing(500, 200)
+                        chart = VerticalBarChart()
+                        chart.x = 50
+                        chart.y = 20
+                        chart.height = 150
+                        chart.width = 400
+                        
+                        sorted_dist = sorted(distribution.items())
+                        chart.data = [[item[1] for item in sorted_dist]]
+                        chart.categoryAxis.categoryNames = [str(item[0]) for item in sorted_dist]
+                        
+                        chart.bars[0].fillColor = colors.HexColor('#14b8a6')
+                        chart.valueAxis.valueMin = 0
+                        chart.categoryAxis.labels.angle = 45
+                        chart.categoryAxis.labels.fontSize = 7
+                        chart.valueAxis.labels.fontSize = 8
+                        
+                        drawing.add(chart)
+                        story.append(drawing)
+                        story.append(Spacer(1, 0.1*inch))
+                        
+                        # Distribution table
+                        dist_data = [['Value', 'Count', 'Percentage']]
+                        for value, count in sorted_dist:
+                            percentage = round((count / len(values) * 100), 1)
+                            dist_data.append([str(value), str(count), f"{percentage}%"])
+                        
+                        dist_table = Table(dist_data, colWidths=[2*inch, 1.5*inch, 2.2*inch])
+                        dist_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                        ]))
+                        story.append(dist_table)
             
-            story.append(Spacer(1, 0.2*inch))
+            elif question.question_type == 'year':
+                # Year questions - BAR CHART
+                distribution = {}
+                
+                for response in question_responses:
+                    value = _extract_value_for_pdf(response.response_data)
+                    if value:
+                        distribution[str(value)] = distribution.get(str(value), 0) + 1
+                
+                if distribution:
+                    # Sort by year descending
+                    sorted_years = sorted(distribution.items(), key=lambda x: x[0], reverse=True)
+                    
+                    # Create bar chart
+                    drawing = Drawing(500, 200)
+                    chart = VerticalBarChart()
+                    chart.x = 50
+                    chart.y = 20
+                    chart.height = 150
+                    chart.width = 400
+                    
+                    chart.data = [[item[1] for item in sorted_years]]
+                    chart.categoryAxis.categoryNames = [item[0] for item in sorted_years]
+                    
+                    chart.bars[0].fillColor = colors.HexColor('#10b981')
+                    chart.valueAxis.valueMin = 0
+                    chart.categoryAxis.labels.angle = 45
+                    chart.categoryAxis.labels.fontSize = 8
+                    chart.valueAxis.labels.fontSize = 8
+                    
+                    drawing.add(chart)
+                    story.append(drawing)
+                    story.append(Spacer(1, 0.1*inch))
+                    
+                    # Distribution table
+                    dist_data = [['Year', 'Count', 'Percentage']]
+                    for year, count in sorted_years:
+                        percentage = round((count / response_count * 100), 1)
+                        dist_data.append([year, str(count), f"{percentage}%"])
+                    
+                    dist_table = Table(dist_data, colWidths=[2.5*inch, 1.5*inch, 1.7*inch])
+                    dist_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                    ]))
+                    story.append(dist_table)
+            
+            elif question.question_type in ['text', 'textarea', 'email']:
+                # Text responses - show response count only (privacy)
+                count_data = [[f'{response_count} text responses received']]
+                count_table = Table(count_data, colWidths=[5.7*inch])
+                count_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#dbeafe')),
+                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e40af')),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 11),
+                    ('TOPPADDING', (0, 0), (-1, -1), 15),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+                    ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#60a5fa')),
+                ]))
+                story.append(count_table)
+                story.append(Paragraph("<i>Individual responses are protected for privacy</i>", styles['Normal']))
+            
+            story.append(Spacer(1, 0.25*inch))
+            
+            # Add page break after every 3 questions to avoid cramping
+            if idx % 3 == 0 and idx < len(questions):
+                story.append(PageBreak())
         
         # Build PDF
         doc.build(story)
@@ -1236,7 +1638,9 @@ def category_analytics_pdf_export(request):
         buffer.seek(0)
         response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'survey_analytics_{category.name}_{timestamp}.pdf'
+        # Sanitize filename - remove special characters
+        safe_category_name = ''.join(c if c.isalnum() or c in (' ', '_', '-') else '_' for c in category.name)
+        filename = f'survey_analytics_{safe_category_name}_{timestamp}.pdf'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         
         return response
@@ -1249,6 +1653,608 @@ def category_analytics_pdf_export(request):
         import traceback
         traceback.print_exc()
         return Response({'error': f'PDF export failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsSurveyAdmin])
+def form_analytics_pdf_export(request):
+    """
+    Export complete form analytics (all categories) as comprehensive PDF report with charts, graphs and statistics.
+    Accepts category_ids array to specify which categories to include.
+    """
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
+        from reportlab.graphics.shapes import Drawing
+        from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
+        from reportlab.graphics.charts.piecharts import Pie
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from datetime import datetime
+        import io
+        
+        # Get category_ids from request (can be sent from frontend)
+        category_ids = request.data.get('category_ids', [])
+        
+        # If no specific categories provided, get registration categories only
+        if category_ids:
+            categories = SurveyCategory.objects.filter(
+                id__in=category_ids,
+                is_active=True
+            ).order_by('order', 'created_at')
+        else:
+            # Default to registration survey categories
+            categories = SurveyCategory.objects.filter(
+                include_in_registration=True,
+                is_active=True
+            ).order_by('order', 'created_at')
+        
+        if not categories.exists():
+            return Response({'error': 'No categories found for export'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get all questions from selected categories
+        category_ids = [cat.id for cat in categories]
+        questions = SurveyQuestion.objects.filter(
+            category_id__in=category_ids,
+            is_active=True
+        ).select_related('category').order_by('category__order', 'order', 'question_text')
+        
+        # Get all responses for these questions
+        responses = SurveyResponse.objects.filter(
+            question__category_id__in=category_ids
+        ).select_related('user', 'question')
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        total_alumni = User.objects.filter(user_type=3, is_approved=True).count()
+        
+        # Create PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer, 
+            pagesize=letter, 
+            topMargin=0.5*inch, 
+            bottomMargin=0.5*inch,
+            leftMargin=0.75*inch,
+            rightMargin=0.75*inch
+        )
+        
+        # Styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Title'],
+            fontSize=26,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=12,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        subtitle_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Heading2'],
+            fontSize=18,
+            textColor=colors.HexColor('#1e40af'),
+            spaceBefore=6,
+            spaceAfter=12,
+            alignment=TA_CENTER
+        )
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=10,
+            fontName='Helvetica-Bold'
+        )
+        section_heading_style = ParagraphStyle(
+            'SectionHeading',
+            parent=styles['Heading2'],
+            fontSize=16,
+            textColor=colors.HexColor('#7c3aed'),
+            spaceAfter=10,
+            spaceBefore=15,
+            fontName='Helvetica-Bold'
+        )
+        question_heading_style = ParagraphStyle(
+            'QuestionHeading',
+            parent=styles['Heading3'],
+            fontSize=12,
+            textColor=colors.HexColor('#1f2937'),
+            spaceAfter=6,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Build story
+        story = []
+        
+        # Title
+        story.append(Paragraph(f"Complete Survey Analytics Report", title_style))
+        story.append(Paragraph(f"Alumni Survey System", subtitle_style))
+        timestamp = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        story.append(Paragraph(f"<i>Generated on {timestamp}</i>", styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Executive Summary
+        total_responses = responses.values('user').distinct().count()
+        response_rate = round((total_responses / total_alumni * 100) if total_alumni > 0 else 0, 1)
+        total_questions = questions.count()
+        total_categories = categories.count()
+        
+        story.append(Paragraph("Executive Summary", heading_style))
+        summary_data = [
+            ['Metric', 'Value'],
+            ['Total Categories', str(total_categories)],
+            ['Total Questions', str(total_questions)],
+            ['Total Responses', str(total_responses)],
+            ['Total Alumni', str(total_alumni)],
+            ['Overall Response Rate', f"{response_rate}%"],
+            ['Report Date', datetime.now().strftime('%Y-%m-%d')],
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[3*inch, 2.7*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#eff6ff')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#60a5fa')),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ]))
+        story.append(summary_table)
+        story.append(PageBreak())
+        
+        # Process each category and its questions
+        for cat_idx, category in enumerate(categories, 1):
+            # Category header
+            story.append(Paragraph(f"Category {cat_idx}: {category.name}", section_heading_style))
+            if category.description:
+                story.append(Paragraph(f"<i>{category.description}</i>", styles['Normal']))
+            story.append(Spacer(1, 0.2*inch))
+            
+            # Get questions for this category
+            category_questions = questions.filter(category=category)
+            
+            for q_idx, question in enumerate(category_questions, 1):
+                question_responses = responses.filter(question=question)
+                response_count = question_responses.count()
+                
+                # Question header
+                question_text = f"{cat_idx}.{q_idx}. {question.question_text}"
+                story.append(Paragraph(question_text, question_heading_style))
+                
+                # Question metadata
+                meta_text = f"<i>Type: {question.get_question_type_display()} | Responses: {response_count}"
+                if response_count > 0 and total_alumni > 0:
+                    q_response_rate = round((response_count / total_alumni * 100), 1)
+                    meta_text += f" | Response Rate: {q_response_rate}%"
+                meta_text += "</i>"
+                story.append(Paragraph(meta_text, styles['Normal']))
+                story.append(Spacer(1, 0.1*inch))
+                
+                # Process based on question type (reuse the same logic)
+                if question.question_type == 'checkbox':
+                    # Checkbox - HORIZONTAL BAR CHART
+                    distribution = {}
+                    for response in question_responses:
+                        values = _extract_value_for_pdf(response.response_data)
+                        if isinstance(values, list):
+                            for val in values:
+                                distribution[str(val)] = distribution.get(str(val), 0) + 1
+                        elif values:
+                            distribution[str(values)] = distribution.get(str(values), 0) + 1
+                    
+                    # Include all options even with 0 count
+                    if question.options:
+                        for option in question.options:
+                            if str(option) not in distribution:
+                                distribution[str(option)] = 0
+                    
+                    if distribution:
+                        sorted_dist = sorted(distribution.items(), key=lambda x: x[1], reverse=True)
+                        
+                        chart_height = max(150, len(sorted_dist) * 30)
+                        drawing = Drawing(500, chart_height)
+                        chart = HorizontalBarChart()
+                        chart.x = 120
+                        chart.y = 20
+                        chart.height = chart_height - 40
+                        chart.width = 350
+                        
+                        chart.data = [[item[1] for item in sorted_dist]]
+                        chart.categoryAxis.categoryNames = [item[0] for item in sorted_dist]
+                        
+                        chart.bars[0].fillColor = colors.HexColor('#3b82f6')
+                        chart.valueAxis.valueMin = 0
+                        chart.categoryAxis.labels.fontSize = 8
+                        chart.valueAxis.labels.fontSize = 8
+                        
+                        drawing.add(chart)
+                        story.append(drawing)
+                        story.append(Spacer(1, 0.1*inch))
+                        
+                        dist_data = [['Option', 'Count', 'Percentage']]
+                        for option, count in sorted_dist:
+                            percentage = round((count / response_count * 100), 1) if response_count > 0 else 0
+                            dist_data.append([option, str(count), f"{percentage}%"])
+                        
+                        dist_table = Table(dist_data, colWidths=[2.5*inch, 1.5*inch, 1.7*inch])
+                        dist_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                        ]))
+                        story.append(dist_table)
+                
+                elif question.question_type in ['radio', 'select']:
+                    # Radio/Select - PIE CHART
+                    distribution = {}
+                    for response in question_responses:
+                        value = _extract_value_for_pdf(response.response_data)
+                        if value:
+                            distribution[str(value)] = distribution.get(str(value), 0) + 1
+                    
+                    if question.options:
+                        for option in question.options:
+                            if str(option) not in distribution:
+                                distribution[str(option)] = 0
+                    
+                    if distribution and response_count > 0:
+                        drawing = Drawing(450, 200)
+                        pie = Pie()
+                        pie.x = 100
+                        pie.y = 20
+                        pie.width = 150
+                        pie.height = 150
+                        
+                        pie.data = list(distribution.values())
+                        pie.labels = [f"{k}: {v}" for k, v in distribution.items()]
+                        
+                        color_palette = [
+                            colors.HexColor('#a855f7'), colors.HexColor('#ec4899'),
+                            colors.HexColor('#f97316'), colors.HexColor('#eab308'),
+                            colors.HexColor('#84cc16'), colors.HexColor('#22c55e'),
+                            colors.HexColor('#14b8a6'), colors.HexColor('#06b6d4'),
+                            colors.HexColor('#3b82f6'), colors.HexColor('#6366f1'),
+                        ]
+                        for i, slice_color in enumerate(color_palette[:len(pie.data)]):
+                            pie.slices[i].fillColor = slice_color
+                        
+                        drawing.add(pie)
+                        story.append(drawing)
+                        story.append(Spacer(1, 0.1*inch))
+                        
+                        dist_data = [['Option', 'Count', 'Percentage']]
+                        for option, count in distribution.items():
+                            percentage = round((count / response_count * 100), 1)
+                            dist_data.append([option, str(count), f"{percentage}%"])
+                        
+                        dist_table = Table(dist_data, colWidths=[2.5*inch, 1.5*inch, 1.7*inch])
+                        dist_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                        ]))
+                        story.append(dist_table)
+                
+                elif question.question_type == 'yes_no':
+                    # Yes/No - PIE CHART with green/red colors
+                    distribution = {'Yes': 0, 'No': 0}
+                    for response in question_responses:
+                        value = _extract_value_for_pdf(response.response_data)
+                        if value in ['Yes', 'yes', True, 'true', '1', 1]:
+                            distribution['Yes'] += 1
+                        elif value in ['No', 'no', False, 'false', '0', 0]:
+                            distribution['No'] += 1
+                    
+                    if response_count > 0:
+                        drawing = Drawing(450, 200)
+                        pie = Pie()
+                        pie.x = 150
+                        pie.y = 20
+                        pie.width = 150
+                        pie.height = 150
+                        
+                        pie.data = [distribution['Yes'], distribution['No']]
+                        pie.labels = [f"Yes: {distribution['Yes']}", f"No: {distribution['No']}"]
+                        
+                        pie.slices[0].fillColor = colors.HexColor('#22c55e')
+                        pie.slices[1].fillColor = colors.HexColor('#ef4444')
+                        
+                        drawing.add(pie)
+                        story.append(drawing)
+                        story.append(Spacer(1, 0.1*inch))
+                        
+                        dist_data = [
+                            ['Response', 'Count', 'Percentage'],
+                            ['Yes', str(distribution['Yes']), f"{round(distribution['Yes']/response_count*100, 1)}%"],
+                            ['No', str(distribution['No']), f"{round(distribution['No']/response_count*100, 1)}%"]
+                        ]
+                        
+                        dist_table = Table(dist_data, colWidths=[2.5*inch, 1.5*inch, 1.7*inch])
+                        dist_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                        ]))
+                        story.append(dist_table)
+                
+                elif question.question_type == 'rating':
+                    # Rating scale - BAR CHART with average
+                    values = []
+                    distribution = {}
+                    
+                    for response in question_responses:
+                        value = _extract_value_for_pdf(response.response_data)
+                        if value is not None:
+                            try:
+                                numeric_value = float(value)
+                                values.append(numeric_value)
+                                rating_key = int(numeric_value)
+                                distribution[rating_key] = distribution.get(rating_key, 0) + 1
+                            except (ValueError, TypeError):
+                                pass
+                    
+                    if values:
+                        avg = round(sum(values) / len(values), 2)
+                        min_val = question.min_value or 1
+                        max_val = question.max_value or 5
+                        
+                        avg_data = [[f'Average Rating: {avg} out of {max_val}']]
+                        avg_table = Table(avg_data, colWidths=[5.7*inch])
+                        avg_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fef3c7')),
+                            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#92400e')),
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 14),
+                            ('TOPPADDING', (0, 0), (-1, -1), 12),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                            ('BOX', (0, 0), (-1, -1), 2, colors.HexColor('#fbbf24')),
+                        ]))
+                        story.append(avg_table)
+                        story.append(Spacer(1, 0.15*inch))
+                        
+                        for rating in range(min_val, max_val + 1):
+                            if rating not in distribution:
+                                distribution[rating] = 0
+                        
+                        drawing = Drawing(500, 200)
+                        chart = VerticalBarChart()
+                        chart.x = 50
+                        chart.y = 20
+                        chart.height = 150
+                        chart.width = 400
+                        
+                        sorted_ratings = sorted(distribution.items())
+                        chart.data = [[item[1] for item in sorted_ratings]]
+                        chart.categoryAxis.categoryNames = [f"{item[0]} {'star' if item[0] == 1 else 'stars'}" for item in sorted_ratings]
+                        
+                        chart.bars[0].fillColor = colors.HexColor('#fbbf24')
+                        chart.valueAxis.valueMin = 0
+                        chart.categoryAxis.labels.angle = 0
+                        chart.categoryAxis.labels.fontSize = 8
+                        chart.valueAxis.labels.fontSize = 8
+                        
+                        drawing.add(chart)
+                        story.append(drawing)
+                        story.append(Spacer(1, 0.1*inch))
+                        
+                        dist_data = [['Rating', 'Count', 'Percentage']]
+                        for rating, count in sorted_ratings:
+                            percentage = round((count / len(values) * 100), 1)
+                            dist_data.append([f"{rating} {'star' if rating == 1 else 'stars'}", str(count), f"{percentage}%"])
+                        dist_data.append(['Average', str(avg), ''])
+                        
+                        dist_table = Table(dist_data, colWidths=[2.5*inch, 1.5*inch, 1.7*inch])
+                        dist_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#fef3c7')),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#eff6ff')]),
+                        ]))
+                        story.append(dist_table)
+                
+                elif question.question_type == 'number':
+                    # Number questions - BAR CHART with statistics
+                    values = []
+                    distribution = {}
+                    
+                    for response in question_responses:
+                        value = _extract_value_for_pdf(response.response_data)
+                        if value is not None:
+                            try:
+                                num_value = float(value)
+                                values.append(num_value)
+                                distribution[num_value] = distribution.get(num_value, 0) + 1
+                            except (ValueError, TypeError):
+                                pass
+                    
+                    if values:
+                        avg = round(sum(values) / len(values), 2)
+                        min_val = round(min(values), 2)
+                        max_val = round(max(values), 2)
+                        
+                        stats_data = [
+                            ['Average', 'Minimum', 'Maximum'],
+                            [str(avg), str(min_val), str(max_val)]
+                        ]
+                        stats_table = Table(stats_data, colWidths=[1.9*inch, 1.9*inch, 1.9*inch])
+                        stats_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#14b8a6')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#ccfbf1')),
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 11),
+                            ('TOPPADDING', (0, 0), (-1, -1), 10),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#14b8a6')),
+                        ]))
+                        story.append(stats_table)
+                        story.append(Spacer(1, 0.15*inch))
+                        
+                        if len(distribution) <= 15:
+                            drawing = Drawing(500, 200)
+                            chart = VerticalBarChart()
+                            chart.x = 50
+                            chart.y = 20
+                            chart.height = 150
+                            chart.width = 400
+                            
+                            sorted_dist = sorted(distribution.items())
+                            chart.data = [[item[1] for item in sorted_dist]]
+                            chart.categoryAxis.categoryNames = [str(item[0]) for item in sorted_dist]
+                            
+                            chart.bars[0].fillColor = colors.HexColor('#14b8a6')
+                            chart.valueAxis.valueMin = 0
+                            chart.categoryAxis.labels.angle = 45
+                            chart.categoryAxis.labels.fontSize = 7
+                            chart.valueAxis.labels.fontSize = 8
+                            
+                            drawing.add(chart)
+                            story.append(drawing)
+                            story.append(Spacer(1, 0.1*inch))
+                            
+                            dist_data = [['Value', 'Count', 'Percentage']]
+                            for value, count in sorted_dist:
+                                percentage = round((count / len(values) * 100), 1)
+                                dist_data.append([str(value), str(count), f"{percentage}%"])
+                            
+                            dist_table = Table(dist_data, colWidths=[2*inch, 1.5*inch, 2.2*inch])
+                            dist_table.setStyle(TableStyle([
+                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                            ]))
+                            story.append(dist_table)
+                
+                elif question.question_type == 'year':
+                    # Year questions - BAR CHART
+                    distribution = {}
+                    
+                    for response in question_responses:
+                        value = _extract_value_for_pdf(response.response_data)
+                        if value:
+                            distribution[str(value)] = distribution.get(str(value), 0) + 1
+                    
+                    if distribution:
+                        sorted_years = sorted(distribution.items(), key=lambda x: x[0], reverse=True)
+                        
+                        drawing = Drawing(500, 200)
+                        chart = VerticalBarChart()
+                        chart.x = 50
+                        chart.y = 20
+                        chart.height = 150
+                        chart.width = 400
+                        
+                        chart.data = [[item[1] for item in sorted_years]]
+                        chart.categoryAxis.categoryNames = [item[0] for item in sorted_years]
+                        
+                        chart.bars[0].fillColor = colors.HexColor('#10b981')
+                        chart.valueAxis.valueMin = 0
+                        chart.categoryAxis.labels.angle = 45
+                        chart.categoryAxis.labels.fontSize = 8
+                        chart.valueAxis.labels.fontSize = 8
+                        
+                        drawing.add(chart)
+                        story.append(drawing)
+                        story.append(Spacer(1, 0.1*inch))
+                        
+                        dist_data = [['Year', 'Count', 'Percentage']]
+                        for year, count in sorted_years:
+                            percentage = round((count / response_count * 100), 1)
+                            dist_data.append([year, str(count), f"{percentage}%"])
+                        
+                        dist_table = Table(dist_data, colWidths=[2.5*inch, 1.5*inch, 1.7*inch])
+                        dist_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#60a5fa')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eff6ff')]),
+                        ]))
+                        story.append(dist_table)
+                
+                elif question.question_type in ['text', 'textarea', 'email']:
+                    # Text responses - show response count only (privacy)
+                    count_data = [[f'{response_count} text responses received']]
+                    count_table = Table(count_data, colWidths=[5.7*inch])
+                    count_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#dbeafe')),
+                        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e40af')),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 11),
+                        ('TOPPADDING', (0, 0), (-1, -1), 15),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+                        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#60a5fa')),
+                    ]))
+                    story.append(count_table)
+                    story.append(Paragraph("<i>Individual responses are protected for privacy</i>", styles['Normal']))
+                
+                story.append(Spacer(1, 0.25*inch))
+            
+            # Add page break after each category except the last
+            if cat_idx < len(categories):
+                story.append(PageBreak())
+        
+        # Build PDF
+        doc.build(story)
+        
+        # Return response
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'Complete_Survey_Analytics_{timestamp}.pdf'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+        
+    except ImportError:
+        return Response({
+            'error': 'ReportLab library not installed. Run: pip install reportlab'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({'error': f'PDF export failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 def _extract_value_for_pdf(response_data):
     """Helper function to extract value from response_data"""
@@ -1286,21 +2292,53 @@ class RegistrationSurveyQuestionsView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):
-        print(f"🔄 Loading fresh registration survey data from database (no cache)")
-        
-        # Get active categories that are marked for inclusion in registration
-        # Only return categories where include_in_registration=True
-        categories = SurveyCategory.objects.filter(
-            is_active=True,
-            include_in_registration=True
-        ).prefetch_related(
-            'questions'
-        ).order_by('order', 'name')
-        
+        print(f"🔄 Loading registration survey form (template-based) from database")
+        print(f"📥 Request params: {request.query_params}")
+
+        # Choose the form (SurveyTemplate) for registration
+        # Priority: explicit form_id param > default template (is_default=True)
+        form_id = request.query_params.get('form_id')
+        template = None
+
+        if form_id:
+            print(f"🔍 Looking for form with ID: {form_id}")
+            try:
+                template = SurveyTemplate.objects.get(id=form_id, is_active=True)
+                print(f"✅ Found template by ID: {template.name}")
+            except SurveyTemplate.DoesNotExist:
+                print(f"❌ Template with ID {form_id} not found")
+                return Response({'error': 'Registration form not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            print(f"🔍 Looking for default template (is_default=True, is_active=True)")
+            all_templates = SurveyTemplate.objects.all()
+            print(f"📊 Total templates in DB: {all_templates.count()}")
+            for t in all_templates:
+                print(f"  - Template {t.id}: {t.name}, is_active={t.is_active}, is_default={t.is_default}")
+            
+            template = SurveyTemplate.objects.filter(is_active=True, is_default=True).first()
+            if template:
+                print(f"✅ Found default template: {template.name}")
+            else:
+                print(f"❌ No default template found")
+
+        if not template:
+            # No registration form configured; return empty list
+            print("⚠️ No default registration form (SurveyTemplate.is_default) configured")
+            response = Response([])
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+            return response
+
+        # Get categories from the selected template, ordered by through-model order then category order
+        categories = template.categories.filter(is_active=True).prefetch_related('questions').order_by(
+            'surveytemplatecategory__order', 'order', 'name'
+        )
+
         survey_data = []
         for category in categories:
             active_questions = category.questions.filter(is_active=True).order_by('order', 'question_text')
-            
+
             if active_questions.exists():
                 questions_data = []
                 for question in active_questions:
@@ -1317,14 +2355,14 @@ class RegistrationSurveyQuestionsView(APIView):
                         'max_length': question.max_length,
                         'order': question.order
                     }
-                    
-                    # Add question-level conditional logic if exists
+
+                    # Question-level conditional logic
                     if question.depends_on_question:
                         question_data['depends_on_question_id'] = question.depends_on_question.id
                         question_data['depends_on_value'] = question.depends_on_value
-                    
+
                     questions_data.append(question_data)
-                
+
                 category_data = {
                     'category': {
                         'id': category.id,
@@ -1334,19 +2372,19 @@ class RegistrationSurveyQuestionsView(APIView):
                     },
                     'questions': questions_data
                 }
-                
-                # Add category-level conditional logic if exists
+
+                # Category-level conditional logic
                 if category.depends_on_category:
                     category_data['category']['depends_on_category'] = category.depends_on_category.id
                     category_data['category']['depends_on_category_name'] = category.depends_on_category.name
                     category_data['category']['depends_on_question_text'] = category.depends_on_question_text
                     category_data['category']['depends_on_value'] = category.depends_on_value
-                
+
                 survey_data.append(category_data)
-        
+
         # Return fresh data directly (no caching)
-        print(f"✅ Returning fresh survey data with {len(survey_data)} categories")
-        
+        print(f"✅ Returning registration form '{template.name}' with {len(survey_data)} categories")
+
         response = Response(survey_data)
         response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response['Pragma'] = 'no-cache'

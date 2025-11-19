@@ -320,15 +320,6 @@ class SurveyTemplate(models.Model):
         super().save(*args, **kwargs)
 
 
-    # New form-like settings (additive, nullable/defaulted for safe migrations)
-    is_published = models.BooleanField(default=False, help_text="Whether this form is published and accepting responses")
-    accepting_responses = models.BooleanField(default=True, help_text="Whether responses are currently accepted")
-    start_at = models.DateTimeField(null=True, blank=True, help_text="Optional start datetime for accepting responses")
-    end_at = models.DateTimeField(null=True, blank=True, help_text="Optional end datetime for accepting responses")
-    confirmation_message = models.TextField(blank=True, default='', help_text="Message shown to respondents after submission")
-    form_settings = models.JSONField(null=True, blank=True, default=dict, help_text="Flexible JSON settings for the form")
-
-
 class SurveyTemplateCategory(models.Model):
     """Through model for SurveyTemplate and SurveyCategory relationship"""
     template = models.ForeignKey(SurveyTemplate, on_delete=models.CASCADE)

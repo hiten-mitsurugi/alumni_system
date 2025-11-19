@@ -65,6 +65,14 @@ class SurveyService {
     })
   }
 
+  async exportFormPDF(categoryIds) {
+    return api.post('/survey/admin/analytics/form/pdf/', {
+      category_ids: categoryIds
+    }, {
+      responseType: 'blob'
+    })
+  }
+
   async getResponses(filters = {}) {
     return api.get('/survey/admin/responses/', { params: filters })
   }
@@ -73,6 +81,7 @@ class SurveyService {
     const {
       format = 'xlsx',
       category_id = null,
+      category_ids = [],
       date_from = null,
       date_to = null,
       include_profile_fields = [
@@ -84,6 +93,7 @@ class SurveyService {
     return api.post('/survey/admin/export/', {
       format,
       category_id,
+      category_ids,
       date_from,
       date_to,
       include_profile_fields

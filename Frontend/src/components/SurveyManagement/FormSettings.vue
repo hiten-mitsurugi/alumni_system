@@ -31,6 +31,18 @@
       <div class="space-y-4">
         <div class="flex items-center">
           <input
+            v-model="localSettings.is_default"
+            type="checkbox"
+            id="is_default"
+            class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+          />
+          <label for="is_default" class="ml-2 text-sm font-medium text-gray-700">
+            Use this form for registration (default)
+          </label>
+        </div>
+
+        <div class="flex items-center">
+          <input
             v-model="localSettings.accepting_responses"
             type="checkbox"
             id="accepting"
@@ -139,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 
 const props = defineProps({
   form: {
@@ -152,12 +164,27 @@ const emit = defineEmits(['save'])
 
 const saving = ref(false)
 
+// Helper to convert ISO 8601 to datetime-local format (yyyy-MM-ddThh:mm)
+const formatDatetimeLocal = (isoString) => {
+  if (!isoString) return ''
+  // Remove timezone and milliseconds: "2025-11-18T18:46:00Z" -> "2025-11-18T18:46"
+  return isoString.replace(/:\d{2}\.\d{3}Z$/, '').replace(/:\d{2}Z$/, '').slice(0, 16)
+}
+
+// Helper to convert datetime-local format back to ISO 8601 for backend
+const formatISO = (datetimeLocal) => {
+  if (!datetimeLocal) return null
+  // Append seconds and Z timezone: "2025-11-18T18:46" -> "2025-11-18T18:46:00Z"
+  return datetimeLocal + ':00Z'
+}
+
 const localSettings = reactive({
   name: props.form.name,
   description: props.form.description,
+  is_default: props.form.is_default || false,
   accepting_responses: props.form.accepting_responses || false,
-  start_at: props.form.start_at || '',
-  end_at: props.form.end_at || '',
+  start_at: formatDatetimeLocal(props.form.start_at),
+  end_at: formatDatetimeLocal(props.form.end_at),
   confirmation_message: props.form.confirmation_message || ''
 })
 
@@ -172,9 +199,10 @@ watch(() => props.form, (newForm) => {
   Object.assign(localSettings, {
     name: newForm.name,
     description: newForm.description,
+    is_default: newForm.is_default || false,
     accepting_responses: newForm.accepting_responses || false,
-    start_at: newForm.start_at || '',
-    end_at: newForm.end_at || '',
+    start_at: formatDatetimeLocal(newForm.start_at),
+    end_at: formatDatetimeLocal(newForm.end_at),
     confirmation_message: newForm.confirmation_message || ''
   })
   Object.assign(formSettings, newForm.form_settings || {})
@@ -185,6 +213,8 @@ const handleSave = async () => {
   try {
     await emit('save', {
       ...localSettings,
+      start_at: formatISO(localSettings.start_at),
+      end_at: formatISO(localSettings.end_at),
       form_settings: formSettings
     })
   } finally {

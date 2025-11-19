@@ -14,16 +14,32 @@ export function useRegistrationSurvey() {
       loading.value = true
       error.value = null
       
+      console.log('🔄 Loading registration survey from API...')
+      
       // Load registration survey questions (public endpoint)
       const response = await surveyService.getRegistrationSurveyQuestions()
+      console.log('📦 API Response:', response)
+      console.log('📊 Data received:', response.data)
+      console.log('📏 Number of sections:', response.data?.length || 0)
+      
       surveyCategories.value = response.data || []
+      
+      if (surveyCategories.value.length > 0) {
+        console.log('✅ Survey sections loaded:')
+        surveyCategories.value.forEach((section, index) => {
+          console.log(`  ${index + 1}. ${section.category.name} (${section.questions.length} questions)`)
+        })
+      } else {
+        console.warn('⚠️ No survey sections returned from API')
+      }
       
       // Initialize responses for checkbox questions
       initializeResponses()
       
     } catch (err) {
       error.value = 'Failed to load survey questions. Please try again later.'
-      console.error('Error loading registration survey:', err)
+      console.error('❌ Error loading registration survey:', err)
+      console.error('Error details:', err.response?.data)
     } finally {
       loading.value = false
     }

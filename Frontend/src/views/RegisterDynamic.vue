@@ -200,7 +200,7 @@ const validateStep = (step) => {
     
     if (surveyStepIndex >= 0 && surveyStepIndex < visibleCategories.length) {
       const categoryData = visibleCategories[surveyStepIndex];
-      return validateCategory(categoryData.category.id);
+      return validateCategory(categoryData); // Pass full categoryData object
     }
     
     return true;
@@ -267,8 +267,25 @@ const handleAgreementSkip = () => {
 };
 
 const handleSurveyConsentAccept = () => {
+  console.log('=== SURVEY CONSENT ACCEPTED ===');
+  console.log('Survey categories loaded:', surveyCategories.value.length);
+  console.log('Survey categories:', surveyCategories.value);
   surveyConsentGiven.value = true;
+  console.log('Consent given, moving to next step');
+  console.log('Current step before:', currentStep.value);
+  console.log('Total steps:', totalSteps.value);
+  console.log('Visible categories:', getVisibleCategories.value);
+  
+  // If no survey categories available, skip to submission
+  if (surveyCategories.value.length === 0 || getVisibleCategories.value.length === 0) {
+    console.warn('No survey categories available, skipping to submission');
+    alert('No survey questions are currently available. Proceeding to registration submission.');
+    currentStep.value = totalSteps.value; // Jump to final step
+    return;
+  }
+  
   nextStep();
+  console.log('Current step after:', currentStep.value);
 };
 
 const handleSurveyConsentDecline = () => {
@@ -481,6 +498,21 @@ onUnmounted(() => {
               :errors="surveyErrors"
               @update:responses="handleSurveyResponses"
             />
+          </div>
+
+          <!-- No Survey Available Message -->
+          <div v-if="currentStep > 4 && !currentSurveyCategory && surveyConsentGiven" class="text-center py-12">
+            <div class="text-gray-400 text-5xl mb-4">📋</div>
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">No Survey Questions Available</h3>
+            <p class="text-gray-500 mb-6">
+              There are currently no survey questions configured for registration.
+            </p>
+            <button
+              @click="currentStep = totalSteps"
+              class="bg-orange-500 text-white py-2 px-6 rounded hover:bg-orange-600 transition-colors"
+            >
+              Continue to Submit Registration
+            </button>
           </div>
         </template>
 

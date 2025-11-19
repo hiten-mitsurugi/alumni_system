@@ -5,7 +5,7 @@
   >
     <div 
       :class="[
-        'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden',
+        'draggable-modal relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col',
         isDragging && draggedModal === 'analytics' ? 'dragging' : ''
       ]"
       data-modal="analytics"
@@ -22,83 +22,237 @@
         <div>
           <h3 class="text-xl font-bold text-white flex items-center gap-2">
             <BarChart3 class="w-5 h-5 opacity-70" />
-            Survey Analytics Dashboard
+            Survey Analytics Report
           </h3>
-          <p class="text-purple-100 text-sm mt-1">Comprehensive overview of survey performance and responses</p>
+          <p class="text-purple-100 text-sm mt-1">{{ analytics.total_responses }} responses • {{ analytics.total_users_responded }} unique respondents</p>
         </div>
-        <button
-          @click="$emit('resetPosition', 'analytics')"
-          class="text-purple-200 hover:text-white p-1 rounded transition-colors"
-          title="Reset position"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-        </button>
-      </div>
-      
-      <div class="p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200 hover:shadow-lg transition-all duration-200 cursor-default">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-orange-600">Total Questions</h4>
-              <div class="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-              </div>
-            </div>
-            <p class="text-3xl font-bold text-orange-500">{{ analytics.total_questions }}</p>
-            <p class="text-xs text-orange-600 mt-1">Active survey questions</p>
-          </div>
-          
-          <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200 hover:shadow-lg transition-all duration-200 cursor-default">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-orange-600">Total Responses</h4>
-              <div class="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                </svg>
-              </div>
-            </div>
-            <p class="text-3xl font-bold text-orange-500">{{ analytics.total_responses }}</p>
-            <p class="text-xs text-orange-600 mt-1">Submitted answers</p>
-          </div>
-          
-          <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl border border-amber-200 hover:shadow-lg transition-all duration-200 cursor-default">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-amber-900">Active Users</h4>
-              <div class="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                </svg>
-              </div>
-            </div>
-            <p class="text-3xl font-bold text-amber-700">{{ analytics.total_users_responded }}</p>
-            <p class="text-xs text-amber-600 mt-1">Unique participants</p>
-          </div>
-          
-          <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 cursor-default">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-purple-900">Completion Rate</h4>
-              <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-              </div>
-            </div>
-            <p class="text-3xl font-bold text-purple-700">{{ analytics.completion_rate }}%</p>
-            <p class="text-xs text-purple-600 mt-1">Survey completion</p>
-          </div>
-        </div>
-        
-        <div class="flex justify-end pt-6 border-t border-slate-200">
+        <div class="flex items-center gap-2">
+          <button
+            @click="$emit('resetPosition', 'analytics')"
+            class="text-purple-200 hover:text-white p-1 rounded transition-colors"
+            title="Reset position"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </button>
           <button
             @click="$emit('close')"
-            class="px-6 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+            class="text-purple-200 hover:text-white p-1 rounded transition-colors"
           >
-            Close Dashboard
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
           </button>
+        </div>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-6">
+        <!-- Who has responded? Section -->
+        <div v-if="analytics.summary && analytics.summary.unique_respondents > 0" class="mb-8">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Survey Summary</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <p class="text-sm text-blue-600 font-medium">Total Responses</p>
+              <p class="text-3xl font-bold text-blue-700">{{ analytics.summary.total_responses }}</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+              <p class="text-sm text-green-600 font-medium">Unique Respondents</p>
+              <p class="text-3xl font-bold text-green-700">{{ analytics.summary.unique_respondents }}</p>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <p class="text-sm text-purple-600 font-medium">Response Rate</p>
+              <p class="text-3xl font-bold text-purple-700">{{ analytics.summary.response_rate }}%</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Questions Analytics -->
+        <div v-if="analytics.questions && analytics.questions.length > 0" class="space-y-8">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Question-by-Question Analysis</h4>
+          
+          <div 
+            v-for="qa in analytics.questions" 
+            :key="qa.question_id"
+            class="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+          >
+            <!-- Question Header -->
+            <div class="mb-4">
+              <h4 class="text-base font-medium text-slate-800 mb-1">{{ qa.question_text }}</h4>
+              <p class="text-sm text-slate-500">{{ qa.response_count }} responses</p>
+            </div>
+
+            <!-- Chart/Data for choice-based questions -->
+            <div v-if="isChoiceQuestion(qa.question_type) && qa.distribution">
+              <!-- Horizontal Bar Chart -->
+              <div class="space-y-3">
+                <div 
+                  v-for="(count, answer) in qa.distribution" 
+                  :key="answer"
+                  class="space-y-1"
+                >
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-700 truncate max-w-[70%]">{{ answer }}</span>
+                    <span class="text-slate-500 font-medium">{{ count }} ({{ getPercentage(count, qa.response_count) }}%)</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-6 overflow-hidden">
+                    <div 
+                      class="bg-purple-500 h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
+                      :style="{ width: getPercentage(count, qa.response_count) + '%' }"
+                    >
+                      <span class="text-xs text-white font-medium" v-if="getPercentage(count, qa.response_count) > 10">
+                        {{ getPercentage(count, qa.response_count) }}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data Table -->
+              <div class="mt-4 bg-slate-50 rounded p-3">
+                <p class="text-xs font-semibold text-slate-600 mb-2">Value | Count</p>
+                <div class="space-y-1">
+                  <div 
+                    v-for="(count, answer) in qa.distribution" 
+                    :key="answer"
+                    class="text-sm text-slate-700 flex justify-between"
+                  >
+                    <span>{{ answer }}</span>
+                    <span class="font-medium">{{ count }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rating Scale Visualization -->
+            <div v-else-if="qa.question_type === 'rating' && qa.distribution">
+              <div class="space-y-3">
+                <div 
+                  v-for="rating in getRatingRange(qa)" 
+                  :key="rating"
+                  class="space-y-1"
+                >
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-700 font-medium">{{ rating }}</span>
+                    <span class="text-slate-500">{{ qa.distribution[rating] || 0 }} ({{ getPercentage(qa.distribution[rating] || 0, qa.response_count) }}%)</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-6 overflow-hidden">
+                    <div 
+                      class="bg-amber-500 h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
+                      :style="{ width: getPercentage(qa.distribution[rating] || 0, qa.response_count) + '%' }"
+                    >
+                      <span class="text-xs text-white font-medium" v-if="getPercentage(qa.distribution[rating] || 0, qa.response_count) > 10">
+                        {{ getPercentage(qa.distribution[rating] || 0, qa.response_count) }}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Statistics -->
+              <div class="mt-4 grid grid-cols-3 gap-3">
+                <div class="bg-slate-50 rounded p-3 text-center">
+                  <p class="text-xs text-slate-500">Average</p>
+                  <p class="text-lg font-bold text-slate-700">{{ qa.average?.toFixed(2) || 'N/A' }}</p>
+                </div>
+                <div class="bg-slate-50 rounded p-3 text-center">
+                  <p class="text-xs text-slate-500">Min</p>
+                  <p class="text-lg font-bold text-slate-700">{{ qa.min_value || 'N/A' }}</p>
+                </div>
+                <div class="bg-slate-50 rounded p-3 text-center">
+                  <p class="text-xs text-slate-500">Max</p>
+                  <p class="text-lg font-bold text-slate-700">{{ qa.max_value || 'N/A' }}</p>
+                </div>
+              </div>
+
+              <!-- Data Table -->
+              <div class="mt-4 bg-slate-50 rounded p-3">
+                <p class="text-xs font-semibold text-slate-600 mb-2">Value | Count</p>
+                <div class="space-y-1">
+                  <div 
+                    v-for="rating in getRatingRange(qa)" 
+                    :key="rating"
+                    class="text-sm text-slate-700 flex justify-between"
+                  >
+                    <span>{{ rating }}</span>
+                    <span class="font-medium">{{ qa.distribution[rating] || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Text/Textarea Questions - Show count only -->
+            <div v-else-if="isTextQuestion(qa.question_type)">
+              <div class="bg-slate-50 rounded-lg p-4 text-center">
+                <p class="text-3xl font-bold text-purple-600">{{ qa.response_count }}</p>
+                <p class="text-sm text-slate-600 mt-1">text responses submitted</p>
+              </div>
+            </div>
+
+            <!-- Numeric Questions - Show statistics -->
+            <div v-else-if="qa.question_type === 'number' && qa.response_count > 0">
+              <div class="grid grid-cols-3 gap-4">
+                <div class="bg-slate-50 rounded-lg p-4 text-center">
+                  <p class="text-xs text-slate-500 mb-1">Average</p>
+                  <p class="text-2xl font-bold text-slate-700">{{ qa.average?.toFixed(2) || 'N/A' }}</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-4 text-center">
+                  <p class="text-xs text-slate-500 mb-1">Minimum</p>
+                  <p class="text-2xl font-bold text-slate-700">{{ qa.min || 'N/A' }}</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-4 text-center">
+                  <p class="text-xs text-slate-500 mb-1">Maximum</p>
+                  <p class="text-2xl font-bold text-slate-700">{{ qa.max || 'N/A' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Yes/No Questions - Pie chart style -->
+            <div v-else-if="qa.question_type === 'yes_no' && qa.distribution">
+              <div class="space-y-3">
+                <div 
+                  v-for="(count, answer) in qa.distribution" 
+                  :key="answer"
+                  class="space-y-1"
+                >
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-700 font-medium">{{ answer }}</span>
+                    <span class="text-slate-500">{{ count }} ({{ getPercentage(count, qa.response_count) }}%)</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-8 overflow-hidden">
+                    <div 
+                      :class="answer === 'Yes' ? 'bg-green-500' : 'bg-red-500'"
+                      class="h-full rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                      :style="{ width: getPercentage(count, qa.response_count) + '%' }"
+                    >
+                      <span class="text-sm text-white font-bold" v-if="getPercentage(count, qa.response_count) > 15">
+                        {{ getPercentage(count, qa.response_count) }}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Default: Just show response count -->
+            <div v-else>
+              <div class="bg-slate-50 rounded-lg p-4 text-center">
+                <p class="text-2xl font-bold text-purple-600">{{ qa.response_count }}</p>
+                <p class="text-sm text-slate-600 mt-1">responses</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- No data message -->
+        <div v-else class="text-center py-12">
+          <div class="text-slate-400 mb-2">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <p class="text-slate-500 font-medium">No question analytics available</p>
+          <p class="text-sm text-slate-400 mt-1">Responses will appear here once submitted</p>
         </div>
       </div>
     </div>
@@ -128,6 +282,30 @@ defineProps({
 })
 
 defineEmits(['close', 'startDrag', 'resetPosition'])
+
+// Helper methods
+const isChoiceQuestion = (type) => {
+  return ['radio', 'select', 'checkbox'].includes(type)
+}
+
+const isTextQuestion = (type) => {
+  return ['text', 'textarea', 'email'].includes(type)
+}
+
+const getPercentage = (value, total) => {
+  if (!total || total === 0) return 0
+  return Math.round((value / total) * 100)
+}
+
+const getRatingRange = (qa) => {
+  const min = qa.min_value || 1
+  const max = qa.max_value || 5
+  const range = []
+  for (let i = max; i >= min; i--) {
+    range.push(i)
+  }
+  return range
+}
 </script>
 
 <style scoped>

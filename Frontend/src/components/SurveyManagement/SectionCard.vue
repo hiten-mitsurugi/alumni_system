@@ -48,6 +48,10 @@
         <span v-if="hasBranching" class="section-card__badge section-card__badge--branching" title="Contains branching logic">
           Branching
         </span>
+
+        <span v-if="section.category.include_in_registration" class="section-card__badge section-card__badge--registration" title="Shown in registration">
+          Registration
+        </span>
       </div>
     </div>
 
@@ -267,6 +271,11 @@ function handleDragEnd() {
 .section-card__badge--branching {
   background: #ddd6fe;
   color: #5b21b6;
+}
+
+.section-card__badge--registration {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .section-card__actions {
