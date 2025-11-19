@@ -198,7 +198,7 @@ const handleWebSocketMessage = (data) => {
 const fetchPosts = async () => {
   try {
     console.log('🔄 Fetching posts from API...');
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/`, {
+    const response = await axios.get(`${BASE_URL}/api/posts/`, {
       headers: { Authorization: `Bearer ${authStore.token}` },
       params: {
         category: activeTab.value !== 'all' ? activeTab.value : null,
@@ -274,7 +274,7 @@ const createPost = async (postData) => {
       });
     }
 
-    const response = await axios.post(`${BASE_URL}/api/posts/posts/create/`, formData, {
+    const response = await axios.post(`${BASE_URL}/api/posts/create/`, formData, {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
         'Content-Type': 'multipart/form-data'
@@ -348,7 +348,7 @@ const reactToPost = async (postId, reactionType) => {
     if (currentUserReaction === reactionType) {
       console.log(`🗑️ Removing reaction ${reactionType} from post ${postId}`);
 
-      const response = await axios.delete(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
+      const response = await axios.delete(`${BASE_URL}/api/posts/${postId}/react/`, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
 
@@ -359,7 +359,7 @@ const reactToPost = async (postId, reactionType) => {
       // Add or change reaction
       console.log(`➕ Adding/changing reaction ${reactionType} for post ${postId}`);
 
-      const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
+      const response = await axios.post(`${BASE_URL}/api/posts/${postId}/react/`, {
         reaction_type: reactionType
       }, {
         headers: { Authorization: `Bearer ${authStore.token}` }
@@ -392,7 +392,7 @@ const addComment = async (postId, commentContent, parentId = null, mentions = []
       requestData.mentions = mentions;
     }
 
-    const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/comment/`, requestData, {
+    const response = await axios.post(`${BASE_URL}/api/posts/${postId}/comment/`, requestData, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
 
@@ -412,7 +412,7 @@ const addComment = async (postId, commentContent, parentId = null, mentions = []
 const fetchCommentsForPost = async (postId) => {
   try {
     console.log(`🔄 Fetching comments for post ${postId}`);
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/comments/`, {
+    const response = await axios.get(`${BASE_URL}/api/posts/${postId}/comments/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
 
@@ -440,6 +440,25 @@ const sharePost = async (postId, shareText = '') => {
   } catch (error) {
     console.error('❌ Failed to share post:', error);
     showNotification('Failed to share post. Please try again.', 'error');
+  }
+};
+
+const handleRepost = async (repostData) => {
+  try {
+    console.log('🔄 Post reposted successfully:', repostData);
+    
+    // Show success notification with privacy info
+    const privacyText = repostData.visibility === 'public' ? 'publicly' : 
+                       repostData.visibility === 'alumni_only' ? 'to alumni only' :
+                       'privately';
+    showNotification(`Post reposted ${privacyText}! 🚀`, 'success');
+    
+    // Refresh the feed to show the new repost
+    await fetchPosts();
+    
+  } catch (error) {
+    console.error('❌ Failed to handle repost:', error);
+    showNotification('Failed to process repost. Please try again.', 'error');
   }
 };
 
@@ -498,7 +517,8 @@ const reactToComment = async (data) => {
 const replyToComment = async (data) => {
   try {
     console.log('💬 Replying to comment:', data);
-    await addComment(selectedPost.value.id, data.content, data.commentId);
+    // Use the commentId as the parent_id for nested replies
+    await addComment(selectedPost.value.id, data.content, data.commentId, data.mentions || []);
     
   } catch (error) {
     console.error('❌ Failed to reply to comment:', error);
@@ -730,6 +750,7 @@ onUnmounted(() => {
                   @react-to-post="reactToPost"
                   @add-comment="addComment"
                   @share-post="sharePost"
+                  @repost="handleRepost"
                   @copy-link="copyPostLink"
                   @open-modal="openPostModal"
                   @reaction-updated="handleReactionUpdated"

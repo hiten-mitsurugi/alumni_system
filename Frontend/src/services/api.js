@@ -4,9 +4,14 @@ import { useAuthStore } from '@/stores/auth';
 
 // Dynamic API base URL that adapts to any environment and IP changes
 const getApiBaseURL = () => {
-  // Allow override via environment variable for production
+  // First check for complete API URL
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // Then check for base URL and add /api suffix
   if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+    return `${import.meta.env.VITE_API_BASE_URL}/api`;
   }
   
   // Auto-detect based on current location (works with any IP)

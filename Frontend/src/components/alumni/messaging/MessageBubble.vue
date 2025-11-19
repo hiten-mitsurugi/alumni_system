@@ -18,6 +18,15 @@
         <span class="font-medium">Pinned</span>
       </div>
 
+      <!-- Pending message indicator -->
+      <div v-if="message.isPending" class="flex items-center gap-1 mb-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full border border-orange-200">
+        <svg class="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+        <span class="font-medium">Pending approval</span>
+      </div>
+
       <!-- Reply indicator - Enhanced styling -->
       <div v-if="replyMessage && !isBumpMessage && !isForwardedMessage" class="flex items-center gap-2 mb-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

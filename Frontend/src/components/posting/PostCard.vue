@@ -192,6 +192,14 @@
       @close="showReactionsModal = false"
       @reaction-updated="handleReactionUpdated"
     />
+    
+    <!-- Repost Modal -->
+    <RepostModal
+      :is-visible="showRepostModal"
+      :original-post="post"
+      @close="showRepostModal = false"
+      @reposted="handleRepostSuccess"
+    />
   </div>
 </template>
 
@@ -204,6 +212,7 @@ import MediaDisplay from './MediaDisplay.vue'
 import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
 import ReactionsModal from './ReactionsModal.vue'
+import RepostModal from './RepostModal.vue'
 import MentionText from '@/components/common/MentionText.vue'
 
 // Props
@@ -235,10 +244,12 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['react-to-post', 'add-comment', 'share-post', 'open-modal', 'reaction-updated', 'deleted', 'pinned', 'reported'])
+const emit = defineEmits(['react-to-post', 'add-comment', 'share-post', 'repost', 'open-modal', 'reaction-updated', 'deleted', 'pinned', 'reported'])
 
 // Local state
+// State
 const showReactionsModal = ref(false)
+const showRepostModal = ref(false)
 
 // Computed properties
 const hasMedia = computed(() => {
@@ -268,7 +279,23 @@ const handleReaction = (postId, reactionType) => {
 }
 
 const handleShare = (postId) => {
-  emit('share-post', postId)
+  console.log('🔄 PostCard: Opening repost modal for post:', postId)
+  showRepostModal.value = true
+}
+
+const handleRepostSuccess = (repostData) => {
+  console.log('✅ PostCard: Repost successful:', repostData)
+  
+  // Show success message
+  // You can replace this with a toast notification
+  alert(`Post reposted successfully with ${repostData.visibility} visibility!`)
+  
+  // Emit repost event to parent (for feed refresh)
+  emit('repost', {
+    originalPostId: props.post.id,
+    repostId: repostData.repost.id,
+    visibility: repostData.visibility
+  })
 }
 
 const openReactionsModal = () => {

@@ -219,9 +219,19 @@ const handleViewProfile = (user) => {
 };
 
 const handleMessage = (connection) => {
-  // Placeholder for messaging functionality
-  showNotification('Messaging feature coming soon!', 'info');
-  // router.push(`/alumni/messaging?user=${connection.username}`);
+  console.log('🔄 Navigating to messaging for user:', connection);
+  
+  // Navigate to messaging with user parameter
+  router.push({
+    name: 'AlumniMessaging',
+    query: {
+      user: connection.username || connection.id,
+      userId: connection.id,
+      name: connection.name || `${connection.first_name} ${connection.last_name}`
+    }
+  });
+  
+  showNotification(`Opening conversation with ${connection.name}`, 'success');
 };
 
 const handleRemoveConnection = async (connection) => {

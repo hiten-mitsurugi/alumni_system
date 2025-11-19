@@ -227,6 +227,15 @@
    themeStore.isDarkMode ? 'text-gray-500' : 'text-gray-400'
  ]">{{ formatLastSeen(conversation.mate) }}</span>
  </div>
+ <!-- Pending message indicator -->
+ <div v-if="conversation.isPending" 
+      class="flex items-center text-orange-500" 
+      title="Message pending approval">
+   <svg class="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+     <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/>
+   </svg>
+ </div>
  <span v-if="conversation.unreadCount > 0 && !conversation.isBlockedByMe && !conversation.isBlockedByThem"
  class="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs rounded-full px-2.5 py-1 min-w-[28px] text-center font-semibold shadow-md">{{
  conversation.unreadCount }}</span>
@@ -349,7 +358,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, triggerRef } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, triggerRef, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import debounce from 'lodash/debounce';
 import { useAuthStore } from '@/stores/auth';
 import { useMessagingNotificationStore } from '@/stores/messagingNotifications';
@@ -368,6 +378,7 @@ import ForwardModal from '../../components/alumni/messaging/ForwardModal.vue';
 const authStore = useAuthStore();
 const messagingNotificationStore = useMessagingNotificationStore();
 const themeStore = useThemeStore();
+const route = useRoute();
 
 // === STATE ===
 const isAuthenticated = ref(false);
@@ -460,7 +471,7 @@ const debugError = console.error; // Always log errors
 
 // === Helper to always return correct avatar URL for user/group (same logic as AlumniNavbar)
 const getProfilePictureUrl = (entity) => {
- const BASE_URL = 'http://127.0.0.1:8000'
+ const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
  // Handle different entity types
  let pic = null;
@@ -657,12 +668,37 @@ const fetchMessages = async conv => {
  // Cache miss - fetch normally
  try {
    console.log(`🚀 Cache MISS: Fetching messages for ${cacheKey}`);
+   
+   // Handle pending conversations (where only message request exists)
+   if (conv.isPending) {
+     console.log('📩 Handling pending conversation - showing placeholder message');
+     // For pending conversations, show a placeholder indicating the message is pending approval
+     messages.value = [{
+       id: `pending_${conv.requestId}`,
+       content: conv.lastMessage.replace('[Pending] ', ''),
+       sender: {
+         id: currentUser.value.id,
+         username: currentUser.value.username,
+         first_name: currentUser.value.first_name,
+         last_name: currentUser.value.last_name,
+         profile_picture: currentUser.value.profile_picture
+       },
+       timestamp: conv.timestamp,
+       is_read: false,
+       isPending: true,
+       attachments: [],
+       reactions: []
+     }];
+     messageCache.set(cacheKey, messages.value);
+     return;
+   }
+   
    const data = conv.type === 'private'
      ? await messagingService.getMessages(conv.mate.id)
      : await messagingService.getGroupMessages(conv.group?.id);
 
-   messages.value = data;
-   messageCache.set(cacheKey, data);
+   messages.value = data || []; // Ensure we always have an array
+   messageCache.set(cacheKey, messages.value);
    prefetchedConversations.add(cacheKey);
  } catch (e) {
    console.error('Messages fetch error', e);
@@ -672,6 +708,14 @@ const fetchMessages = async conv => {
      messages.value = [];
      // Don't show alert - just silently handle the blocking
      // The chat area will show the blocking message instead
+   } else if (e.response?.status === 404 || e.response?.status === 400) {
+     // No messages exist yet - this is normal for new conversations
+     console.log('No messages exist yet for this conversation');
+     messages.value = [];
+   } else {
+     // Other errors
+     console.error('Unexpected error fetching messages:', e);
+     messages.value = [];
    }
  }
 };
@@ -747,6 +791,99 @@ const selectLastConversation = () => {
  }
  }
 };
+
+// Handle query parameters for starting conversation with specific user
+async function handleUserFromQuery() {
+  const userId = route.query.userId;
+  const username = route.query.user;
+  const userName = route.query.name;
+  
+  if (!userId && !username) return;
+  
+  console.log('🔄 Messaging: Handling user from query params:', { userId, username, userName });
+  
+  try {
+    // 🚀 FIRST: Refresh conversations to get latest data including pending requests
+    console.log('🔄 Refreshing conversations to check for pending requests...');
+    await fetchConversations();
+    
+    // Now try to find existing conversation (including pending ones)
+    let existingConv = conversations.value.find(c => 
+      c.type === 'private' && (
+        c.mate.id == userId || 
+        c.mate.username === username
+      )
+    );
+    
+    if (existingConv) {
+      console.log('✅ Found existing conversation:', existingConv);
+      selectConversation(existingConv);
+      return;
+    }
+    
+    // If no existing conversation, try to find user in available mates
+    let user = availableMates.value.find(mate => 
+      mate.id == userId || mate.username === username
+    );
+    
+    // If not found in available mates, search for the user
+    if (!user && (userId || username)) {
+      try {
+        console.log('🔍 Searching for user:', { userId, username });
+        const searchResponse = await api.get(`/message/search/?q=${encodeURIComponent(username || userId)}`);
+        
+        if (searchResponse.data && searchResponse.data.length > 0) {
+          user = searchResponse.data.find(result => 
+            result.type === 'user' && (
+              result.id == userId || 
+              result.username === username
+            )
+          );
+        }
+      } catch (error) {
+        console.error('❌ Error searching for user:', error);
+      }
+    }
+    
+    // If still no user found, create a minimal user object for the conversation
+    if (!user && userId) {
+      user = {
+        id: parseInt(userId),
+        username: username || `user_${userId}`,
+        first_name: userName ? userName.split(' ')[0] : 'User',
+        last_name: userName ? userName.split(' ').slice(1).join(' ') : '',
+        profile_picture: null
+      };
+      console.log('🔧 Created minimal user object:', user);
+    }
+    
+    if (user) {
+      // Create a new conversation
+      const newConversation = {
+        type: 'private',
+        id: user.id,
+        mate: user,
+        lastMessage: '',
+        timestamp: new Date().toISOString(),
+        unreadCount: 0
+      };
+      
+      console.log('✅ Creating new conversation:', newConversation);
+      
+      // Add to conversations if not already there
+      if (!conversations.value.find(c => c.type === 'private' && c.mate.id === user.id)) {
+        conversations.value.unshift(newConversation);
+      }
+      
+      // Select the conversation
+      selectConversation(newConversation);
+    } else {
+      console.warn('⚠️ Could not find or create user for conversation');
+    }
+  } catch (error) {
+    console.error('❌ Error handling user from query:', error);
+  }
+}
 
 // === CONVERSATION HANDLERS ===
 async function selectSearchResult(r) {
@@ -974,6 +1111,61 @@ async function sendMessage(data) {
 
  // Create unique temporary message ID to prevent duplicates
  const tempId = `temp-${Date.now()}-${Math.random()}`;
+
+ // 🚀 NEW: Check if this is a new conversation (no messages and not pending)
+ const isNewConversation = !selectedConversation.value.isPending && 
+                          messages.value.length === 0 && 
+                          selectedConversation.value.type === 'private';
+
+ if (isNewConversation) {
+   console.log('🆕 New conversation detected - using REST API instead of WebSocket');
+   console.log('🆕 Sending to receiver ID:', selectedConversation.value.mate.id);
+   console.log('🆕 Message content:', data.content);
+   
+   try {
+     // Use REST API for new conversations to create MessageRequest
+     const response = await api.post('/message/send/', {
+       receiver_id: selectedConversation.value.mate.id,
+       content: data.content,
+       attachment_ids: attachmentIds,
+       reply_to_id: data.reply_to_id
+     });
+     
+     console.log('✅ Message request created:', response.data);
+     console.log('✅ Response status:', response.status);
+     
+     // Add a small delay to ensure backend processing is complete
+     await new Promise(resolve => setTimeout(resolve, 500));
+     
+     // Refresh conversations to get the new pending conversation
+     console.log('🔄 Refreshing conversations after message send...');
+     await fetchConversations();
+     
+     // Find and select the updated conversation
+     const updatedConv = conversations.value.find(c => 
+       c.type === 'private' && c.mate.id === selectedConversation.value.mate.id
+     );
+     
+     if (updatedConv) {
+       console.log('✅ Found updated conversation:', updatedConv);
+       selectConversation(updatedConv);
+     } else {
+       console.warn('⚠️ Updated conversation not found after refresh');
+       console.log('📋 Available conversations:', conversations.value.map(c => ({
+         type: c.type,
+         mateId: c.mate?.id,
+         isPending: c.isPending,
+         lastMessage: c.lastMessage
+       })));
+     }
+     
+     return;
+   } catch (error) {
+     console.error('❌ Error creating message request:', error);
+     console.error('❌ Error details:', error.response?.data);
+     return;
+   }
+ }
 
  // Create temporary message for UI
  const newMessage = {
@@ -2814,7 +3006,14 @@ onMounted(async () => {
  ]);
 
  setupWebSockets();
- selectLastConversation();
+ 
+ // Check for user query parameter before selecting last conversation
+ await handleUserFromQuery();
+ 
+ // Only select last conversation if no user was specified in query
+ if (!route.query.userId && !route.query.user) {
+   selectLastConversation();
+ }
 
  // 🔔 NOTIFICATION: Initialize messaging notification store
  // This ensures notification counts are ready when the messaging view is loaded
@@ -2835,6 +3034,15 @@ onMounted(async () => {
  console.log('Messaging.vue: Token validation failed');
  }
 });
+
+// Watch for route query changes to handle navigation to different users
+watch(() => [route.query.userId, route.query.user], async ([newUserId, newUsername], [oldUserId, oldUsername]) => {
+  // Only handle if there's actually a change and the component is already loaded
+  if (currentUser.value && (newUserId !== oldUserId || newUsername !== oldUsername)) {
+    console.log('🔄 Route query changed, handling new user:', { newUserId, newUsername });
+    await handleUserFromQuery();
+  }
+}, { deep: true });
 
 onUnmounted(() => {
  if (isDev) debugLog('Messaging.vue: Component unmounting - cleaning up resources');

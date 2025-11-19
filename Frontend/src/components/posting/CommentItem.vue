@@ -88,28 +88,6 @@
         class="relative"
       />
       
-      <!-- Reply Form -->
-      <div v-if="showReplyForm" class="mt-3 ml-3">
-        <div class="flex space-x-2">
-          <img 
-            :src="userProfilePicture || '/default-avatar.png'"
-            alt="Your avatar"
-            class="reply-avatar"
-          />
-          <div class="flex-1">
-            <input
-              v-model="replyText"
-              @keypress.enter="submitReply"
-              @keypress.escape="cancelReply"
-              type="text"
-              placeholder="Write a reply..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              ref="replyInput"
-            />
-          </div>
-        </div>
-      </div>
-      
       <!-- Replies -->
       <div v-if="comment.replies && comment.replies.length > 0" class="mt-2 ml-3 space-y-2">
         <CommentItem
@@ -149,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref } from 'vue'
 import CommentReactionPickerSimple from './CommentReactionPickerSimple.vue'
 import CommentReactionSummary from './CommentReactionSummary.vue'
 import MentionText from '@/components/common/MentionText.vue'
@@ -175,61 +153,13 @@ const emit = defineEmits(['react-to-comment', 'reply-to-comment', 'delete-commen
 
 // Local state
 const showReactionPicker = ref(false)
-const showReplyForm = ref(false)
-const replyText = ref('')
 
 // Methods
-const toggleLike = () => {
-  const currentReaction = props.comment.reactions_summary?.user_reaction
-  if (currentReaction === 'like') {
-    // Remove like
-    emit('react-to-comment', {
-      commentId: props.comment.id,
-      reactionType: null // Remove reaction
-    })
-  } else {
-    // Add like
-    emit('react-to-comment', {
-      commentId: props.comment.id,
-      reactionType: 'like'
-    })
-  }
-}
-
-const toggleReactionPicker = () => {
-  showReactionPicker.value = !showReactionPicker.value
-}
-
-const handleReactionSelected = (data) => {
-  emit('react-to-comment', data)
-  showReactionPicker.value = false
-}
-
 const toggleReply = () => {
-  showReplyForm.value = !showReplyForm.value
-  if (showReplyForm.value) {
-    nextTick(() => {
-      const input = document.querySelector('input[placeholder="Write a reply..."]')
-      if (input) input.focus()
-    })
-  }
-}
-
-const submitReply = () => {
-  const content = replyText.value.trim()
-  if (content) {
-    emit('reply-to-comment', {
-      commentId: props.comment.id,
-      content: content
-    })
-    replyText.value = ''
-    showReplyForm.value = false
-  }
-}
-
-const cancelReply = () => {
-  replyText.value = ''
-  showReplyForm.value = false
+  emit('reply-to-comment', {
+    commentId: props.comment.id,
+    authorName: props.comment.user?.full_name || 'Someone'
+  })
 }
 
 const handleReplyToComment = (data) => {
@@ -269,6 +199,33 @@ const confirmDelete = () => {
   emit('delete-comment', props.comment.id)
   hideDeleteConfirmation()
 }
+
+// Missing methods
+const toggleLike = () => {
+  const currentReaction = props.comment.reactions_summary?.user_reaction
+  if (currentReaction === 'like') {
+    // Remove like
+    emit('react-to-comment', {
+      commentId: props.comment.id,
+      reactionType: null // Remove reaction
+    })
+  } else {
+    // Add like
+    emit('react-to-comment', {
+      commentId: props.comment.id,
+      reactionType: 'like'
+    })
+  }
+}
+
+const toggleReactionPicker = () => {
+  showReactionPicker.value = !showReactionPicker.value
+}
+
+const handleReactionSelected = (data) => {
+  emit('react-to-comment', data)
+  showReactionPicker.value = false
+}
 </script>
 
 <style scoped>
@@ -282,14 +239,6 @@ const confirmDelete = () => {
 .comment-avatar {
   width: 2rem;
   height: 2rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.reply-avatar {
-  width: 1.5rem;
-  height: 1.5rem;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;

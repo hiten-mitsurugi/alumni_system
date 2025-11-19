@@ -40,7 +40,7 @@ export function useNetworking() {
       }
       
       // Use the backend media server URL (not the API URL)
-      const BASE_URL = 'http://localhost:8000';  // Backend server for media files
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
       return `${BASE_URL}${profilePicture}`;
     };
 
@@ -194,7 +194,7 @@ export function useNetworking() {
           }
           
           // Use the backend media server URL (not the API URL)
-          const BASE_URL = 'http://localhost:8000';  // Backend server for media files
+          const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
           return `${BASE_URL}${profilePicture}`;
         };
         

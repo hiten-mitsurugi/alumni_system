@@ -14,6 +14,7 @@
         :post="post"
         :categories="categories"
         @copy-link="handleCopyLink"
+        @repost="handleRepost"
       />
     </div>
 
@@ -62,7 +63,7 @@ const fetchPosts = async () => {
     console.log('🔄 PostsTab - Current user:', authStore.user?.id);
     console.log('🔄 PostsTab - Type of props.userId:', typeof props.userId, 'Value:', props.userId);
     
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/`, {
+    const response = await axios.get(`${BASE_URL}/api/posts/`, {
       headers: { 
         Authorization: `Bearer ${authStore.token}` 
       }
@@ -77,16 +78,21 @@ const fetchPosts = async () => {
     console.log('🎯 PostsTab - Filtering for user ID:', targetUserId);
     console.log('🎯 PostsTab - Type of targetUserId:', typeof targetUserId);
     
-    // Filter posts by userId
+    // Filter posts by userId - this includes both original posts and reposts by this user
     posts.value = allPosts.filter(post => {
       const postUserId = Number(post.user.id);
-      console.log(`   - Post ${post.id} by user ${postUserId} (type: ${typeof postUserId})`);
+      console.log(`   - Post ${post.id} (type: ${post.post_type || 'original'}) by user ${postUserId}`);
+      console.log(`   - Content preview: "${(post.content || post.shared_text || '').substring(0, 50)}"`);
       console.log(`   - Comparison: ${postUserId} === ${targetUserId} = ${postUserId === targetUserId}`);
       return postUserId === targetUserId;
     });
     
-    console.log(`✅ PostsTab - Filtered ${posts.value.length} posts for user ${targetUserId}`);
-    console.log('📝 PostsTab - Filtered posts:', posts.value.map(p => ({ id: p.id, user: p.user.id, content: p.content.substring(0, 50) })));
+    console.log(`✅ PostsTab - Filtered ${posts.value.length} posts (original + reposts) for user ${targetUserId}`);
+    console.log('📝 PostsTab - Posts breakdown:', {
+      original: posts.value.filter(p => !p.post_type || p.post_type === 'original').length,
+      reposts: posts.value.filter(p => p.post_type === 'repost').length,
+      shared: posts.value.filter(p => p.post_type === 'shared').length
+    });
     
   } catch (error) {
     console.error('❌ PostsTab - Error fetching posts:', error);
@@ -101,6 +107,24 @@ const handleCopyLink = (postId) => {
   const link = `${window.location.origin}/post/${postId}`;
   navigator.clipboard.writeText(link);
   console.log('📋 Post link copied:', link);
+};
+
+const handleRepost = async (repostData) => {
+  try {
+    console.log('🔄 Post reposted successfully from profile:', repostData);
+    
+    // Show success notification
+    const privacyText = repostData.visibility === 'public' ? 'publicly' : 
+                       repostData.visibility === 'alumni_only' ? 'to alumni only' :
+                       'privately';
+    console.log(`✅ Post reposted ${privacyText}!`);
+    
+    // Refresh posts to show the new repost
+    await fetchPosts();
+    
+  } catch (error) {
+    console.error('❌ Failed to handle repost from profile:', error);
+  }
 };
 
 // Watch for userId changes and refetch

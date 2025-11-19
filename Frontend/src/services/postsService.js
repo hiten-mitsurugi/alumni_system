@@ -52,9 +52,19 @@ export const postsService = {
   },
 
   // Share post
-  async sharePost(postId, sharedText = '') {
+  async sharePost(postId, sharedText = '', visibility = 'public') {
     const response = await api.post(`/posts/${postId}/share/`, {
-      shared_text: sharedText
+      shared_text: sharedText,
+      visibility: visibility
+    })
+    return response.data
+  },
+
+  // Repost functionality
+  async repostPost(postId, repostText = '', visibility = 'public') {
+    const response = await api.post(`/posts/${postId}/repost/`, {
+      repost_text: repostText,
+      visibility: visibility
     })
     return response.data
   },
@@ -73,13 +83,13 @@ export const postsService = {
   // Post management
   async deletePost(postId) {
     console.log('🗑️ Deleting post via API:', postId);
-    const response = await api.delete(`/posts/posts/${postId}/delete/`)
+    const response = await api.delete(`/posts/${postId}/delete/`)
     console.log('✅ Post delete response:', response.data);
     return response.data
   },
 
   async pinPost(postId) {
-    const response = await api.post(`/posts/posts/${postId}/pin/`)
+    const response = await api.post(`/posts/${postId}/pin/`)
     return response.data
   }
 }

@@ -226,6 +226,52 @@ class ConversationListView(APIView):
                 }
                 conversations.append(conversation)
 
+        # 🆕 ADDITION: Include pending message requests sent by current user
+        # This allows users to see their outgoing messages immediately, even if not yet accepted
+        pending_requests = MessageRequest.objects.filter(
+            sender=current_user,
+            accepted=False
+        ).exclude(
+            receiver_id__in=conversation_dict.keys()  # Don't duplicate existing conversations
+        ).select_related('receiver', 'receiver__profile')
+        
+        for request in pending_requests:
+            receiver = request.receiver
+            
+            # Skip if receiver is blocked
+            is_blocked_by_me = receiver.id in blocked_user_ids
+            is_blocked_by_them = receiver.id in blocked_by_user_ids
+            
+            # Build profile picture URL
+            profile_picture_url = None
+            if receiver.profile_picture:
+                profile_picture_url = request.build_absolute_uri(receiver.profile_picture.url)
+            
+            # Create conversation object for pending request
+            conversation = {
+                'type': 'private',
+                'mate': {
+                    'id': receiver.id,
+                    'username': receiver.username,
+                    'first_name': receiver.first_name,
+                    'last_name': receiver.last_name,
+                    'profile_picture': profile_picture_url,
+                    'profile': {
+                        'status': getattr(receiver.profile, 'status', 'offline') if hasattr(receiver, 'profile') and receiver.profile else 'offline',
+                        'last_seen': getattr(receiver.profile, 'last_seen', None) if hasattr(receiver, 'profile') and receiver.profile else None,
+                    }
+                },
+                'lastMessage': f"[Pending] {request.content[:50]}" + ('...' if len(request.content) > 50 else ''),
+                'timestamp': request.timestamp.isoformat(),
+                'unreadCount': 0,  # No unread count for pending requests
+                'isBlockedByMe': is_blocked_by_me,
+                'isBlockedByThem': is_blocked_by_them,
+                'canSendMessage': not (is_blocked_by_me or is_blocked_by_them),
+                'isPending': True,  # Flag to indicate this is a pending request
+                'requestId': str(request.id)
+            }
+            conversations.append(conversation)
+
         # Sort by timestamp (newest first)
         conversations.sort(key=lambda x: x['timestamp'], reverse=True)
         

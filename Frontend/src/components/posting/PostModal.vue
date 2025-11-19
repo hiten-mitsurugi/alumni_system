@@ -258,13 +258,25 @@
                   
                   <!-- Comment Input with Mention Support -->
                   <div class="flex-1">
+                    <!-- Reply indicator -->
+                    <div v-if="isReplying" class="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                      <span class="text-blue-600">📝 Replying to {{ replyContext?.authorName }}</span>
+                      <button 
+                        @click="cancelReply"
+                        class="ml-2 text-blue-500 hover:text-blue-700 font-medium"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    
                     <MentionTextarea
                       v-model="newComment"
                       @mention="handleMention"
                       @submit="addComment"
-                      :placeholder="'Write a comment... Use @ to mention someone'"
+                      :placeholder="isReplying ? `Reply to ${replyContext?.authorName}... Use @ to mention someone` : 'Write a comment... Use @ to mention someone'"
                       :rows="1"
                       class="w-full rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      ref="commentInputRef"
                     />
                   </div>
                   
@@ -298,7 +310,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import PostHeader from './PostHeader.vue'
 import PostActions from './PostActions.vue'
 import ReactionSummary from './ReactionSummary.vue'
@@ -306,7 +318,6 @@ import ReactionsModal from './ReactionsModal.vue'
 import EmojiPicker from './EmojiPicker.vue'
 import CommentItem from './CommentItem.vue'
 import MentionTextarea from '@/components/common/MentionTextarea.vue'
-import MentionText from '@/components/common/MentionText.vue'
 import '@/components/css/PostModal.css'
 
 // Props
@@ -373,6 +384,10 @@ const showReactionsModal = ref(false)
 const showEmojiPicker = ref(false)
 const commentInputRef = ref(null)
 const mentionedUsers = ref([])
+
+// Reply context state
+const replyContext = ref(null) // { commentId: number, authorName: string }
+const isReplying = ref(false)
 
 // Methods
 const handleMention = (mentionData) => {
@@ -458,6 +473,17 @@ const extractMentions = (content) => {
   return mentions
 }
 
+const clearReplyContext = () => {
+  replyContext.value = null
+  isReplying.value = false
+}
+
+const cancelReply = () => {
+  clearReplyContext()
+  newComment.value = ''
+  mentionedUsers.value = []
+}
+
 const addComment = () => {
   const content = newComment.value?.trim()
   if (!content) return
@@ -465,11 +491,22 @@ const addComment = () => {
   // Extract mentions from the comment
   const mentions = extractMentions(content)
   
-  // Emit comment with mention data if backend supports it
-  emit('add-comment', props.post.id, content, null, mentions)
+  if (isReplying.value && replyContext.value) {
+    // This is a reply to a specific comment
+    emit('reply-to-comment', {
+      commentId: replyContext.value.commentId,
+      content: content,
+      mentions: mentions
+    })
+  } else {
+    // This is a new top-level comment - emit with same signature as expected by AlumniHome
+    emit('add-comment', props.post.id, content, null, mentions)
+  }
   
+  // Reset form
   newComment.value = ''
   mentionedUsers.value = []
+  clearReplyContext()
 }
 
 const handleReaction = (postId, reactionType) => {
@@ -530,7 +567,19 @@ const handleReactToComment = (data) => {
 }
 
 const handleReplyToComment = (data) => {
-  emit('reply-to-comment', data)
+  // Set reply context
+  replyContext.value = {
+    commentId: data.commentId,
+    authorName: data.authorName
+  }
+  isReplying.value = true
+  
+  // Focus the main comment input
+  nextTick(() => {
+    if (commentInputRef.value) {
+      commentInputRef.value.focus()
+    }
+  })
 }
 
 const handleDeleteComment = (commentId) => {
