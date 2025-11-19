@@ -181,7 +181,7 @@ const getQuestionTypeLabel = (type) => {
                   @click="emit('editQuestion', question)"
                   :class="[
                     'p-2 rounded-lg transition-colors',
-                    isDark ? 'bg-blue-900/30 text-blue-400 hover:bg-blue-900/50' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                    isDark ? 'bg-orange-900/30 text-orange-400 hover:bg-orange-900/50' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
                   ]"
                   title="Edit question"
                 >

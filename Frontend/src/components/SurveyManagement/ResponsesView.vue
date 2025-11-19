@@ -8,17 +8,9 @@
       </div>
       <div class="flex gap-3">
         <button
-          @click="refreshData"
-          :disabled="loading"
-          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
-        >
-          <RefreshCw :class="['w-4 h-4', loading && 'animate-spin']" />
-          Refresh
-        </button>
-        <button
           @click="exportPDFReport"
           :disabled="!questionAnalytics.length"
-          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
         >
           <Download class="w-4 h-4" />
           Export PDF Report

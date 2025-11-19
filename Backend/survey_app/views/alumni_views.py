@@ -29,7 +29,7 @@ from ..permissions import CanRespondToSurveys
 
 class ActiveSurveyQuestionsView(APIView):
     """
-    Get all active survey questions organized by categories.
+    Get all published/active survey forms (templates) with their categories and questions.
     Alumni use this to see what surveys they can fill out.
     """
     permission_classes = [CanRespondToSurveys]
@@ -41,29 +41,52 @@ class ActiveSurveyQuestionsView(APIView):
         if cached_data:
             return Response(cached_data)
         
-        # Get active categories with their questions
-        categories = SurveyCategory.objects.filter(is_active=True).prefetch_related(
-            'questions'
-        ).order_by('order', 'name')
+        # Get published and active templates (forms)
+        templates = SurveyTemplate.objects.filter(
+            is_active=True,
+            is_published=True,
+            accepting_responses=True
+        ).prefetch_related(
+            'categories',
+            'categories__questions'
+        ).order_by('name')
         
         survey_data = []
-        for category in categories:
-            active_questions = category.questions.filter(is_active=True).order_by('order', 'question_text')
+        for template in templates:
+            # Get categories for this template (form)
+            categories = template.categories.filter(is_active=True).order_by(
+                'surveytemplatecategory__order', 'order', 'name'
+            )
             
-            if active_questions.exists():
-                questions_data = ActiveSurveyQuestionsSerializer(
-                    active_questions, 
-                    many=True, 
-                    context={'request': request}
-                ).data
+            template_categories = []
+            for category in categories:
+                active_questions = category.questions.filter(is_active=True).order_by('order', 'question_text')
                 
+                if active_questions.exists():
+                    questions_data = ActiveSurveyQuestionsSerializer(
+                        active_questions, 
+                        many=True, 
+                        context={'request': request}
+                    ).data
+                    
+                    template_categories.append({
+                        'category': SurveyCategorySerializer(category).data,
+                        'questions': questions_data
+                    })
+            
+            # Only include templates that have categories with questions
+            if template_categories:
                 survey_data.append({
-                    'category': SurveyCategorySerializer(category).data,
-                    'questions': questions_data
+                    'template': {
+                        'id': template.id,
+                        'name': template.name,
+                        'description': template.description,
+                    },
+                    'categories': template_categories
                 })
         
-        # Cache for 30 minutes
-        cache.set(cache_key, survey_data, 1800)
+        # Cache for 5 minutes (300 seconds) - short enough to see changes quickly
+        cache.set(cache_key, survey_data, 300)
         
         return Response(survey_data)
 

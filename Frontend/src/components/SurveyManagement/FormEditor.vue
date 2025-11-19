@@ -30,7 +30,7 @@
         </button>
         <button
           @click="showPreview = true"
-          class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+          class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition"
         >
           Preview
         </button>

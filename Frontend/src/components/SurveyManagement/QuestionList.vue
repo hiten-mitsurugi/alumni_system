@@ -5,7 +5,7 @@
       <h4 class="text-md font-semibold text-gray-700">Questions</h4>
       <button
         @click="showCreateModal = true"
-        class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition flex items-center gap-1"
+        class="bg-orange-600 text-white px-3 py-1.5 rounded text-sm hover:bg-orange-700 transition flex items-center gap-1"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -60,7 +60,7 @@
               <div class="flex items-center gap-1">
                 <button
                   @click="editQuestion(question)"
-                  class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"
+                  class="text-orange-600 hover:bg-orange-50 p-1.5 rounded transition"
                   title="Edit"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

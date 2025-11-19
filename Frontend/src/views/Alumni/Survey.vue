@@ -18,24 +18,71 @@ const themeStore = useThemeStore()
 
 // Reactive data
 const loading = ref(true)
-const currentCategoryIndex = ref(null) // null = show cards, number = show category
-const surveyData = ref([])
+const currentFormIndex = ref(null) // null = show form cards, number = show form
+const currentCategoryIndex = ref(null) // which category within the form
+const surveyData = ref([]) // Array of forms with their categories
 const responses = ref({})
 const progress = ref(null)
 const submitting = ref(false)
 const showResults = ref(false)
-const showCardGrid = ref(true) // Toggle between card grid and category view
+const showCardGrid = ref(true) // Toggle between card grid and form view
 
 // Computed properties
-const currentCategory = computed(() => {
-  if (currentCategoryIndex.value === null) return null
-  return surveyData.value[currentCategoryIndex.value] || null
+const currentForm = computed(() => {
+  if (currentFormIndex.value === null) return null
+  return surveyData.value[currentFormIndex.value] || null
 })
 
-// Get answered questions count for a category
+const currentCategory = computed(() => {
+  if (!currentForm.value || currentCategoryIndex.value === null) return null
+  return currentForm.value.categories[currentCategoryIndex.value] || null
+})
+
+// Get answered questions count for a form
+const getFormProgress = (formIndex) => {
+  const form = surveyData.value[formIndex]
+  if (!form || !form.categories || !Array.isArray(form.categories)) {
+    return { answered: 0, total: 0, percentage: 0 }
+  }
+  
+  let totalQuestions = 0
+  let answeredQuestions = 0
+  
+  form.categories.forEach(cat => {
+    if (cat && cat.questions && Array.isArray(cat.questions)) {
+      totalQuestions += cat.questions.length
+      answeredQuestions += cat.questions.filter(q => {
+        const response = responses.value[q.id]
+        return response !== undefined && response !== '' && response !== null
+      }).length
+    }
+  })
+  
+  return {
+    answered: answeredQuestions,
+    total: totalQuestions,
+    percentage: totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0
+  }
+}
+
+// Get form status
+const getFormStatus = (formIndex) => {
+  const progress = getFormProgress(formIndex)
+  if (progress.answered === 0) return 'not-started'
+  if (progress.answered === progress.total) return 'complete'
+  return 'in-progress'
+}
+
+// Get category progress within current form
 const getCategoryProgress = (categoryIndex) => {
-  const category = surveyData.value[categoryIndex]
-  if (!category) return { answered: 0, total: 0, percentage: 0 }
+  if (!currentForm.value || !currentForm.value.categories || !Array.isArray(currentForm.value.categories)) {
+    return { answered: 0, total: 0, percentage: 0 }
+  }
+  
+  const category = currentForm.value.categories[categoryIndex]
+  if (!category || !category.questions || !Array.isArray(category.questions)) {
+    return { answered: 0, total: 0, percentage: 0 }
+  }
   
   const totalQuestions = category.questions.length
   const answeredQuestions = category.questions.filter(q => {
@@ -62,7 +109,9 @@ const currentQuestions = computed(() => {
   return currentCategory.value?.questions || []
 })
 
-const totalCategories = computed(() => surveyData.value.length)
+const totalCategories = computed(() => {
+  return currentForm.value?.categories.length || 0
+})
 
 const canGoNext = computed(() => {
   if (!currentCategory.value) return false
@@ -77,11 +126,23 @@ const isLastCategory = computed(() => {
 })
 
 const overallProgress = computed(() => {
-  const totalQuestions = surveyData.value.reduce((total, category) => {
-    return total + category.questions.length
-  }, 0)
+  let totalQuestions = 0
+  let answeredQuestions = 0
   
-  const answeredQuestions = Object.keys(responses.value).length
+  if (Array.isArray(surveyData.value)) {
+    surveyData.value.forEach(form => {
+      if (form && form.categories && Array.isArray(form.categories)) {
+        form.categories.forEach(category => {
+          if (category && category.questions && Array.isArray(category.questions)) {
+            totalQuestions += category.questions.length
+            answeredQuestions += category.questions.filter(q => {
+              return responses.value[q.id] !== undefined && responses.value[q.id] !== '' && responses.value[q.id] !== null
+            }).length
+          }
+        })
+      }
+    })
+  }
   
   return totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0
 })
@@ -90,6 +151,8 @@ const overallProgress = computed(() => {
 const loadSurveyData = async () => {
   try {
     const response = await surveyService.getActiveSurveyQuestions()
+    console.log('📋 Survey data received from backend:', response.data)
+    console.log('📊 Data structure:', JSON.stringify(response.data, null, 2))
     surveyData.value = response.data
   } catch (error) {
     console.error('Error loading survey questions:', error)
@@ -123,20 +186,21 @@ const loadExistingResponses = async () => {
 }
 
 // Navigation
-const openCategory = (index) => {
-  currentCategoryIndex.value = index
+const openForm = (formIndex) => {
+  currentFormIndex.value = formIndex
+  currentCategoryIndex.value = 0 // Start with first category
   showCardGrid.value = false
 }
 
-const closeCategory = () => {
+const closeForm = () => {
+  currentFormIndex.value = null
   currentCategoryIndex.value = null
   showCardGrid.value = true
 }
 
 const goToCategory = (index) => {
-  if (index >= 0 && index < totalCategories.value) {
+  if (currentForm.value && index >= 0 && index < currentForm.value.categories.length) {
     currentCategoryIndex.value = index
-    showCardGrid.value = false
   }
 }
 
@@ -350,12 +414,12 @@ onMounted(async () => {
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
 
-      <!-- Card Grid View -->
+      <!-- Card Grid View - Show Forms -->
       <div v-else-if="showCardGrid && surveyData.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
-          v-for="(category, index) in surveyData"
-          :key="category.category.id"
-          @click="openCategory(index)"
+          v-for="(form, formIndex) in surveyData"
+          :key="form?.template?.id || formIndex"
+          @click="openForm(formIndex)"
           :class="[
             'cursor-pointer rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden',
             themeStore.isDarkMode ? 'bg-gray-800 hover:bg-gray-750 border border-gray-700' : 'bg-white hover:border-blue-300 border border-gray-200'
@@ -364,8 +428,8 @@ onMounted(async () => {
           <!-- Card Header -->
           <div :class="[
             'p-4 border-b',
-            getCategoryStatus(index) === 'complete' ? 'bg-green-50 border-green-200' :
-            getCategoryStatus(index) === 'in-progress' ? 'bg-yellow-50 border-yellow-200' :
+            getFormStatus(formIndex) === 'complete' ? 'bg-green-50 border-green-200' :
+            getFormStatus(formIndex) === 'in-progress' ? 'bg-yellow-50 border-yellow-200' :
             themeStore.isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-orange-100 border-gray-200'
           ]">
             <div class="flex items-start justify-between">
@@ -374,38 +438,38 @@ onMounted(async () => {
                   'font-semibold text-lg mb-1',
                   themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
                 ]">
-                  {{ category.category.name }}
+                  {{ form?.template?.name || 'Untitled Form' }}
                 </h3>
                 <p :class="[
                   'text-sm',
                   themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'
                 ]">
-                  {{ category.questions.length }} question{{ category.questions.length !== 1 ? 's' : '' }}
+                  {{ form?.categories?.length || 0 }} section{{ (form?.categories?.length || 0) !== 1 ? 's' : '' }}
                 </p>
               </div>
               
               <!-- Status Badge -->
               <div :class="[
                 'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
-                getCategoryStatus(index) === 'complete' ? 'bg-green-100 text-green-700' :
-                getCategoryStatus(index) === 'in-progress' ? 'bg-yellow-100 text-yellow-700' :
+                getFormStatus(formIndex) === 'complete' ? 'bg-green-100 text-green-700' :
+                getFormStatus(formIndex) === 'in-progress' ? 'bg-yellow-100 text-yellow-700' :
                 'bg-gray-100 text-gray-600'
               ]">
-                <CheckCircle v-if="getCategoryStatus(index) === 'complete'" class="w-3 h-3" />
-                <Clock v-else-if="getCategoryStatus(index) === 'in-progress'" class="w-3 h-3" />
+                <CheckCircle v-if="getFormStatus(formIndex) === 'complete'" class="w-3 h-3" />
+                <Clock v-else-if="getFormStatus(formIndex) === 'in-progress'" class="w-3 h-3" />
                 <FileText v-else class="w-3 h-3" />
-                <span class="capitalize">{{ getCategoryStatus(index).replace('-', ' ') }}</span>
+                <span class="capitalize">{{ getFormStatus(formIndex).replace('-', ' ') }}</span>
               </div>
             </div>
           </div>
           
           <!-- Card Body -->
           <div class="p-4">
-            <p v-if="category.category.description" :class="[
+            <p v-if="form?.template?.description" :class="[
               'text-sm mb-4 line-clamp-3',
               themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
             ]">
-              {{ category.category.description }}
+              {{ form.template.description }}
             </p>
             
             <!-- Progress Bar -->
@@ -414,11 +478,11 @@ onMounted(async () => {
                 <span :class="themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'">Progress</span>
                 <span :class="[
                   'font-medium',
-                  getCategoryProgress(index).percentage === 100 ? 'text-green-600' :
-                  getCategoryProgress(index).percentage > 0 ? 'text-yellow-600' :
+                  getFormProgress(formIndex).percentage === 100 ? 'text-green-600' :
+                  getFormProgress(formIndex).percentage > 0 ? 'text-yellow-600' :
                   themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 ]">
-                  {{ getCategoryProgress(index).answered }}/{{ getCategoryProgress(index).total }}
+                  {{ getFormProgress(formIndex).answered }}/{{ getFormProgress(formIndex).total }}
                 </span>
               </div>
               
@@ -429,11 +493,11 @@ onMounted(async () => {
                 <div
                   :class="[
                     'h-2 rounded-full transition-all duration-300',
-                    getCategoryProgress(index).percentage === 100 ? 'bg-green-500' :
-                    getCategoryProgress(index).percentage > 0 ? 'bg-yellow-500' :
+                    getFormProgress(formIndex).percentage === 100 ? 'bg-green-500' :
+                    getFormProgress(formIndex).percentage > 0 ? 'bg-yellow-500' :
                     'bg-blue-500'
                   ]"
-                  :style="{ width: `${getCategoryProgress(index).percentage}%` }"
+                  :style="{ width: `${getFormProgress(formIndex).percentage}%` }"
                 ></div>
               </div>
             </div>
@@ -448,7 +512,7 @@ onMounted(async () => {
               'text-sm font-medium',
               themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
             ]">
-              Click to {{ getCategoryStatus(index) === 'not-started' ? 'start' : 'continue' }}
+              Click to {{ getFormStatus(formIndex) === 'not-started' ? 'start' : 'continue' }}
             </span>
             <ChevronRight :class="[
               'w-4 h-4',
@@ -499,12 +563,12 @@ onMounted(async () => {
       </div>
 
       <!-- Survey Questions -->
-      <div v-else-if="currentCategory" class="max-w-3xl mx-auto">
+      <div v-else-if="currentForm && currentCategory" class="max-w-3xl mx-auto">
         <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md' : 'bg-white rounded-lg shadow-md'">
-          <!-- Back to Categories Button -->
+          <!-- Back to Forms Button -->
           <div class="p-4 border-b" :class="themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-200'">
             <button
-              @click="closeCategory"
+              @click="closeForm"
               :class="[
                 'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
                 themeStore.isDarkMode 
@@ -513,18 +577,26 @@ onMounted(async () => {
               ]"
             >
               <ChevronLeft class="w-4 h-4" />
-              Back to Categories
+              Back to Forms
             </button>
           </div>
         
-        <!-- Category Header -->
+        <!-- Form & Category Header -->
         <div :class="themeStore.isDarkMode ? 'bg-gray-700 p-6 border-b border-gray-600' : 'bg-orange-100 p-6 border-b'">
-          <h2 :class="themeStore.isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'">{{ currentCategory.category.name }}</h2>
-          <p v-if="currentCategory.category.description" :class="themeStore.isDarkMode ? 'text-gray-300 mt-2' : 'text-gray-600 mt-2'">
+          <div class="mb-2">
+            <span :class="[
+              'text-sm font-medium px-2 py-1 rounded',
+              themeStore.isDarkMode ? 'bg-gray-600 text-gray-300' : 'bg-orange-200 text-orange-800'
+            ]">
+              {{ currentForm?.template?.name || 'Survey Form' }}
+            </span>
+          </div>
+          <h2 :class="themeStore.isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'">{{ currentCategory?.category?.name || 'Section' }}</h2>
+          <p v-if="currentCategory?.category?.description" :class="themeStore.isDarkMode ? 'text-gray-300 mt-2' : 'text-gray-600 mt-2'">
             {{ currentCategory.category.description }}
           </p>
           <div :class="themeStore.isDarkMode ? 'mt-4 text-sm text-gray-400' : 'mt-4 text-sm text-gray-600'">
-            Category {{ currentCategoryIndex + 1 }} of {{ totalCategories }} • 
+            Section {{ currentCategoryIndex + 1 }} of {{ totalCategories }} • 
             {{ currentQuestions.length }} questions
           </div>
         </div>

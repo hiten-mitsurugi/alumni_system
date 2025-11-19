@@ -71,7 +71,7 @@
           <div class="flex items-center gap-2">
             <button
               @click="selectSection(section)"
-              class="text-blue-600 hover:bg-blue-50 p-2 rounded transition"
+              class="text-orange-600 hover:bg-orange-50 p-2 rounded transition"
               title="View Questions"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
