@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { 
   CheckCircle, 
   Clock, 
@@ -27,18 +27,115 @@ const submitting = ref(false)
 const showResults = ref(false)
 const showCardGrid = ref(true) // Toggle between card grid and form view
 
+// =============================
+// Conditional Logic Helpers
+// =============================
+
+// Normalize values for comparison (handle boolean → string, null/undefined)
+const normalizeValue = (value) => {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  return String(value)
+}
+
+// Parse dependency values (handle JSON arrays or single strings)
+const parseDependencyValue = (depValue) => {
+  if (!depValue) return []
+  try {
+    const parsed = JSON.parse(depValue)
+    return Array.isArray(parsed) ? parsed : [parsed]
+  } catch (e) {
+    // Fallback to raw string if JSON parse fails
+    return [depValue]
+  }
+}
+
+// Determine if a category should be visible based on conditional logic
+const shouldShowCategory = (categoryWrapper) => {
+  if (!categoryWrapper || !categoryWrapper.category) return false
+  const cat = categoryWrapper.category
+  
+  // No dependency = always visible
+  if (!cat.depends_on_category) return true
+  
+  // Find dependency category
+  const depCat = currentForm.value?.categories.find(
+    c => c.category.id === cat.depends_on_category
+  )
+  if (!depCat) {
+    console.warn(`Category "${cat.name}" depends on category ID ${cat.depends_on_category} but it was not found`)
+    return false
+  }
+  
+  // Find dependency question by text
+  const depQuestion = depCat.questions.find(
+    q => q.question_text === cat.depends_on_question_text
+  )
+  if (!depQuestion) {
+    console.warn(`Category "${cat.name}" depends on question "${cat.depends_on_question_text}" but it was not found`)
+    return false
+  }
+  
+  // Check user's answer
+  const userAnswer = normalizeValue(responses.value[depQuestion.id])
+  if (!userAnswer) return false
+  
+  // Check if answer matches required values
+  const requiredValues = parseDependencyValue(cat.depends_on_value)
+  const matches = requiredValues.some(val => normalizeValue(val) === userAnswer)
+  
+  return matches
+}
+
+// Determine if a question should be visible based on conditional logic
+const shouldShowQuestion = (question) => {
+  if (!question) return false
+  
+  // No dependency = always visible
+  if (!question.depends_on_question_id) return true
+  
+  // Check dependency answer
+  const depAnswer = normalizeValue(responses.value[question.depends_on_question_id])
+  if (!depAnswer) return false
+  
+  // Compare with required value(s)
+  const requiredValues = parseDependencyValue(question.depends_on_value)
+  return requiredValues.some(val => normalizeValue(val) === depAnswer)
+}
+
 // Computed properties
 const currentForm = computed(() => {
   if (currentFormIndex.value === null) return null
   return surveyData.value[currentFormIndex.value] || null
 })
 
-const currentCategory = computed(() => {
-  if (!currentForm.value || currentCategoryIndex.value === null) return null
-  return currentForm.value.categories[currentCategoryIndex.value] || null
+// Visible categories (filtered by conditional logic)
+const visibleCategories = computed(() => {
+  if (!currentForm.value) return []
+  return currentForm.value.categories.filter(cat => shouldShowCategory(cat))
 })
 
-// Get answered questions count for a form
+// Visible category indices (for navigation)
+const visibleCategoryIndices = computed(() => {
+  if (!currentForm.value) return []
+  return currentForm.value.categories
+    .map((c, idx) => ({ c, idx }))
+    .filter(({ c }) => shouldShowCategory(c))
+    .map(({ idx }) => idx)
+})
+
+const currentCategory = computed(() => {
+  if (!currentForm.value || currentCategoryIndex.value === null) return null
+  const category = currentForm.value.categories[currentCategoryIndex.value]
+  // Ensure current category is visible
+  if (category && !shouldShowCategory(category)) {
+    console.warn('Current category is not visible based on conditional logic')
+    return null
+  }
+  return category || null
+})
+
+// Get answered questions count for a form (visible questions only)
 const getFormProgress = (formIndex) => {
   const form = surveyData.value[formIndex]
   if (!form || !form.categories || !Array.isArray(form.categories)) {
@@ -49,12 +146,20 @@ const getFormProgress = (formIndex) => {
   let answeredQuestions = 0
   
   form.categories.forEach(cat => {
+    // Skip hidden categories
+    if (!shouldShowCategory(cat)) return
+    
     if (cat && cat.questions && Array.isArray(cat.questions)) {
-      totalQuestions += cat.questions.length
-      answeredQuestions += cat.questions.filter(q => {
+      cat.questions.forEach(q => {
+        // Skip hidden questions
+        if (!shouldShowQuestion(q)) return
+        
+        totalQuestions++
         const response = responses.value[q.id]
-        return response !== undefined && response !== '' && response !== null
-      }).length
+        if (response !== undefined && response !== '' && response !== null) {
+          answeredQuestions++
+        }
+      })
     }
   })
   
@@ -73,7 +178,7 @@ const getFormStatus = (formIndex) => {
   return 'in-progress'
 }
 
-// Get category progress within current form
+// Get category progress within current form (visible questions only)
 const getCategoryProgress = (categoryIndex) => {
   if (!currentForm.value || !currentForm.value.categories || !Array.isArray(currentForm.value.categories)) {
     return { answered: 0, total: 0, percentage: 0 }
@@ -84,8 +189,15 @@ const getCategoryProgress = (categoryIndex) => {
     return { answered: 0, total: 0, percentage: 0 }
   }
   
-  const totalQuestions = category.questions.length
-  const answeredQuestions = category.questions.filter(q => {
+  // Skip if category is hidden
+  if (!shouldShowCategory(category)) {
+    return { answered: 0, total: 0, percentage: 0 }
+  }
+  
+  // Filter to visible questions only
+  const visibleQuestions = category.questions.filter(q => shouldShowQuestion(q))
+  const totalQuestions = visibleQuestions.length
+  const answeredQuestions = visibleQuestions.filter(q => {
     const response = responses.value[q.id]
     return response !== undefined && response !== '' && response !== null
   }).length
@@ -106,23 +218,31 @@ const getCategoryStatus = (categoryIndex) => {
 }
 
 const currentQuestions = computed(() => {
-  return currentCategory.value?.questions || []
+  if (!currentCategory.value || !currentCategory.value.questions) return []
+  // Filter questions by conditional logic - only show visible questions
+  return currentCategory.value.questions.filter(q => shouldShowQuestion(q))
 })
 
 const totalCategories = computed(() => {
-  return currentForm.value?.categories.length || 0
+  // Count only visible categories
+  return visibleCategoryIndices.value.length
 })
 
 const canGoNext = computed(() => {
   if (!currentCategory.value) return false
   
-  // Check if all required questions in current category are answered
-  const requiredQuestions = currentQuestions.value.filter(q => q.is_required)
-  return requiredQuestions.every(q => responses.value[q.id] !== undefined && responses.value[q.id] !== '')
+  // Check if all VISIBLE required questions in current category are answered
+  const visibleRequiredQuestions = currentQuestions.value.filter(q => q.is_required)
+  return visibleRequiredQuestions.every(q => {
+    const response = responses.value[q.id]
+    return response !== undefined && response !== '' && response !== null
+  })
 })
 
 const isLastCategory = computed(() => {
-  return currentCategoryIndex.value === totalCategories.value - 1
+  const visible = visibleCategoryIndices.value
+  if (!visible.length) return true
+  return currentCategoryIndex.value === visible[visible.length - 1]
 })
 
 const overallProgress = computed(() => {
@@ -133,11 +253,19 @@ const overallProgress = computed(() => {
     surveyData.value.forEach(form => {
       if (form && form.categories && Array.isArray(form.categories)) {
         form.categories.forEach(category => {
+          // Skip hidden categories
+          if (!shouldShowCategory(category)) return
+          
           if (category && category.questions && Array.isArray(category.questions)) {
-            totalQuestions += category.questions.length
-            answeredQuestions += category.questions.filter(q => {
-              return responses.value[q.id] !== undefined && responses.value[q.id] !== '' && responses.value[q.id] !== null
-            }).length
+            category.questions.forEach(q => {
+              // Skip hidden questions
+              if (!shouldShowQuestion(q)) return
+              
+              totalQuestions++
+              if (responses.value[q.id] !== undefined && responses.value[q.id] !== '' && responses.value[q.id] !== null) {
+                answeredQuestions++
+              }
+            })
           }
         })
       }
@@ -188,8 +316,16 @@ const loadExistingResponses = async () => {
 // Navigation
 const openForm = (formIndex) => {
   currentFormIndex.value = formIndex
-  currentCategoryIndex.value = 0 // Start with first category
   showCardGrid.value = false
+  
+  // Find first visible category
+  const visible = visibleCategoryIndices.value
+  if (visible.length > 0) {
+    currentCategoryIndex.value = visible[0]
+  } else {
+    console.warn('No visible categories in this form')
+    currentCategoryIndex.value = 0 // Fallback to first category
+  }
 }
 
 const closeForm = () => {
@@ -199,20 +335,30 @@ const closeForm = () => {
 }
 
 const goToCategory = (index) => {
-  if (currentForm.value && index >= 0 && index < currentForm.value.categories.length) {
+  if (!currentForm.value) return
+  // Only allow navigation to visible categories
+  if (visibleCategoryIndices.value.includes(index)) {
     currentCategoryIndex.value = index
   }
 }
 
 const nextCategory = () => {
-  if (!isLastCategory.value) {
-    currentCategoryIndex.value++
+  if (isLastCategory.value) return
+  
+  const visible = visibleCategoryIndices.value
+  const currentPos = visible.indexOf(currentCategoryIndex.value)
+  
+  if (currentPos !== -1 && currentPos < visible.length - 1) {
+    currentCategoryIndex.value = visible[currentPos + 1]
   }
 }
 
 const previousCategory = () => {
-  if (currentCategoryIndex.value > 0) {
-    currentCategoryIndex.value--
+  const visible = visibleCategoryIndices.value
+  const currentPos = visible.indexOf(currentCategoryIndex.value)
+  
+  if (currentPos > 0) {
+    currentCategoryIndex.value = visible[currentPos - 1]
   }
 }
 
@@ -404,6 +550,35 @@ onMounted(async () => {
   ])
   loading.value = false
 })
+
+// Cleanup responses for hidden questions (triggered by answer changes)
+watch(
+  responses,
+  () => {
+    if (!currentForm.value) return
+    
+    // Clean up responses for questions that should no longer be visible
+    currentForm.value.categories.forEach(category => {
+      if (!category || !category.questions) return
+      
+      category.questions.forEach(question => {
+        const questionId = question.id
+        
+        // If question has a response but should not be visible, clean it up
+        if (responses.value[questionId] !== undefined && !shouldShowQuestion(question)) {
+          console.log(`Cleaning up response for hidden question: ${question.question_text}`)
+          
+          if (question.question_type === 'checkbox') {
+            responses.value[questionId] = []
+          } else {
+            delete responses.value[questionId]
+          }
+        }
+      })
+    })
+  },
+  { deep: true }
+)
 </script>
 
 <template>

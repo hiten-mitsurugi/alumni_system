@@ -214,13 +214,20 @@ class ActiveSurveyQuestionsSerializer(serializers.ModelSerializer):
     """Serializer for active survey questions (for alumni to answer)"""
     category = SurveyCategorySerializer(read_only=True)
     user_response = serializers.SerializerMethodField()
+    # Include conditional logic fields for Survey.vue to evaluate visibility
+    depends_on_question_id = serializers.IntegerField(
+        source='depends_on_question.id', 
+        read_only=True,
+        allow_null=True
+    )
 
     class Meta:
         model = SurveyQuestion
         fields = [
             'id', 'category', 'question_text', 'question_type',
             'placeholder_text', 'help_text', 'options', 'is_required',
-            'min_value', 'max_value', 'max_length', 'order', 'user_response'
+            'min_value', 'max_value', 'max_length', 'order', 'user_response',
+            'depends_on_question_id', 'depends_on_value'  # Conditional logic fields
         ]
 
     def get_user_response(self, obj):

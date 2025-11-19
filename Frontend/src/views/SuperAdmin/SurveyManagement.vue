@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 p-6">
+  <div class="min-h-screen bg-gradient-to-br from-white via-white to-white p-6">
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
       <div class="mb-8">
