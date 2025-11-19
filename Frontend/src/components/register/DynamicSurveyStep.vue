@@ -61,6 +61,24 @@
             :class="{ 'border-red-500': errors[question.id] }"
           />
 
+          <!-- Year Input -->
+          <select
+            v-else-if="question.question_type === 'year'"
+            v-model.number="localResponses[question.id]"
+            :required="question.is_required"
+            class="mt-1 w-full border rounded-md p-2"
+            :class="{ 'border-red-500': errors[question.id] }"
+          >
+            <option :value="null">{{ question.placeholder_text || 'Select a year' }}</option>
+            <option 
+              v-for="year in generateYearRange(question.min_value || 1950, question.max_value || (new Date().getFullYear() + 1))" 
+              :key="year" 
+              :value="year"
+            >
+              {{ year }}
+            </option>
+          </select>
+
           <!-- Email Input -->
           <input
             v-else-if="question.question_type === 'email'"
@@ -273,6 +291,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:responses'])
+
+// Helper function to generate year range for year questions
+const generateYearRange = (minYear, maxYear) => {
+  const years = []
+  for (let year = maxYear; year >= minYear; year--) {
+    years.push(year)
+  }
+  return years
+}
 
 // Initialize local responses
 const localResponses = reactive({ ...props.responses })

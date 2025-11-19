@@ -206,10 +206,17 @@
     <QuestionModal
       v-if="showQuestionModal"
       :question="editingQuestion"
-      :categoryId="questionCategoryId"
-      :allQuestions="allQuestionsInForm"
+      :selected-category-id="questionCategoryId"
+      :categories="allCategories"
+      :questions="allQuestionsInForm"
+      :questions-length="allQuestionsInForm.length"
+      :is-dragging="false"
+      :dragged-modal="''"
+      :modal-position="{ x: 0, y: 0 }"
       @close="closeQuestionModal"
       @save="handleQuestionSave"
+      @start-drag="() => {}"
+      @reset-position="() => {}"
     />
   </div>
 </template>
@@ -223,7 +230,7 @@ import SectionsGrid from './SectionsGrid.vue'
 import SectionView from './SectionView.vue'
 import FormSettings from './FormSettings.vue'
 import DraggableModal from './DraggableModal.vue'
-import QuestionModal from '../modals/QuestionModal.vue'
+import QuestionModal from './QuestionModal.vue'
 
 const props = defineProps({
   form: {
@@ -264,6 +271,11 @@ const tabs = [
 const allQuestionsInForm = computed(() => {
   if (!props.form.sections) return []
   return props.form.sections.flatMap(s => s.questions || [])
+})
+
+const allCategories = computed(() => {
+  if (!props.form.sections) return []
+  return props.form.sections.map(s => s.category)
 })
 
 const handlePublish = async () => {
@@ -403,8 +415,21 @@ const closeQuestionModal = () => {
   questionCategoryId.value = null
 }
 
-const handleQuestionSave = () => {
+const handleQuestionSave = async () => {
+  // Store the currently selected section ID before refresh
+  const selectedSectionId = selectedSection.value?.category?.id
+  
   closeQuestionModal()
   emit('refresh')
+  
+  // Wait a bit for the refresh to complete, then restore the selected section
+  if (selectedSectionId) {
+    setTimeout(() => {
+      const section = props.form.sections?.find(s => s.category.id === selectedSectionId)
+      if (section) {
+        selectedSection.value = section
+      }
+    }, 100)
+  }
 }
 </script>

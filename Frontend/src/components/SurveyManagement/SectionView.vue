@@ -1,6 +1,6 @@
 <template>
   <div v-if="isOpen" class="section-view-overlay" @click="handleOverlayClick">
-    <div class="section-view" :class="{ 'section-view--open': isOpen }">
+    <div class="section-view" :class="{ 'section-view--open': isOpen }" @click.stop>
       <!-- Header -->
       <div class="section-view__header">
         <div class="section-view__header-content">
@@ -40,101 +40,111 @@
           Questions ({{ questions.length }})
         </h3>
         <button class="section-view__add-question-btn" @click="handleAddQuestion">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
           Add Question
         </button>
       </div>
 
       <!-- Questions Table -->
       <div class="section-view__table-container">
-        <table v-if="questions.length > 0" class="section-view__table">
-          <thead>
-            <tr>
-              <th class="section-view__table-th section-view__table-th--drag"></th>
-              <th class="section-view__table-th section-view__table-th--order">Order</th>
-              <th class="section-view__table-th">Question</th>
-              <th class="section-view__table-th">Type</th>
-              <th class="section-view__table-th section-view__table-th--center">Required</th>
-              <th class="section-view__table-th section-view__table-th--center">Conditional</th>
-              <th class="section-view__table-th section-view__table-th--center">Branching</th>
-              <th class="section-view__table-th section-view__table-th--actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="question in sortedQuestions"
-              :key="question.id"
-              class="section-view__table-row"
-              @click="handleQuestionClick(question)"
-            >
-              <td class="section-view__table-td section-view__table-td--drag">
-                <div class="section-view__drag-handle" title="Drag to reorder">
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </div>
-              </td>
-              <td class="section-view__table-td section-view__table-td--order">
-                {{ question.order }}
-              </td>
-              <td class="section-view__table-td section-view__table-td--question">
-                <div class="section-view__question-text">
-                  {{ truncateText(question.question_text, 60) }}
-                </div>
-              </td>
-              <td class="section-view__table-td">
-                <span class="section-view__type-badge">
-                  {{ formatQuestionType(question.question_type) }}
-                </span>
-              </td>
-              <td class="section-view__table-td section-view__table-td--center">
-                <span v-if="question.required" class="section-view__check-icon" title="Required">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M13 4L6 11 3 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
-                  </svg>
-                </span>
-              </td>
-              <td class="section-view__table-td section-view__table-td--center">
-                <span v-if="question.depends_on_question" class="section-view__indicator section-view__indicator--conditional" title="Has conditional visibility">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 2l6 12H2L8 2z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                  </svg>
-                </span>
-              </td>
-              <td class="section-view__table-td section-view__table-td--center">
-                <span v-if="hasBranching(question)" class="section-view__indicator section-view__indicator--branching" title="Has branching logic">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 2v12M8 8h6M8 8H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
-                </span>
-              </td>
-              <td class="section-view__table-td section-view__table-td--actions" @click.stop>
-                <div class="section-view__actions">
-                  <button
-                    class="section-view__action-btn"
-                    title="Edit question"
-                    @click="handleEditQuestion(question)"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z"/>
+        <div v-if="questions.length > 0" class="section-view__table-wrapper">
+          <table class="section-view__table">
+            <thead class="section-view__table-head">
+              <tr>
+                <th class="section-view__table-th section-view__table-th--drag"></th>
+                <th class="section-view__table-th section-view__table-th--order">Order</th>
+                <th class="section-view__table-th">Question</th>
+                <th class="section-view__table-th">Type</th>
+                <th class="section-view__table-th section-view__table-th--center">Required</th>
+                <th class="section-view__table-th section-view__table-th--center">Conditional</th>
+                <th class="section-view__table-th section-view__table-th--center">Branching</th>
+                <th class="section-view__table-th section-view__table-th--actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="section-view__table-body">
+              <tr
+                v-for="question in sortedQuestions"
+                :key="question.id"
+                class="section-view__table-row"
+              >
+                <td class="section-view__table-td section-view__table-td--drag">
+                  <div class="section-view__drag-handle" title="Drag to reorder">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                  </button>
-                  <button
-                    class="section-view__action-btn section-view__action-btn--danger"
-                    title="Delete question"
-                    @click="handleDeleteQuestion(question.id)"
+                  </div>
+                </td>
+                <td class="section-view__table-td section-view__table-td--order">
+                  <span class="section-view__order-badge">{{ question.order }}</span>
+                </td>
+                <td class="section-view__table-td section-view__table-td--question">
+                  <div class="section-view__question-content">
+                    <div class="section-view__question-text">
+                      {{ question.question_text }}
+                    </div>
+                    <div v-if="question.help_text" class="section-view__question-help">
+                      {{ truncateText(question.help_text, 80) }}
+                    </div>
+                  </div>
+                </td>
+                <td class="section-view__table-td">
+                  <span class="section-view__type-badge">
+                    {{ formatQuestionType(question.question_type) }}
+                  </span>
+                </td>
+                <td class="section-view__table-td section-view__table-td--center">
+                  <span 
+                    :class="[
+                      'section-view__status-badge',
+                      question.is_required ? 'section-view__status-badge--required' : 'section-view__status-badge--optional'
+                    ]"
                   >
+                    <span class="section-view__status-dot"></span>
+                    {{ question.is_required ? 'Required' : 'Optional' }}
+                  </span>
+                </td>
+                <td class="section-view__table-td section-view__table-td--center">
+                  <div v-if="question.depends_on_question" class="section-view__conditional-info">
+                    <span class="section-view__indicator section-view__indicator--conditional" :title="getConditionalTooltip(question)">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"/>
+                      </svg>
+                    </span>
+                    <div v-if="question.depends_on_value" class="section-view__conditional-text">
+                      <span class="section-view__conditional-value">{{ question.depends_on_value }}</span>
+                    </div>
+                  </div>
+                  <span v-else class="section-view__text-muted">—</span>
+                </td>
+                <td class="section-view__table-td section-view__table-td--center">
+                  <span v-if="hasBranching(question)" class="section-view__indicator section-view__indicator--branching" title="Has branching logic">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M5.5 2V1h5v1h3.5v1h-1v11h-10V3h-1V2h3.5z"/>
+                      <path d="M8 2v12M8 8h6M8 8H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                     </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                  </span>
+                  <span v-else class="section-view__text-muted">—</span>
+                </td>
+                <td class="section-view__table-td section-view__table-td--actions" @click.stop>
+                  <div class="section-view__actions">
+                    <button
+                      class="section-view__action-btn section-view__action-btn--edit"
+                      title="Edit question"
+                      @click="handleEditQuestion(question)"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      class="section-view__action-btn section-view__action-btn--delete"
+                      title="Delete question"
+                      @click="handleDeleteQuestion(question.id)"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Empty State -->
         <div v-else class="section-view__empty">
@@ -152,15 +162,9 @@
       <!-- Footer Actions -->
       <div class="section-view__footer">
         <button class="section-view__footer-btn section-view__footer-btn--secondary" @click="handleEditSection">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z"/>
-          </svg>
           Edit Section Details
         </button>
         <button class="section-view__footer-btn section-view__footer-btn--danger" @click="handleDeleteSection">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M5.5 2V1h5v1h3.5v1h-1v11h-10V3h-1V2h3.5z"/>
-          </svg>
           Delete Section
         </button>
       </div>
@@ -196,7 +200,20 @@ const emit = defineEmits([
 const questions = computed(() => props.section?.questions || []);
 
 const sortedQuestions = computed(() => {
-  return [...questions.value].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const sorted = [...questions.value].sort((a, b) => (a.order || 0) - (b.order || 0));
+  
+  // Debug: Log question data to check fields
+  if (sorted.length > 0) {
+    console.log('📊 Section questions:', sorted.map(q => ({
+      id: q.id,
+      text: q.question_text?.substring(0, 30),
+      is_required: q.is_required,
+      depends_on_question: q.depends_on_question,
+      depends_on_value: q.depends_on_value
+    })));
+  }
+  
+  return sorted;
 });
 
 const hasConditions = computed(() => {
@@ -227,8 +244,18 @@ function formatQuestionType(type) {
     rating: 'Rating',
     yes_no: 'Yes/No',
     file: 'File',
+    year: 'Year'
   };
   return typeMap[type] || type;
+}
+
+function getConditionalTooltip(question) {
+  if (!question.depends_on_question) return '';
+  
+  const dependsOnQ = questions.value.find(q => q.id === question.depends_on_question);
+  const questionText = dependsOnQ ? dependsOnQ.question_text : 'Unknown question';
+  
+  return `Shows only if "${questionText}" = ${question.depends_on_value}`;
 }
 
 function handleClose() {
@@ -286,8 +313,8 @@ function handleDeleteSection() {
 }
 
 .section-view {
-  width: 700px;
-  max-width: 90vw;
+  width: 1100px;
+  max-width: 95vw;
   background: white;
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -424,7 +451,16 @@ function handleDeleteSection() {
 .section-view__table-container {
   flex: 1;
   overflow-y: auto;
-  padding: 0;
+  padding: 24px;
+  background: #f9fafb;
+}
+
+.section-view__table-wrapper {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: white;
 }
 
 .section-view__table {
@@ -433,17 +469,27 @@ function handleDeleteSection() {
   font-size: 14px;
 }
 
+.section-view__table-head {
+  background: linear-gradient(to right, #f8fafc, #f1f5f9);
+}
+
+.section-view__table-body {
+  background: white;
+}
+
 .section-view__table-th {
   text-align: left;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
   font-weight: 600;
-  color: #374151;
-  font-size: 13px;
+  color: #475569;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   position: sticky;
   top: 0;
   z-index: 10;
+  background: inherit;
 }
 
 .section-view__table-th--drag {
@@ -466,110 +512,202 @@ function handleDeleteSection() {
 }
 
 .section-view__table-row {
-  cursor: pointer;
   transition: background 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .section-view__table-row:hover {
-  background: #f9fafb;
+  background: #f8fafc;
 }
 
 .section-view__table-td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  padding: 16px 20px;
+  color: #334155;
+  vertical-align: middle;
 }
 
 .section-view__table-td--drag {
-  padding-left: 24px;
+  width: 40px;
+  padding-left: 20px;
+  padding-right: 8px;
 }
 
 .section-view__table-td--order {
-  font-weight: 500;
-  color: #6b7280;
+  width: 80px;
 }
 
 .section-view__table-td--question {
-  max-width: 250px;
+  max-width: 400px;
 }
 
 .section-view__table-td--center {
   text-align: center;
+  width: 120px;
 }
 
 .section-view__table-td--actions {
   text-align: center;
+  width: 100px;
 }
 
 .section-view__drag-handle {
-  color: #9ca3af;
+  color: #cbd5e1;
   cursor: grab;
   display: inline-flex;
+  transition: color 0.2s ease;
 }
 
 .section-view__drag-handle:hover {
-  color: #6b7280;
+  color: #94a3b8;
+}
+
+.section-view__order-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.section-view__question-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .section-view__question-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.section-view__question-help {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
 }
 
 .section-view__type-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  background: #e5e7eb;
-  color: #374151;
-  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: #ede9fe;
+  color: #7c3aed;
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.section-view__check-icon {
-  color: #10b981;
+.section-view__status-badge {
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.section-view__status-badge--required {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.section-view__status-badge--optional {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.section-view__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.section-view__status-badge--required .section-view__status-dot {
+  background: #dc2626;
+}
+
+.section-view__status-badge--optional .section-view__status-dot {
+  background: #94a3b8;
+}
+
+.section-view__text-muted {
+  color: #cbd5e1;
+  font-size: 14px;
 }
 
 .section-view__indicator {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.section-view__conditional-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.section-view__conditional-text {
+  font-size: 11px;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.section-view__conditional-value {
+  padding: 2px 6px;
+  background: #fef3c7;
+  border-radius: 4px;
 }
 
 .section-view__indicator--conditional {
   color: #f59e0b;
+  background: #fef3c7;
 }
 
 .section-view__indicator--branching {
   color: #8b5cf6;
+  background: #ede9fe;
 }
 
 .section-view__actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
 }
 
 .section-view__action-btn {
-  padding: 4px;
+  padding: 6px;
   background: transparent;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
-  color: #6b7280;
+  color: #94a3b8;
   display: inline-flex;
-  transition: all 0.15s ease;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.section-view__action-btn:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-  color: #111827;
+.section-view__action-btn--edit:hover {
+  background: #fef3c7;
+  color: #f59e0b;
 }
 
-.section-view__action-btn--danger:hover {
+.section-view__action-btn--delete:hover {
   background: #fee2e2;
-  border-color: #fecaca;
   color: #dc2626;
 }
 

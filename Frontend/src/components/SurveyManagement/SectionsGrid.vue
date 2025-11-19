@@ -36,7 +36,7 @@
         v-for="section in sortedSections"
         :key="section.category.id"
         :section="section"
-        @click="handleSectionClick"
+        @section-click="handleSectionClick"
         @add-question="handleAddQuestion"
         @edit="handleEditSection"
         @delete="handleDeleteSection"

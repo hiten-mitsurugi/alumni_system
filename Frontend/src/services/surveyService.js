@@ -113,6 +113,10 @@ class SurveyService {
     return api.patch(`/survey/admin/forms/${id}/`, data)
   }
 
+  async deleteForm(id) {
+    return api.delete(`/survey/admin/forms/${id}/`)
+  }
+
   async publishForm(id, data) {
     return api.post(`/survey/admin/forms/${id}/publish/`, data)
   }

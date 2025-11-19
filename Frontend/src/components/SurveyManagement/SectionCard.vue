@@ -58,27 +58,21 @@
         title="Add question"
         @click="handleAddQuestion"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        Add Question
       </button>
       <button
         class="section-card__action-btn"
         title="Edit section"
         @click="handleEdit"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z"/>
-        </svg>
+        Edit
       </button>
       <button
         class="section-card__action-btn section-card__action-btn--danger"
         title="Delete section"
         @click="handleDelete"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M5.5 2V1h5v1h3.5v1h-1v11h-10V3h-1V2h3.5zM6 4v8h1V4H6zm3 0v8h1V4H9z"/>
-        </svg>
+        Delete
       </button>
     </div>
   </div>
@@ -96,7 +90,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-  'click',
+  'section-click',
   'add-question',
   'edit',
   'delete',
@@ -123,7 +117,7 @@ function truncateText(text, maxLength) {
 }
 
 function handleCardClick() {
-  emit('click', props.section);
+  emit('section-click', props.section);
 }
 
 function handleAddQuestion() {

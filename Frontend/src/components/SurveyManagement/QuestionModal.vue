@@ -1,4 +1,24 @@
 <script setup>
+/*
+  NOTE: "category" == "section"
+
+  - The backend model and API use the name `SurveyCategory` and expect
+    payload keys like `category` (an integer id). Example create payload:
+      { "category": 3, "question_text": "...", ... }
+
+  - The frontend UI uses the friendlier term "section" for the same
+    concept. This component accepts `selectedCategoryId` (the id of the
+    currently-selected section) and writes it into `form.category` so the
+    backend receives the expected field.
+
+  - If you prefer developer-facing names like `selectedSectionId`, it's
+    fine to rename props/variables in the UI for clarity, but map them to
+    `category` in the request payload when calling the API.
+
+  - Keep this comment in place to avoid confusion between UI wording and
+    the API/model naming.
+*/
+
 import { ref, computed, watch } from 'vue'
 import { X, Plus, Trash2 } from 'lucide-vue-next'
 import surveyService from '@/services/surveyService'
@@ -60,6 +80,7 @@ const questionTypes = [
   { value: 'text', label: 'Short Text', hasOptions: false },
   { value: 'textarea', label: 'Long Text', hasOptions: false },
   { value: 'number', label: 'Number', hasOptions: false },
+  { value: 'year', label: 'Year (YYYY)', hasOptions: false },
   { value: 'email', label: 'Email', hasOptions: false },
   { value: 'date', label: 'Date', hasOptions: false },
   { value: 'radio', label: 'Single Choice', hasOptions: true },
@@ -70,7 +91,7 @@ const questionTypes = [
 ]
 
 const availableQuestions = computed(() => {
-  return props.questions.filter(q => {
+  const available = props.questions.filter(q => {
     if (q.id === form.value.id) return false
     if (q.question_type === 'yes_no') return true
     if (q.question_type === 'radio' && q.options && Array.isArray(q.options)) {
@@ -79,18 +100,85 @@ const availableQuestions = computed(() => {
     }
     return false
   })
+  
+  // Debug: Log available questions for conditional logic
+  console.log('🔍 Available questions for conditional logic:', available.map(q => ({
+    id: q.id,
+    text: q.question_text?.substring(0, 40),
+    type: q.question_type
+  })))
+  
+  return available
 })
 
-// Initialize form
-if (props.question) {
-  form.value = { 
-    ...props.question,
-    options: props.question.options ? [...props.question.options] : []
+// Generate year options (current year down to 1950)
+const yearOptions = computed(() => {
+  const currentYear = new Date().getFullYear()
+  const startYear = 1950
+  const years = []
+  for (let year = currentYear + 1; year >= startYear; year--) {
+    years.push(year)
   }
-} else {
-  form.value.category = props.selectedCategoryId
-  form.value.order = props.questionsLength
+  return years
+})
+
+// Default max year for new year questions
+const defaultMaxYear = computed(() => new Date().getFullYear() + 1)
+
+// Initialize form
+const initializeForm = () => {
+  if (props.question) {
+    const questionData = {
+      ...props.question,
+      options: props.question.options ? [...props.question.options] : [],
+      category: props.question.category || props.selectedCategoryId,
+      depends_on_question: props.question.depends_on_question || null,
+      depends_on_value: props.question.depends_on_value || ''
+    }
+    
+    console.log('🔄 Initializing form with question:', {
+      id: questionData.id,
+      text: questionData.question_text?.substring(0, 40),
+      depends_on_question: questionData.depends_on_question,
+      depends_on_value: questionData.depends_on_value
+    })
+    
+    form.value = questionData
+  } else {
+    form.value = {
+      id: null,
+      category: props.selectedCategoryId,
+      question_text: '',
+      question_type: 'text',
+      options: [],
+      is_required: true,
+      order: props.questionsLength,
+      is_active: true,
+      placeholder_text: '',
+      help_text: '',
+      min_value: null,
+      max_value: null,
+      max_length: null,
+      depends_on_question: null,
+      depends_on_value: ''
+    }
+    console.log('🆕 Initializing new question form')
+  }
 }
+
+initializeForm()
+
+// Watch for question prop changes (when editing different questions)
+watch(() => props.question, (newQuestion) => {
+  initializeForm()
+}, { deep: true })
+
+// Watch for selectedCategoryId changes when creating new questions
+watch(() => props.selectedCategoryId, (newCategoryId) => {
+  if (!props.question && newCategoryId) {
+    form.value.category = newCategoryId
+  }
+})
 
 const addOption = () => {
   if (form.value && form.value.options) {
@@ -106,21 +194,40 @@ const removeOption = (index) => {
 
 const saveQuestion = async () => {
   try {
+    // Prepare payload - clean up conditional logic if not set
+    const payload = {
+      ...form.value,
+      // If no depends_on_question, clear depends_on_value
+      depends_on_value: form.value.depends_on_question ? form.value.depends_on_value : ''
+    }
+    
+    console.log('📤 Sending question data:', payload)
+    
     if (form.value.id) {
-      await surveyService.updateQuestion(form.value.id, form.value)
+      await surveyService.updateQuestion(form.value.id, payload)
     } else {
-      await surveyService.createQuestion(form.value)
+      await surveyService.createQuestion(payload)
     }
     emit('save')
     emit('close')
   } catch (error) {
     console.error('Error saving question:', error)
+    console.error('Error response data:', error.response?.data)
     if (error.response?.status === 400) {
       const errorData = error.response.data
-      if (errorData.category && Array.isArray(errorData.category)) {
+      
+      // Log all validation errors
+      console.error('Validation errors:', errorData)
+      
+      // Check for specific field errors
+      if (errorData.question_type) {
+        alert(`Question Type Error: ${Array.isArray(errorData.question_type) ? errorData.question_type[0] : errorData.question_type}`)
+      } else if (errorData.category && Array.isArray(errorData.category)) {
         alert(errorData.category[0])
       } else if (typeof errorData.category === 'string') {
         alert(errorData.category)
+      } else if (errorData.non_field_errors) {
+        alert(errorData.non_field_errors[0])
       } else {
         alert('Failed to save question. Please check your input and try again.')
       }
@@ -133,7 +240,9 @@ const saveQuestion = async () => {
 
 <template>
   <div
-    class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+    class="fixed inset-0 overflow-y-auto h-full w-full flex items-center justify-center p-4"
+    style="z-index: 1100;"
+    @click.stop="emit('close')"
   >
     <div 
       :class="[
@@ -204,7 +313,7 @@ const saveQuestion = async () => {
           </div>
           
           <div>
-            <label :class="['block text-sm font-semibold mb-2', isDark ? 'text-gray-300' : 'text-slate-700']">Category *</label>
+            <label :class="['block text-sm font-semibold mb-2', isDark ? 'text-gray-300' : 'text-slate-700']">Section*</label>
             <select
               v-model="form.category"
               required
@@ -213,7 +322,7 @@ const saveQuestion = async () => {
                 isDark ? 'bg-gray-700 border-gray-600 text-white' : 'border-slate-300'
               ]"
             >
-              <option :value="null">Select a category</option>
+              <option :value="null">Select a Section</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                 {{ cat.name }}
               </option>
@@ -297,6 +406,37 @@ const saveQuestion = async () => {
                 isDark ? 'bg-gray-700 border-gray-600 text-white' : 'border-slate-300'
               ]"
             />
+          </div>
+        </div>
+
+        <!-- Year Range Section -->
+        <div v-if="form.question_type === 'year'" :class="['grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg border', isDark ? 'bg-gray-700 border-gray-600' : 'bg-green-50 border-green-200']">
+          <div>
+            <label :class="['block text-sm font-semibold mb-2', isDark ? 'text-gray-300' : 'text-green-900']">Minimum Year</label>
+            <select
+              v-model.number="form.min_value"
+              :class="[
+                'w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors',
+                isDark ? 'bg-gray-600 border-gray-500 text-white' : 'border-green-300 bg-white'
+              ]"
+            >
+              <option :value="null">No minimum</option>
+              <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label :class="['block text-sm font-semibold mb-2', isDark ? 'text-gray-300' : 'text-green-900']">Maximum Year</label>
+            <select
+              v-model.number="form.max_value"
+              :class="[
+                'w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors',
+                isDark ? 'bg-gray-600 border-gray-500 text-white' : 'border-green-300 bg-white'
+              ]"
+            >
+              <option :value="null">Use current year + 1 ({{ defaultMaxYear }})</option>
+              <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
+            </select>
           </div>
         </div>
 

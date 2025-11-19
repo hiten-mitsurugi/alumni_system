@@ -81,6 +81,7 @@ class SurveyQuestion(models.Model):
         ('checkbox', 'Multiple Choice (Checkbox)'),
         ('select', 'Dropdown Select'),
         ('number', 'Number Input'),
+        ('year', 'Year (YYYY)'),
         ('email', 'Email Input'),
         ('date', 'Date Picker'),
         ('rating', 'Rating Scale (1-5)'),

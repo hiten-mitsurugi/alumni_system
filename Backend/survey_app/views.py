@@ -170,7 +170,7 @@ class SurveyFormDetailView(generics.RetrieveUpdateDestroyAPIView):
         categories_data = []
         for cat in categories:
             questions = SurveyQuestion.objects.filter(category=cat).order_by('order', 'question_text')
-            qdata = SurveyQuestionListSerializer(questions, many=True).data
+            qdata = SurveyQuestionSerializer(questions, many=True).data
             categories_data.append({
                 'category': SurveyCategorySerializer(cat).data,
                 'questions': qdata

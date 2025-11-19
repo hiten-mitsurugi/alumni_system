@@ -119,6 +119,24 @@
                 :class="{ 'border-red-500': errors[question.id] }"
               />
 
+              <!-- Year Input -->
+              <select
+                v-else-if="question.question_type === 'year'"
+                v-model.number="responses[question.id]"
+                :required="question.is_required"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                :class="{ 'border-red-500': errors[question.id] }"
+              >
+                <option :value="null">{{ question.placeholder_text || 'Select a year' }}</option>
+                <option 
+                  v-for="year in generateYearRange(question.min_value || 1950, question.max_value || (new Date().getFullYear() + 1))" 
+                  :key="year" 
+                  :value="year"
+                >
+                  {{ year }}
+                </option>
+              </select>
+
               <!-- Email Input -->
               <input
                 v-else-if="question.question_type === 'email'"
@@ -406,6 +424,15 @@ export default {
     const questions = ref([])
     const responses = ref({})
     const errors = ref({})
+
+    // Helper function to generate year range for year questions
+    const generateYearRange = (minYear, maxYear) => {
+      const years = []
+      for (let year = maxYear; year >= minYear; year--) {
+        years.push(year)
+      }
+      return years
+    }
 
     // Group questions by category
     const categorizedQuestions = computed(() => {
