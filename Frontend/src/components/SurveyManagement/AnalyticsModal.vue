@@ -1,7 +1,8 @@
 <template>
   <div
-    v-if="analytics"
-    class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+    v-if="show"
+    class="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    @click.self="closeModal"
   >
     <div 
       :class="[

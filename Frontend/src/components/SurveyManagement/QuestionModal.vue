@@ -240,7 +240,7 @@ const saveQuestion = async () => {
 
 <template>
   <div
-    class="fixed inset-0 overflow-y-auto h-full w-full flex items-center justify-center p-4"
+    class="fixed inset-0 overflow-y-auto h-full w-full flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
     style="z-index: 1100;"
     @click.stop="emit('close')"
   >

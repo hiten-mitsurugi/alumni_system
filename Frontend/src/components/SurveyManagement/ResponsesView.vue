@@ -45,7 +45,7 @@
           </div>
         </div>
         <p class="text-3xl font-bold text-blue-700">{{ stats.totalResponses }}</p>
-        <p class="text-xs text-blue-600 mt-1">Across all sections</p>
+        <p class="text-xs text-blue-600 mt-1">For this form</p>
       </div>
 
       <!-- Unique Respondents -->
@@ -69,7 +69,7 @@
           </div>
         </div>
         <p class="text-3xl font-bold text-green-700">{{ stats.completionRate }}%</p>
-        <p class="text-xs text-green-600 mt-1">Average progress</p>
+        <p class="text-xs text-green-600 mt-1">For this form</p>
       </div>
 
       <!-- Latest Response -->
@@ -605,9 +605,12 @@ const loadResponses = async () => {
     questionAnalytics.value = allAnalytics
     console.log('Total question analytics loaded:', allAnalytics.length)
     
-    // Also load raw responses for stats
-    const responsesResult = await surveyService.getResponses({})
+    // Load raw responses for stats - FILTERED BY THIS FORM'S CATEGORIES
+    const responsesResult = await surveyService.getResponses({
+      category_ids: sectionIds.join(',')  // Convert array to comma-separated string
+    })
     responses.value = responsesResult.data || []
+    console.log('Responses filtered for this form:', responses.value.length)
 
     // Set default selected section
     if (!selectedSectionId.value && props.form.sections && props.form.sections.length > 0) {

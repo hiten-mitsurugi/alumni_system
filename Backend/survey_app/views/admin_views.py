@@ -224,9 +224,22 @@ class SurveyResponsesView(generics.ListAPIView):
         if question_id:
             queryset = queryset.filter(question_id=question_id)
         
-        # Filter by category
+        # Filter by category (single)
         category_id = self.request.query_params.get('category_id')
         if category_id:
             queryset = queryset.filter(question__category_id=category_id)
+        
+        # Filter by multiple categories
+        category_ids = self.request.query_params.get('category_ids')
+        if category_ids:
+            try:
+                # Handle both comma-separated string and array
+                if isinstance(category_ids, str):
+                    ids = [int(id.strip()) for id in category_ids.split(',') if id.strip()]
+                else:
+                    ids = category_ids
+                queryset = queryset.filter(question__category_id__in=ids)
+            except (ValueError, TypeError):
+                pass
         
         return queryset.order_by('-submitted_at')
