@@ -66,9 +66,10 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
           <input
             v-model="localSettings.end_at"
-            type="datetime-local"
+            type="date"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
+          <p class="text-xs text-gray-500 mt-1">Form will close at 11:59 PM on this date</p>
         </div>
         
         <div>
@@ -164,18 +165,32 @@ const emit = defineEmits(['save'])
 
 const saving = ref(false)
 
-// Helper to convert ISO 8601 to datetime-local format (yyyy-MM-ddThh:mm)
+// Helper to convert ISO 8601 to datetime-local format (yyyy-MM-ddThh:mm) for start date
 const formatDatetimeLocal = (isoString) => {
   if (!isoString) return ''
   // Remove timezone and milliseconds: "2025-11-18T18:46:00Z" -> "2025-11-18T18:46"
   return isoString.replace(/:\d{2}\.\d{3}Z$/, '').replace(/:\d{2}Z$/, '').slice(0, 16)
 }
 
-// Helper to convert datetime-local format back to ISO 8601 for backend
+// Helper to convert ISO 8601 to date format (yyyy-MM-dd)
+const formatDate = (isoString) => {
+  if (!isoString) return ''
+  // Extract just the date part: "2025-11-18T18:46:00Z" -> "2025-11-18"
+  return isoString.split('T')[0]
+}
+
+// Helper to convert datetime-local format back to ISO 8601 for backend (start date)
 const formatISO = (datetimeLocal) => {
   if (!datetimeLocal) return null
   // Append seconds and Z timezone: "2025-11-18T18:46" -> "2025-11-18T18:46:00Z"
   return datetimeLocal + ':00Z'
+}
+
+// Helper to convert date to ISO 8601 at 11:59 PM for backend
+const formatEndDateISO = (dateString) => {
+  if (!dateString) return null
+  // Set time to 23:59:59 (11:59 PM): "2025-11-18" -> "2025-11-18T23:59:59Z"
+  return dateString + 'T23:59:59Z'
 }
 
 const localSettings = reactive({
@@ -184,7 +199,7 @@ const localSettings = reactive({
   is_default: props.form.is_default || false,
   accepting_responses: props.form.accepting_responses || false,
   start_at: formatDatetimeLocal(props.form.start_at),
-  end_at: formatDatetimeLocal(props.form.end_at),
+  end_at: formatDate(props.form.end_at),
   confirmation_message: props.form.confirmation_message || ''
 })
 
@@ -202,7 +217,7 @@ watch(() => props.form, (newForm) => {
     is_default: newForm.is_default || false,
     accepting_responses: newForm.accepting_responses || false,
     start_at: formatDatetimeLocal(newForm.start_at),
-    end_at: formatDatetimeLocal(newForm.end_at),
+    end_at: formatDate(newForm.end_at),
     confirmation_message: newForm.confirmation_message || ''
   })
   Object.assign(formSettings, newForm.form_settings || {})
@@ -214,7 +229,7 @@ const handleSave = async () => {
     await emit('save', {
       ...localSettings,
       start_at: formatISO(localSettings.start_at),
-      end_at: formatISO(localSettings.end_at),
+      end_at: formatEndDateISO(localSettings.end_at),
       form_settings: formSettings
     })
   } finally {

@@ -315,6 +315,25 @@ const loadExistingResponses = async () => {
 
 // Navigation
 const openForm = (formIndex) => {
+  const form = surveyData.value[formIndex]
+  
+  // Check if already answered and not allowing multiple responses
+  if (form?.template?.has_answered && !form?.template?.allow_multiple_responses) {
+    // Still open but will show the notice banner
+    currentFormIndex.value = formIndex
+    showCardGrid.value = false
+    
+    // Find first visible category
+    const visible = visibleCategoryIndices.value
+    if (visible.length > 0) {
+      currentCategoryIndex.value = visible[0]
+    } else {
+      console.warn('No visible categories in this form')
+      currentCategoryIndex.value = 0
+    }
+    return
+  }
+  
   currentFormIndex.value = formIndex
   showCardGrid.value = false
   
@@ -594,12 +613,24 @@ watch(
         <div
           v-for="(form, formIndex) in surveyData"
           :key="form?.template?.id || formIndex"
-          @click="openForm(formIndex)"
+          @click="form?.template?.has_answered && !form?.template?.allow_multiple_responses ? null : openForm(formIndex)"
           :class="[
-            'cursor-pointer rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden',
-            themeStore.isDarkMode ? 'bg-gray-800 hover:bg-gray-750 border border-gray-700' : 'bg-white hover:border-blue-300 border border-gray-200'
+            'rounded-lg shadow-md transition-all duration-300 overflow-hidden',
+            form?.template?.has_answered && !form?.template?.allow_multiple_responses 
+              ? 'opacity-75 cursor-not-allowed' 
+              : 'cursor-pointer hover:shadow-xl',
+            themeStore.isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200',
+            !form?.template?.has_answered || form?.template?.allow_multiple_responses ? (themeStore.isDarkMode ? 'hover:bg-gray-750' : 'hover:border-blue-300') : ''
           ]"
         >
+          <!-- Already Answered Badge (Top Banner) -->
+          <div 
+            v-if="form?.template?.has_answered && !form?.template?.allow_multiple_responses"
+            class="bg-green-500 text-white text-center py-2 px-4 text-sm font-medium"
+          >
+            ✓ You have already answered this form
+          </div>
+          
           <!-- Card Header -->
           <div :class="[
             'p-4 border-b',
@@ -739,7 +770,27 @@ watch(
 
       <!-- Survey Questions -->
       <div v-else-if="currentForm && currentCategory" class="max-w-3xl mx-auto">
-        <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md' : 'bg-white rounded-lg shadow-md'">
+        <!-- Already Answered Notice (Full-width banner above form) -->
+        <div 
+          v-if="currentForm?.template?.has_answered && !currentForm?.template?.allow_multiple_responses"
+          class="mb-6 bg-green-50 border border-green-200 rounded-lg p-6 text-center"
+        >
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <CheckCircle class="w-6 h-6 text-green-600" />
+            <h3 class="text-lg font-semibold text-green-900">You have already answered this form</h3>
+          </div>
+          <p class="text-green-700 mb-4">
+            This form does not allow multiple responses. You have already submitted your answers.
+          </p>
+          <button
+            @click="closeForm"
+            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Back to Forms
+          </button>
+        </div>
+        
+        <div v-else :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md' : 'bg-white rounded-lg shadow-md'">
           <!-- Back to Forms Button -->
           <div class="p-4 border-b" :class="themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-200'">
             <button

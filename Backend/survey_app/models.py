@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
+from django.utils import timezone
 import json
 
 
@@ -318,6 +319,23 @@ class SurveyTemplate(models.Model):
         if self.is_default:
             SurveyTemplate.objects.filter(is_default=True).update(is_default=False)
         super().save(*args, **kwargs)
+
+    def expire_if_needed(self):
+        """Expire this template if end_at passed.
+        Sets is_published + accepting_responses to False when end_at reached."""
+        if self.end_at and timezone.now() >= self.end_at and (self.is_published or self.accepting_responses):
+            self.is_published = False
+            self.accepting_responses = False
+            self.save(update_fields=['is_published', 'accepting_responses'])
+
+    @classmethod
+    def bulk_expire(cls):
+        """Bulk expire all templates whose end_at has passed."""
+        now = timezone.now()
+        # Unpublish any published templates past end date
+        cls.objects.filter(end_at__isnull=False, end_at__lte=now, is_published=True).update(is_published=False)
+        # Stop accepting responses for any templates past end date
+        cls.objects.filter(end_at__isnull=False, end_at__lte=now, accepting_responses=True).update(accepting_responses=False)
 
 
 class SurveyTemplateCategory(models.Model):

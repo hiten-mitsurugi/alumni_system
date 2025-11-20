@@ -41,6 +41,10 @@ class ActiveSurveyQuestionsView(APIView):
         if cached_data:
             return Response(cached_data)
         
+        # Auto-expire any templates whose end date has passed
+        from ..models import SurveyTemplate as ST
+        ST.bulk_expire()
+
         # Get published and active templates (forms)
         templates = SurveyTemplate.objects.filter(
             is_active=True,
@@ -57,6 +61,19 @@ class ActiveSurveyQuestionsView(APIView):
             categories = template.categories.filter(is_active=True).order_by(
                 'surveytemplatecategory__order', 'order', 'name'
             )
+            
+            # Check if user has already answered this template (form)
+            # User is considered to have answered if they have ANY response to questions in this template
+            has_answered = False
+            allow_multiple = template.form_settings.get('allow_multiple_responses', False) if template.form_settings else False
+            
+            if not allow_multiple:
+                # Check if user has any responses for questions in this template's categories
+                category_ids = list(categories.values_list('id', flat=True))
+                has_answered = SurveyResponse.objects.filter(
+                    user=request.user,
+                    question__category_id__in=category_ids
+                ).exists()
             
             template_categories = []
             for category in categories:
@@ -81,6 +98,8 @@ class ActiveSurveyQuestionsView(APIView):
                         'id': template.id,
                         'name': template.name,
                         'description': template.description,
+                        'allow_multiple_responses': allow_multiple,
+                        'has_answered': has_answered,
                     },
                     'categories': template_categories
                 })
@@ -103,6 +122,46 @@ class SurveyResponseSubmitView(APIView):
         print(f"🚀 Survey submission received from user: {request.user}")
         print(f"📋 Request data: {request.data}")
         print(f"📊 Data type: {type(request.data)}")
+        
+        # Validate allow_multiple_responses enforcement
+        if 'responses' in request.data and request.data['responses']:
+            # Get the first question to identify which template (form) this belongs to
+            first_response = request.data['responses'][0]
+            question_id = first_response.get('question_id')
+            
+            if question_id:
+                try:
+                    question = SurveyQuestion.objects.select_related('category').get(id=question_id)
+                    
+                    # Find the template (form) this question belongs to
+                    template = SurveyTemplate.objects.filter(
+                        categories=question.category,
+                        is_active=True
+                    ).first()
+                    
+                    if template:
+                        # Check allow_multiple_responses setting
+                        allow_multiple = template.form_settings.get('allow_multiple_responses', False) if template.form_settings else False
+                        
+                        if not allow_multiple:
+                            # Check if user already has responses for this template
+                            category_ids = list(template.categories.values_list('id', flat=True))
+                            has_existing_response = SurveyResponse.objects.filter(
+                                user=request.user,
+                                question__category_id__in=category_ids
+                            ).exists()
+                            
+                            if has_existing_response:
+                                return Response(
+                                    {
+                                        'error': 'You have already answered this form.',
+                                        'message': 'This form does not allow multiple responses. You have already submitted your answers.'
+                                    },
+                                    status=status.HTTP_400_BAD_REQUEST
+                                )
+                
+                except SurveyQuestion.DoesNotExist:
+                    pass  # Continue with normal validation
         
         # Check if it's bulk submission
         if 'responses' in request.data:
