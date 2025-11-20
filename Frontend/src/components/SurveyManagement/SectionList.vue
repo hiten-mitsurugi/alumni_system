@@ -130,12 +130,32 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Page Title</label>
+          <input
+            v-model="sectionForm.page_title"
+            type="text"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            placeholder="Title shown to respondents on this page"
+          />
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Page Description</label>
+          <textarea
+            v-model="sectionForm.page_description"
+            rows="3"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            placeholder="Instructions or description shown to respondents"
+          ></textarea>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Internal Description</label>
           <textarea
             v-model="sectionForm.description"
             rows="3"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            placeholder="Optional description for this section"
+            placeholder="Internal notes (not shown to respondents)"
           ></textarea>
         </div>
         
@@ -199,6 +219,8 @@ const draggedIndex = ref(null)
 
 const sectionForm = reactive({
   name: '',
+  page_title: '',
+  page_description: '',
   description: '',
   order_index: 0
 })
@@ -214,6 +236,8 @@ const selectSection = (section) => {
 const editSection = (section) => {
   editingSection.value = section.category
   sectionForm.name = section.category.name
+  sectionForm.page_title = section.category.page_title || ''
+  sectionForm.page_description = section.category.page_description || ''
   sectionForm.description = section.category.description || ''
   sectionForm.order_index = section.category.order
 }
@@ -229,6 +253,8 @@ const closeModal = () => {
   showCreateModal.value = false
   editingSection.value = null
   sectionForm.name = ''
+  sectionForm.page_title = ''
+  sectionForm.page_description = ''
   sectionForm.description = ''
   sectionForm.order_index = props.sections.length
 }
@@ -236,12 +262,21 @@ const closeModal = () => {
 const handleSubmit = async () => {
   const data = {
     name: sectionForm.name,
+    page_title: sectionForm.page_title,
+    page_description: sectionForm.page_description,
     description: sectionForm.description,
     order: sectionForm.order_index
   }
   
   if (editingSection.value) {
-    await updateSection(editingSection.value.id, data)
+    console.log('Updating section with data:', data)
+    console.log('Section ID:', editingSection.value.id)
+    const result = await updateSection(editingSection.value.id, data)
+    console.log('Update result:', result)
+    if (result) {
+      closeModal()
+      emit('refresh')
+    }
   } else {
     // Create the section
     console.log('Creating section with data:', data)

@@ -76,6 +76,17 @@ class AdminService {
     }
   }
 
+  async getAlumniDirectory(params = {}) {
+    try {
+      const response = await apiClient.get('/auth/alumni-directory/', { params })
+      const data = response.data
+      return Array.isArray(data) ? data : (data.results || data.items || [])
+    } catch (error) {
+      console.error('Failed to fetch alumni directory:', error)
+      throw this.handleError(error)
+    }
+  }
+
   async getPendingUsers() {
     try {
       const response = await apiClient.get('/auth/pending-alumni/')

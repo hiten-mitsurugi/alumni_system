@@ -195,7 +195,7 @@ function handleDrop(event) {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #3b82f6;
+  background: #dd6b20;
   color: white;
   border: none;
   border-radius: 6px;
@@ -206,7 +206,7 @@ function handleDrop(event) {
 }
 
 .sections-grid__add-btn:hover {
-  background: #2563eb;
+  background: #F57C00;
 }
 
 .sections-grid__add-btn:active {
@@ -235,7 +235,7 @@ function handleDrop(event) {
 
 .sections-grid__empty-btn {
   padding: 10px 20px;
-  background: #3b82f6;
+  background: #dd6b20;
   color: white;
   border: none;
   border-radius: 6px;

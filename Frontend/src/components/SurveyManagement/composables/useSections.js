@@ -42,11 +42,16 @@ export function useSections() {
     loading.value = true
     error.value = null
     try {
+      console.log('useSections: Updating section', sectionId, 'with data:', JSON.stringify(sectionData, null, 2))
       const response = await surveyService.updateCategory(sectionId, sectionData)
+      console.log('useSections: Update response:', JSON.stringify(response.data, null, 2))
       return response.data
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.detail || err.message
       console.error('Error updating section:', err)
+      console.error('Error response:', err.response?.data)
+      console.error('Error status:', err.response?.status)
+      alert('Failed to update section: ' + error.value)
       return null
     } finally {
       loading.value = false

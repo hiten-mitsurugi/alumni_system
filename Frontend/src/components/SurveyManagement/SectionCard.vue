@@ -6,13 +6,6 @@
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
   >
-    <!-- Drag Handle -->
-    <div class="section-card__drag-handle" title="Drag to reorder">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </div>
-
     <!-- Card Content -->
     <div class="section-card__content" @click="handleCardClick">
       <!-- Header -->
@@ -62,21 +55,27 @@
         title="Add question"
         @click="handleAddQuestion"
       >
-        Add Question
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/>
+        </svg>
       </button>
       <button
         class="section-card__action-btn"
         title="Edit section"
         @click="handleEdit"
       >
-        Edit
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25a1.75 1.75 0 01.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086zM11.189 6.25L9.75 4.81l-6.286 6.287a.25.25 0 00-.064.108l-.558 1.953 1.953-.558a.249.249 0 00.108-.064l6.286-6.286z"/>
+        </svg>
       </button>
       <button
         class="section-card__action-btn section-card__action-btn--danger"
         title="Delete section"
         @click="handleDelete"
       >
-        Delete
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M11 1.75V3h2.25a.75.75 0 010 1.5H2.75a.75.75 0 010-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75zM4.496 6.675a.75.75 0 10-1.492.15l.66 6.6A1.75 1.75 0 005.405 15h5.19c.9 0 1.652-.681 1.741-1.576l.66-6.6a.75.75 0 00-1.492-.149l-.66 6.6a.25.25 0 01-.249.225h-5.19a.25.25 0 01-.249-.225l-.66-6.6zM6.5 1.75V3h3V1.75a.25.25 0 00-.25-.25h-2.5a.25.25 0 00-.25.25z"/>
+        </svg>
       </button>
     </div>
   </div>
@@ -159,7 +158,7 @@ function handleDragEnd() {
   transition: all 0.2s ease;
   cursor: pointer;
   display: flex;
-  gap: 12px;
+  gap: 16px;
 }
 
 .section-card:hover {
@@ -174,24 +173,6 @@ function handleDragEnd() {
 
 .section-card--conditional {
   border-left: 3px solid #f59e0b;
-}
-
-.section-card__drag-handle {
-  flex-shrink: 0;
-  width: 20px;
-  color: #9ca3af;
-  cursor: grab;
-  display: flex;
-  align-items: flex-start;
-  padding-top: 4px;
-}
-
-.section-card__drag-handle:hover {
-  color: #6b7280;
-}
-
-.section-card__drag-handle:active {
-  cursor: grabbing;
 }
 
 .section-card__content {
@@ -286,28 +267,32 @@ function handleDragEnd() {
 }
 
 .section-card__action-btn {
-  padding: 6px;
+  padding: 8px;
   background: transparent;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
   cursor: pointer;
-  color: #6b7280;
-  transition: all 0.15s ease;
+  color: #c2410c;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .section-card__action-btn:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-  color: #111827;
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.section-card__action-btn--danger {
+  border-color: #fed7aa;
 }
 
 .section-card__action-btn--danger:hover {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #dc2626;
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #c2410c;
 }
 
 .section-card__action-btn:active {

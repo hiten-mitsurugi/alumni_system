@@ -50,16 +50,6 @@ const routes = [
         component: () => import('../views/SuperAdmin/AlumniDirectory.vue'),
       },
       {
-        path: 'system-monitoring',
-        name: 'SuperAdminSystemMonitoring',
-        component: () => import('../views/SuperAdmin/SystemMonitoring.vue'),
-      },
-      {
-        path: 'analytic-dashboard',
-        name: 'SuperAdminAnalyticDashboard',
-        component: () => import('../views/SuperAdmin/AnalyticDashboard.vue'),
-      },
-      {
         path: 'pending-user-approval',
         name: 'SuperAdminPendingUserApproval',
         component: () => import('@/views/Admin/PendingUserApprovalPage.vue'),

@@ -10,7 +10,6 @@ import {
   UserCog as UserManagementIcon,
   ListChecks as SurveyIcon,
   BookOpenText as DirectoryIcon,
-  ActivitySquare as MonitoringIcon,
   BarChart3 as AnalyticsIcon,
   UserCheck2 as ApprovalIcon,
   Settings as SettingsIcon,
@@ -187,28 +186,6 @@ const isActive = (path) => route.path.startsWith(path);
               : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
             <DirectoryIcon class="w-4 h-4" />
             <span>Alumni Directory</span>
-          </router-link>
-        </li>
-
-        <li>
-          <router-link to="/super-admin/system-monitoring"
-            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
-            :class="isActive('/super-admin/system-monitoring')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
-            <MonitoringIcon class="w-4 h-4" />
-            <span>System Monitoring</span>
-          </router-link>
-        </li>
-
-        <li>
-          <router-link to="/super-admin/analytic-dashboard"
-            class="flex items-center gap-2 p-2 rounded transition text-sm font-['Poppins'] group"
-            :class="isActive('/super-admin/analytic-dashboard')
-              ? (themeStore.isAdminDark() ? 'font-semibold text-orange-500 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
-            <AnalyticsIcon class="w-4 h-4" />
-            <span>Analytic Dashboard</span>
           </router-link>
         </li>
 

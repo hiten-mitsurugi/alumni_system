@@ -501,7 +501,6 @@ const sectionForm = reactive({
 const tabs = [
   { id: 'sections', name: 'Sections & Questions' },
   { id: 'settings', name: 'Settings' },
-  { id: 'responses', name: 'Responses' },
   { id: 'comprehensive-report', name: 'Comprehensive Report' }
 ]
 
