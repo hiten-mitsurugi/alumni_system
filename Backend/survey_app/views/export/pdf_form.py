@@ -37,6 +37,8 @@ def form_analytics_pdf_export(request):
         
         # Get category_ids from request
         category_ids = request.data.get('category_ids', [])
+        programs = request.data.get('programs', [])  # Filter by programs
+        graduation_years = request.data.get('graduation_years', [])  # Filter by graduation years
         
         # Try to find the template/form name from categories
         form_title = "Survey Analytics Report"
@@ -79,9 +81,46 @@ def form_analytics_pdf_export(request):
             question__category_id__in=category_ids
         ).select_related('user', 'question')
         
+        # Apply program filter
+        if programs:
+            program_list = programs if isinstance(programs, list) else [p.strip() for p in programs.split(',') if p.strip()]
+            if program_list:
+                responses = responses.filter(user__program__in=program_list)
+        
+        # Apply graduation year filter
+        if graduation_years:
+            if isinstance(graduation_years, list):
+                year_list = [int(y) for y in graduation_years if str(y).strip()]
+            else:
+                try:
+                    year_list = [int(y.strip()) for y in str(graduation_years).split(',') if y.strip()]
+                except (ValueError, TypeError):
+                    year_list = []
+            if year_list:
+                responses = responses.filter(user__year_graduated__in=year_list)
+        
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        total_alumni = User.objects.filter(user_type=3, is_approved=True).count()
+        total_alumni_queryset = User.objects.filter(user_type=3, is_approved=True)
+        
+        # Apply same filters to total alumni count
+        if programs:
+            program_list = programs if isinstance(programs, list) else [p.strip() for p in programs.split(',') if p.strip()]
+            if program_list:
+                total_alumni_queryset = total_alumni_queryset.filter(program__in=program_list)
+        
+        if graduation_years:
+            if isinstance(graduation_years, list):
+                year_list = [int(y) for y in graduation_years if str(y).strip()]
+            else:
+                try:
+                    year_list = [int(y.strip()) for y in str(graduation_years).split(',') if y.strip()]
+                except (ValueError, TypeError):
+                    year_list = []
+            if year_list:
+                total_alumni_queryset = total_alumni_queryset.filter(year_graduated__in=year_list)
+        
+        total_alumni = total_alumni_queryset.count()
         
         # Create PDF
         buffer = io.BytesIO()
@@ -162,10 +201,19 @@ def form_analytics_pdf_export(request):
             ['Total Categories', str(total_categories)],
             ['Total Questions', str(total_questions)],
             ['Total Responses', str(total_responses)],
-            ['Total Alumni', str(total_alumni)],
+            ['Total Alumni (Filtered)', str(total_alumni)],
             ['Overall Response Rate', f"{response_rate}%"],
-            ['Report Date', datetime.now().strftime('%Y-%m-%d')],
         ]
+        
+        # Add filter information if present
+        if programs:
+            program_names = programs if isinstance(programs, list) else programs.split(',')
+            summary_data.append(['Program Filter', ', '.join(program_names)])
+        if graduation_years:
+            year_names = graduation_years if isinstance(graduation_years, list) else graduation_years.split(',')
+            summary_data.append(['Graduation Year Filter', ', '.join(map(str, year_names))])
+        
+        summary_data.append(['Report Date', datetime.now().strftime('%Y-%m-%d')])
         
         summary_table = Table(summary_data, colWidths=[3*inch, 2.7*inch])
         summary_table.setStyle(TableStyle([

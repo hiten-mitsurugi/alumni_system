@@ -35,12 +35,14 @@ def survey_export_view(request):
         category_ids = request.data.get('category_ids', [])  # Multiple categories (new)
         date_from = request.data.get('date_from')
         date_to = request.data.get('date_to')
+        programs = request.data.get('programs', [])  # Filter by programs
+        graduation_years = request.data.get('graduation_years', [])  # Filter by graduation years
         
         # Support both single category_id and multiple category_ids
         if category_id and not category_ids:
             category_ids = [category_id]
         
-        print(f"🔍 Starting export with filters: categories={category_ids}, date_from={date_from}, date_to={date_to}")
+        print(f"🔍 Starting export with filters: categories={category_ids}, date_from={date_from}, date_to={date_to}, programs={programs}, years={graduation_years}")
         
         # ===== STEP 1: Get ALL survey questions for selected categories =====
         all_questions = SurveyQuestion.objects.all().select_related('category').order_by('category__name', 'order')
@@ -61,6 +63,24 @@ def survey_export_view(request):
         # Apply category filter
         if category_ids:
             all_responses = all_responses.filter(question__category_id__in=category_ids)
+        
+        # Apply program filter
+        if programs:
+            program_list = programs if isinstance(programs, list) else [p.strip() for p in programs.split(',') if p.strip()]
+            if program_list:
+                all_responses = all_responses.filter(user__program__in=program_list)
+        
+        # Apply graduation year filter
+        if graduation_years:
+            if isinstance(graduation_years, list):
+                year_list = [int(y) for y in graduation_years if str(y).strip()]
+            else:
+                try:
+                    year_list = [int(y.strip()) for y in str(graduation_years).split(',') if y.strip()]
+                except (ValueError, TypeError):
+                    year_list = []
+            if year_list:
+                all_responses = all_responses.filter(user__year_graduated__in=year_list)
         
         print(f"📝 Found {all_responses.count()} responses to include")
         
@@ -257,6 +277,8 @@ def survey_export_view(request):
             ['Total Questions Included', all_questions.count()],
             ['Total Responses Included', all_responses.count()],
             ['Category Filter', ', '.join(map(str, category_ids)) if category_ids else 'All Categories'],
+            ['Program Filter', ', '.join(programs) if programs else 'All Programs'],
+            ['Graduation Year Filter', ', '.join(map(str, graduation_years)) if graduation_years else 'All Years'],
             ['Date From Filter', date_from or 'No Limit'],
             ['Date To Filter', date_to or 'No Limit'],
             ['User Info Fields', 4],  # Full Name, Email, Year Graduated, Program

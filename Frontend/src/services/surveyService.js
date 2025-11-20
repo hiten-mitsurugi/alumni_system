@@ -51,10 +51,18 @@ class SurveyService {
     return api.get('/survey/admin/analytics/')
   }
 
-  async getCategoryAnalytics(categoryId) {
-    return api.get('/survey/admin/analytics/category/', {
-      params: { category_id: categoryId }
-    })
+  async getCategoryAnalytics(categoryId, filters = {}) {
+    const params = { category_id: categoryId }
+    
+    // Add optional filters
+    if (filters.programs && filters.programs.length > 0) {
+      params.programs = filters.programs.join(',')
+    }
+    if (filters.graduation_years && filters.graduation_years.length > 0) {
+      params.graduation_years = filters.graduation_years.join(',')
+    }
+    
+    return api.get('/survey/admin/analytics/category/', { params })
   }
 
   async exportCategoryPDF(categoryId) {
@@ -65,10 +73,20 @@ class SurveyService {
     })
   }
 
-  async exportFormPDF(categoryIds) {
-    return api.post('/survey/admin/analytics/form/pdf/', {
+  async exportFormPDF(categoryIds, filters = {}) {
+    const requestData = {
       category_ids: categoryIds
-    }, {
+    }
+    
+    // Add optional filters
+    if (filters.programs && filters.programs.length > 0) {
+      requestData.programs = filters.programs
+    }
+    if (filters.graduation_years && filters.graduation_years.length > 0) {
+      requestData.graduation_years = filters.graduation_years
+    }
+    
+    return api.post('/survey/admin/analytics/form/pdf/', requestData, {
       responseType: 'blob'
     })
   }
@@ -84,6 +102,8 @@ class SurveyService {
       category_ids = [],
       date_from = null,
       date_to = null,
+      programs = [],
+      graduation_years = [],
       include_profile_fields = [
         'first_name', 'last_name', 'email', 'program', 
         'year_graduated', 'student_id', 'birth_date', 'user_type'
@@ -96,6 +116,8 @@ class SurveyService {
       category_ids,
       date_from,
       date_to,
+      programs,
+      graduation_years,
       include_profile_fields
     }, {
       responseType: format === 'xlsx' ? 'blob' : 'json'

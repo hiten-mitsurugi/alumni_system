@@ -95,6 +95,7 @@ class CategoryAnalyticsView(APIView):
     """
     Get detailed analytics for a specific category.
     Returns per-question aggregated statistics ready for charting.
+    Supports optional filtering by programs and graduation years.
     """
     permission_classes = [IsSurveyAdmin]
     
@@ -115,8 +116,17 @@ class CategoryAnalyticsView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Check cache first
+        # Get filter parameters
+        programs = request.query_params.get('programs')
+        graduation_years = request.query_params.get('graduation_years')
+        
+        # Build cache key with filters
         cache_key = f'category_analytics_{category_id}'
+        if programs:
+            cache_key += f'_prog_{programs}'
+        if graduation_years:
+            cache_key += f'_years_{graduation_years}'
+        
         cached_data = cache.get(cache_key)
         if cached_data:
             return Response(cached_data)
@@ -135,7 +145,25 @@ class CategoryAnalyticsView(APIView):
         # Get total potential respondents (alumni)
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        total_alumni = User.objects.filter(user_type=3, is_approved=True).count()
+        total_alumni_queryset = User.objects.filter(user_type=3, is_approved=True)
+        
+        # Apply filters if provided
+        if programs:
+            program_list = [p.strip() for p in programs.split(',') if p.strip()]
+            if program_list:
+                responses = responses.filter(user__program__in=program_list)
+                total_alumni_queryset = total_alumni_queryset.filter(program__in=program_list)
+        
+        if graduation_years:
+            try:
+                year_list = [int(y.strip()) for y in graduation_years.split(',') if y.strip()]
+                if year_list:
+                    responses = responses.filter(user__year_graduated__in=year_list)
+                    total_alumni_queryset = total_alumni_queryset.filter(year_graduated__in=year_list)
+            except (ValueError, TypeError):
+                pass
+        
+        total_alumni = total_alumni_queryset.count()
         
         # Calculate per-question analytics
         question_analytics = []

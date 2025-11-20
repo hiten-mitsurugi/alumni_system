@@ -242,4 +242,21 @@ class SurveyResponsesView(generics.ListAPIView):
             except (ValueError, TypeError):
                 pass
         
+        # Filter by programs
+        programs = self.request.query_params.get('programs')
+        if programs:
+            program_list = [p.strip() for p in programs.split(',') if p.strip()]
+            if program_list:
+                queryset = queryset.filter(user__program__in=program_list)
+        
+        # Filter by graduation years
+        graduation_years = self.request.query_params.get('graduation_years')
+        if graduation_years:
+            try:
+                year_list = [int(y.strip()) for y in graduation_years.split(',') if y.strip()]
+                if year_list:
+                    queryset = queryset.filter(user__year_graduated__in=year_list)
+            except (ValueError, TypeError):
+                pass
+        
         return queryset.order_by('-submitted_at')

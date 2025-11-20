@@ -6,7 +6,7 @@
         <h1 class="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent mb-2">
           Survey Management
         </h1>
-        <p class="text-gray-600">Create and manage Google Forms-like surveys</p>
+        <p class="text-gray-600">Create and manage surveys</p>
       </div>
 
       <!-- Loading State -->

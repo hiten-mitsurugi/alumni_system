@@ -6,7 +6,7 @@
         <h2 class="text-2xl font-bold text-gray-900">Survey Responses</h2>
         <p class="text-gray-600">View and analyze all responses for {{ form?.name }}</p>
       </div>
-      <div class="flex gap-3">
+      <div v-if="!isFiltered" class="flex gap-3">
         <button
           @click="exportPDFReport"
           :disabled="!questionAnalytics.length"
@@ -37,7 +37,7 @@
           </div>
         </div>
         <p class="text-3xl font-bold text-blue-700">{{ stats.totalResponses }}</p>
-        <p class="text-xs text-blue-600 mt-1">For this form</p>
+        <p class="text-xs text-blue-600 mt-1">{{ isFiltered ? 'Filtered responses' : 'For this form' }}</p>
       </div>
 
       <!-- Unique Respondents -->
@@ -49,7 +49,7 @@
           </div>
         </div>
         <p class="text-3xl font-bold text-purple-700">{{ stats.uniqueRespondents }}</p>
-        <p class="text-xs text-purple-600 mt-1">Unique users</p>
+        <p class="text-xs text-purple-600 mt-1">{{ isFiltered ? 'From filtered set' : 'Unique users' }}</p>
       </div>
 
       <!-- Completion Rate -->
@@ -61,7 +61,7 @@
           </div>
         </div>
         <p class="text-3xl font-bold text-green-700">{{ stats.completionRate }}%</p>
-        <p class="text-xs text-green-600 mt-1">For this form</p>
+        <p class="text-xs text-green-600 mt-1">{{ isFiltered ? 'Filtered completion' : 'For this form' }}</p>
       </div>
 
       <!-- Latest Response -->
@@ -482,6 +482,10 @@ const props = defineProps({
   form: {
     type: Object,
     required: true
+  },
+  isFiltered: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -901,14 +905,38 @@ const formatRelativeTime = (dateString) => {
 
 // Watch for form changes to reload data
 watch(() => props.form, (newForm) => {
-  if (newForm?.id) {
+  // Only auto-reload if NOT in filtered mode (regular Responses tab)
+  if (!props.isFiltered && newForm?.id) {
     loadResponses()
   }
 }, { immediate: false })
 
+// Watch for filtered data changes (Comprehensive Report tab)
+watch(() => [props.form?._filteredAnalytics, props.form?._filteredResponses], ([newAnalytics, newResponses]) => {
+  if (props.isFiltered && newAnalytics && newResponses) {
+    questionAnalytics.value = newAnalytics
+    responses.value = newResponses
+    
+    // Set default selected section if not set
+    if (!selectedSectionId.value && props.form.sections && props.form.sections.length > 0) {
+      selectedSectionId.value = props.form.sections[0].category.id
+    }
+  }
+}, { deep: true })
+
 // Load data on mount
 onMounted(() => {
-  if (props.form?.id) {
+  // If filtered data is provided via props, use it (Comprehensive Report tab)
+  if (props.isFiltered && props.form?._filteredAnalytics && props.form?._filteredResponses) {
+    questionAnalytics.value = props.form._filteredAnalytics
+    responses.value = props.form._filteredResponses
+    
+    // Set default selected section
+    if (!selectedSectionId.value && props.form.sections && props.form.sections.length > 0) {
+      selectedSectionId.value = props.form.sections[0].category.id
+    }
+  } else if (props.form?.id) {
+    // Regular Responses tab - load from API
     loadResponses()
   }
 })

@@ -82,6 +82,12 @@
           v-else-if="activeTab === 'responses'"
           :form="form"
         />
+
+        <!-- Comprehensive Report Tab -->
+        <ComprehensiveReportView
+          v-else-if="activeTab === 'comprehensive-report'"
+          :form="form"
+        />
       </div>
     </div>
 
@@ -456,6 +462,7 @@ import SectionsGrid from './SectionsGrid.vue'
 import SectionView from './SectionView.vue'
 import FormSettings from './FormSettings.vue'
 import ResponsesView from './ResponsesView.vue'
+import ComprehensiveReportView from './ComprehensiveReportView.vue'
 import DraggableModal from './DraggableModal.vue'
 import QuestionModal from './QuestionModal.vue'
 
@@ -494,7 +501,8 @@ const sectionForm = reactive({
 const tabs = [
   { id: 'sections', name: 'Sections & Questions' },
   { id: 'settings', name: 'Settings' },
-  { id: 'responses', name: 'Responses' }
+  { id: 'responses', name: 'Responses' },
+  { id: 'comprehensive-report', name: 'Comprehensive Report' }
 ]
 
 const allQuestionsInForm = computed(() => {
