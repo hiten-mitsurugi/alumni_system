@@ -67,93 +67,75 @@
       </p>
     </div>
 
-    <!-- Pending Users Grid -->
+    <!-- Pending Users List -->
     <div v-else class="p-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <div 
-          v-for="user in pendingUsers" 
+      <div class="space-y-4">
+        <div
+          v-for="user in pendingUsers"
           :key="user.id"
-          class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+          :class="[
+            'p-4 rounded-lg border transition-all',
+            themeStore.isAdminDark() 
+              ? 'bg-gray-900 border-gray-700 hover:border-blue-600' 
+              : 'bg-gray-50 border-gray-200 hover:border-blue-400'
+          ]"
         >
-          <!-- User Info -->
-          <div class="flex items-start space-x-3 mb-4">
-            <img 
-              v-if="user.profile_picture" 
-              :src="user.profile_picture" 
-              :alt="getUserName(user)"
-              class="w-12 h-12 rounded-full object-cover"
-            >
-            <div 
-              v-else
-              class="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center"
-            >
-              <User class="w-6 h-6 text-gray-500 dark:text-gray-400" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <h5 class="font-medium text-gray-900 dark:text-white truncate">
-                {{ getUserName(user) }}
-              </h5>
-              <p class="text-sm text-gray-600 dark:text-gray-400 truncate">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <h4 :class="['font-semibold', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">
+                  {{ getUserName(user) }}
+                </h4>
+                <span :class="[
+                  'px-2 py-0.5 text-xs rounded-full',
+                  themeStore.isAdminDark() 
+                    ? 'bg-yellow-900 text-yellow-300' 
+                    : 'bg-yellow-100 text-yellow-800'
+                ]">
+                  Pending Review
+                </span>
+              </div>
+              <p :class="['text-sm mt-1', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">
                 {{ user.email }}
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                Registered: {{ formatDate(user.date_joined) }}
-              </p>
+              <div class="flex items-center space-x-4 mt-2 text-xs">
+                <span :class="themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-500'">
+                  <span class="font-medium">Type:</span> {{ getUserTypeLabel(user.user_type) }}
+                </span>
+                <span :class="themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-500'">
+                  <span class="font-medium">Registered:</span> {{ formatDate(user.date_joined) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex space-x-2 ml-4">
+              <button
+                @click="handleApproveUser(user.id)"
+                :disabled="processingUsers.has(user.id)"
+                :class="[
+                  'px-3 py-1.5 text-xs font-medium rounded-md transition-colors disabled:opacity-50',
+                  themeStore.isAdminDark()
+                    ? 'bg-green-900 text-green-300 hover:bg-green-800'
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                ]"
+              >
+                <Check class="w-4 h-4" />
+              </button>
+              <button
+                @click="handleRejectUser(user.id)"
+                :disabled="processingUsers.has(user.id)"
+                :class="[
+                  'px-3 py-1.5 text-xs font-medium rounded-md transition-colors disabled:opacity-50',
+                  themeStore.isAdminDark()
+                    ? 'bg-red-900 text-red-300 hover:bg-red-800'
+                    : 'bg-red-100 text-red-700 hover:bg-red-200'
+                ]"
+              >
+                <X class="w-4 h-4" />
+              </button>
             </div>
           </div>
-
-          <!-- User Details -->
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600 dark:text-gray-400">Type:</span>
-              <span class="font-medium text-gray-900 dark:text-white">
-                {{ getUserTypeLabel(user.user_type) }}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600 dark:text-gray-400">Status:</span>
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300">
-                Pending Review
-              </span>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex space-x-2">
-            <button
-              @click="handleApproveUser(user.id)"
-              :disabled="processingUsers.has(user.id)"
-              class="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Check class="w-4 h-4 mr-1" />
-              <span v-if="processingUsers.has(user.id)">Processing...</span>
-              <span v-else>Approve</span>
-            </button>
-            <button
-              @click="handleRejectUser(user.id)"
-              :disabled="processingUsers.has(user.id)"
-              class="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <X class="w-4 h-4 mr-1" />
-              <span v-if="processingUsers.has(user.id)">Processing...</span>
-              <span v-else>Reject</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div v-if="pendingUsers.length > 0" class="mt-6 pt-6 border-t dark:border-gray-700">
-        <div class="flex items-center justify-between">
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            {{ pendingUsers.length }} user{{ pendingUsers.length !== 1 ? 's' : '' }} waiting for approval
-          </p>
-          <router-link 
-            to="/admin/users"
-            class="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
-          >
-            View all users →
-          </router-link>
         </div>
       </div>
     </div>
@@ -163,7 +145,7 @@
 <script setup>
 import { ref } from 'vue'
 import { 
-  Clock, CheckCircle, User, Check, X, RefreshCw
+  Clock, CheckCircle, Check, X, RefreshCw
 } from 'lucide-vue-next'
 import { useThemeStore } from '@/stores/theme'
 

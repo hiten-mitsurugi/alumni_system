@@ -86,6 +86,7 @@
         <!-- Comprehensive Report Tab -->
         <ComprehensiveReportView
           v-else-if="activeTab === 'comprehensive-report'"
+          ref="comprehensiveReportRef"
           :form="form"
         />
       </div>
@@ -454,7 +455,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { useForms } from './composables/useForms'
 import { useSections } from './composables/useSections'
 import surveyService from '@/services/surveyService'
@@ -479,6 +480,7 @@ const { publishForm } = useForms()
 const { createSection, updateSection, deleteSection } = useSections()
 
 const activeTab = ref('sections')
+const comprehensiveReportRef = ref(null)
 const showPreview = ref(false)
 const previewCurrentPage = ref(0) // For preview pagination
 const selectedSection = ref(null)
@@ -503,6 +505,18 @@ const tabs = [
   { id: 'settings', name: 'Settings' },
   { id: 'comprehensive-report', name: 'Comprehensive Report' }
 ]
+
+// Watch for tab changes and refresh comprehensive report
+watch(activeTab, async (newTab) => {
+  if (newTab === 'comprehensive-report') {
+    // Wait for component to mount, then refresh
+    await nextTick()
+    if (comprehensiveReportRef.value && comprehensiveReportRef.value.refreshData) {
+      console.log('🔄 Auto-refreshing comprehensive report on tab switch')
+      comprehensiveReportRef.value.refreshData()
+    }
+  }
+})
 
 const allQuestionsInForm = computed(() => {
   if (!props.form.sections) return []

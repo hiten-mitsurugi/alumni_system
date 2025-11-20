@@ -81,7 +81,7 @@
         <button 
           @click.stop="connect(person)"
           :disabled="person.connecting"
-          class="px-3 py-1 text-xs bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors disabled:opacity-50"
+          class="px-3 py-1 text-xs bg-orange-600 text-white rounded-full hover:bg-orange-700 transition-colors disabled:opacity-50"
         >
           <span v-if="person.connecting" class="animate-spin mr-1">⟳</span>
           Connect
@@ -98,8 +98,8 @@
           :class="[
             'block text-center text-sm font-medium',
             themeStore.isDarkMode 
-              ? 'text-green-400 hover:text-green-300' 
-              : 'text-green-600 hover:text-green-700'
+              ? 'text-orange-400 hover:text-orange-300' 
+              : 'text-orange-600 hover:text-orange-700'
           ]"
         >
           View all suggestions

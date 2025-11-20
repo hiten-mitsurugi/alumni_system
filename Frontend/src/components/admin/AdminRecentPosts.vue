@@ -88,15 +88,6 @@
                   {{ formatRelativeTime(post.created_at) }}
                 </span>
               </div>
-              <div class="flex items-center space-x-2">
-                <!-- Status Badge -->
-                <span 
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  :class="getStatusClass(post.status)"
-                >
-                  {{ getStatusLabel(post.status) }}
-                </span>
-              </div>
             </div>
 
             <!-- Post Content Preview -->
@@ -132,22 +123,6 @@
 
               <!-- Quick Actions -->
               <div class="flex items-center space-x-2">
-                <button
-                  v-if="post.status === 'pending'"
-                  @click="$emit('approve-post', post.id)"
-                  :class="['text-xs', themeStore.isAdminDark() ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700']"
-                  title="Approve Post"
-                >
-                  <Check class="w-4 h-4" />
-                </button>
-                <button
-                  v-if="post.status === 'pending'"
-                  @click="$emit('reject-post', post.id)"
-                  :class="['text-xs', themeStore.isAdminDark() ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700']"
-                  title="Reject Post"
-                >
-                  <X class="w-4 h-4" />
-                </button>
                 <button
                   @click="$emit('view-post', post)"
                   :class="['text-xs', themeStore.isAdminDark() ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700']"
@@ -188,7 +163,7 @@
 import { computed } from 'vue'
 import { 
   RefreshCw, AlertCircle, FileText, User, Heart, MessageCircle, 
-  Tag, Check, X, Eye, Trash2 
+  Tag, Eye, Trash2 
 } from 'lucide-vue-next'
 import { useThemeStore } from '@/stores/theme'
 
@@ -213,8 +188,7 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits([
-  'refresh', 'approve-post', 'reject-post', 
-  'view-post', 'delete-post'
+  'refresh', 'view-post', 'delete-post'
 ])
 
 // Utility methods
@@ -231,29 +205,6 @@ const getAuthorName = (post) => {
   const name = `${author.first_name || ''} ${author.last_name || ''}`.trim()
   if (name) return name
   return author.username || author.email || 'Anonymous'
-}
-
-const getStatusClass = (status) => {
-  const isDark = themeStore.isAdminDark()
-  switch (status) {
-    case 'approved':
-      return isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
-    case 'pending':
-      return isDark ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'
-    case 'declined':
-      return isDark ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-800'
-    default:
-      return isDark ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-800'
-  }
-}
-
-const getStatusLabel = (status) => {
-  switch (status) {
-    case 'approved': return 'Approved'
-    case 'pending': return 'Pending'
-    case 'declined': return 'Declined'
-    default: return 'Unknown'
-  }
 }
 
 const formatRelativeTime = (dateString) => {

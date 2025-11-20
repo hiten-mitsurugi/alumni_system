@@ -74,7 +74,7 @@
               <button 
                 @click="connect(person)"
                 :disabled="person.connecting"
-                class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm font-medium"
+                class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 text-sm font-medium"
               >
                 <span v-if="person.connecting" class="animate-spin mr-2">⟳</span>
                 Connect

@@ -75,50 +75,14 @@
       />
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Recent Posts -->
-      <div>
-        <AdminRecentPosts
-          :posts="recentPosts"
-          :loading="dashboardLoading"
-          :error="dashboardError"
-          @refresh="refreshDashboardData"
-          @approve-post="handleApprovePost"
-          @reject-post="handleRejectPost"
-          @view-post="handleViewPost"
-          @delete-post="handleDeletePost"
-        />
-      </div>
-
-      <!-- Quick Actions -->
-      <div>
-        <AdminQuickActions
-          :loading="dashboardLoading"
-          :last-updated="analyticsLastUpdated"
-          @refresh="refreshDashboardData"
-          @refresh-analytics="refreshAnalytics"
-        />
-      </div>
-    </div>
-
-    <!-- Debug Information (Development Only) -->
-    <div 
-      v-if="showDebugInfo" 
-      class="mt-8 p-4 rounded-lg text-xs border border-gray-300 dark:border-gray-700"
-      style="background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%); color: #222;"
-      :class="'dark:bg-gray-900 dark:text-gray-100'"
-    >
-      <h4 class="font-semibold mb-2 text-blue-700 dark:text-blue-300">Debug Information:</h4>
-      <ul class="space-y-1">
-        <li><span class="font-semibold">Analytics Loading:</span> <span>{{ analyticsLoading }}</span></li>
-        <li><span class="font-semibold">Dashboard Loading:</span> <span>{{ dashboardLoading }}</span></li>
-        <li><span class="font-semibold">Analytics Error:</span> <span>{{ analyticsError }}</span></li>
-        <li><span class="font-semibold">Dashboard Error:</span> <span>{{ dashboardError }}</span></li>
-        <li><span class="font-semibold">Last Updated:</span> <span>{{ analyticsLastUpdated }}</span></li>
-        <li><span class="font-semibold">Recent Posts Count:</span> <span>{{ recentPosts.length }}</span></li>
-        <li><span class="font-semibold">Pending Users Count:</span> <span>{{ pendingApprovals.length }}</span></li>
-      </ul>
+    <!-- Quick Actions -->
+    <div class="max-w-2xl">
+      <AdminQuickActions
+        :loading="dashboardLoading"
+        :last-updated="analyticsLastUpdated"
+        @refresh="refreshDashboardData"
+        @refresh-analytics="refreshAnalytics"
+      />
     </div>
   </div>
 </template>
@@ -131,7 +95,6 @@ import { useThemeStore } from '@/stores/theme'
 // Import modular components
 import AdminAnalyticsCards from '@/components/admin/AdminAnalyticsCards.vue'
 import AdminPendingApprovals from '@/components/admin/AdminPendingApprovals.vue'
-import AdminRecentPosts from '@/components/admin/AdminRecentPosts.vue'
 import AdminQuickActions from '@/components/admin/AdminQuickActions.vue'
 
 // Import composables
@@ -158,20 +121,11 @@ const {
 const {
   loading: dashboardLoading,
   error: dashboardError,
-  recentPosts,
   pendingApprovals,
   fetchAllRecentData,
   approveUser,
-  rejectUser,
-  approvePost,
-  rejectPost,
-  deletePost
+  rejectUser
 } = useAdminDashboard()
-
-// Debug mode (show in development)
-const showDebugInfo = computed(() => {
-  return import.meta.env.MODE === 'development'
-})
 
 // Methods
 const refreshAnalytics = async () => {
@@ -209,35 +163,6 @@ const handleRejectUser = async (userId) => {
     console.error('Failed to reject user:', result.error)
     // Could add toast notification here
   }
-}
-
-const handleApprovePost = async (postId) => {
-  console.log('Dashboard Debug: Approving post', postId)
-  const result = await approvePost(postId)
-  if (!result.success) {
-    console.error('Failed to approve post:', result.error)
-  }
-}
-
-const handleRejectPost = async (postId) => {
-  console.log('Dashboard Debug: Rejecting post', postId)
-  const result = await rejectPost(postId)
-  if (!result.success) {
-    console.error('Failed to reject post:', result.error)
-  }
-}
-
-const handleDeletePost = async (postId) => {
-  console.log('Dashboard Debug: Deleting post', postId)
-  const result = await deletePost(postId)
-  if (!result.success) {
-    console.error('Failed to delete post:', result.error)
-  }
-}
-
-const handleViewPost = (post) => {
-  console.log('Dashboard Debug: Viewing post', post.id)
-  // Could navigate to post detail view
 }
 
 // Lifecycle

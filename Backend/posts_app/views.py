@@ -82,10 +82,12 @@ class PostFeedView(APIView):
             Prefetch('comments', queryset=Comment.objects.select_related('user').order_by('-created_at'))
         )
         
-        # All posts are now auto-approved, so no approval filtering needed
-        # Just apply visibility filters based on user type
+        # Apply visibility filters based on user type
+        # Admins (type 1 & 2) see ALL posts regardless of status or visibility
+        # Alumni (type 3) only see published posts and exclude admin-only visibility
         if user.user_type == 3:  # Alumni
-            queryset = queryset.exclude(visibility='admin_only')
+            queryset = queryset.filter(status='published').exclude(visibility='admin_only')
+        # For admins, no filtering - they see everything
         
         # Apply category filter
         if category and category != 'all':

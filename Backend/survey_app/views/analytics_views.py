@@ -119,6 +119,7 @@ class CategoryAnalyticsView(APIView):
         # Get filter parameters
         programs = request.query_params.get('programs')
         graduation_years = request.query_params.get('graduation_years')
+        response_years = request.query_params.get('response_years')  # NEW: Filter by response year
         
         # Build cache key with filters
         cache_key = f'category_analytics_{category_id}'
@@ -126,6 +127,8 @@ class CategoryAnalyticsView(APIView):
             cache_key += f'_prog_{programs}'
         if graduation_years:
             cache_key += f'_years_{graduation_years}'
+        if response_years:
+            cache_key += f'_resp_{response_years}'
         
         cached_data = cache.get(cache_key)
         if cached_data:
@@ -160,6 +163,15 @@ class CategoryAnalyticsView(APIView):
                 if year_list:
                     responses = responses.filter(user__year_graduated__in=year_list)
                     total_alumni_queryset = total_alumni_queryset.filter(year_graduated__in=year_list)
+            except (ValueError, TypeError):
+                pass
+        
+        # NEW: Filter by response year (year the survey was answered)
+        if response_years:
+            try:
+                response_year_list = [int(y.strip()) for y in response_years.split(',') if y.strip()]
+                if response_year_list:
+                    responses = responses.filter(submitted_at__year__in=response_year_list)
             except (ValueError, TypeError):
                 pass
         
@@ -488,9 +500,25 @@ class AnalyticsFilterOptionsView(APIView):
             years = User.objects.filter(user_type=3, year_graduated__isnull=False).values_list('year_graduated', flat=True).distinct().order_by('-year_graduated')
             year_options = [{'value': y, 'label': str(y), 'count': User.objects.filter(user_type=3, year_graduated=y).count()} for y in years]
             
+            # NEW: Get distinct response years from survey responses
+            from django.db.models.functions import ExtractYear
+            response_years_qs = SurveyResponse.objects.annotate(
+                response_year=ExtractYear('submitted_at')
+            ).values('response_year').distinct().order_by('-response_year')
+            
+            response_year_options = [
+                {
+                    'value': item['response_year'],
+                    'label': str(item['response_year']),
+                    'count': SurveyResponse.objects.filter(submitted_at__year=item['response_year']).values('user').distinct().count()
+                }
+                for item in response_years_qs if item['response_year']
+            ]
+            
             return Response({
                 'programs': program_options,
                 'graduationYears': year_options,
+                'responseYears': response_year_options,  # NEW: Response years
                 'employmentStatuses': [],
                 'locations': [],
                 'genders': [],

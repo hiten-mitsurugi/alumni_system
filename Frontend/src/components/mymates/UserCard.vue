@@ -58,7 +58,7 @@
         :class="[
           'w-full px-2 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50',
           singleAction.primary 
-            ? 'bg-green-600 text-white hover:bg-green-700' 
+            ? 'bg-orange-600 text-white hover:bg-orange-700' 
             : (themeStore.isDarkMode 
               ? 'border border-gray-600 text-gray-300 hover:bg-gray-700' 
               : 'border border-gray-300 text-gray-700 hover:bg-gray-50')

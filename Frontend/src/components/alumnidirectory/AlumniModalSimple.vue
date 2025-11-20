@@ -350,7 +350,7 @@ watch(() => props.show, (newValue) => {
           <button
             type="submit"
             :disabled="loading"
-            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center space-x-2 font-bold"
+            class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 flex items-center space-x-2 font-bold"
           >
             <div v-if="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             <span>{{ loading ? 'Saving...' : (isEditMode ? 'Update Alumni' : 'Create Alumni') }}</span>

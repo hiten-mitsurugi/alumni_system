@@ -61,6 +61,9 @@ class SurveyService {
     if (filters.graduation_years && filters.graduation_years.length > 0) {
       params.graduation_years = filters.graduation_years.join(',')
     }
+    if (filters.response_years && filters.response_years.length > 0) {
+      params.response_years = filters.response_years.join(',')
+    }
     
     return api.get('/survey/admin/analytics/category/', { params })
   }
@@ -85,6 +88,9 @@ class SurveyService {
     if (filters.graduation_years && filters.graduation_years.length > 0) {
       requestData.graduation_years = filters.graduation_years
     }
+    if (filters.response_years && filters.response_years.length > 0) {
+      requestData.response_years = filters.response_years
+    }
     
     return api.post('/survey/admin/analytics/form/pdf/', requestData, {
       responseType: 'blob'
@@ -104,6 +110,7 @@ class SurveyService {
       date_to = null,
       programs = [],
       graduation_years = [],
+      response_years = [],  // NEW: Response years filter
       include_profile_fields = [
         'first_name', 'last_name', 'email', 'program', 
         'year_graduated', 'student_id', 'birth_date', 'user_type'
@@ -118,6 +125,7 @@ class SurveyService {
       date_to,
       programs,
       graduation_years,
+      response_years,  // NEW: Include response years
       include_profile_fields
     }, {
       responseType: format === 'xlsx' ? 'blob' : 'json'

@@ -9,18 +9,59 @@ class AdminAnalyticsView(APIView):
     
     def get(self, request):
         try:
+            from datetime import timedelta
+            from posts_app.models import Post
+            
             # Get basic user statistics
             total_users = CustomUser.objects.count()
             approved_alumni = CustomUser.objects.filter(user_type=3, is_approved=True).count()
             pending_alumni = CustomUser.objects.filter(user_type=3, is_approved=False).count()
             blocked_users = CustomUser.objects.filter(is_active=False).count()
             
-            # Get user registration trends (last 30 days)
-            from datetime import timedelta
-            thirty_days_ago = timezone.now() - timedelta(days=30)
+            # Active users should match the same scope as total users for percentage calculation
+            active_users = CustomUser.objects.filter(is_active=True).count()
+            
+            # Get user registration trends (last 7 days for "this week")
+            seven_days_ago = timezone.now() - timedelta(days=7)
             recent_registrations = CustomUser.objects.filter(
-                date_joined__gte=thirty_days_ago
+                user_type=3, 
+                is_approved=True,
+                date_joined__gte=seven_days_ago
             ).count()
+            
+            # Get online users (active in last 15 minutes)
+            fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
+            online_users = CustomUser.objects.filter(
+                last_login__gte=fifteen_minutes_ago
+            ).count()
+            
+            # Get posts statistics
+            total_posts = Post.objects.count()
+            pending_posts = Post.objects.filter(status='pending').count()
+            approved_posts = Post.objects.filter(status='approved').count()
+            declined_posts = Post.objects.filter(status='declined').count()
+            
+            # Get weekly posts (last 7 days)
+            weekly_posts = Post.objects.filter(
+                created_at__gte=seven_days_ago
+            ).count()
+            
+            # Get reported posts count (unresolved reports)
+            try:
+                from posts_app.models import PostReport
+                reported_posts = PostReport.objects.filter(is_resolved=False).count()
+            except:
+                reported_posts = 0
+            
+            # Calculate approval rate
+            total_reviewed = approved_posts + declined_posts
+            approval_rate = round((approved_posts / total_reviewed * 100), 1) if total_reviewed > 0 else 0
+            
+            # Calculate user engagement (online/active ratio)
+            user_engagement = round((online_users / active_users * 100), 1) if active_users > 0 else 0
+            
+            # Calculate pending actions
+            pending_actions = pending_alumni + reported_posts
             
             # Get work history statistics
             total_work_histories = WorkHistory.objects.count()
@@ -60,13 +101,30 @@ class AdminAnalyticsView(APIView):
                 if count > 0:
                     year_stats[str(year)] = count
             
+            # Return data in the format frontend expects
             analytics_data = {
-                'user_statistics': {
+                'users': {
+                    'total': total_users,  # Total all users (for activity rate calculation)
+                    'active': active_users,  # Active users
+                    'pending_approvals': pending_alumni,  # Pending alumni approvals
+                    'recent_registrations': recent_registrations,  # New approved alumni this week
+                    'online_now': online_users  # Currently online users
+                },
+                'posts': {
+                    'total': total_posts,
+                    'pending': pending_posts,
+                    'approved': approved_posts,
+                    'declined': declined_posts,
+                    'reported': reported_posts,
+                    'weekly_posts': weekly_posts,
+                    'approval_rate': approval_rate
+                },
+                'summary': {
+                    'user_engagement': user_engagement,
+                    'pending_actions': pending_actions,
                     'total_users': total_users,
-                    'approved_alumni': approved_alumni,
-                    'pending_alumni': pending_alumni,
-                    'blocked_users': blocked_users,
-                    'recent_registrations': recent_registrations
+                    'approved_alumni': approved_alumni,  # Add this for reference
+                    'total_content': total_posts
                 },
                 'content_statistics': {
                     'total_work_histories': total_work_histories,
@@ -77,7 +135,7 @@ class AdminAnalyticsView(APIView):
                     'gender_distribution': gender_stats,
                     'graduation_years': year_stats
                 },
-                'generated_at': timezone.now().isoformat()
+                'last_updated': timezone.now().isoformat()
             }
             
             return Response(analytics_data)

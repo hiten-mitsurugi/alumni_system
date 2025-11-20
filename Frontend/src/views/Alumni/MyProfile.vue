@@ -14,7 +14,6 @@ import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
 
 import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
 import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnectionsWidget.vue'
-import RecentActivityWidget from '@/components/profile/RecentActivityWidget.vue'
 import ContactInfoWidget from '@/components/profile/ContactInfoWidget.vue'
 import EditProfileModal from '@/components/profile/EditProfileModal.vue'
 import CoverPhotoModal from '@/components/profile/CoverPhotoModal.vue'
@@ -1090,12 +1089,6 @@ watch(() => route.params.userIdentifier, () => {
         <div class="space-y-6">
           <!-- People You May Know -->
           <SuggestedConnectionsWidget @connect="handleConnect" />
-
-          <!-- Recent Activity (if own profile) -->
-          <RecentActivityWidget v-if="isOwnProfile" />
-
-
-
         </div>
       </div>
     </div>

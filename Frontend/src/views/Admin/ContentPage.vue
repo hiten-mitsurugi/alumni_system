@@ -1,19 +1,17 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useThemeStore } from '@/stores/theme';
 import axios from 'axios';
 
 // Import posting components
 import PostCreateForm from '@/components/posting/PostCreateForm.vue';
-import CategoryTabs from '@/components/posting/CategoryTabs.vue';
 import PostCard from '@/components/posting/PostCard.vue';
 import PostModal from '@/components/posting/PostModal.vue';
 import NotificationToast from '@/components/posting/NotificationToast.vue';
 
 const router = useRouter();
-const route = useRoute();
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
 
@@ -21,10 +19,11 @@ const themeStore = useThemeStore();
 const posts = ref([]);
 const searchQuery = ref('');
 const activeTab = ref('all');
+const selectedCategory = ref('all');
 const selectedReaction = ref({});
 const comments = ref({});
-const showComments = ref({});
 const notifications = ref([]);
+const isLoading = ref(false);
 
 // Modal state
 const showModal = ref(false);
@@ -156,8 +155,9 @@ const handleWebSocketMessage = (data) => {
 // API Functions
 const fetchPosts = async () => {
   try {
+    isLoading.value = true;
     console.log('🔄 Fetching posts from API...');
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/`, {
+    const response = await axios.get(`${BASE_URL}/api/posts/`, {
       headers: { Authorization: `Bearer ${authStore.token}` },
       params: {
         category: activeTab.value !== 'all' ? activeTab.value : null,
@@ -198,7 +198,9 @@ const fetchPosts = async () => {
   } catch (error) {
     console.error('❌ Failed to fetch posts:', error);
     console.error('Response:', error.response?.data);
-    showNotification('Failed to load posts. Please try again.', 'error');
+    addNotification('Failed to load posts. Please try again.', 'error');
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -235,7 +237,7 @@ const createPost = async (postData) => {
     });
     
     console.log('🚀 Sending post data...');
-    const response = await axios.post(`${BASE_URL}/api/posts/posts/create/`, formData, {
+    const response = await axios.post(`${BASE_URL}/api/posts/create/`, formData, {
       headers: { 
         Authorization: `Bearer ${authStore.token}`,
         'Content-Type': 'multipart/form-data'
@@ -269,7 +271,7 @@ const reactToPost = async (postId, reactionType) => {
     if (currentReaction === reactionType) {
       // Remove reaction
       console.log('🗑️ Removing reaction...');
-      await axios.delete(`${BASE_URL}/api/posts/posts/${postId}/react/`, {
+      await axios.delete(`${BASE_URL}/api/posts/${postId}/react/`, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
       selectedReaction.value[postId] = null;
@@ -279,7 +281,7 @@ const reactToPost = async (postId, reactionType) => {
       const requestData = { reaction_type: reactionType };
       console.log('📤 Sending request data:', requestData);
       
-      await axios.post(`${BASE_URL}/api/posts/posts/${postId}/react/`, requestData, {
+      await axios.post(`${BASE_URL}/api/posts/${postId}/react/`, requestData, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
       selectedReaction.value[postId] = reactionType;
@@ -290,7 +292,7 @@ const reactToPost = async (postId, reactionType) => {
     if (post) {
       // Fetch fresh post data to ensure reactions_summary is updated
       try {
-        const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/`, {
+        const response = await axios.get(`${BASE_URL}/api/posts/${postId}/`, {
           headers: { Authorization: `Bearer ${authStore.token}` }
         });
         
@@ -322,7 +324,7 @@ const reactToPost = async (postId, reactionType) => {
 const addComment = async (postId, content) => {
   try {
     console.log('🔄 Adding comment via API...', { postId, content });
-    const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/comment/`, {
+    const response = await axios.post(`${BASE_URL}/api/posts/${postId}/comment/`, {
       content: content
     }, {
       headers: { Authorization: `Bearer ${authStore.token}` }
@@ -352,7 +354,7 @@ const addComment = async (postId, content) => {
 const fetchCommentsForPost = async (postId) => {
   try {
     console.log(`Fetching all comments for post ${postId}`);
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/comments/`, {
+    const response = await axios.get(`${BASE_URL}/api/posts/${postId}/comments/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
     
@@ -377,7 +379,7 @@ const sharePost = async (postId) => {
   if (shareText === null) return; // User cancelled
   
   try {
-    await axios.post(`${BASE_URL}/api/posts/posts/${postId}/share/`, {
+    await axios.post(`${BASE_URL}/api/posts/${postId}/share/`, {
       shared_text: shareText
     }, {
       headers: { Authorization: `Bearer ${authStore.token}` }
@@ -409,7 +411,7 @@ const handleReactionUpdated = async (postId) => {
   console.log('🔄 Handling reaction update for post:', postId);
   try {
     // Refresh the specific post to get updated reaction data
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/${postId}/`, {
+    const response = await axios.get(`${BASE_URL}/api/posts/${postId}/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
     
@@ -483,7 +485,7 @@ const handlePostPinned = async (data) => {
   
   try {
     // Refresh the specific post to get updated pin status
-    const response = await axios.get(`${BASE_URL}/api/posts/posts/${data.postId}/`, {
+    const response = await axios.get(`${BASE_URL}/api/posts/${data.postId}/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
     
@@ -588,7 +590,7 @@ const updatePostReaction = async (data) => {
     
     // Fetch fresh data from backend to get updated reactions_summary
     try {
-      const response = await axios.get(`${BASE_URL}/api/posts/posts/${data.post_id}/`, {
+      const response = await axios.get(`${BASE_URL}/api/posts/${data.post_id}/`, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       });
       
@@ -735,60 +737,47 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen transition-colors duration-200" :class="themeStore.isAdminDark() ? 'bg-gray-900' : 'bg-gray-50'">
-    <!-- Header -->
-    <div :class="[
-      'shadow-sm border-b fixed top-0 left-0 right-0 z-20 ml-[280px]',
-      themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-    ]">
-      <div class="w-full px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 :class="['text-2xl font-bold mb-1', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">Alumni Community Hub</h1>
-            <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">Connect, Share, and Stay Updated with Your Alumni Network</p>
-          </div>
-          
-          <!-- Search -->
-          <div class="relative">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search posts, announcements, events..."
-              :class="[
-                'pl-10 pr-4 py-2 w-80 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
-                themeStore.isAdminDark() 
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-              ]"
-            />
-            <svg :class="['absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+  <div :class="['min-h-screen transition-colors duration-200', themeStore.isAdminDark() ? 'bg-gray-900' : 'bg-gray-50']">
+    <!-- Main Container with centered max-width -->
+    <div class="max-w-4xl mx-auto px-4 py-6">
+      <!-- Category Tabs -->
+      <div :class="[
+        'mb-6 overflow-hidden border rounded-lg shadow-sm backdrop-blur-sm',
+        themeStore.isAdminDark() ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200'
+      ]">
+        <div :class="['flex w-full overflow-x-auto', themeStore.isAdminDark() ? 'border-b border-gray-700/50' : 'border-b border-gray-200/50']">
+          <button
+            v-for="category in categories"
+            :key="category.value"
+            @click="selectedCategory = category.value; activeTab = category.value"
+            :class="[
+              'flex items-center justify-center px-4 py-3 text-sm font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex-shrink-0',
+              selectedCategory === category.value
+                ? themeStore.isAdminDark()
+                  ? 'text-orange-400 border-orange-400 bg-orange-400/10'
+                  : 'text-orange-600 border-orange-500 bg-orange-50/80'
+                : themeStore.isAdminDark()
+                  ? 'text-gray-400 border-transparent hover:text-orange-400 hover:border-orange-400/50 hover:bg-orange-400/5'
+                  : 'text-gray-600 border-transparent hover:text-orange-600 hover:border-orange-500/50 hover:bg-orange-50/50'
+            ]"
+          >
+            <span class="mr-2">{{ category.icon }}</span>
+            {{ category.label }}
+          </button>
         </div>
-        
-        <!-- Category Tabs -->
-        <CategoryTabs 
+      </div>
+
+      <!-- Create Post Form -->
+      <div class="mb-6">
+        <PostCreateForm 
+          :user-profile-picture="authStore.user.profile_picture"
           :categories="categories"
-          :active-tab="activeTab"
-          @category-change="activeTab = $event"
+          @create-post="createPost"
         />
       </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="max-w-6xl mx-auto px-6 py-8 pt-32">
-      <!-- Create Post Section -->
-      <PostCreateForm 
-        :user-profile-picture="authStore.user.profile_picture"
-        :categories="categories"
-        @create-post="createPost"
-      />
-
-
 
       <!-- Posts Feed -->
-      <div class="space-y-8">
+      <div class="space-y-6">
         <PostCard
           v-for="post in filteredPosts"
           :key="post.id"
@@ -808,30 +797,33 @@ onUnmounted(() => {
           @reported="handlePostReported"
         />
       </div>
+
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex justify-center py-12">
+        <div :class="['flex items-center space-x-2', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']">
+          <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Loading posts...</span>
+        </div>
+      </div>
       
       <!-- Empty State -->
-      <div v-if="filteredPosts.length === 0" class="text-center py-12">
+      <div v-if="filteredPosts.length === 0 && !isLoading" class="py-12 text-center">
         <div :class="[
-          'rounded-lg shadow-sm border p-8 max-w-lg mx-auto',
+          'p-8 border shadow-sm rounded-xl max-w-lg mx-auto',
           themeStore.isAdminDark() ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         ]">
-          <svg :class="['mx-auto h-12 w-12 mb-4', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg :class="['w-12 h-12 mx-auto mb-4', themeStore.isAdminDark() ? 'text-gray-500' : 'text-gray-400']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
           </svg>
-          <h3 :class="['text-lg font-semibold mb-2', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">No Posts Found</h3>
+          <h3 :class="['mb-2 text-lg font-semibold', themeStore.isAdminDark() ? 'text-gray-200' : 'text-gray-800']">
+            No Posts Found
+          </h3>
           <p :class="['text-sm', themeStore.isAdminDark() ? 'text-gray-400' : 'text-gray-600']">
-            {{ searchQuery ? 'Try adjusting your search terms or exploring different categories.' : 'Share the first post with your alumni community and get the conversation started!' }}
+            {{ searchQuery ? 'Try adjusting your search terms or exploring different categories.' : 'Share the first post with your alumni community!' }}
           </p>
-          <div v-if="!searchQuery" class="mt-4">
-            <button
-              :class="['inline-flex items-center px-4 py-2 text-white font-medium text-sm rounded-lg transition-colors duration-200', themeStore.isAdminDark() ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-600 hover:bg-orange-700']"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-              Create Your First Post
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -883,67 +875,5 @@ onUnmounted(() => {
 
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}
-
-/* Smooth transitions for all interactive elements */
-.transition-all {
-  transition: all 0.3s ease;
-}
-
-/* Enhanced hover effects */
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-/* Focus states for accessibility */
-input:focus, textarea:focus, select:focus, button:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* Animation for notifications */
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.fixed.top-6.right-6 > div {
-  animation: slideInRight 0.3s ease-out;
-}
-
-/* Reaction picker enhanced styling */
-.group:hover .group-hover\:opacity-100 {
-  opacity: 1;
-  transform: translateY(-5px);
-}
-
-/* Enhanced card shadows */
-.shadow-xl {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.shadow-2xl {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* Gradient text for enhanced visual appeal */
-.bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--tw-gradient-stops));
-}
-
-/* Enhanced spacing for better readability */
-.leading-relaxed {
-  line-height: 1.75;
-}
-
-/* Reaction picker positioning */
-.group:hover .group-hover\:opacity-100 {
-  opacity: 1;
 }
 </style>
