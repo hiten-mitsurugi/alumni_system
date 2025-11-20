@@ -51,34 +51,72 @@ class ApproveUserView(APIView):
             try:
                 from auth_app.tasks import send_approval_email_task, clear_approval_caches_task
                 
-                # Send email in background
-                send_approval_email_task.delay(
-                    user_data['id'],
-                    user_data['email'],
-                    user_data['first_name'],
-                    user_data['last_name'],
-                    user_data['username']
-                )
+                # Try to send email in background (Celery)
+                try:
+                    send_approval_email_task.delay(
+                        user_data['id'],
+                        user_data['email'],
+                        user_data['first_name'],
+                        user_data['last_name'],
+                        user_data['username']
+                    )
+                    email_status = 'queued'
+                except Exception as celery_error:
+                    logger.warning(f"Celery not available, sending email synchronously: {celery_error}")
+                    # Fallback: Send email synchronously
+                    try:
+                        from auth_app.email_templates.approval_email import get_approval_email_template
+                        from django.core.mail import EmailMultiAlternatives
+                        
+                        class UserData:
+                            def __init__(self, first_name, last_name, email, username):
+                                self.first_name = first_name
+                                self.last_name = last_name
+                                self.email = email
+                                self.username = username
+                        
+                        user_obj = UserData(user_data['first_name'], user_data['last_name'], user_data['email'], user_data['username'])
+                        subject, html_content, text_content = get_approval_email_template(user_obj)
+                        
+                        email = EmailMultiAlternatives(
+                            subject=subject,
+                            body=text_content,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[user_data['email']],
+                        )
+                        email.attach_alternative(html_content, "text/html")
+                        email.send(fail_silently=False)
+                        email_status = 'sent'
+                        logger.info(f"Approval email sent synchronously to {user_data['email']}")
+                    except Exception as email_error:
+                        logger.error(f"Failed to send approval email: {email_error}")
+                        email_status = 'failed'
                 
-                # Clear additional caches in background
-                clear_approval_caches_task.delay(
-                    user_data['id'],
-                    user_data['year_graduated'],
-                    user_data['program'],
-                    user_data['first_name'],
-                    user_data['last_name']
-                )
+                # Clear additional caches in background (or synchronously if Celery unavailable)
+                try:
+                    clear_approval_caches_task.delay(
+                        user_data['id'],
+                        user_data['year_graduated'],
+                        user_data['program'],
+                        user_data['first_name'],
+                        user_data['last_name']
+                    )
+                except Exception:
+                    # Fallback: Clear caches synchronously
+                    cache.delete('approved_alumni_list')
+                    cache.delete('pending_alumni_list')
+                    cache.delete(f'user_detail_{user_data["id"]}')
                 
-                logger.info(f"User {user_id} approved - background tasks queued")
+                logger.info(f"User {user_id} approved - email status: {email_status}")
                 
             except Exception as task_error:
-                logger.error(f"Failed to queue background tasks: {str(task_error)}")
-                # Don't fail the request - user is still approved
+                logger.error(f"Failed to process background tasks: {str(task_error)}")
+                email_status = 'failed'
             
             # Return immediately (fast response)
             return Response({
                 'message': 'User approved successfully',
-                'email_queued': True,
+                'email_status': email_status,
                 'user': {
                     'id': user_data['id'],
                     'name': f"{user_data['first_name']} {user_data['last_name']}",
