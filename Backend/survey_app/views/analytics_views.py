@@ -238,9 +238,9 @@ class CategoryAnalyticsView(APIView):
                 distribution = {'Yes': 0, 'No': 0}
                 for response in question_responses:
                     value = extract_value(response.response_data)
-                    if value in ['Yes', 'yes', True, 'true', '1', 1]:
+                    if value in ['Yes', 'yes', True, 'True', 'true', '1', 1]:
                         distribution['Yes'] += 1
-                    elif value in ['No', 'no', False, 'false', '0', 0]:
+                    elif value in ['No', 'no', False, 'False', 'false', '0', 0]:
                         distribution['No'] += 1
                 analytics_item['distribution'] = distribution
                 

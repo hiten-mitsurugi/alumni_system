@@ -15,7 +15,8 @@ def extract_value(response_data):
     Returns:
         The extracted value or None
     """
-    if not response_data:
+    # Handle boolean False explicitly (it's a valid value, not empty)
+    if response_data is None:
         return None
     
     if isinstance(response_data, dict):
@@ -38,7 +39,8 @@ def extract_value_for_pdf(response_data):
     Returns:
         The extracted value or None
     """
-    if not response_data:
+    # Handle boolean False explicitly (it's a valid value, not empty)
+    if response_data is None:
         return None
         
     if isinstance(response_data, dict):

@@ -32,7 +32,7 @@
         </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Program Filter -->
         <div class="relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -110,45 +110,6 @@
           </div>
           <p class="text-xs text-gray-500 mt-1">Alumni batch year</p>
         </div>
-
-        <!-- Response Year Filter (NEW) -->
-        <div class="relative">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Filter by Response Year
-          </label>
-          <div class="relative">
-            <button
-              @click="toggleResponseYearDropdown"
-              type="button"
-              class="w-full px-4 py-2 text-left border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white flex items-center justify-between"
-            >
-              <span class="text-gray-700">
-                {{ filters.selectedResponseYears.length > 0 ? `${filters.selectedResponseYears.length} selected` : 'Select years' }}
-              </span>
-              <ChevronDown class="w-4 h-4 text-gray-500" />
-            </button>
-            
-            <div
-              v-if="showResponseYearDropdown"
-              class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
-            >
-              <label
-                v-for="year in availableResponseYears"
-                :key="year.value"
-                class="flex items-center px-4 py-2 hover:bg-orange-50 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  :value="year.value"
-                  v-model="filters.selectedResponseYears"
-                  class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                />
-                <span class="ml-3 text-sm text-gray-700">{{ year.label }} ({{ year.count }} respondents)</span>
-              </label>
-            </div>
-          </div>
-          <p class="text-xs text-gray-500 mt-1">Year survey was answered</p>
-        </div>
       </div>
 
       <div class="mt-4 flex items-center justify-between">
@@ -158,9 +119,6 @@
           </span>
           <span v-if="filters.selectedYears.length > 0">
             · {{ filters.selectedYears.length }} graduation year(s) selected
-          </span>
-          <span v-if="filters.selectedResponseYears.length > 0">
-            · {{ filters.selectedResponseYears.length }} response year(s) selected
           </span>
           <span v-if="!hasActiveFilters" class="text-gray-400">
             No filters applied - showing all responses
@@ -246,24 +204,19 @@ const questionAnalytics = ref([])
 const selectedSectionId = ref(null)
 const availablePrograms = ref([])
 const availableYears = ref([])
-const availableResponseYears = ref([])  // NEW: Response years
-
 // Dropdown visibility state
 const showProgramDropdown = ref(false)
 const showYearDropdown = ref(false)
-const showResponseYearDropdown = ref(false)  // NEW: Response year dropdown
 
 const filters = ref({
   selectedPrograms: [],
-  selectedYears: [],
-  selectedResponseYears: []  // NEW: Response year filter
+  selectedYears: []
 })
 
 // Computed
 const hasActiveFilters = computed(() => {
   return filters.value.selectedPrograms.length > 0 || 
-         filters.value.selectedYears.length > 0 ||
-         filters.value.selectedResponseYears.length > 0  // NEW: Include response years
+         filters.value.selectedYears.length > 0
 })
 
 const stats = computed(() => {
@@ -326,14 +279,10 @@ const loadFilterOptions = async () => {
     
     // Use actual graduation years from database
     availableYears.value = result.data.graduationYears || []
-    
-    // NEW: Load response years from database
-    availableResponseYears.value = result.data.responseYears || []
   } catch (error) {
     console.error('Failed to load filter options:', error)
     // Keep standardized programs even if API fails
     availableYears.value = []
-    availableResponseYears.value = []
   }
 }
 
@@ -351,8 +300,7 @@ const applyFilters = async () => {
 
     const filterParams = {
       programs: filters.value.selectedPrograms,
-      graduation_years: filters.value.selectedYears,
-      response_years: filters.value.selectedResponseYears
+      graduation_years: filters.value.selectedYears
     }
 
     // Load analytics for each section with filters
@@ -385,9 +333,6 @@ const applyFilters = async () => {
     if (filterParams.graduation_years.length > 0) {
       responseFilters.graduation_years = filterParams.graduation_years.join(',')
     }
-    if (filterParams.response_years.length > 0) {
-      responseFilters.response_years = filterParams.response_years.join(',')
-    }
 
     const responsesResult = await surveyService.getResponses(responseFilters)
     responses.value = responsesResult.data || []
@@ -406,7 +351,6 @@ const applyFilters = async () => {
 const clearFilters = () => {
   filters.value.selectedPrograms = []
   filters.value.selectedYears = []
-  filters.value.selectedResponseYears = []  // NEW: Clear response years
   applyFilters()
 }
 
@@ -421,15 +365,6 @@ const toggleYearDropdown = () => {
   showYearDropdown.value = !showYearDropdown.value
   if (showYearDropdown.value) {
     showProgramDropdown.value = false
-    showResponseYearDropdown.value = false  // NEW: Close response year dropdown
-  }
-}
-
-const toggleResponseYearDropdown = () => {
-  showResponseYearDropdown.value = !showResponseYearDropdown.value
-  if (showResponseYearDropdown.value) {
-    showProgramDropdown.value = false
-    showYearDropdown.value = false
   }
 }
 
@@ -439,7 +374,6 @@ const handleClickOutside = (event) => {
   if (!isDropdownClick) {
     showProgramDropdown.value = false
     showYearDropdown.value = false
-    showResponseYearDropdown.value = false  // NEW: Close response year dropdown
   }
 }
 
@@ -468,8 +402,7 @@ const exportFilteredPDF = async () => {
     
     const filterParams = {
       programs: filters.value.selectedPrograms,
-      graduation_years: filters.value.selectedYears,
-      response_years: filters.value.selectedResponseYears  // NEW: Response years
+      graduation_years: filters.value.selectedYears
     }
     
     const response = await surveyService.exportFormPDF(categoryIds, filterParams)
@@ -514,8 +447,7 @@ const exportFilteredExcel = async () => {
       format: 'xlsx',
       category_ids: categoryIds,
       programs: filters.value.selectedPrograms,
-      graduation_years: filters.value.selectedYears,
-      response_years: filters.value.selectedResponseYears  // NEW: Response years
+      graduation_years: filters.value.selectedYears
     })
     
     const blob = new Blob([result.data], { 
