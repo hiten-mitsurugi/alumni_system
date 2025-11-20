@@ -114,7 +114,7 @@ html, body {
   }
 
   /* Ensure proper mobile centering without shifts */
-  .block.md\\:hidden {
+  .block.md\:hidden {
     width: 100vw !important;
     max-width: 100vw !important;
     margin: 0 !important;

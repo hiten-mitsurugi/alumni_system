@@ -10,38 +10,38 @@
         :placeholder="placeholder"
         :class="[
           'w-full p-3 border rounded-lg resize-none transition-colors duration-200',
-          themeStore.isDark 
-            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+          themeStore.isDark
+            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
         ]"
         :rows="rows"
       ></textarea>
-      
+
       <!-- Mention dropdown -->
       <div
         v-if="showMentionDropdown"
         ref="mentionDropdown"
         :class="[
           'absolute z-50 w-80 max-h-60 overflow-y-auto shadow-lg rounded-lg border',
-          themeStore.isDark 
-            ? 'bg-gray-800 border-gray-600' 
+          themeStore.isDark
+            ? 'bg-gray-800 border-gray-600'
             : 'bg-white border-gray-200'
         ]"
         :style="dropdownStyle"
       >
         <!-- Loading state -->
         <div v-if="loading" class="p-4 text-center">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+          <div class="w-6 h-6 mx-auto border-b-2 border-blue-500 rounded-full animate-spin"></div>
           <p class="mt-2 text-sm text-gray-500">Searching users...</p>
         </div>
-        
+
         <!-- No results -->
         <div v-else-if="mentionUsers.length === 0 && currentMentionQuery.length >= 2" class="p-4 text-center">
           <p :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'">
             No users found for "{{ currentMentionQuery }}"
           </p>
         </div>
-        
+
         <!-- User list -->
         <div v-else>
           <div
@@ -56,12 +56,12 @@
             @click="selectMention(user)"
           >
             <!-- User avatar -->
-            <div class="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden bg-gray-300 mr-3">
+            <div class="flex-shrink-0 w-10 h-10 mr-3 overflow-hidden bg-gray-300 rounded-full">
               <img
                 v-if="user.profile_picture"
                 :src="user.profile_picture"
                 :alt="user.full_name"
-                class="w-full h-full object-cover"
+                class="object-cover w-full h-full"
               />
               <div
                 v-else
@@ -73,7 +73,7 @@
                 {{ user.first_name?.[0] }}{{ user.last_name?.[0] }}
               </div>
             </div>
-            
+
             <!-- User info -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center">
@@ -162,16 +162,16 @@ watch(internalText, (newValue) => {
 const handleInput = (event) => {
   const text = event.target.value
   const cursorPosition = event.target.selectionStart
-  
+
   // Check if we're typing after an @ symbol
   const beforeCursor = text.substring(0, cursorPosition)
   const mentionMatch = beforeCursor.match(/@(\w*)$/)
-  
+
   if (mentionMatch) {
     const mentionQuery = mentionMatch[1]
     mentionStartPosition.value = beforeCursor.lastIndexOf('@')
     currentMentionQuery.value = mentionQuery
-    
+
     if (mentionQuery.length >= 0) {
       showMentionDropdown.value = true
       selectedMentionIndex.value = 0
@@ -193,12 +193,12 @@ const handleKeydown = (event) => {
           mentionUsers.value.length - 1
         )
         break
-        
+
       case 'ArrowUp':
         event.preventDefault()
         selectedMentionIndex.value = Math.max(selectedMentionIndex.value - 1, 0)
         break
-        
+
       case 'Enter':
       case 'Tab':
         if (mentionUsers.value.length > 0) {
@@ -206,7 +206,7 @@ const handleKeydown = (event) => {
           selectMention(mentionUsers.value[selectedMentionIndex.value])
         }
         break
-        
+
       case 'Escape':
         event.preventDefault()
         hideMentionDropdown()
@@ -222,20 +222,20 @@ const searchUsers = async (query) => {
   if (query.length < 2 && query.length > 0) {
     return
   }
-  
+
   try {
     loading.value = true
-    
+
     const response = await api.get('/auth/mention-search/', {
       params: {
         q: query,
         limit: 8
       }
     })
-    
+
     mentionUsers.value = response.data.users || []
     selectedMentionIndex.value = 0
-    
+
   } catch (error) {
     console.error('❌ Error searching users for mentions:', error)
     console.error('❌ Error details:', {
@@ -253,19 +253,19 @@ const searchUsers = async (query) => {
 const selectMention = (user) => {
   const beforeMention = internalText.value.substring(0, mentionStartPosition.value)
   const afterCursor = internalText.value.substring(textarea.value.selectionStart)
-  
+
   // Insert the mention using full name instead of username
   const mentionText = `@${user.full_name} `
   internalText.value = beforeMention + mentionText + afterCursor
-  
+
   // Position cursor after the mention
   const newCursorPosition = beforeMention.length + mentionText.length
-  
+
   nextTick(() => {
     textarea.value.focus()
     textarea.value.setSelectionRange(newCursorPosition, newCursorPosition)
   })
-  
+
   // Emit mention event with full user data
   emit('mention', {
     user,
@@ -276,7 +276,7 @@ const selectMention = (user) => {
       end: beforeMention.length + mentionText.length - 1
     }
   })
-  
+
   hideMentionDropdown()
 }
 
@@ -289,11 +289,11 @@ const hideMentionDropdown = () => {
 
 const positionDropdown = async () => {
   await nextTick()
-  
+
   if (!textarea.value || !mentionDropdown.value) return
-  
+
   const textMetrics = getTextMetrics()
-  
+
   dropdownStyle.value = {
     top: `${textMetrics.lineHeight + 5}px`,
     left: `${textMetrics.characterWidth}px`
@@ -304,7 +304,7 @@ const getTextMetrics = () => {
   // Simple approximation - in a real implementation, you might want more precise positioning
   const lineHeight = 24 // Approximate line height
   const characterWidth = mentionStartPosition.value * 8 // Approximate character width
-  
+
   return {
     lineHeight,
     characterWidth: Math.min(characterWidth, 200) // Don't go too far right

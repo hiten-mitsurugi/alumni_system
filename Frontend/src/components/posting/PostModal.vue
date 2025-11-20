@@ -1,26 +1,43 @@
 <template>
   <div
     v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm p-2 sm:p-4"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
     @click.self="closeModal"
   >
+    <!-- Mobile Layout -->
     <div
-      class="bg-white rounded-lg sm:rounded-2xl shadow-2xl w-full h-full sm:max-w-[70vw] sm:w-full sm:max-h-[95vh] overflow-hidden flex flex-col post-modal"
+      class="flex flex-col w-full overflow-hidden bg-white lg:hidden"
+      style="height: calc(100vh - 80px); max-height: calc(100vh - 80px);"
       @click.stop
     >
-      <!-- Mobile-only Media (above header) -->
+      <!-- Mobile Header -->
+      <div class="flex items-center justify-between flex-shrink-0 p-4 bg-white border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 truncate">
+          {{ post.user.full_name }}'s Post
+        </h3>
+        <button
+          @click="closeModal"
+          class="flex-shrink-0 p-2 transition-colors rounded-full hover:bg-gray-100"
+        >
+          <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Media Section -->
       <div
         v-if="hasMedia"
-        class="sm:hidden bg-gray-900 flex items-center justify-center min-h-0"
-        style="height: 40vh; min-height: 200px; max-height: 400px;"
+        class="flex items-center justify-center flex-shrink-0 bg-gray-900"
+        style="height: 35vh; min-height: 200px;"
       >
-        <div class="relative w-full h-full flex items-center justify-center p-2">
+        <div class="relative flex items-center justify-center w-full h-full p-2">
           <!-- Image Display -->
-          <div v-if="currentMediaType === 'image'" class="relative w-full h-full flex items-center justify-center">
+          <div v-if="currentMediaType === 'image'" class="relative flex items-center justify-center w-full h-full">
             <img
               :src="getMediaUrl(currentMediaUrl)"
               :alt="post.title"
-              class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
+              class="object-contain w-full h-full max-w-full max-h-full rounded"
               loading="lazy"
               @load="onImageLoad"
               @error="onImageError"
@@ -28,271 +45,383 @@
           </div>
 
           <!-- Video Display -->
-          <div v-else-if="currentMediaType === 'video'" class="relative w-full h-full flex items-center justify-center">
+          <div v-else-if="currentMediaType === 'video'" class="relative flex items-center justify-center w-full h-full">
             <video
               :src="getMediaUrl(currentMediaUrl)"
               controls
-              class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
+              class="object-contain w-full h-full max-w-full max-h-full rounded"
               @error="onVideoError"
             />
           </div>
 
-          <!-- Multiple Media Navigation -->
+          <!-- Navigation for multiple media -->
           <div v-if="mediaFiles.length > 1" class="absolute inset-0 flex items-center justify-between p-2 pointer-events-none">
             <button
               v-if="currentMediaIndex > 0"
               @click="previousMedia"
-              class="bg-black bg-opacity-50 text-white p-1.5 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
+              class="p-2 text-white transition-all bg-black bg-opacity-50 rounded-full pointer-events-auto hover:bg-opacity-75"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-
-            <!-- Spacer to push next button to the right -->
-            <div class="flex-1 pointer-events-none"></div>
-
+            <div class="flex-1"></div>
             <button
               v-if="currentMediaIndex < mediaFiles.length - 1"
               @click="nextMedia"
-              class="bg-black bg-opacity-50 text-white p-1.5 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
+              class="p-2 text-white transition-all bg-black bg-opacity-50 rounded-full pointer-events-auto hover:bg-opacity-75"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
 
           <!-- Media Counter -->
-          <div v-if="mediaFiles.length > 1" class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
+          <div v-if="mediaFiles.length > 1" class="absolute px-2 py-1 text-xs text-white bg-black bg-opacity-50 rounded-full bottom-2 right-2">
             {{ currentMediaIndex + 1 }} / {{ mediaFiles.length }}
           </div>
         </div>
       </div>
 
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-900 truncate">
-          {{ post.user.full_name }}'s Post
-        </h3>
-        <button
-          @click="closeModal"
-          class="p-2 hover:bg-orange-100 hover:text-orange-600 rounded-full transition-colors flex-shrink-0"
-        >
-          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-500 hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+      <!-- Mobile Content Area -->
+      <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <!-- Post Content -->
+        <div class="flex-shrink-0 p-4 bg-white border-b border-gray-200">
+          <PostHeader
+            :post="post"
+            :categories="categories"
+            :user-profile-picture="userProfilePicture"
+            :show-menu="false"
+          />
+          <h3 v-if="post.title" class="mt-3 mb-2 text-base font-semibold text-gray-900">
+            {{ post.title }}
+          </h3>
+          <p v-if="post.content" class="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+            {{ post.content }}
+          </p>
+        </div>
 
-      <!-- Modal Content -->
-      <div class="flex-1 overflow-visible flex flex-col sm:flex-row">
-        <!-- Desktop-only Left side - Media (if exists) -->
-        <div
-          v-if="hasMedia"
-          class="hidden sm:flex basis-2/3 bg-gray-900 items-center justify-center min-h-0"
-        >
-          <div class="relative w-full h-full flex items-center justify-center p-4">
-            <!-- Image Display -->
-            <div v-if="currentMediaType === 'image'" class="relative w-full h-full flex items-center justify-center">
-              <img
-                :src="getMediaUrl(currentMediaUrl)"
-                :alt="post.title"
-                class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
-                style="max-height: calc(100vh - 80px); max-width: calc(100vw - 40px);"
-                loading="lazy"
-                @load="onImageLoad"
-                @error="onImageError"
-              />
-            </div>
+        <!-- Engagement Summary -->
+        <div v-if="hasEngagement" class="flex-shrink-0 px-4 py-3 bg-white border-b border-gray-200">
+          <ReactionSummary
+            :reactions-summary="post.reactions_summary"
+            :post-id="post.id"
+            @open-reactions-modal="openReactionsModal"
+          />
+        </div>
 
-            <!-- Video Display -->
-            <div v-else-if="currentMediaType === 'video'" class="relative w-full h-full flex items-center justify-center">
-              <video
-                :src="getMediaUrl(currentMediaUrl)"
-                controls
-                class="w-full h-full object-contain rounded-lg max-w-full max-h-full"
-                style="max-height: calc(100vh - 80px); max-width: calc(100vw - 40px);"
-                @error="onVideoError"
-              />
-            </div>
+        <!-- Post Actions -->
+        <div class="flex-shrink-0 px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <PostActions
+            :post-id="post.id"
+            :selected-reaction="selectedReaction"
+            size="small"
+            @react-to-post="handleReaction"
+            @comment-clicked="() => {}"
+            @share-post="handleShare"
+            @copy-link="handleCopyLink"
+          />
+        </div>
 
-            <!-- Multiple Media Navigation -->
-            <div v-if="mediaFiles.length > 1" class="absolute inset-0 flex items-center justify-between p-4 pointer-events-none">
-              <button
-                v-if="currentMediaIndex > 0"
-                @click="previousMedia"
-                class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
-              >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+        <!-- Comments Header -->
+        <div class="flex-shrink-0 px-4 py-2 border-b border-gray-200 bg-gray-50">
+          <h4 class="text-sm font-semibold text-gray-900">
+            Comments ({{ comments.length || 0 }})
+          </h4>
+        </div>
 
-              <!-- Spacer to push next button to the right -->
-              <div class="flex-1 pointer-events-none"></div>
+        <!-- Comments List -->
+        <div class="flex-1 min-h-0 px-4 py-3 overflow-y-auto bg-gray-50">
+          <div v-if="comments.length === 0" class="py-8 text-center text-gray-500">
+            <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p class="text-sm">No comments yet</p>
+            <p class="text-xs">Be the first to comment!</p>
+          </div>
 
-              <button
-                v-if="currentMediaIndex < mediaFiles.length - 1"
-                @click="nextMedia"
-                class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all pointer-events-auto flex-shrink-0"
-              >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Media Counter -->
-            <div v-if="mediaFiles.length > 1" class="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-              {{ currentMediaIndex + 1 }} / {{ mediaFiles.length }}
-            </div>
+          <div v-for="comment in comments" :key="comment.id" class="mb-3">
+            <CommentItem
+              :comment="comment"
+              :user-profile-picture="userProfilePicture"
+              :current-user-id="currentUserId"
+              @react-to-comment="handleReactToComment"
+              @reply-to-comment="handleReplyToComment"
+              @delete-comment="handleDeleteComment"
+            />
           </div>
         </div>
 
-  <!-- Right side - Post Details and Comments -->
-  <div :class="hasMedia ? 'basis-1/3 w-full' : 'flex-1'" class="flex flex-col bg-white sm:border-l border-gray-200 h-full" style="overflow-x: visible;">
-    <!-- Scrollable Content Area with Fixed Height -->
-    <div class="flex flex-col h-full" style="height: calc(100% - 70px); overflow-x: visible;">
-            <!-- Post Header -->
-            <div class="p-4 border-b border-gray-200 flex-shrink-0">
-              <PostHeader
-                :post="post"
-                :categories="categories"
-                :user-profile-picture="userProfilePicture"
-                :show-menu="false"
+        <!-- Mobile Comment Input - Always at bottom -->
+        <div class="flex-shrink-0 px-4 py-3 bg-white border-t border-gray-200" style="padding-bottom: calc(env(safe-area-inset-bottom) + 16px); margin-bottom: 80px;">
+          <!-- Reply indicator -->
+          <div v-if="isReplying" class="px-3 py-2 mb-2 text-sm border border-blue-200 rounded-lg bg-blue-50">
+            <span class="text-blue-600">📝 Replying to {{ replyContext?.authorName }}</span>
+            <button
+              @click="cancelReply"
+              class="ml-2 font-medium text-blue-500 hover:text-blue-700"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <img
+              :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'"
+              alt="Your avatar"
+              class="flex-shrink-0 object-cover w-8 h-8 rounded-full"
+            />
+            <!-- Emoji Button -->
+            <button
+              @click="toggleEmojiPicker"
+              class="flex-shrink-0 p-2 text-lg text-gray-500 transition-all duration-200 rounded-full emoji-button hover:text-orange-600 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              title="Add emoji"
+            >
+              😀
+            </button>
+            <div class="flex-1">
+              <MentionTextarea
+                v-model="newComment"
+                @mention="handleMention"
+                @submit="addComment"
+                :placeholder="isReplying ? `Reply to ${replyContext?.authorName}... Use @ to mention someone` : 'Write a comment... Use @ to mention someone'"
+                :rows="1"
+                class="w-full text-sm transition-all duration-200 border border-gray-300 rounded-full mobile-comment-input focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                ref="commentInputRef"
               />
             </div>
+            <button
+              @click="addComment"
+              :disabled="!newComment.trim()"
+              class="flex items-center justify-center flex-shrink-0 w-8 h-8 font-medium text-white transition-all duration-200 bg-orange-600 rounded-full hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
 
-            <!-- Post Content -->
-            <div class="p-4 pb-2 border-b border-gray-200 flex-shrink-0">
-              <h3 v-if="post.title" class="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
-                {{ post.title }}
-              </h3>
-              <p v-if="post.content" class="text-gray-700 whitespace-pre-wrap text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed">
-                {{ post.content }}
-              </p>
-            </div>
+          <!-- Emoji Picker -->
+          <EmojiPicker
+            :isVisible="showEmojiPicker"
+            @emoji-selected="insertEmoji"
+            @close="closeEmojiPicker"
+          />
+        </div>
+      </div>
+    </div>
 
-            <!-- Engagement Summary -->
-            <div v-if="hasEngagement" class="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-200 hover-isolation flex-shrink-0" style="overflow: visible; position: relative; z-index: 10;" @mouseenter.stop @mouseover.stop>
-              <ReactionSummary
-                :reactions-summary="post.reactions_summary"
-                :post-id="post.id"
-                @open-reactions-modal="openReactionsModal"
+    <!-- Desktop Layout -->
+    <div class="hidden h-full max-w-6xl mx-auto overflow-hidden bg-white rounded-lg shadow-2xl lg:flex">
+      <!-- Desktop Media Section -->
+      <div
+        v-if="hasMedia"
+        class="flex items-center justify-center h-full bg-gray-900 basis-2/3"
+      >
+        <div class="relative flex items-center justify-center w-full h-full p-4">
+          <!-- Image Display -->
+          <div v-if="currentMediaType === 'image'" class="relative flex items-center justify-center w-full h-full">
+            <img
+              :src="getMediaUrl(currentMediaUrl)"
+              :alt="post.title"
+              class="object-contain w-full h-full max-w-full max-h-full rounded-lg"
+              style="max-height: calc(100vh - 80px); max-width: calc(100vw - 40px);"
+              loading="lazy"
+              @load="onImageLoad"
+              @error="onImageError"
+            />
+          </div>
+
+          <!-- Video Display -->
+          <div v-else-if="currentMediaType === 'video'" class="relative flex items-center justify-center w-full h-full">
+            <video
+              :src="getMediaUrl(currentMediaUrl)"
+              controls
+              class="object-contain w-full h-full max-w-full max-h-full rounded-lg"
+              style="max-height: calc(100vh - 80px); max-width: calc(100vw - 40px);"
+              @error="onVideoError"
+            />
+          </div>
+
+          <!-- Navigation for multiple media -->
+          <div v-if="mediaFiles.length > 1" class="absolute inset-0 flex items-center justify-between p-2 pointer-events-none">
+            <button
+              v-if="currentMediaIndex > 0"
+              @click="previousMedia"
+              class="p-3 text-white transition-all bg-black bg-opacity-50 rounded-full pointer-events-auto hover:bg-opacity-75"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div class="flex-1"></div>
+            <button
+              v-if="currentMediaIndex < mediaFiles.length - 1"
+              @click="nextMedia"
+              class="p-3 text-white transition-all bg-black bg-opacity-50 rounded-full pointer-events-auto hover:bg-opacity-75"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Media Counter -->
+          <div v-if="mediaFiles.length > 1" class="absolute px-3 py-1 text-sm text-white bg-black bg-opacity-50 rounded-full bottom-4 right-4">
+            {{ currentMediaIndex + 1 }} / {{ mediaFiles.length }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Content Section -->
+      <div :class="hasMedia ? 'basis-1/3' : 'flex-1'" class="flex flex-col h-full bg-white border-l border-gray-200">
+        <!-- Desktop Header -->
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900 truncate">
+            {{ post.user.full_name }}'s Post
+          </h3>
+          <button
+            @click="closeModal"
+            class="p-2 transition-colors rounded-full hover:bg-gray-100"
+          >
+            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Desktop Content Area -->
+        <div class="flex flex-col flex-1 overflow-hidden">
+          <!-- Post Header -->
+          <div class="p-4 border-b border-gray-200">
+            <PostHeader
+              :post="post"
+              :categories="categories"
+              :user-profile-picture="userProfilePicture"
+              :show-menu="false"
+            />
+          </div>
+
+          <!-- Post Content -->
+          <div class="p-4 border-b border-gray-200">
+            <h3 v-if="post.title" class="mb-3 text-lg font-semibold text-gray-900">
+              {{ post.title }}
+            </h3>
+            <p v-if="post.content" class="text-base leading-relaxed text-gray-700 whitespace-pre-wrap">
+              {{ post.content }}
+            </p>
+          </div>
+
+          <!-- Engagement Summary -->
+          <div v-if="hasEngagement" class="px-4 py-3 border-b border-gray-200">
+            <ReactionSummary
+              :reactions-summary="post.reactions_summary"
+              :post-id="post.id"
+              :current-user-id="currentUserId"
+              @show-reactions-modal="showReactionsModal = true"
+            />
+          </div>
+
+          <!-- Post Actions -->
+          <div class="px-4 py-3 border-b border-gray-200">
+            <PostActions
+              :post="post"
+              :current-user-id="currentUserId"
+              @reaction-updated="handleReactionUpdated"
+              @save-updated="handleSave"
+              @edit-post="handleEdit"
+              @delete-post="handleDelete"
+            />
+          </div>
+
+          <!-- Comments Section -->
+          <div class="flex-1 px-4 pt-3 overflow-y-auto">
+            <div v-if="comments.length > 0" class="mb-4 space-y-4">
+              <CommentItem
+                v-for="comment in comments"
+                :key="comment.id"
+                :comment="comment"
+                :current-user-id="currentUserId"
+                :is-replying="replyContext?.commentId === comment.id"
+                @reply="handleReplyToComment"
+                @like="handleCommentLike"
+                @edit="handleCommentEdit"
+                @delete="handleCommentDelete"
+                @cancel-reply="cancelReply"
               />
             </div>
-
-            <!-- Post Actions -->
-            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50" style="overflow: visible; position: relative; z-index: 10;">
-              <PostActions
-                :post-id="post.id"
-                :selected-reaction="selectedReaction"
-                size="small"
-                @react-to-post="handleReaction"
-                @comment-clicked="() => {}"
-                @share-post="handleShare"
-                @copy-link="handleCopyLink"
-              />
-            </div>
-
-            <!-- Comments Header -->
-            <div class="px-3 sm:px-6 py-2 sm:py-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
-              <h4 class="font-semibold text-gray-900 text-sm sm:text-lg">
-                Comments ({{ comments.length || 0 }})
-              </h4>
-            </div>
-
-            <!-- Comments List -->
-            <div class="px-4 py-3 space-y-3 bg-gray-50 flex-1 overflow-y-auto min-h-0"
-                 style="max-height: 400px;">
-              <div v-if="comments.length === 0" class="text-center text-gray-500 py-4 sm:py-8">
-                <svg class="mx-auto h-6 w-6 sm:h-12 sm:w-12 text-gray-400 mb-2 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <p class="text-sm sm:text-lg">No comments yet</p>
-                <p class="text-xs sm:text-sm">Be the first to comment!</p>
-              </div>
-
-              <div v-for="comment in comments" :key="comment.id">
-                <CommentItem
-                  :comment="comment"
-                  :user-profile-picture="userProfilePicture"
-                  :current-user-id="currentUserId"
-                  @react-to-comment="handleReactToComment"
-                  @reply-to-comment="handleReplyToComment"
-                  @delete-comment="handleDeleteComment"
-                />
-              </div>
-
-              <!-- Add some bottom padding only when there are comments to prevent huge empty space -->
-              <div v-if="comments.length > 0" class="pb-2"></div>
+            <div v-else class="py-8 text-center text-gray-500">
+              <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <p class="mb-1 text-lg font-medium text-gray-400">No comments yet</p>
+              <p class="text-sm text-gray-400">Be the first to share your thoughts!</p>
             </div>
           </div>
 
-          <!-- Fixed Comment Input at Bottom -->
-          <div class="h-16 sm:h-20 px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-200 bg-white flex items-center">
-            <div class="flex space-x-2 sm:space-x-3 w-full items-center">
-              <img
-                :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'"
-                alt="Your avatar"
-                class="w-7 h-7 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
-              />
-              <div class="flex-1 relative">
-                <!-- Emoji Picker -->
-                <EmojiPicker
-                  :isVisible="showEmojiPicker"
-                  @emoji-selected="insertEmoji"
-                  @close="closeEmojiPicker"
-                />
-
-                <div class="flex space-x-1 sm:space-x-2">
-                  <!-- Emoji Button -->
-                  <button
-                    @click="toggleEmojiPicker"
-                    class="emoji-button p-1.5 sm:p-3 text-gray-500 hover:text-orange-600 hover:bg-orange-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    title="Add emoji"
-                  >
-                    😀
-                  </button>
-
-                  <!-- Comment Input with Mention Support -->
-                  <div class="flex-1">
-                    <!-- Reply indicator -->
-                    <div v-if="isReplying" class="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-                      <span class="text-blue-600">📝 Replying to {{ replyContext?.authorName }}</span>
-                      <button
-                        @click="cancelReply"
-                        class="ml-2 text-blue-500 hover:text-blue-700 font-medium"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-
-                    <MentionTextarea
-                      v-model="newComment"
-                      @mention="handleMention"
-                      @submit="addComment"
-                      :placeholder="isReplying ? `Reply to ${replyContext?.authorName}... Use @ to mention someone` : 'Write a comment... Use @ to mention someone'"
-                      :rows="1"
-                      class="w-full rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
-                      ref="commentInputRef"
-                    />
-                  </div>
-
-                  <!-- Send Button -->
-                  <button
-                    @click="addComment"
-                    :disabled="!newComment.trim()"
-                    class="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-600 text-white rounded-full hover:bg-orange-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-                  >
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  </button>
+          <!-- Comment Input -->
+          <div class="p-4 border-t border-gray-200">
+            <!-- Reply Context -->
+            <div v-if="isReplying" class="p-3 mb-3 border-l-4 border-orange-500 rounded-lg bg-gray-50">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm text-gray-600">Replying to</span>
+                  <span class="text-sm font-medium text-gray-900">{{ replyContext.authorName }}</span>
                 </div>
+                <button
+                  @click="cancelReply"
+                  class="text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
+              <p class="mt-1 text-sm text-gray-700 line-clamp-2">{{ replyContext.content }}</p>
             </div>
+
+            <div class="flex items-end space-x-3">
+              <img
+                :src="userProfilePicture"
+                alt="Your avatar"
+                class="flex-shrink-0 object-cover w-10 h-10 rounded-full"
+              />
+              <button
+                @click="toggleEmojiPicker"
+                class="flex-shrink-0 p-3 text-sm text-gray-500 transition-all duration-200 rounded-full emoji-button hover:text-orange-600 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                title="Add emoji"
+              >
+                😀
+              </button>
+              <div class="flex-1">
+                <MentionTextarea
+                  v-model="newComment"
+                  @mention="handleMention"
+                  @submit="addComment"
+                  :placeholder="isReplying ? `Reply to ${replyContext?.authorName}... Use @ to mention someone` : 'Write a comment... Use @ to mention someone'"
+                  :rows="1"
+                  class="w-full text-sm transition-all duration-200 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  ref="commentInputRef"
+                />
+              </div>
+              <button
+                @click="addComment"
+                :disabled="!newComment.trim()"
+                class="flex-shrink-0 px-4 py-2 font-medium text-white transition-all duration-200 bg-orange-600 rounded-full hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Desktop Emoji Picker -->
+            <EmojiPicker
+              :isVisible="showEmojiPicker"
+              @emoji-selected="insertEmoji"
+              @close="closeEmojiPicker"
+            />
           </div>
         </div>
       </div>
@@ -379,7 +508,7 @@ const emit = defineEmits([
 // Local state
 const newComment = ref('')
 const currentMediaIndex = ref(0)
-const focusCommentInput = ref(false) // Add missing property to prevent Vue warning
+// const focusCommentInput = ref(false) // Add missing property to prevent Vue warning
 const showReactionsModal = ref(false)
 const showEmojiPicker = ref(false)
 const commentInputRef = ref(null)
@@ -556,7 +685,7 @@ const onImageError = (event) => {
   event.target.src = '/default-placeholder.png'; // Fallback image
 }
 
-const onVideoError = (event) => {
+const onVideoError = () => {
   console.error('Failed to load video:', currentMediaUrl.value)
   // Could show error message or try different format
 }
@@ -693,3 +822,130 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 </script>
+
+<style scoped>
+/* Ensure mobile layout is always shown on mobile devices */
+@media (max-width: 1023px) {
+  .lg\:hidden {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .hidden.lg\:flex {
+    display: none !important;
+  }
+}
+
+/* Mobile-specific improvements for comment section */
+@media (max-width: 640px) {
+  /* Override MentionTextarea default padding for mobile */
+  .mobile-comment-input :deep(textarea) {
+    padding: 10px 16px !important;
+    min-height: 40px !important;
+    max-height: 100px !important;
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    line-height: 1.4 !important;
+    border-radius: 20px !important;
+    background-color: #ffffff !important;
+    border: 2px solid #d1d5db !important;
+    color: #374151 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1 !important;
+  }
+
+  .mobile-comment-input :deep(textarea):focus {
+    border-color: #f97316 !important;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1) !important;
+    outline: none !important;
+  }
+
+  .emoji-button {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 18px;
+    padding: 8px !important;
+    background-color: transparent;
+  }
+
+  /* Ensure proper avatar sizing and aspect ratio on mobile */
+  img[alt="Your avatar"] {
+    width: 36px !important;
+    height: 36px !important;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  /* Ensure send button is properly sized and centered */
+  button[class*="bg-orange-600"] {
+    min-width: 36px !important;
+    min-height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 10px !important;
+  }
+
+  /* Better container spacing */
+  .mobile-comment-input {
+    min-height: 40px !important;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  button {
+    min-height: 44px; /* iOS accessibility guidelines */
+    touch-action: manipulation;
+  }
+
+  /* Better touch targets for mobile */
+  .emoji-button,
+  button[class*="bg-orange-600"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Additional specificity for mobile textarea overrides */
+@media (max-width: 640px) {
+  .mobile-comment-input :deep(.mention-wrapper) {
+    width: 100% !important;
+    position: relative !important;
+    display: block !important;
+  }
+
+  .mobile-comment-input :deep(.mention-wrapper textarea) {
+    width: 100% !important;
+    padding: 10px 16px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 100px !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+    resize: none !important;
+    background: white !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 20px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  .mobile-comment-input :deep(.mention-wrapper textarea):focus {
+    border-color: #f97316 !important;
+    outline: none !important;
+  }
+}
+</style>

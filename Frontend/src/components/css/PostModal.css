@@ -400,3 +400,159 @@
     flex-shrink: 0 !important;
   }
 }
+
+/* Mobile layout specific styles for dual mobile/desktop layout */
+@media (max-width: 1023px) {
+  /* Ensure mobile layout is visible and takes full screen */
+  .lg\:hidden {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 50 !important;
+    background: white !important;
+  }
+
+  /* Hide desktop layout on mobile */
+  .hidden.lg\:flex {
+    display: none !important;
+  }
+
+  /* Mobile comment input specific styling */
+  .lg\:hidden .mention-textarea,
+  .lg\:hidden [class*="mention"] {
+    display: block !important;
+    width: 100% !important;
+    min-height: 20px !important;
+    height: auto !important;
+    padding: 8px 12px !important;
+    border-radius: 20px !important;
+    border: 1px solid #d1d5db !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    resize: none !important;
+    outline: none !important;
+    background: white !important;
+    color: #374151 !important;
+  }
+
+  /* Override any hiding of mobile input field */
+  .lg\:hidden .mention-textarea:deep(.textarea),
+  .lg\:hidden .mention-textarea:deep(textarea),
+  .lg\:hidden [class*="mention"]:deep(.textarea),
+  .lg\:hidden [class*="mention"]:deep(textarea) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    width: 100% !important;
+    min-height: 20px !important;
+    height: auto !important;
+    background: white !important;
+    color: #374151 !important;
+    border: none !important;
+    outline: none !important;
+    resize: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  /* Mobile avatar fixes */
+  .lg\:hidden img[alt="Your avatar"] {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Mobile send button */
+  .lg\:hidden .bg-orange-600 {
+    padding: 8px 12px !important;
+    border-radius: 50% !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Mobile comment input container */
+  .lg\:hidden .border-t.border-gray-200 {
+    background: white !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 12px 16px !important;
+  }
+
+  /* Mobile comments section */
+  .lg\:hidden .overflow-y-auto {
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* Desktop layout specific styles */
+@media (min-width: 1024px) {
+  /* Ensure desktop layout is visible */
+  .hidden.lg\:flex {
+    display: flex !important;
+  }
+
+  /* Hide mobile layout on desktop */
+  .lg\:hidden {
+    display: none !important;
+  }
+}
+
+/* Mobile bottom navigation spacing fixes */
+@media (max-width: 1023px) {
+  /* Prevent overlap with bottom navigation tabs */
+  .post-modal .lg\:hidden {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Ensure comment input stays above bottom navigation */
+  .post-modal .lg\:hidden .border-t.border-gray-200:last-child {
+    position: relative !important;
+    z-index: 60 !important;
+    margin-bottom: 80px !important;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 20px) !important;
+    background: white !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Modal container height adjustment for bottom nav */
+  .post-modal .lg\:hidden {
+    max-height: calc(100vh - 80px) !important;
+    height: calc(100vh - 80px) !important;
+  }
+
+  /* Ensure modal content doesn't overflow behind bottom nav */
+  .post-modal .lg\:hidden .overflow-y-auto {
+    padding-bottom: 20px !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Mobile comment input specific styling */
+  .post-modal .mobile-comment-input {
+    height: 36px !important;
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    border-radius: 18px !important;
+  }
+
+  /* Force visibility for mobile comment input */
+  .post-modal .lg\:hidden .mobile-comment-input {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 70 !important;
+  }
+}

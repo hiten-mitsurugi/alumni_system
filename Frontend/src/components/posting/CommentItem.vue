@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-item flex space-x-3 py-2 group">
+  <div class="comment-item flex space-x-2 sm:space-x-3 py-1 sm:py-2 group items-start">
     <!-- User Avatar -->
     <img
       :src="comment.user?.profile_picture || '/default-avatar.png'"
@@ -11,15 +11,15 @@
     <div class="flex-1 min-w-0">
       <!-- Comment Bubble -->
       <div class="relative">
-        <div class="bg-gray-100 rounded-2xl px-3 py-2 max-w-xs lg:max-w-md">
-          <div class="font-semibold text-sm text-gray-900 mb-1">
+        <div class="bg-gray-100 rounded-lg sm:rounded-xl md:rounded-2xl px-3 py-2 sm:px-3 sm:py-2 md:px-4 md:py-3 max-w-[85%] sm:max-w-[80%] md:max-w-md lg:max-w-lg xl:max-w-xl">
+          <div class="font-semibold text-xs sm:text-sm md:text-base text-gray-900 mb-1">
             {{ comment.user?.full_name || `${comment.user?.first_name} ${comment.user?.last_name}`.trim() || 'Anonymous' }}
           </div>
           <MentionText
             :content="comment.content"
             :mentions="comment.mentions || []"
             :available-users="comment.mentioned_users || {}"
-            className="text-sm text-gray-800 leading-relaxed"
+            className="text-xs sm:text-sm md:text-base text-gray-800 leading-relaxed break-words"
           />
         </div>
 
@@ -34,12 +34,12 @@
       </div>
 
       <!-- Comment Actions -->
-      <div class="flex items-center space-x-4 mt-1 ml-3">
+      <div class="flex items-center flex-wrap gap-2 sm:gap-3 md:gap-4 mt-1 sm:mt-2 ml-2 sm:ml-3">
         <!-- Like Button -->
         <button
           @click="toggleLike"
           :class="[
-            'text-xs font-medium transition-colors',
+            'text-xs sm:text-sm font-medium transition-colors py-1 px-1 sm:px-2 rounded hover:bg-gray-100 touch-manipulation',
             comment.reactions_summary?.user_reaction === 'like'
               ? 'text-blue-600'
               : 'text-gray-500 hover:text-blue-600'
@@ -51,7 +51,7 @@
         <!-- Reply Button -->
         <button
           @click="toggleReply"
-          class="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors"
+          class="text-xs sm:text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors py-1 px-1 sm:px-2 rounded hover:bg-gray-100 touch-manipulation"
         >
           Reply
         </button>
@@ -60,22 +60,22 @@
         <button
           v-if="comment.can_delete"
           @click="showDeleteConfirmation"
-          class="text-xs font-medium text-gray-500 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+          class="text-xs sm:text-sm font-medium text-gray-500 hover:text-red-600 transition-colors py-1 px-1 sm:px-2 rounded hover:bg-gray-100 touch-manipulation sm:opacity-0 sm:group-hover:opacity-100"
         >
           Delete
         </button>
 
         <!-- Time -->
-        <span class="text-xs text-gray-400">
+        <span class="text-xs sm:text-sm text-gray-400 flex-shrink-0">
           {{ formatTimeAgo(comment.created_at) }}
         </span>
 
         <!-- Reaction Picker Trigger -->
         <button
           @click="toggleReactionPicker"
-          class="text-xs text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100"
+          class="text-xs sm:text-sm text-gray-400 hover:text-gray-600 transition-colors py-1 px-1 sm:px-2 rounded hover:bg-gray-100 touch-manipulation sm:opacity-0 sm:group-hover:opacity-100"
         >
-          <span class="text-sm">😊</span>
+          <span class="text-base sm:text-lg">😊</span>
         </button>
       </div>
 
@@ -89,7 +89,7 @@
       />
 
       <!-- Replies -->
-      <div v-if="comment.replies && comment.replies.length > 0" class="mt-2 ml-3 space-y-2">
+      <div v-if="comment.replies && comment.replies.length > 0" class="mt-2 ml-2 sm:ml-3 md:ml-4 pl-2 sm:pl-3 border-l-2 border-gray-200 space-y-1 sm:space-y-2">
         <CommentItem
           v-for="reply in comment.replies"
           :key="reply.id"
@@ -232,8 +232,16 @@ const handleReactionSelected = (data) => {
 .comment-item {
   position: relative;
   display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  align-items: flex-start;
+}
+
+@media (min-width: 640px) {
+  .comment-item {
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
 }
 
 .comment-avatar {
@@ -242,9 +250,43 @@ const handleReactionSelected = (data) => {
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 640px) {
+  .comment-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .comment-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }
 
 .group:hover .group-hover\:opacity-100 {
   opacity: 1;
+}
+
+/* Touch-friendly interactions for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .sm\:opacity-0.sm\:group-hover\:opacity-100 {
+    opacity: 1 !important;
+  }
+}
+
+/* Better word breaking for long text on mobile */
+.break-words {
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Touch manipulation for better mobile performance */
+.touch-manipulation {
+  touch-action: manipulation;
 }
 </style>
