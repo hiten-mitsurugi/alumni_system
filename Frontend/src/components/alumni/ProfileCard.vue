@@ -81,7 +81,7 @@
       <!-- Action Buttons -->
       <div class="mt-4 space-y-2">
         <button
-          @click="$emit('edit-profile')"
+          @click="goToMyProfile"
           :class="[
             'w-full px-3 py-2 text-sm font-medium transition-colors rounded-lg',
             themeStore.isDarkMode 
@@ -92,7 +92,7 @@
           Edit Profile
         </button>
         <button
-          @click="$emit('view-profile')"
+          @click="goToMyProfile"
           :class="[
             'w-full px-3 py-2 text-sm font-medium transition-colors rounded-lg',
             themeStore.isDarkMode 
@@ -256,7 +256,16 @@ const fetchUserData = async () => {
 }
 
 // Emits
-defineEmits(['edit-profile', 'view-profile'])
+// No emits needed - both buttons navigate directly
+
+// Router for navigation
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+// Go to current user's profile
+const goToMyProfile = () => {
+  router.push({ name: 'AlumniMyProfile' })
+}
 
 // Lifecycle
 onMounted(() => {

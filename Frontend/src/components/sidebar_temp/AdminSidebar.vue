@@ -189,7 +189,7 @@ const handleProfilePictureUpload = async (event) => {
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin') && route.path === '/admin' 
               ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
+              : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100')"
           >
             <LayoutDashboardIcon class="w-4 h-4" /> <span>Dashboard</span>
           </router-link>
@@ -200,7 +200,7 @@ const handleProfilePictureUpload = async (event) => {
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/contents') 
               ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
+              : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100')"
           >
             <FileTextIcon class="w-4 h-4" /> <span>Contents</span>
           </router-link>
@@ -211,7 +211,7 @@ const handleProfilePictureUpload = async (event) => {
             class="flex items-center gap-2 p-2 rounded transition text-sm relative"
             :class="isActive('/admin/messaging') 
               ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
+              : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100')"
           >
             <MessageCircleIcon class="w-4 h-4" />
     <span>Messaging</span>
@@ -240,7 +240,7 @@ const handleProfilePictureUpload = async (event) => {
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/user-management') 
               ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
+              : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100')"
           >
             <UsersIcon class="w-4 h-4" /> <span>Users</span>
           </router-link>
@@ -251,7 +251,7 @@ const handleProfilePictureUpload = async (event) => {
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/pending-user-approval') 
               ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
+              : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100')"
           >
             <UserCheckIcon class="w-4 h-4" /> <span>Pending</span>
           </router-link>
@@ -262,7 +262,7 @@ const handleProfilePictureUpload = async (event) => {
             class="flex items-center gap-2 p-2 rounded transition text-sm"
             :class="isActive('/admin/post-reports') 
               ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') 
-              : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')"
+              : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100')"
           >
             <AlertTriangleIcon class="w-4 h-4" /> <span>Reports</span>
           </router-link>
@@ -270,7 +270,7 @@ const handleProfilePictureUpload = async (event) => {
         <li>
           <button @click="toggleSettings"
             class="flex items-center gap-2 w-full text-left p-2 rounded transition text-sm justify-between"
-            :class="isActive('/admin/settings') ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') : (themeStore.isAdminDark() ? 'hover:text-gray-200 hover:bg-gray-800/50' : 'hover:text-gray-600 hover:bg-gray-100')">
+            :class="isActive('/admin/settings') ? (themeStore.isAdminDark() ? 'font-semibold text-orange-400 bg-orange-900/40' : 'font-semibold text-orange-600 bg-orange-100') : (themeStore.isAdminDark() ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-800/50' : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100')">>
             <div class="flex items-center gap-2">
               <SettingsIcon class="w-4 h-4" />
               <span>Settings</span>

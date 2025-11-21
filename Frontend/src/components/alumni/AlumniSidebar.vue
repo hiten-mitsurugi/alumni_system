@@ -21,14 +21,17 @@
       ]">Alumni System</span>
       <button
         @click="$emit('toggle')"
-        class="p-2 text-gray-600 transition-colors duration-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+        class="p-2 transition-colors duration-200 rounded-lg"
+        :class="themeStore.isDarkMode 
+          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+          : 'text-gray-800 hover:bg-gray-100 hover:text-gray-900'"
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
     </div>
-    <nav class="px-3 mt-6">
+    <nav class="px-3 mt-6" :class="themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-800'">
       <SidebarItem :icon="Home" label="Home" to="/alumni/home" :expanded="isExpanded" />
       <SidebarItem :icon="User" label="My Profile" to="/alumni/my-profile" :expanded="isExpanded" />
       <SidebarItem :icon="Users" label="My Mates" to="/alumni/my-mates" :expanded="isExpanded" />

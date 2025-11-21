@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
     <div class="flex flex-col items-center">
-      <img v-if="showLogo" src="@/assets/logo3-removebg-preview.png" alt="Logo" class="h-20 w-auto mb-6 animate-bounce" />
+      <img v-if="showLogo" src="@/assets/A-C-Logo.png" alt="Logo" class="h-20 w-auto mb-6 animate-bounce" />
       <div class="loader mb-4"></div>
       <span class="text-xl font-semibold text-gray-700">{{ message }}</span>
     </div>

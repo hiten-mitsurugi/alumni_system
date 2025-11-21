@@ -1,7 +1,12 @@
 <template>
   <router-link
     :to="to"
-    class="relative group flex items-center pl-3 pr-2 py-3 mb-2 rounded-lg transition-all duration-150 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
+    class="relative group flex items-center pl-3 pr-2 py-3 mb-2 rounded-lg transition-all duration-150"
+    :class="[
+      themeStore.isDarkMode 
+        ? 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+        : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+    ]"
     active-class="bg-orange-600 text-white shadow-lg"
   >
     <!-- Icon Component -->
@@ -23,7 +28,12 @@
     <!-- Tooltip (collapsed) -->
     <div
       v-if="!expanded"
-      class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:block bg-orange-600 dark:bg-orange-500 text-white text-sm px-3 py-2 rounded-lg z-10 whitespace-nowrap shadow-lg border border-orange-500 dark:border-orange-400"
+      :class="[
+        'absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:block text-white text-sm px-3 py-2 rounded-lg z-10 whitespace-nowrap shadow-lg',
+        themeStore.isDarkMode 
+          ? 'bg-orange-500 border border-orange-400'
+          : 'bg-orange-600 border border-orange-500'
+      ]"
     >
       {{ label }}
       <div v-if="badge" class="inline-block ml-2 bg-red-500 text-xs px-1.5 py-0.5 rounded-full">{{ badge }}</div>
@@ -32,6 +42,10 @@
 </template>
 
 <script setup>
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
+
 defineProps({
   icon: [Object, Function], 
   label: String,

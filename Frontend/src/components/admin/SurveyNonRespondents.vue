@@ -229,15 +229,42 @@
         Choose a survey from the dropdown above to view non-respondents.
       </p>
     </div>
+
+    <!-- Notification Toasts -->
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+      <NotificationToast
+        v-for="notification in notifications"
+        :key="notification.id"
+        :type="notification.type"
+        :message="notification.message"
+        @close="removeNotification(notification.id)"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useToast } from 'vue-toastification'
+import NotificationToast from '@/components/common/NotificationToast.vue'
 import surveyService from '@/services/surveyService'
 
-const toast = useToast()
+// Toast notification state
+const notifications = ref([])
+
+const showToast = (message, type = 'success') => {
+  notifications.value.push({
+    id: Date.now() + Math.random(),
+    message,
+    type
+  })
+}
+
+const removeNotification = (id) => {
+  const index = notifications.value.findIndex(n => n.id === id)
+  if (index > -1) {
+    notifications.value.splice(index, 1)
+  }
+}
 
 // Data
 const surveys = ref([])
@@ -263,7 +290,7 @@ async function loadSurveys() {
     surveys.value = response.data.results || response.data
   } catch (error) {
     console.error('Failed to load surveys:', error)
-    toast.error('Failed to load surveys')
+    showToast('Failed to load surveys', 'error')
   }
 }
 
@@ -294,10 +321,10 @@ async function loadNonRespondents() {
     nonRespondents.value = response.data.non_respondents || []
     statistics.value = response.data.statistics || null
 
-    toast.success(`Loaded ${nonRespondents.value.length} non-respondents`)
+    showToast(`Loaded ${nonRespondents.value.length} non-respondents`)
   } catch (error) {
     console.error('Failed to load non-respondents:', error)
-    toast.error('Failed to load non-respondents')
+    showToast('Failed to load non-respondents', 'error')
     nonRespondents.value = []
     statistics.value = null
   } finally {
@@ -333,13 +360,13 @@ async function exportToCSV() {
     )
 
     if (success) {
-      toast.success('CSV exported successfully!')
+      showToast('CSV exported successfully!')
     } else {
-      toast.error('Failed to export CSV')
+      showToast('Failed to export CSV', 'error')
     }
   } catch (error) {
     console.error('Export failed:', error)
-    toast.error('Failed to export CSV')
+    showToast('Failed to export CSV', 'error')
   }
 }
 
