@@ -3,7 +3,7 @@
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-900">Update Cover Photo</h2>
+        <h2 class="text-xl font-semibold text-gray-900">Update Profile Picture</h2>
         <button 
           @click="$emit('close')"
           class="text-gray-400 hover:text-gray-600 transition-colors"
@@ -21,9 +21,10 @@
           @click="triggerFileInput"
           @drop.prevent="handleDrop"
           @dragover.prevent
-          @dragenter.prevent
-          class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors"
-          :class="{ 'border-green-500 bg-green-50': dragOver }"
+          @dragenter.prevent="handleDragEnter"
+          @dragleave.prevent="handleDragLeave"
+          class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-orange-500 transition-colors"
+          :class="{ 'border-orange-500 bg-orange-50': dragOver }"
         >
           <div v-if="!selectedFile">
             <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,8 +43,8 @@
           <div v-else class="space-y-4">
             <img 
               :src="previewUrl" 
-              alt="Cover photo preview"
-              class="w-full h-32 object-cover rounded-lg"
+              alt="Profile picture preview"
+              class="w-32 h-32 mx-auto object-cover rounded-full border-4 border-orange-500"
             />
             <div class="text-sm text-gray-600">
               {{ selectedFile.name }}
@@ -75,7 +76,7 @@
             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            Recommended: 1584 x 396 pixels for best quality
+            Recommended: Square image (400 x 400 pixels) for best quality
           </p>
         </div>
 
@@ -96,9 +97,9 @@
           Cancel
         </button>
         <button 
-          @click="saveCoverPhoto"
+          @click="saveProfilePicture"
           :disabled="!selectedFile || uploading"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+          class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
         >
           <span v-if="uploading" class="animate-spin mr-2">⟳</span>
           {{ uploading ? 'Uploading...' : 'Save Photo' }}
@@ -109,7 +110,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 
 const emit = defineEmits(['close', 'save'])
 
@@ -140,6 +141,14 @@ const handleDrop = (event) => {
   if (file) {
     processFile(file)
   }
+}
+
+const handleDragEnter = () => {
+  dragOver.value = true
+}
+
+const handleDragLeave = () => {
+  dragOver.value = false
 }
 
 const processFile = (file) => {
@@ -190,15 +199,15 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-const saveCoverPhoto = async () => {
+const saveProfilePicture = async () => {
   if (!selectedFile.value) return
   
   try {
     uploading.value = true
     emit('save', selectedFile.value)
   } catch (error) {
-    console.error('Error saving cover photo:', error)
-    error.value = 'Failed to upload cover photo. Please try again.'
+    console.error('Error saving profile picture:', error)
+    error.value = 'Failed to upload profile picture. Please try again.'
   } finally {
     uploading.value = false
   }
@@ -211,16 +220,5 @@ const cleanup = () => {
   }
 }
 
-// Handle drag events
-const handleDragEnter = () => {
-  dragOver.value = true
-}
-
-const handleDragLeave = () => {
-  dragOver.value = false
-}
-
-// Cleanup when component is unmounted
-import { onUnmounted } from 'vue'
 onUnmounted(cleanup)
 </script>

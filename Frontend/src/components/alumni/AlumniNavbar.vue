@@ -19,7 +19,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      <img src="@/assets/logo3-removebg-preview.png" alt="Alumni System Logo" class="w-auto h-10" />
+      <img src="@/assets/A-C-Logo.png" alt="Alumni System Logo" class="w-auto h-10" />
 
       <!-- Search Bar - Positioned with margin when sidebar expands -->
       <div v-if="isHomePage" :class="[
@@ -148,7 +148,7 @@
                    @click="markAsRead(notification.id)"
                    :class="[
                      'px-4 py-3 border-b cursor-pointer transition-colors',
-                     !notification.read 
+                     !notification.read_at 
                        ? themeStore.isDarkMode 
                          ? 'bg-blue-900/30' 
                          : 'bg-blue-50' 
@@ -159,18 +159,30 @@
                      themeStore.isDarkMode ? 'border-gray-600' : 'border-gray-100'
                    ]">
                 <div class="flex items-start space-x-3">
-                  <!-- Notification Icon -->
-                  <div :class="[
-                    'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1',
-                    getNotificationColor(notification.type)
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path v-if="notification.type === 'connection'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                      <path v-else-if="notification.type === 'survey'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      <path v-else-if="notification.type === 'profile'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      <path v-else-if="notification.type === 'message'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
+                  <!-- Actor Avatar -->
+                  <div class="flex-shrink-0 mt-1">
+                    <img 
+                      v-if="notification.actor_avatar"
+                      :src="getActorAvatarUrl(notification.actor_avatar)"
+                      :alt="notification.actor_name || 'User'"
+                      @error="handleNotificationAvatarError"
+                      class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-slate-600"
+                    />
+                    <div 
+                      v-else
+                      :class="[
+                        'w-10 h-10 rounded-full flex items-center justify-center border-2',
+                        getNotificationColor(notification.type),
+                        'border-gray-200 dark:border-slate-600'
+                      ]">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path v-if="notification.type === 'connection'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                        <path v-else-if="notification.type === 'survey'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path v-else-if="notification.type === 'profile'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <path v-else-if="notification.type === 'message'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                    </div>
                   </div>
 
                   <!-- Notification Content -->
@@ -180,7 +192,7 @@
                         'text-sm font-medium',
                         themeStore.isDarkMode ? 'text-gray-100' : 'text-gray-900'
                       ]">{{ notification.title }}</p>
-                      <span v-if="!notification.read"
+                      <span v-if="!notification.read_at"
                             class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
                     </div>
                     <p :class="[
@@ -190,7 +202,7 @@
                     <p :class="[
                       'text-xs mt-1',
                       themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    ]">{{ notification.time }}</p>
+                    ]">{{ notification.time_ago }}</p>
                   </div>
                 </div>
               </div>
@@ -302,69 +314,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { useNotificationsStore } from '@/stores/notifications'
 import LogoutLoading from '../common/LogoutLoading.vue'
+
+// ============================================================
+// SECTION 1: INITIALIZATION & SETUP
+// ============================================================
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
-const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`;
-
-
-const dropdownOpen = ref(false)
-const notificationOpen = ref(false)
-const loggingOut = ref(false)
-const showLogoutConfirmation = ref(false)
-
-// Sample notifications data
-const notifications = ref([
-  {
-    id: 1,
-    title: 'New Connection Request',
-    message: 'John Doe wants to connect with you',
-    time: '5 minutes ago',
-    type: 'connection',
-    read: false
-  },
-  {
-    id: 2,
-    title: 'Survey Available',
-    message: 'Alumni Career Development Survey is now open',
-    time: '1 hour ago',
-    type: 'survey',
-    read: false
-  },
-  {
-    id: 3,
-    title: 'Profile Views',
-    message: 'Your profile was viewed 3 times this week',
-    time: '2 hours ago',
-    type: 'profile',
-    read: true
-  },
-  {
-    id: 4,
-    title: 'New Message',
-    message: 'You have a new message from Sarah Wilson',
-    time: '3 hours ago',
-    type: 'message',
-    read: true
-  }
-])
-
-// Unread notification count
-const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
-
-// Theme computed property
-const isDarkMode = computed(() => themeStore.isDarkMode)
-
-// Inject search functionality from parent (AlumniHome)
-const injectedSearchQuery = inject('searchQuery', ref(''))
-const injectedToggleMobileSearch = inject('toggleMobileSearch', () => { })
+const notificationsStore = useNotificationsStore()
+const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`
 
 // Define props
 const props = defineProps({
@@ -393,55 +359,180 @@ const props = defineProps({
 // Define emits
 defineEmits(['toggleNotification', 'toggleMobileSearch', 'update:searchQuery'])
 
-// Check if we're on the home page to show search
+// ============================================================
+// SECTION 2: STATE MANAGEMENT
+// ============================================================
+
+const dropdownOpen = ref(false)
+const notificationOpen = ref(false)
+const loggingOut = ref(false)
+const showLogoutConfirmation = ref(false)
+
+// Inject search functionality from parent (AlumniHome)
+const injectedSearchQuery = inject('searchQuery', ref(''))
+const injectedToggleMobileSearch = inject('toggleMobileSearch', () => {})
+
+// ============================================================
+// SECTION 3: COMPUTED PROPERTIES
+// ============================================================
+
+// Notifications
+const notifications = computed(() => notificationsStore.items)
+const unreadCount = computed(() => notificationsStore.unreadCount)
+
+// Theme
+const isDarkMode = computed(() => themeStore.isDarkMode)
+
+// Route detection
 const isHomePage = computed(() => route.name === 'AlumniHome')
 
-// Compute search bar margin based on sidebar state (optional subtle shift)
+// Responsive margins
 const searchBarMargin = computed(() => {
   if (props.isMobile || props.isTablet) return 'ml-0'
   return props.sidebarExpanded ? 'ml-8' : 'ml-0'
 })
 
-// Compute profile section margin to shift right when sidebar expands
 const profileSectionMargin = computed(() => {
   if (props.isMobile || props.isTablet) return 'mr-0'
   return props.sidebarExpanded ? '-mr-44' : 'mr-0'
 })
 
-// Compute profile picture URL with cache-busting and better fallback
+// Profile picture URL with fallback
 const profilePictureUrl = computed(() => {
   const user = authStore.user
   const pic = user?.profile_picture
 
-  console.log('User data:', user)
-  console.log('Profile picture:', pic)
-
   if (!pic || pic === '' || pic === 'null') {
-    console.log('Using default avatar')
     return '/default-avatar.png'
   }
 
   try {
-    // Handle absolute URLs (already complete)
     if (pic.startsWith('http://') || pic.startsWith('https://')) {
       return pic
     }
 
-    // Handle relative URLs - ensure they start with /
     const relativePath = pic.startsWith('/') ? pic : `/${pic}`
-    const fullUrl = `${BASE_URL}${relativePath}`
-
-    console.log('Profile picture URL:', fullUrl)
-    return fullUrl
+    return `${BASE_URL}${relativePath}`
   } catch (error) {
     console.error('Error processing profile picture URL:', error)
     return '/default-avatar.png'
   }
 })
 
-// Initialize component
-onMounted(async () => {
-  // Fetch user if not already present
+// ============================================================
+// SECTION 4: NOTIFICATION HANDLERS
+// ============================================================
+
+async function markAsRead(notificationId) {
+  await notificationsStore.markAsRead(notificationId)
+  
+  const notification = notifications.value.find(n => n.id === notificationId)
+  if (notification && notification.link_route) {
+    notificationOpen.value = false
+    
+    const routeParams = {
+      path: notification.link_route,
+      ...(notification.link_params && Object.keys(notification.link_params).length > 0 
+        ? { query: notification.link_params } 
+        : {})
+    }
+    
+    router.push(routeParams)
+  }
+}
+
+async function markAllAsRead() {
+  await notificationsStore.markAllAsRead()
+}
+
+function getNotificationColor(type) {
+  const colorMap = {
+    connection: themeStore.isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600',
+    survey: themeStore.isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600',
+    profile: themeStore.isDarkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600',
+    message: themeStore.isDarkMode ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-100 text-orange-600',
+    post: themeStore.isDarkMode ? 'bg-indigo-900/30 text-indigo-400' : 'bg-indigo-100 text-indigo-600',
+    system: themeStore.isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
+  }
+  return colorMap[type] || colorMap.system
+}
+
+// ============================================================
+// SECTION 5: THEME MANAGEMENT
+// ============================================================
+
+function toggleTheme() {
+  themeStore.toggleTheme()
+}
+
+// ============================================================
+// SECTION 6: AUTHENTICATION & LOGOUT
+// ============================================================
+
+function confirmLogout() {
+  dropdownOpen.value = false
+  showLogoutConfirmation.value = true
+}
+
+function cancelLogout() {
+  showLogoutConfirmation.value = false
+}
+
+async function handleLogout() {
+  showLogoutConfirmation.value = false
+  loggingOut.value = true
+  
+  await authStore.logoutWithAPI()
+  await new Promise(resolve => setTimeout(resolve, 500))
+  
+  router.push('/login')
+  loggingOut.value = false
+}
+
+// ============================================================
+// SECTION 7: UI EVENT HANDLERS
+// ============================================================
+
+function handleImageError(event) {
+  console.warn('Profile image failed to load, using default avatar')
+  event.target.src = '/default-avatar.png'
+}
+
+function handleNotificationAvatarError(event) {
+  event.target.src = '/default-avatar.png'
+}
+
+function getActorAvatarUrl(avatarPath) {
+  if (!avatarPath) {
+    return '/default-avatar.png'
+  }
+  
+  try {
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+      return avatarPath
+    }
+    
+    const path = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`
+    return `${BASE_URL}${path}`
+  } catch (error) {
+    console.error('Error processing actor avatar URL:', error)
+    return '/default-avatar.png'
+  }
+}
+
+function handleClickOutside(event) {
+  const dropdown = event.target.closest('.relative')
+  if (!dropdown) {
+    dropdownOpen.value = false
+    notificationOpen.value = false
+  }
+}
+
+// ============================================================
+// SECTION 8: LIFECYCLE HOOKS
+// ============================================================
+
+async function initializeUser() {
   if (!authStore.user && authStore.token) {
     try {
       await authStore.fetchUser()
@@ -451,93 +542,31 @@ onMounted(async () => {
       router.push('/login')
     }
   }
-})
+}
 
-// Notification functions
-function markAsRead(notificationId) {
-  const notification = notifications.value.find(n => n.id === notificationId)
-  if (notification) {
-    notification.read = true
+async function initializeNotifications() {
+  console.log('🔔 Initializing notifications system...')
+  
+  try {
+    await notificationsStore.fetchNotifications()
+    console.log('✅ Notifications fetched:', notificationsStore.items.length)
+    
+    notificationsStore.connectWebSocket()
+    console.log('✅ WebSocket connection initiated')
+  } catch (error) {
+    console.error('❌ Failed to initialize notifications:', error)
   }
 }
 
-function markAllAsRead() {
-  notifications.value.forEach(notification => {
-    notification.read = true
-  })
-}
-
-function getNotificationColor(type) {
-  const colorMap = {
-    connection: themeStore.isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600',
-    survey: themeStore.isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600',
-    profile: themeStore.isDarkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600',
-    message: themeStore.isDarkMode ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-100 text-orange-600',
-    system: themeStore.isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
-  }
-  return colorMap[type] || colorMap.system
-}
-
-// Close dropdowns when clicking outside
-document.addEventListener('click', (e) => {
-  const target = e.target
-  if (!target.closest('.relative')) {
-    dropdownOpen.value = false
-    notificationOpen.value = false
-  }
-})
-
-// Logout confirmation functions
-function confirmLogout() {
-  dropdownOpen.value = false; // Close dropdown when showing confirmation
-  showLogoutConfirmation.value = true;
-}
-
-function cancelLogout() {
-  showLogoutConfirmation.value = false;
-}
-
-// Handle image loading errors
-function handleImageError(event) {
-  console.warn('Profile image failed to load, using default avatar')
-  event.target.src = '/default-avatar.png'
-}
-
-// Toggle dark/light mode
-function toggleTheme() {
-  console.log('🌙 Toggle theme clicked')
-  console.log('Before:', document.documentElement.classList.contains('dark'))
-  themeStore.toggleTheme()
-  console.log('After:', document.documentElement.classList.contains('dark'))
-  console.log('Store isDarkMode:', themeStore.isDarkMode)
-}
-
-// Logout function
-async function handleLogout() {
-  showLogoutConfirmation.value = false;
-  loggingOut.value = true;
-  console.log('AlumniNavbar: Starting logout process');
-  await authStore.logoutWithAPI();
-  console.log('AlumniNavbar: Backend logout completed, waiting briefly for status broadcast');
-
-  // Wait a bit to ensure status update is broadcast and received
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  console.log('AlumniNavbar: Redirecting to login');
-  router.push('/login');
-  loggingOut.value = false;
-}
-
-// Click outside to close dropdown
-const handleClickOutside = (event) => {
-  const dropdown = event.target.closest('.relative')
-  if (!dropdown) {
-    dropdownOpen.value = false
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
+  await initializeUser()
+  await initializeNotifications()
   document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  notificationsStore.disconnectWebSocket()
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 

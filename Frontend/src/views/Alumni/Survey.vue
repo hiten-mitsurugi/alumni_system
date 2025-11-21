@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { 
   CheckCircle, 
   Clock, 
@@ -15,6 +16,7 @@ import { useThemeStore } from '@/stores/theme'
 
 // Theme store
 const themeStore = useThemeStore()
+const route = useRoute()
 
 // Reactive data
 const loading = ref(true)
@@ -26,6 +28,8 @@ const progress = ref(null)
 const submitting = ref(false)
 const showResults = ref(false)
 const showCardGrid = ref(true) // Toggle between card grid and form view
+const errorMessage = ref(null) // Error message for login required or already completed
+const errorType = ref(null) // Type of error: 'login_required' or 'already_completed'
 
 // =============================
 // Conditional Logic Helpers
@@ -278,12 +282,64 @@ const overallProgress = computed(() => {
 // Load survey data
 const loadSurveyData = async () => {
   try {
-    const response = await surveyService.getActiveSurveyQuestions()
-    console.log('📋 Survey data received from backend:', response.data)
-    console.log('📊 Data structure:', JSON.stringify(response.data, null, 2))
-    surveyData.value = response.data
+    // Check if there's a slug parameter (public survey link)
+    const publicSlug = route.params.slug
+    
+    if (publicSlug) {
+      console.log('📋 Loading specific survey by slug:', publicSlug)
+      
+      try {
+        // Use PUBLIC endpoint - no auth required
+        const response = await surveyService.getPublicSurvey(publicSlug)
+        
+        // Transform response to match expected structure
+        const surveyForm = response.data
+        const transformedData = [{
+          id: surveyForm.id,
+          name: surveyForm.name,
+          description: surveyForm.description,
+          is_published: surveyForm.is_published,
+          accepting_responses: surveyForm.accepting_responses,
+          confirmation_message: surveyForm.confirmation_message,
+          categories: surveyForm.sections || []
+        }]
+        
+        surveyData.value = transformedData
+        
+        // Auto-open the form (skip card grid)
+        showCardGrid.value = false
+        currentFormIndex.value = 0
+        currentCategoryIndex.value = 0
+        
+        console.log('✅ Loaded public survey:', surveyForm.name)
+      } catch (error) {
+        // Handle specific error responses
+        if (error.response) {
+          const errorData = error.response.data
+          
+          if (errorData.error === 'login_required') {
+            errorType.value = 'login_required'
+            errorMessage.value = errorData.message || 'You need to login to access this survey'
+          } else if (errorData.error === 'already_completed') {
+            errorType.value = 'already_completed'
+            errorMessage.value = errorData.message || 'You have already completed this survey'
+          } else {
+            errorMessage.value = 'Survey not found or unavailable'
+          }
+        } else {
+          errorMessage.value = 'Failed to load survey'
+        }
+        console.error('Error loading public survey:', error)
+      }
+    } else {
+      // Load all active surveys (normal alumni view)
+      const response = await surveyService.getActiveSurveyQuestions()
+      console.log('📋 Survey data received from backend:', response.data)
+      surveyData.value = response.data
+    }
   } catch (error) {
     console.error('Error loading survey questions:', error)
+    errorMessage.value = 'Failed to load surveys'
   }
 }
 
@@ -608,6 +664,66 @@ watch(
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
 
+      <!-- Error Messages (Login Required or Already Completed) -->
+      <div v-else-if="errorMessage" class="max-w-2xl mx-auto">
+        <div :class="[
+          'rounded-lg shadow-lg p-8 text-center',
+          themeStore.isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+        ]">
+          <!-- Icon -->
+          <div class="flex justify-center mb-4">
+            <div :class="[
+              'rounded-full p-4',
+              errorType === 'login_required' ? 'bg-orange-100' : 'bg-green-100'
+            ]">
+              <AlertCircle 
+                :class="[
+                  'w-12 h-12',
+                  errorType === 'login_required' ? 'text-orange-600' : 'text-green-600'
+                ]"
+              />
+            </div>
+          </div>
+
+          <!-- Message -->
+          <h2 :class="[
+            'text-2xl font-bold mb-2',
+            themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+          ]">
+            {{ errorType === 'login_required' ? 'Login Required' : 'Survey Completed' }}
+          </h2>
+          
+          <p :class="[
+            'text-lg mb-6',
+            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          ]">
+            {{ errorMessage }}
+          </p>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-4 justify-center">
+            <button
+              v-if="errorType === 'login_required'"
+              @click="$router.push('/login')"
+              class="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition font-medium"
+            >
+              Go to Login
+            </button>
+            <button
+              @click="$router.push('/')"
+              :class="[
+                'px-6 py-3 rounded-lg transition font-medium',
+                themeStore.isDarkMode 
+                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ]"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Card Grid View - Show Forms -->
       <div v-else-if="showCardGrid && surveyData.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
@@ -761,10 +877,10 @@ watch(
         </div>
         
         <button
-          @click="$router.push('/alumni')"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          @click="$router.push('/alumni/home')"
+          class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
-          Return to Dashboard
+          Return to Home
         </button>
       </div>
 
@@ -1003,7 +1119,7 @@ watch(
             :class="[
               'flex items-center gap-2 px-6 py-2 rounded-lg transition-colors',
               canGoNext && !submitting
-                ? 'bg-green-600 text-white hover:bg-green-700'
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
                 : (themeStore.isDarkMode ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
             ]"
           >

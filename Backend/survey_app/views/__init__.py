@@ -50,6 +50,18 @@ from .export_views import (
     clear_survey_cache_view,
 )
 
+# Distribution Views (Problem 1: Role Separation & Link Sharing)
+from .distribution_views import (
+    PublicSurveyDetailView,
+)
+
+# Monitoring Views (Problem 2: Non-Response Tracking)
+from .monitoring_views import (
+    SurveyNonRespondentsView,
+    SurveyStatisticsView,
+    AllSurveysStatisticsView,
+)
+
 __all__ = [
     # Admin Views
     'SurveyCategoryListCreateView',
@@ -88,4 +100,12 @@ __all__ = [
     'category_analytics_pdf_export',
     'form_analytics_pdf_export',
     'clear_survey_cache_view',
+    
+    # Distribution Views
+    'PublicSurveyDetailView',
+    
+    # Monitoring Views
+    'SurveyNonRespondentsView',
+    'SurveyStatisticsView',
+    'AllSurveysStatisticsView',
 ]

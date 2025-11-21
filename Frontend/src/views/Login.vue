@@ -7,12 +7,14 @@ import { useUiStore } from '../stores/ui';
 import api from '../services/api';
 import backgroundImage from "@/assets/Background.png";
 import { Eye as EyeIcon, EyeOff as EyeOffIcon } from 'lucide-vue-next';
+import LoginLoading from '../components/common/LoginLoading.vue';
 
 // Refs and stores
 const email = ref('');
 const password = ref('');
 const error = ref('');
 const showPassword = ref(false);
+const loggingIn = ref(false);
 const router = useRouter();
 const authStore = useAuthStore();
 const ui = useUiStore();
@@ -36,6 +38,7 @@ const login = async () => {
       'Password must be at least 8 characters, with 1 uppercase, 1 lowercase, 1 number, and 1 special character';
     return;
   }
+  loggingIn.value = true;
   try {
     const response = await api.post('/auth/login/', {
       email: email.value,
@@ -57,15 +60,18 @@ const login = async () => {
     // Show error immediately without loading
     error.value = err.response?.data?.detail || 'Invalid email or password';
     console.error('Login error:', error.value);
+    loggingIn.value = false;
   }
 };
 </script>
 
 <template>
-  <div
-    class="min-h-screen bg-cover bg-center flex flex-col login-container"
-    :style="{ backgroundImage: `url(${backgroundImage})` }"
-  >
+  <div>
+    <LoginLoading v-if="loggingIn" />
+    <div
+      class="min-h-screen bg-cover bg-center flex flex-col login-container"
+      :style="{ backgroundImage: `url(${backgroundImage})` }"
+    >
     <!-- Main Content -->
     <div class="flex flex-1 items-center justify-center px-6 md:px-16">
       <!-- Left Section -->
@@ -142,6 +148,7 @@ const login = async () => {
         </div>
       </div>
     </div>
+  </div>
   </div>
 </template>
 

@@ -11,6 +11,7 @@ django.setup()
 import auth_app.routing
 import posts_app.routing
 import messaging_app.routing
+import notifications_app.routing
 from auth_app.middleware import JwtAuthMiddlewareStack
 
 application = ProtocolTypeRouter({
@@ -19,7 +20,8 @@ application = ProtocolTypeRouter({
         URLRouter(
             auth_app.routing.websocket_urlpatterns +
             posts_app.routing.websocket_urlpatterns +
-            messaging_app.routing.websocket_urlpatterns
+            messaging_app.routing.websocket_urlpatterns +
+            notifications_app.routing.websocket_urlpatterns
         )
     )
 })

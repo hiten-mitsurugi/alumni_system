@@ -65,3 +65,22 @@ class IsSurveyOwnerOrAdmin(BasePermission):
         
         # For questions/categories, anyone authenticated can view
         return True
+
+
+class CanDistributeSurveys(BasePermission):
+    """
+    Permission class for survey distribution (Problem 1: Role Separation).
+    Admins (user_type=2) and Super Admins (user_type=1) can view shareable surveys
+    to distribute links via posts/messages, but only for read-only access.
+    This allows survey visibility without granting management permissions.
+    """
+    def has_permission(self, request, view):
+        # Only allow authenticated admins and super admins
+        if not request.user.is_authenticated:
+            return False
+        
+        # Allow both admin and super admin to view shareable surveys
+        if request.user.user_type in [1, 2]:
+            return True
+        
+        return False

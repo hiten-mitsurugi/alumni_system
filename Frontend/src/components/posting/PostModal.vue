@@ -326,6 +326,7 @@
           <!-- Post Actions -->
           <div class="px-4 py-3 border-b border-gray-200">
             <PostActions
+              :post-id="post.id"
               :post="post"
               :current-user-id="currentUserId"
               @reaction-updated="handleReactionUpdated"
@@ -502,7 +503,9 @@ const emit = defineEmits([
   'reaction-updated',
   'react-to-comment',
   'reply-to-comment',
-  'delete-comment'
+  'delete-comment',
+  'edit-post',
+  'delete-post'
 ])
 
 // Local state
@@ -712,6 +715,27 @@ const handleReplyToComment = (data) => {
 }
 
 const handleDeleteComment = (commentId) => {
+  emit('delete-comment', commentId)
+}
+
+const handleEdit = (postId) => {
+  emit('edit-post', postId)
+}
+
+const handleDelete = (postId) => {
+  emit('delete-post', postId)
+}
+
+const handleCommentLike = (data) => {
+  emit('react-to-comment', data)
+}
+
+const handleCommentEdit = (commentId) => {
+  // Handle comment edit - could open edit modal or inline edit
+  console.log('Edit comment:', commentId)
+}
+
+const handleCommentDelete = (commentId) => {
   emit('delete-comment', commentId)
 }
 

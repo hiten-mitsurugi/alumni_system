@@ -22,6 +22,20 @@ const routes = [
     component: () => import('../views/ForgotPassword.vue'),
     meta: { requiresGuest: true },
   },
+  // 🔓 Public Survey Route (for sharing with alumni)
+  {
+    path: '/survey/:slug',
+    name: 'PublicSurvey',
+    component: () => import('../views/Alumni/Survey.vue'),
+    meta: { public: true },
+  },
+  // 🎓 Alumni Welcome/Intro (shown once after first login)
+  {
+    path: '/alumni-intro',
+    name: 'AlumniIntro',
+    component: () => import('../views/Alumni/AlumniIntro.vue'),
+    meta: { requiresAuth: true, role: 3, skipIntroCheck: true },
+  },
 
   // 🛡 Super Admin Routes
   {
@@ -87,6 +101,12 @@ const routes = [
         path: 'survey-management',
         name: 'AdminSurveyManagement',
         component: () => import('../views/Admin/SurveyManagementPage.vue'),
+      },
+      {
+        path: 'survey-non-respondents',
+        name: 'AdminSurveyNonRespondents',
+        component: () => import('../components/admin/SurveyNonRespondents.vue'),
+        meta: { title: 'Survey Non-Respondents' }
       },
       {
         path: 'contents',
@@ -186,6 +206,11 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = !!authStore.token;
 
+  // Allow public routes (like public surveys)
+  if (to.meta.public) {
+    return next();
+  }
+
   // Fetch user data if token exists but no user loaded
   if (isAuthenticated && !authStore.user) {
     const ui = useUiStore();
@@ -207,7 +232,14 @@ router.beforeEach(async (to, from, next) => {
     switch (userRole) {
       case 1: return next({ name: 'SuperAdminDashboard' });
       case 2: return next({ name: 'AdminDashboard' });
-      case 3: return next({ name: 'AlumniHome' });
+      case 3: {
+        // Check if alumni has seen intro page
+        const hasSeenIntro = localStorage.getItem('alumni_intro_seen');
+        if (!hasSeenIntro) {
+          return next({ name: 'AlumniIntro' });
+        }
+        return next({ name: 'AlumniHome' });
+      }
       default: return next('/login');
     }
   }
@@ -220,6 +252,14 @@ router.beforeEach(async (to, from, next) => {
   // Enforce role-based access
   if (to.meta.role && userRole !== to.meta.role) {
     return next('/login');
+  }
+
+  // Check if alumni user needs to see intro page (after login, before main app)
+  if (isAuthenticated && userRole === 3 && !to.meta.skipIntroCheck) {
+    const hasSeenIntro = localStorage.getItem('alumni_intro_seen');
+    if (!hasSeenIntro && to.name !== 'AlumniIntro') {
+      return next({ name: 'AlumniIntro' });
+    }
   }
 
   next();

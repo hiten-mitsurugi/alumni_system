@@ -278,10 +278,11 @@ class SurveyTemplateSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'categories', 'category_ids',
             'is_active', 'is_default', 'is_published', 'accepting_responses',
             'start_at', 'end_at', 'confirmation_message', 'form_settings',
+            'share_enabled', 'public_slug',  # Added sharing fields
             'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_by', 'created_at', 'updated_at']
+        read_only_fields = ['created_by', 'created_at', 'updated_at', 'public_slug']
 
     def create(self, validated_data):
         # created_by is set in the view's perform_create method
@@ -317,3 +318,113 @@ class SurveyTemplateSerializer(serializers.ModelSerializer):
                 instance.surveytemplatecategory_set.create(category=category, order=i)
         
         return instance
+
+
+class ShareableSurveySerializer(serializers.ModelSerializer):
+    """
+    Read-only serializer for shareable surveys (Problem 1: Role Separation).
+    Used by admins to view and distribute survey links without edit access.
+    Only exposes essential information needed for sharing.
+    """
+    public_url = serializers.SerializerMethodField()
+    response_count = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SurveyTemplate
+        fields = [
+            'id',
+            'name',
+            'description',
+            'public_slug',
+            'public_url',
+            'is_published',
+            'accepting_responses',
+            'start_at',
+            'end_at',
+            'response_count',
+            'status',
+            'created_at',
+        ]
+        read_only_fields = fields  # All fields are read-only for distribution
+    
+    def get_public_url(self, obj):
+        """Generate the shareable public URL for this survey"""
+        from .utils import get_survey_public_url
+        
+        if not obj.public_slug:
+            return None
+        
+        request = self.context.get('request')
+        return get_survey_public_url(obj.public_slug, request)
+    
+    def get_response_count(self, obj):
+        """Get total number of responses submitted to this survey"""
+        return obj.form_responses.filter(
+            response_data__isnull=False
+        ).values('user').distinct().count()
+    
+    def get_status(self, obj):
+        """Get human-readable status of the survey"""
+        from django.utils import timezone
+        from .utils import validate_survey_sharing_eligibility
+        
+        now = timezone.now()
+        
+        # Check if expired
+        if obj.end_at and now >= obj.end_at:
+            return "expired"
+        
+        # Check if not started
+        if obj.start_at and now < obj.start_at:
+            return "scheduled"
+        
+        # Check if accepting responses
+        if not obj.accepting_responses:
+            return "closed"
+        
+        # Check if published
+        if not obj.is_published:
+            return "draft"
+        
+        # Check overall eligibility
+        is_eligible, _ = validate_survey_sharing_eligibility(obj)
+        if is_eligible:
+            return "active"
+        
+        return "inactive"
+
+
+class NonRespondentSerializer(serializers.Serializer):
+    """
+    Serializer for alumni who have not responded to a specific survey (Problem 2).
+    Read-only serializer to display non-respondent information.
+    """
+    id = serializers.IntegerField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    full_name = serializers.SerializerMethodField()
+    program = serializers.CharField()
+    year_graduated = serializers.IntegerField(allow_null=True)
+    contact_number = serializers.CharField(allow_null=True)
+    last_login = serializers.DateTimeField(allow_null=True)
+    date_joined = serializers.DateTimeField()
+    
+    def get_full_name(self, obj):
+        """Get formatted full name"""
+        return f"{obj.first_name} {obj.last_name}".strip()
+
+
+class SurveyStatisticsSerializer(serializers.Serializer):
+    """
+    Serializer for survey response statistics (Problem 2).
+    Provides overview of response rates and non-respondent counts.
+    """
+    survey_id = serializers.IntegerField()
+    survey_name = serializers.CharField()
+    total_alumni = serializers.IntegerField()
+    total_respondents = serializers.IntegerField()
+    total_non_respondents = serializers.IntegerField()
+    response_rate = serializers.FloatField()
+

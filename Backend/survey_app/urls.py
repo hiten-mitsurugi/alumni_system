@@ -45,6 +45,24 @@ urlpatterns = [
     path('admin/forms/<int:pk>/publish/', views.SurveyFormPublishView.as_view(), name='admin-form-publish'),
     
     # =============================================================================
+    # PUBLIC ENDPOINTS - Survey Access (No Authentication Required)
+    # Alumni can access published surveys via public link
+    # =============================================================================
+    
+    # Public Survey Detail by slug
+    path('public/<slug:slug>/', views.PublicSurveyDetailView.as_view(), name='public-survey-detail'),
+    
+    # =============================================================================
+    # MONITORING ENDPOINTS - Non-Response Tracking (Admin & Super Admin)
+    # Problem 2: Non-Response Monitoring
+    # =============================================================================
+    
+    # Survey Statistics & Non-Respondents
+    path('statistics/all/', views.AllSurveysStatisticsView.as_view(), name='all-surveys-statistics'),
+    path('<int:survey_id>/statistics/', views.SurveyStatisticsView.as_view(), name='survey-statistics'),
+    path('<int:survey_id>/non-respondents/', views.SurveyNonRespondentsView.as_view(), name='survey-non-respondents'),
+    
+    # =============================================================================
     # ALUMNI ENDPOINTS - Survey Taking (Alumni & Authenticated Users)
     # =============================================================================
     

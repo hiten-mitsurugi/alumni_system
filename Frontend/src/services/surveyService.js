@@ -161,6 +161,91 @@ class SurveyService {
     return api.post(`/survey/admin/forms/${id}/publish/`, data)
   }
 
+  // ============= PUBLIC SURVEY ACCESS =============
+  
+  /**
+   * Get public survey details by slug (NO AUTHENTICATION REQUIRED)
+   * This is used when alumni click on shared survey links
+   * @param {string} slug - The public slug of the survey
+   * @returns {Promise} Survey data with sections and questions
+   */
+  async getPublicSurvey(slug) {
+    return api.get(`/survey/public/${slug}/`)
+  }
+
+  // ============= MONITORING ENDPOINTS (Problem 2) =============
+  
+  /**
+   * Get response statistics for all surveys
+   * @returns {Promise} All surveys statistics
+   */
+  async getAllSurveysStatistics() {
+    return api.get('/survey/statistics/all/')
+  }
+
+  /**
+   * Get response statistics for a specific survey
+   * @param {number} surveyId - Survey ID
+   * @returns {Promise} Survey statistics
+   */
+  async getSurveyStatistics(surveyId) {
+    return api.get(`/survey/${surveyId}/statistics/`)
+  }
+
+  /**
+   * Get list of non-respondents for a survey
+   * @param {number} surveyId - Survey ID
+   * @param {Object} filters - Optional filters (program, year_graduated, etc.)
+   * @returns {Promise} Non-respondents list with statistics
+   */
+  async getSurveyNonRespondents(surveyId, filters = {}) {
+    return api.get(`/survey/${surveyId}/non-respondents/`, { params: filters })
+  }
+
+  /**
+   * Export non-respondents to CSV
+   * @param {number} surveyId - Survey ID
+   * @param {Object} filters - Optional filters
+   * @returns {Promise<Blob>} CSV file blob
+   */
+  async exportNonRespondentsCSV(surveyId, filters = {}) {
+    try {
+      const params = { ...filters, export: 'csv' }
+      const response = await api.get(`/survey/${surveyId}/non-respondents/`, {
+        params,
+        responseType: 'blob'
+      })
+      return response.data
+    } catch (error) {
+      console.error('Export failed:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Download non-respondents CSV file
+   * @param {number} surveyId - Survey ID
+   * @param {string} surveyName - Survey name for filename
+   * @param {Object} filters - Optional filters
+   */
+  async downloadNonRespondentsCSV(surveyId, surveyName, filters = {}) {
+    try {
+      const blob = await this.exportNonRespondentsCSV(surveyId, filters)
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `non_respondents_${surveyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      return true
+    } catch (error) {
+      console.error('Download failed:', error)
+      return false
+    }
+  }
+
   // ============= ALUMNI/USER ENDPOINTS =============
   
   // Get survey questions for alumni to answer

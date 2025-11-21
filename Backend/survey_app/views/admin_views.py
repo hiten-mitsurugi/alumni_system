@@ -171,7 +171,22 @@ class SurveyFormDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(form_data)
 
     def perform_update(self, serializer):
-        """Allow updating template fields and categories"""
+        """
+        Allow updating template fields and categories.
+        Auto-generate public_slug when share_enabled is toggled to True.
+        """
+        instance = serializer.instance
+        share_enabled = serializer.validated_data.get('share_enabled', instance.share_enabled)
+        
+        # Auto-generate slug if share_enabled is True and slug doesn't exist
+        if share_enabled and not instance.public_slug:
+            from ..utils import generate_unique_survey_slug
+            instance.public_slug = generate_unique_survey_slug(instance.name)
+        
+        # If share_enabled is being disabled, optionally clear the slug (or keep it)
+        # For now, we'll keep the slug even if sharing is disabled
+        # This allows re-enabling without changing the URL
+        
         serializer.save()
 
 

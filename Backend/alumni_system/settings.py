@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'posts_app',
     'messaging_app',
     'survey_app',  # NEW - Dynamic Survey System
+    'notifications_app',  # Real-time notifications
 ]
 
 # === Middleware ===

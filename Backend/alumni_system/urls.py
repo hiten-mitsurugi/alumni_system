@@ -15,4 +15,5 @@ urlpatterns = [
     path('api/', include('auth_app.urls')),  # Add direct API routes for backward compatibility
     path('api/posts/', include('posts_app.urls')),
     path('api/survey/', include('survey_app.urls')),  # NEW - Dynamic Survey System
+    path('api/notifications/', include('notifications_app.urls')),  # Real-time notifications
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

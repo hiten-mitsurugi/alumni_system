@@ -300,6 +300,19 @@ class SurveyTemplate(models.Model):
         help_text="Flexible JSON settings for the form"
     )
     
+    # Survey sharing settings (for Problem 1: Role Separation & Link Sharing)
+    share_enabled = models.BooleanField(
+        default=False,
+        help_text="Allow admins to view and share this survey link (read-only distribution)"
+    )
+    public_slug = models.SlugField(
+        max_length=100,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Unique slug for shareable survey link (auto-generated when share_enabled=True)"
+    )
+    
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE,

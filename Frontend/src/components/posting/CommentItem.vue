@@ -1,5 +1,6 @@
 <template>
-  <div class="comment-item flex space-x-2 sm:space-x-3 py-1 sm:py-2 group items-start">
+  <div>
+    <div class="comment-item flex space-x-2 sm:space-x-3 py-1 sm:py-2 group items-start">
     <!-- User Avatar -->
     <img
       :src="comment.user?.profile_picture || '/default-avatar.png'"
@@ -124,6 +125,7 @@
       </div>
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
@@ -145,25 +147,34 @@ const props = defineProps({
   currentUserId: {
     type: Number,
     required: true
+  },
+  isReplying: {
+    type: Boolean,
+    default: false
   }
 })
 
 // Emits
-const emit = defineEmits(['react-to-comment', 'reply-to-comment', 'delete-comment'])
+const emit = defineEmits(['react-to-comment', 'reply-to-comment', 'delete-comment', 'reply', 'like', 'edit', 'delete', 'cancelReply'])
 
 // Local state
 const showReactionPicker = ref(false)
 
 // Methods
 const toggleReply = () => {
-  emit('reply-to-comment', {
+  const data = {
     commentId: props.comment.id,
     authorName: props.comment.user?.full_name || 'Someone'
-  })
+  }
+  
+  // Emit both event names for compatibility
+  emit('reply-to-comment', data)
+  emit('reply', data)
 }
 
 const handleReplyToComment = (data) => {
   emit('reply-to-comment', data)
+  emit('reply', data)
 }
 
 const formatTimeAgo = (dateString) => {
@@ -196,26 +207,23 @@ const hideDeleteConfirmation = () => {
 }
 
 const confirmDelete = () => {
+  // Emit both event names for compatibility
   emit('delete-comment', props.comment.id)
+  emit('delete', props.comment.id)
   hideDeleteConfirmation()
 }
 
 // Missing methods
 const toggleLike = () => {
   const currentReaction = props.comment.reactions_summary?.user_reaction
-  if (currentReaction === 'like') {
-    // Remove like
-    emit('react-to-comment', {
-      commentId: props.comment.id,
-      reactionType: null // Remove reaction
-    })
-  } else {
-    // Add like
-    emit('react-to-comment', {
-      commentId: props.comment.id,
-      reactionType: 'like'
-    })
+  const data = {
+    commentId: props.comment.id,
+    reactionType: currentReaction === 'like' ? null : 'like'
   }
+  
+  // Emit both event names for compatibility
+  emit('react-to-comment', data)
+  emit('like', data)
 }
 
 const toggleReactionPicker = () => {

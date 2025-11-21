@@ -17,6 +17,7 @@ import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnection
 import ContactInfoWidget from '@/components/profile/ContactInfoWidget.vue'
 import EditProfileModal from '@/components/profile/EditProfileModal.vue'
 import CoverPhotoModal from '@/components/profile/CoverPhotoModal.vue'
+import ProfilePictureModal from '@/components/profile/ProfilePictureModal.vue'
 import EducationModal from '@/components/profile/EducationModal.vue'
 import ExperienceModal from '@/components/profile/ExperienceModal.vue'
 import SkillModal from '@/components/profile/SkillModal.vue'
@@ -31,10 +32,11 @@ const router = useRouter()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 
-const loading = ref(true)
+const loading = ref(false)
 const followLoading = ref(false)
 const showEditModal = ref(false)
 const showCoverModal = ref(false)
+const showProfilePictureModal = ref(false)
 
 // Modal states for CRUD operations
 const showEducationModal = ref(false)
@@ -347,27 +349,7 @@ const editCoverPhoto = () => {
 }
 
 const editProfilePicture = () => {
-  // Implement profile picture upload
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.onchange = async (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const formData = new FormData()
-      formData.append('profile_picture', file)
-
-      try {
-        await api.patch('/auth/enhanced-profile/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        await fetchProfile()
-      } catch (error) {
-        console.error('Error updating profile picture:', error)
-      }
-    }
-  }
-  input.click()
+  showProfilePictureModal.value = true
 }
 
 const updateProfile = async (profileData) => {
@@ -392,6 +374,21 @@ const updateCoverPhoto = async (file) => {
     showCoverModal.value = false
   } catch (error) {
     console.error('Error updating cover photo:', error)
+  }
+}
+
+const updateProfilePicture = async (file) => {
+  try {
+    const formData = new FormData()
+    formData.append('profile_picture', file)
+
+    await api.patch('/auth/enhanced-profile/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    await fetchProfile()
+    showProfilePictureModal.value = false
+  } catch (error) {
+    console.error('Error updating profile picture:', error)
   }
 }
 
@@ -877,7 +874,8 @@ watch(() => route.params.userIdentifier, () => {
                 @click="editProfilePicture"
               >
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
               </div>
             </div>
@@ -1106,6 +1104,13 @@ watch(() => route.params.userIdentifier, () => {
       v-if="showCoverModal"
       @close="showCoverModal = false"
       @save="updateCoverPhoto"
+    />
+
+    <!-- Profile Picture Upload Modal -->
+    <ProfilePictureModal
+      v-if="showProfilePictureModal"
+      @close="showProfilePictureModal = false"
+      @save="updateProfilePicture"
     />
 
     <!-- Education Modal -->
