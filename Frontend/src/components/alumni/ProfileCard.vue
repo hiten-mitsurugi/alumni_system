@@ -56,7 +56,7 @@
             <p :class="[
               'text-sm font-semibold',
               themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-            ]">{{ user.connections_count || 0 }}</p>
+            ]">{{ user.connections_count }}</p>
             <p :class="[
               'text-xs',
               themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -69,7 +69,7 @@
             <p :class="[
               'text-sm font-semibold',
               themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-            ]">{{ user.posts_count || 0 }}</p>
+            ]">{{ user.posts_count }}</p>
             <p :class="[
               'text-xs',
               themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -205,10 +205,13 @@ const user = computed(() => {
     cover_photo: coverPhotoUrl,
     title: profileData.value?.headline || profileData.value?.present_occupation || 'Alumni Member',
     location: profileData.value?.location || profileData.value?.present_address || 'Location not specified',
-    connections_count: profileData.value?.connections_count || 0,
-    posts_count: 0 // Will be updated if needed
+    connections_count: userStats.value?.connections_count || profileData.value?.connections_count || 0,
+    posts_count: userStats.value?.posts_count || profileData.value?.posts_count || 0
   }
 })
+
+// Add reactive stats data
+const userStats = ref({ posts_count: 0, connections_count: 0 })
 
 // Methods
 const handleCoverPhotoError = (event) => {
@@ -245,6 +248,9 @@ const fetchUserData = async () => {
       }
     }
 
+    // Fetch real-time statistics
+    await fetchUserStats()
+
   } catch (error) {
     console.error('Error fetching user data:', error)
     // Final fallback to auth store data
@@ -252,6 +258,62 @@ const fetchUserData = async () => {
     profileData.value = null
   } finally {
     loading.value = false
+  }
+}
+
+// New method to fetch user statistics
+const fetchUserStats = async () => {
+  try {
+    console.log('🔍 ProfileCard: Fetching user statistics...')
+    
+    // Fetch enhanced profile to get connections count
+    const enhancedResponse = await api.get('/auth/enhanced-profile/')
+    console.log('🔍 Enhanced profile response:', enhancedResponse.data)
+    
+    const connections_count = enhancedResponse.data.profile?.connections_count || 0
+    console.log('🔍 Connections count:', connections_count)
+    
+    // Get posts count from enhanced profile if available, otherwise try posts endpoint
+    let posts_count = enhancedResponse.data.profile?.posts_count || 0
+    console.log('🔍 Posts count from enhanced profile:', posts_count)
+    
+    // If no posts count from enhanced profile, try posts endpoint
+    if (posts_count === 0) {
+      try {
+        const postsResponse = await api.get('/posts/')
+        console.log('🔍 Posts endpoint response:', postsResponse.data)
+        
+        if (Array.isArray(postsResponse.data)) {
+          // Filter posts by current user
+          const userPosts = postsResponse.data.filter(post => post.user?.id === authStore.user?.id)
+          posts_count = userPosts.length
+        } else if (postsResponse.data.results) {
+          // Paginated response
+          const userPosts = postsResponse.data.results.filter(post => post.user?.id === authStore.user?.id)
+          posts_count = userPosts.length
+        }
+        console.log('🔍 Calculated posts count:', posts_count)
+      } catch (postsError) {
+        console.warn('Could not fetch posts count:', postsError.message)
+      }
+    }
+    
+    // Update stats
+    userStats.value = {
+      connections_count,
+      posts_count
+    }
+    
+    console.log('🔍 Final userStats:', userStats.value)
+    
+    // Also update profile data if it exists
+    if (profileData.value) {
+      profileData.value.connections_count = connections_count
+      profileData.value.posts_count = posts_count
+    }
+    
+  } catch (error) {
+    console.error('Error fetching user stats:', error)
   }
 }
 
@@ -270,6 +332,16 @@ const goToMyProfile = () => {
 // Lifecycle
 onMounted(() => {
   fetchUserData()
+})
+
+// Method to refresh stats (can be called when posts are added/deleted)
+const refreshStats = async () => {
+  await fetchUserStats()
+}
+
+// Export the refresh method so parent components can call it
+defineExpose({
+  refreshStats
 })
 </script>
 

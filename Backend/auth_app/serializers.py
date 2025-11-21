@@ -531,6 +531,7 @@ class EnhancedProfileSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
     connections_count = serializers.SerializerMethodField()
+    posts_count = serializers.SerializerMethodField()
     is_following = serializers.SerializerMethodField()
     is_followed_by = serializers.SerializerMethodField()
     mutual_connection = serializers.SerializerMethodField()
@@ -547,7 +548,27 @@ class EnhancedProfileSerializer(serializers.ModelSerializer):
         return obj.get_following_count()
     
     def get_connections_count(self, obj):
-        return obj.get_connections_count()
+        count = obj.get_connections_count()
+        print(f"🔍 Backend: get_connections_count for user {obj.user.id} = {count}")
+        
+        # Debug: Let's see what connections exist
+        from .models import Following
+        following_records = Following.objects.filter(follower=obj.user)
+        follower_records = Following.objects.filter(following=obj.user)
+        print(f"🔍 Backend: User {obj.user.id} is following {following_records.count()} users")
+        print(f"🔍 Backend: User {obj.user.id} has {follower_records.count()} followers")
+        
+        for f in following_records:
+            print(f"   Following: {f.following.first_name} {f.following.last_name} (status: {f.status})")
+        for f in follower_records:
+            print(f"   Follower: {f.follower.first_name} {f.follower.last_name} (status: {f.status})")
+        
+        return count
+    
+    def get_posts_count(self, obj):
+        count = obj.get_posts_count()
+        print(f"🔍 Backend: get_posts_count for user {obj.user.id} = {count}")
+        return count
     
     def get_is_following(self, obj):
         """Check if current user is following this profile's user"""

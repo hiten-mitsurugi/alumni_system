@@ -351,19 +351,44 @@ class Profile(models.Model):
     allow_messaging = models.BooleanField(default=True)
     
     def get_connections_count(self):
-        """Get total connections count"""
-        return Following.objects.filter(
-            models.Q(follower=self.user) | models.Q(following=self.user),
-            is_mutual=True
-        ).count() // 2  # Divide by 2 since mutual connections appear twice
+        """Get total connections count - unique people connected to this user"""
+        # Get all unique user IDs that are connected to this user (either direction)
+        # with accepted status, but count each person only once
+        connected_user_ids = set()
+        
+        # Add users who follow this user (accepted)
+        followers = Following.objects.filter(
+            following=self.user, 
+            status='accepted'
+        ).values_list('follower_id', flat=True)
+        connected_user_ids.update(followers)
+        
+        # Add users this user follows (accepted)  
+        following = Following.objects.filter(
+            follower=self.user, 
+            status='accepted'
+        ).values_list('following_id', flat=True)
+        connected_user_ids.update(following)
+        
+        return len(connected_user_ids)
     
     def get_followers_count(self):
         """Get followers count"""
-        return Following.objects.filter(following=self.user).count()
+        return Following.objects.filter(following=self.user, status='accepted').count()
     
     def get_following_count(self):
         """Get following count"""
-        return Following.objects.filter(follower=self.user).count()
+        return Following.objects.filter(follower=self.user, status='accepted').count()
+    
+    def get_posts_count(self):
+        """Get user's posts count"""
+        try:
+            # Import here to avoid circular imports
+            from posts_app.models import Post
+            return Post.objects.filter(user=self.user).count()
+        except ImportError:
+            # If posts app is not available, return 0
+            return 0
 
     def save(self, *args, **kwargs):
         self.full_name = f"{self.user.first_name} {self.user.middle_name or ''} {self.user.last_name}".strip()
