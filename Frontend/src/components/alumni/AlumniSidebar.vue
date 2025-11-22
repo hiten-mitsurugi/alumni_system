@@ -36,7 +36,7 @@
       <SidebarItem :icon="User" label="My Profile" to="/alumni/my-profile" :expanded="isExpanded" />
       <SidebarItem :icon="Users" label="My Mates" to="/alumni/my-mates" :expanded="isExpanded" />
       <SidebarItem :icon="MessageCircle" label="Messaging" to="/alumni/messaging" :expanded="isExpanded" :badge="messagingBadgeCount" />
-      <SidebarItem :icon="FileText" label="Survey" to="/alumni/survey" :expanded="isExpanded" badge="2" />
+      <SidebarItem :icon="FileText" label="Survey" to="/alumni/survey" :expanded="isExpanded" />
     </nav>
   </div>
 </template>

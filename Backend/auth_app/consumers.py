@@ -264,3 +264,12 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'type': 'mention_notification',
             'data': event['data']
         }))
+
+    # 🔔 NOTIFICATIONS: Handler for general notification messages
+    async def notification_message(self, event):
+        """Handle notification.message events from backend"""
+        logger.info(f"NotificationConsumer: Sending notification to user {self.scope['user']}")
+        await self.send(text_data=json.dumps({
+            'type': 'notification',
+            'notification': event['notification']
+        }))

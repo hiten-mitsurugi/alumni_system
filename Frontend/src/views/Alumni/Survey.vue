@@ -167,6 +167,15 @@ const getFormProgress = (formIndex) => {
     }
   })
   
+  // If form is already answered, show full progress
+  if (form?.template?.has_answered) {
+    return {
+      answered: totalQuestions,
+      total: totalQuestions,
+      percentage: 100
+    }
+  }
+  
   return {
     answered: answeredQuestions,
     total: totalQuestions,
@@ -176,6 +185,13 @@ const getFormProgress = (formIndex) => {
 
 // Get form status
 const getFormStatus = (formIndex) => {
+  const form = surveyData.value[formIndex]
+  
+  // Check if form has already been answered
+  if (form?.template?.has_answered) {
+    return 'complete'
+  }
+  
   const progress = getFormProgress(formIndex)
   if (progress.answered === 0) return 'not-started'
   if (progress.answered === progress.total) return 'complete'
@@ -254,7 +270,16 @@ const overallProgress = computed(() => {
   let answeredQuestions = 0
   
   if (Array.isArray(surveyData.value)) {
-    surveyData.value.forEach(form => {
+    surveyData.value.forEach((form, formIndex) => {
+      // If form is already fully answered, count all questions as answered
+      if (form?.template?.has_answered) {
+        const formProgress = getFormProgress(formIndex)
+        totalQuestions += formProgress.total
+        answeredQuestions += formProgress.total
+        return
+      }
+      
+      // Otherwise, count based on actual responses
       if (form && form.categories && Array.isArray(form.categories)) {
         form.categories.forEach(category => {
           // Skip hidden categories
@@ -674,12 +699,12 @@ watch(
           <div class="flex justify-center mb-4">
             <div :class="[
               'rounded-full p-4',
-              errorType === 'login_required' ? 'bg-orange-100' : 'bg-green-100'
+              errorType === 'login_required' ? 'bg-orange-100' : 'bg-orange-100'
             ]">
               <AlertCircle 
                 :class="[
                   'w-12 h-12',
-                  errorType === 'login_required' ? 'text-orange-600' : 'text-green-600'
+                  errorType === 'login_required' ? 'text-orange-600' : 'text-orange-600'
                 ]"
               />
             </div>
@@ -725,7 +750,71 @@ watch(
       </div>
 
       <!-- Card Grid View - Show Forms -->
-      <div v-else-if="showCardGrid && surveyData.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else-if="showCardGrid && surveyData.length > 0">
+        <!-- Page Header -->
+        <div class="mb-8 text-center">
+          <div class="flex items-center justify-center gap-3 mb-4">
+            <BarChart3 :class="[
+              'w-10 h-10',
+              themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600'
+            ]" />
+            <h1 :class="[
+              'text-3xl font-bold',
+              themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+            ]">
+              Alumni Survey Forms
+            </h1>
+          </div>
+          <p :class="[
+            'text-lg max-w-3xl mx-auto',
+            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          ]">
+            Help us improve by completing these survey forms. Your feedback is valuable in enhancing our programs and services for future alumni.
+          </p>
+          
+          <!-- Stats Summary -->
+          <div class="mt-6 flex justify-center gap-8">
+            <div :class="[
+              'text-center',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            ]">
+              <div :class="[
+                'text-2xl font-bold',
+                themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600'
+              ]">
+                {{ surveyData.length }}
+              </div>
+              <div class="text-sm">Available Form{{ surveyData.length !== 1 ? 's' : '' }}</div>
+            </div>
+            <div :class="[
+              'text-center',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            ]">
+              <div :class="[
+                'text-2xl font-bold',
+                themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600'
+              ]">
+                {{ surveyData.filter((_, idx) => getFormStatus(idx) === 'complete').length }}
+              </div>
+              <div class="text-sm">Completed</div>
+            </div>
+            <div :class="[
+              'text-center',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            ]">
+              <div :class="[
+                'text-2xl font-bold',
+                themeStore.isDarkMode ? 'text-orange-400' : 'text-orange-600'
+              ]">
+                {{ overallProgress }}%
+              </div>
+              <div class="text-sm">Overall Progress</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Survey Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="(form, formIndex) in surveyData"
           :key="form?.template?.id || formIndex"
@@ -742,7 +831,7 @@ watch(
           <!-- Already Answered Badge (Top Banner) -->
           <div 
             v-if="form?.template?.has_answered && !form?.template?.allow_multiple_responses"
-            class="bg-green-500 text-white text-center py-2 px-4 text-sm font-medium"
+            class="bg-orange-600 text-white text-center py-2 px-4 text-sm font-medium"
           >
             ✓ You have already answered this form
           </div>
@@ -750,8 +839,8 @@ watch(
           <!-- Card Header -->
           <div :class="[
             'p-4 border-b',
-            getFormStatus(formIndex) === 'complete' ? 'bg-green-50 border-green-200' :
-            getFormStatus(formIndex) === 'in-progress' ? 'bg-yellow-50 border-yellow-200' :
+            getFormStatus(formIndex) === 'complete' ? 'bg-orange-50 border-orange-200' :
+            getFormStatus(formIndex) === 'in-progress' ? 'bg-orange-50 border-orange-200' :
             themeStore.isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-orange-100 border-gray-200'
           ]">
             <div class="flex items-start justify-between">
@@ -773,7 +862,7 @@ watch(
               <!-- Status Badge -->
               <div :class="[
                 'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
-                getFormStatus(formIndex) === 'complete' ? 'bg-green-100 text-green-700' :
+                getFormStatus(formIndex) === 'complete' ? 'bg-orange-100 text-orange-700' :
                 getFormStatus(formIndex) === 'in-progress' ? 'bg-yellow-100 text-yellow-700' :
                 'bg-gray-100 text-gray-600'
               ]">
@@ -800,7 +889,7 @@ watch(
                 <span :class="themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'">Progress</span>
                 <span :class="[
                   'font-medium',
-                  getFormProgress(formIndex).percentage === 100 ? 'text-green-600' :
+                  getFormProgress(formIndex).percentage === 100 ? 'text-orange-600' :
                   getFormProgress(formIndex).percentage > 0 ? 'text-yellow-600' :
                   themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 ]">
@@ -815,7 +904,7 @@ watch(
                 <div
                   :class="[
                     'h-2 rounded-full transition-all duration-300',
-                    getFormProgress(formIndex).percentage === 100 ? 'bg-green-500' :
+                    getFormProgress(formIndex).percentage === 100 ? 'bg-orange-600' :
                     getFormProgress(formIndex).percentage > 0 ? 'bg-yellow-500' :
                     'bg-blue-500'
                   ]"
@@ -842,11 +931,12 @@ watch(
             ]" />
           </div>
         </div>
+        </div>
       </div>
 
       <!-- Survey Complete -->
       <div v-else-if="showResults" :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-md p-8 text-center' : 'bg-white rounded-lg shadow-md p-8 text-center'">
-        <CheckCircle class="w-16 h-16 text-green-600 mx-auto mb-4" />
+        <CheckCircle class="w-16 h-16 text-orange-600 mx-auto mb-4" />
         <h2 :class="themeStore.isDarkMode ? 'text-2xl font-bold text-white mb-2' : 'text-2xl font-bold text-gray-900 mb-2'">Survey Completed!</h2>
         <p :class="themeStore.isDarkMode ? 'text-gray-300 mb-6' : 'text-gray-600 mb-6'">
           Thank you for taking the time to complete the Alumni Tracer Survey. 
@@ -868,7 +958,7 @@ watch(
               <span :class="themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'">Status:</span>
               <span :class="[
                 'font-semibold ml-2',
-                progress.is_complete ? 'text-green-600' : 'text-yellow-600'
+                progress.is_complete ? 'text-orange-600' : 'text-yellow-600'
               ]">
                 {{ progress.is_complete ? 'Complete' : 'In Progress' }}
               </span>
@@ -889,18 +979,18 @@ watch(
         <!-- Already Answered Notice (Full-width banner above form) -->
         <div 
           v-if="currentForm?.template?.has_answered && !currentForm?.template?.allow_multiple_responses"
-          class="mb-6 bg-green-50 border border-green-200 rounded-lg p-6 text-center"
+          class="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-6 text-center"
         >
           <div class="flex items-center justify-center gap-3 mb-2">
-            <CheckCircle class="w-6 h-6 text-green-600" />
-            <h3 class="text-lg font-semibold text-green-900">You have already answered this form</h3>
+            <CheckCircle class="w-6 h-6 text-orange-600" />
+            <h3 class="text-lg font-semibold text-orange-700">You have already answered this form</h3>
           </div>
-          <p class="text-green-700 mb-4">
+          <p class="text-orange-700 mb-4">
             This form does not allow multiple responses. You have already submitted your answers.
           </p>
           <button
             @click="closeForm"
-            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            class="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
           >
             Back to Forms
           </button>

@@ -340,7 +340,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -404,7 +404,11 @@ const injectedToggleMobileSearch = inject('toggleMobileSearch', () => {})
 
 // Notifications
 const notifications = computed(() => notificationsStore.items)
-const unreadCount = computed(() => notificationsStore.unreadCount)
+const unreadCount = computed(() => {
+  const count = notificationsStore.unreadCount
+  console.log('🔢 unreadCount computed property evaluated:', count)
+  return count
+})
 
 // Theme
 const isDarkMode = computed(() => themeStore.isDarkMode)
@@ -574,11 +578,14 @@ async function initializeNotifications() {
   console.log('🔔 Initializing notifications system...')
   
   try {
-    await notificationsStore.fetchNotifications()
-    console.log('✅ Notifications fetched:', notificationsStore.items.length)
-    
-    notificationsStore.connectWebSocket()
-    console.log('✅ WebSocket connection initiated')
+    // Use the store's initialize method
+    if (!notificationsStore.isInitialized) {
+      await notificationsStore.initialize()
+      console.log('✅ Notifications initialized successfully')
+    } else {
+      console.log('✅ Notifications already initialized, refreshing counts...')
+      await notificationsStore.forceRefresh()
+    }
   } catch (error) {
     console.error('❌ Failed to initialize notifications:', error)
   }
@@ -588,6 +595,11 @@ onMounted(async () => {
   await initializeUser()
   await initializeNotifications()
   document.addEventListener('click', handleClickOutside)
+  
+  // Watch for changes in unreadCount
+  watch(() => notificationsStore.unreadCount, (newCount, oldCount) => {
+    console.log(`🔔 NAVBAR: unreadCount changed from ${oldCount} to ${newCount}`)
+  })
 })
 
 onUnmounted(() => {

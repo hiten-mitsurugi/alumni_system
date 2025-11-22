@@ -9,6 +9,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const isLoading = ref(false);
   const wsConnected = ref(false);
   const ws = ref(null);
+  const isInitialized = ref(false);
 
   // Computed
   const unreadNotifications = computed(() => 
@@ -125,13 +126,18 @@ export const useNotificationsStore = defineStore('notifications', () => {
     ws.value.onmessage = (event) => {
       const data = JSON.parse(event.data);
       
-      console.log('📨 WebSocket message received:', data.type);
+      console.log('📨 RAW WebSocket message received:', event.data);
+      console.log('📨 Parsed data:', data);
+      console.log('📨 Message type:', data.type);
       
       // Handle notification messages (both formats)
       if ((data.type === 'notification' || data.type === 'notification.message') && data.notification) {
-        console.log('🔔 NEW NOTIFICATION:', data.notification.title);
+        console.log('🔔 NEW NOTIFICATION RECEIVED!');
+        console.log('   Title:', data.notification.title);
+        console.log('   Message:', data.notification.message);
         console.log('   Actor:', data.notification.actor_name);
         console.log('   Avatar:', data.notification.actor_avatar);
+        console.log('   Current unread count BEFORE:', unreadCount.value);
         
         // Prepend new notification to list IMMEDIATELY
         items.value.unshift(data.notification);
@@ -139,9 +145,13 @@ export const useNotificationsStore = defineStore('notifications', () => {
         // Increment unread count
         unreadCount.value++;
         
-        console.log('✅ Notification added to store. Total:', items.value.length);
+        console.log('   New unread count AFTER:', unreadCount.value);
+        console.log('   Total notifications in store:', items.value.length);
+        console.log('✅ Notification added to store successfully!');
       } else if (data.type === 'connection_established') {
         console.log('✅ Connection established:', data.message);
+      } else {
+        console.log('⚠️ Unknown message type or missing notification data:', data);
       }
     };
 
@@ -176,7 +186,32 @@ export const useNotificationsStore = defineStore('notifications', () => {
     items.value = [];
     unreadCount.value = 0;
     isLoading.value = false;
+    isInitialized.value = false;
     disconnectWebSocket();
+  }
+
+  // Initialize store (fetch initial data and connect WebSocket)
+  async function initialize() {
+    if (isInitialized.value) {
+      console.log('🔔 Notifications store already initialized');
+      return;
+    }
+
+    console.log('🔔 Initializing notifications store...');
+    try {
+      await fetchNotifications();
+      connectWebSocket();
+      isInitialized.value = true;
+      console.log('✅ Notifications store initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize notifications store:', error);
+    }
+  }
+
+  // Force refresh counts (for ensuring real-time accuracy)
+  async function forceRefresh() {
+    console.log('🔄 Force refreshing notification counts...');
+    await fetchUnreadCount();
   }
 
   return {
@@ -185,6 +220,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     unreadCount,
     isLoading,
     wsConnected,
+    isInitialized,
     
     // Computed
     unreadNotifications,
@@ -196,6 +232,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
     markAllAsRead,
     connectWebSocket,
     disconnectWebSocket,
+    initialize,
+    forceRefresh,
     reset
   };
 });

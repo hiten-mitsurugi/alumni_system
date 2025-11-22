@@ -34,15 +34,15 @@
         <div :class="themeStore.isDarkMode ? 'bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-3' : 'bg-white rounded-lg shadow-sm border border-gray-200 p-3'">
           <div class="flex justify-around text-center">
             <div>
-              <div class="text-base font-semibold text-green-600">{{ stats.connectionsCount }}</div>
+              <div class="text-base font-semibold text-orange-600">{{ stats.connectionsCount }}</div>
               <div :class="themeStore.isDarkMode ? 'text-xs text-gray-400' : 'text-xs text-gray-600'">Connections</div>
             </div>
             <div>
-              <div class="text-base font-semibold text-green-600">{{ stats.followersCount }}</div>
+              <div class="text-base font-semibold text-orange-600">{{ stats.followersCount }}</div>
               <div :class="themeStore.isDarkMode ? 'text-xs text-gray-400' : 'text-xs text-gray-600'">Followers</div>
             </div>
             <div>
-              <div class="text-base font-semibold text-green-600">{{ stats.followingCount }}</div>
+              <div class="text-base font-semibold text-orange-600">{{ stats.followingCount }}</div>
               <div :class="themeStore.isDarkMode ? 'text-xs text-gray-400' : 'text-xs text-gray-600'">Following</div>
             </div>
           </div>
@@ -59,14 +59,14 @@
             :class="[
               'py-2 sm:py-3 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors flex-shrink-0',
               activeTab === tab.id
-                ? 'border-green-500 text-green-600'
+                ? 'border-orange-600 text-orange-700'
                 : (themeStore.isDarkMode
                   ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')
             ]"
           >
             {{ tab.label }}
-            <span v-if="tab.count > 0" class="ml-1 bg-green-100 text-green-800 py-0.5 px-1 sm:scroll-px-4 rounded-full text-xs">
+            <span v-if="tab.count > 0" class="ml-1 bg-orange-100 text-orange-700 py-0.5 px-1 sm:scroll-px-4 rounded-full text-xs">
               {{ tab.count }}
             </span>
           </button>
@@ -94,7 +94,7 @@
       <div
         :class="[
           'p-4 rounded-lg shadow-lg border-l-4',
-          notification.type === 'success' ? (themeStore.isDarkMode ? 'bg-green-900 border-green-400 text-green-200' : 'bg-green-50 border-green-400 text-green-800') :
+          notification.type === 'success' ? (themeStore.isDarkMode ? 'bg-orange-700 border-orange-400 text-orange-200' : 'bg-orange-50 border-orange-400 text-orange-700') :
           notification.type === 'error' ? (themeStore.isDarkMode ? 'bg-red-900 border-red-400 text-red-200' : 'bg-red-50 border-red-400 text-red-800') :
           (themeStore.isDarkMode ? 'bg-blue-900 border-blue-400 text-blue-200' : 'bg-blue-50 border-blue-400 text-blue-800')
         ]"

@@ -65,13 +65,13 @@ def broadcast_notification(user_id, notification):
     
     try:
         async_to_sync(channel_layer.group_send)(
-            f'notifications_user_{user_id}',
+            f'user_{user_id}',
             {
                 'type': 'notification.message',
                 'notification': notification_data
             }
         )
-        print(f"📡 Broadcasted notification to user {user_id}: {notification.title}")
+        print(f"📡 Broadcasted notification to group 'user_{user_id}': {notification.title}")
     except Exception as e:
         print(f"⚠️ Failed to broadcast notification to user {user_id}: {e}")
 

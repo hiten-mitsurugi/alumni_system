@@ -34,6 +34,13 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('access_token');            // ✅ updated
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
+      // Ensure the alumni intro flag is cleared on logout so the intro
+      // displays again on the next login.
+      try {
+        localStorage.removeItem('alumni_intro_seen');
+      } catch (e) {
+        // ignore
+      }
       
       // Disconnect WebSocket connections to prevent reconnection attempts
       try {

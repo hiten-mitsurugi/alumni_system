@@ -55,8 +55,13 @@ def detect_and_notify_mentions(comment):
     Pattern: @[User Name](user_id)
     Skips if user mentions themselves.
     """
+    print(f"🔍 SIGNAL: Checking mentions in comment {comment.id} by user {comment.user.id}")
+    print(f"🔍 SIGNAL: Comment content: {comment.content[:100]}")
+    
     mention_pattern = r'@\[([^\]]+)\]\((\d+)\)'
     matches = re.findall(mention_pattern, comment.content)
+    
+    print(f"🔍 SIGNAL: Found {len(matches)} mentions: {matches}")
     
     if not matches:
         return
@@ -74,7 +79,10 @@ def detect_and_notify_mentions(comment):
             
             # Don't notify if user mentions themselves
             if mentioned_user.id == comment.user.id:
+                print(f"⏭️ SIGNAL: Skipping self-mention for user {user_id}")
                 continue
+            
+            print(f"🔔 SIGNAL: Creating mention notification for user {mentioned_user.id} ({mentioned_user.get_full_name()})")
             
             create_notification(
                 user=mentioned_user,
@@ -88,8 +96,15 @@ def detect_and_notify_mentions(comment):
             )
             
             notified_user_ids.add(user_id)
+            print(f"✅ SIGNAL: Mention notification created successfully")
             
         except User.DoesNotExist:
+            print(f"❌ SIGNAL: User {user_id} not found")
+            continue
+        except Exception as e:
+            print(f"❌ SIGNAL: Error creating mention notification: {e}")
+            import traceback
+            traceback.print_exc()
             continue
 
 
