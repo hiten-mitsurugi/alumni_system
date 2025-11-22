@@ -11,10 +11,14 @@ import ProfileContactSection from '@/components/profile/ProfileContactSection.vu
 import ProfileEducationSection from '@/components/profile/ProfileEducationSection.vue'
 import ProfileExperienceSection from '@/components/profile/ProfileExperienceSection.vue'
 import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
+import ProfileMembershipsSection from '@/components/profile/ProfileMembershipsSection.vue'
+import ProfileRecognitionsSection from '@/components/profile/ProfileRecognitionsSection.vue'
+import ProfileTrainingsSection from '@/components/profile/ProfileTrainingsSection.vue'
+import ProfilePublicationsSection from '@/components/profile/ProfilePublicationsSection.vue'
+import ProfileCareerEnhancementSection from '@/components/profile/ProfileCareerEnhancementSection.vue'
 
 import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
 import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnectionsWidget.vue'
-import ContactInfoWidget from '@/components/profile/ContactInfoWidget.vue'
 import EditProfileModal from '@/components/profile/EditProfileModal.vue'
 import CoverPhotoModal from '@/components/profile/CoverPhotoModal.vue'
 import ProfilePictureModal from '@/components/profile/ProfilePictureModal.vue'
@@ -22,6 +26,11 @@ import EducationModal from '@/components/profile/EducationModal.vue'
 import ExperienceModal from '@/components/profile/ExperienceModal.vue'
 import SkillModal from '@/components/profile/SkillModal.vue'
 import AchievementModal from '@/components/profile/AchievementModal.vue'
+import MembershipModal from '@/components/profile/MembershipModal.vue'
+import RecognitionModal from '@/components/profile/RecognitionModal.vue'
+import TrainingModal from '@/components/profile/TrainingModal.vue'
+import PublicationModal from '@/components/profile/PublicationModal.vue'
+import CareerEnhancementModal from '@/components/profile/CareerEnhancementModal.vue'
 
 // Tab components
 import PostsTab from '@/components/profile/tabs/PostsTab.vue'
@@ -43,12 +52,22 @@ const showEducationModal = ref(false)
 const showExperienceModal = ref(false)
 const showSkillModal = ref(false)
 const showAchievementModal = ref(false)
+const showMembershipModal = ref(false)
+const showRecognitionModal = ref(false)
+const showTrainingModal = ref(false)
+const showPublicationModal = ref(false)
+const showCareerEnhancementModal = ref(false)
 
 // Selected items for editing
 const selectedEducation = ref(null)
 const selectedExperience = ref(null)
 const selectedSkill = ref(null)
 const selectedAchievement = ref(null)
+const selectedMembership = ref(null)
+const selectedRecognition = ref(null)
+const selectedTraining = ref(null)
+const selectedPublication = ref(null)
+const selectedCareerEnhancement = ref(null)
 
 const user = ref(null)
 const profile = ref(null)
@@ -56,6 +75,11 @@ const education = ref([])
 const workHistories = ref([])
 const skills = ref([])
 const achievements = ref([])
+const memberships = ref([])
+const recognitions = ref([])
+const trainings = ref([])
+const publications = ref([])
+const careerEnhancement = ref({})
 
 const isFollowing = ref(false)
 const connectionsCount = ref(0)
@@ -390,11 +414,6 @@ const updateProfilePicture = async (file) => {
   } catch (error) {
     console.error('Error updating profile picture:', error)
   }
-}
-
-// Section handlers
-const editAbout = () => {
-  showEditModal.value = true
 }
 
 // Education CRUD handlers
@@ -793,8 +812,321 @@ const handleAchievementVisibilityChange = async (achievementId, newVisibility) =
   }
 }
 
-const handleConnect = (userId) => {
+const handleConnect = () => {
   // Handle connection from suggested connections
+}
+
+// Membership handlers
+const addMembership = () => {
+  selectedMembership.value = null
+  showMembershipModal.value = true
+}
+
+const editMembership = (membership) => {
+  selectedMembership.value = membership
+  showMembershipModal.value = true
+}
+
+const deleteMembership = async (membershipId) => {
+  if (!confirm('Are you sure you want to delete this membership?')) {
+    return
+  }
+
+  try {
+    // TODO: Replace with actual API call
+    // await api.delete(`/auth/memberships/${membershipId}/`)
+    
+    // Remove from local state
+    memberships.value = memberships.value.filter(m => m.id !== membershipId)
+    console.log('Membership deleted:', membershipId)
+  } catch (error) {
+    console.error('Error deleting membership:', error)
+    alert('Failed to delete membership')
+  }
+}
+
+const closeMembershipModal = () => {
+  showMembershipModal.value = false
+  selectedMembership.value = null
+}
+
+const saveMembership = async (membershipData) => {
+  try {
+    if (selectedMembership.value) {
+      // Update existing membership
+      // TODO: Replace with actual API call
+      // const response = await api.put(`/auth/memberships/${selectedMembership.value.id}/`, membershipData)
+      
+      const index = memberships.value.findIndex(m => m.id === selectedMembership.value.id)
+      if (index !== -1) {
+        memberships.value[index] = { ...membershipData, id: selectedMembership.value.id }
+      }
+    } else {
+      // Create new membership
+      // TODO: Replace with actual API call
+      // const response = await api.post('/auth/memberships/', membershipData)
+      
+      const newMembership = { ...membershipData, id: Date.now() } // Temporary ID
+      memberships.value.push(newMembership)
+    }
+    
+    closeMembershipModal()
+    console.log('Membership saved:', membershipData)
+  } catch (error) {
+    console.error('Error saving membership:', error)
+    alert('Failed to save membership')
+  }
+}
+
+const handleMembershipVisibilityChange = async (data) => {
+  console.log('Membership visibility change:', data)
+  // TODO: Implement visibility change API call
+}
+
+// Recognition handlers
+const addRecognition = () => {
+  selectedRecognition.value = null
+  showRecognitionModal.value = true
+}
+
+const editRecognition = (recognition) => {
+  selectedRecognition.value = recognition
+  showRecognitionModal.value = true
+}
+
+const deleteRecognition = async (recognitionId) => {
+  if (!confirm('Are you sure you want to delete this recognition?')) {
+    return
+  }
+
+  try {
+    // TODO: Replace with actual API call
+    // await api.delete(`/auth/recognitions/${recognitionId}/`)
+    
+    // Remove from local state
+    recognitions.value = recognitions.value.filter(r => r.id !== recognitionId)
+    console.log('Recognition deleted:', recognitionId)
+  } catch (error) {
+    console.error('Error deleting recognition:', error)
+    alert('Failed to delete recognition')
+  }
+}
+
+const closeRecognitionModal = () => {
+  showRecognitionModal.value = false
+  selectedRecognition.value = null
+}
+
+const saveRecognition = async (recognitionData) => {
+  try {
+    if (selectedRecognition.value) {
+      // Update existing recognition
+      const index = recognitions.value.findIndex(r => r.id === selectedRecognition.value.id)
+      if (index !== -1) {
+        recognitions.value[index] = { ...recognitionData, id: selectedRecognition.value.id }
+      }
+    } else {
+      // Create new recognition
+      const newRecognition = { ...recognitionData, id: Date.now() }
+      recognitions.value.push(newRecognition)
+    }
+    
+    closeRecognitionModal()
+    console.log('Recognition saved:', recognitionData)
+  } catch (error) {
+    console.error('Error saving recognition:', error)
+    alert('Failed to save recognition')
+  }
+}
+
+const handleRecognitionVisibilityChange = (data) => {
+  console.log('Recognition visibility change:', data)
+}
+
+// Training handlers
+const addTraining = () => {
+  selectedTraining.value = null
+  showTrainingModal.value = true
+}
+
+const editTraining = (training) => {
+  selectedTraining.value = training
+  showTrainingModal.value = true
+}
+
+const deleteTraining = async (trainingId) => {
+  if (!confirm('Are you sure you want to delete this training?')) {
+    return
+  }
+
+  try {
+    // TODO: Replace with actual API call
+    // await api.delete(`/auth/trainings/${trainingId}/`)
+    
+    // Remove from local state
+    trainings.value = trainings.value.filter(t => t.id !== trainingId)
+    console.log('Training deleted:', trainingId)
+  } catch (error) {
+    console.error('Error deleting training:', error)
+    alert('Failed to delete training')
+  }
+}
+
+const closeTrainingModal = () => {
+  showTrainingModal.value = false
+  selectedTraining.value = null
+}
+
+const saveTraining = async (trainingData) => {
+  try {
+    if (selectedTraining.value) {
+      // Update existing training
+      const index = trainings.value.findIndex(t => t.id === selectedTraining.value.id)
+      if (index !== -1) {
+        trainings.value[index] = { ...trainingData, id: selectedTraining.value.id }
+      }
+    } else {
+      // Create new training
+      const newTraining = { ...trainingData, id: Date.now() }
+      trainings.value.push(newTraining)
+    }
+    
+    closeTrainingModal()
+    console.log('Training saved:', trainingData)
+  } catch (error) {
+    console.error('Error saving training:', error)
+    alert('Failed to save training')
+  }
+}
+
+const handleTrainingVisibilityChange = (data) => {
+  console.log('Training visibility change:', data)
+}
+
+// Publication handlers
+const addPublication = () => {
+  selectedPublication.value = null
+  showPublicationModal.value = true
+}
+
+const editPublication = (publication) => {
+  selectedPublication.value = publication
+  showPublicationModal.value = true
+}
+
+const deletePublication = async (publicationId) => {
+  if (!confirm('Are you sure you want to delete this publication?')) {
+    return
+  }
+
+  try {
+    // TODO: Replace with actual API call
+    // await api.delete(`/auth/publications/${publicationId}/`)
+    
+    // Remove from local state
+    publications.value = publications.value.filter(p => p.id !== publicationId)
+    console.log('Publication deleted:', publicationId)
+  } catch (error) {
+    console.error('Error deleting publication:', error)
+    alert('Failed to delete publication')
+  }
+}
+
+const closePublicationModal = () => {
+  showPublicationModal.value = false
+  selectedPublication.value = null
+}
+
+const savePublication = async (publicationData) => {
+  try {
+    if (selectedPublication.value) {
+      // Update existing publication
+      const index = publications.value.findIndex(p => p.id === selectedPublication.value.id)
+      if (index !== -1) {
+        publications.value[index] = { ...publicationData, id: selectedPublication.value.id }
+      }
+    } else {
+      // Create new publication
+      const newPublication = { ...publicationData, id: Date.now() }
+      publications.value.push(newPublication)
+    }
+    
+    closePublicationModal()
+    console.log('Publication saved:', publicationData)
+  } catch (error) {
+    console.error('Error saving publication:', error)
+    alert('Failed to save publication')
+  }
+}
+
+const handlePublicationVisibilityChange = (data) => {
+  console.log('Publication visibility change:', data)
+}
+
+// Career Enhancement handlers
+const addCareerEnhancement = () => {
+  selectedCareerEnhancement.value = null
+  showCareerEnhancementModal.value = true
+}
+
+const editCertificate = (certificate) => {
+  // For editing certificates, we open the career enhancement modal with the full data
+  // The certificate parameter is the specific certificate to edit
+  selectedCareerEnhancement.value = careerEnhancement.value
+  showCareerEnhancementModal.value = true
+  
+  // Log for debugging - certificate contains the specific certificate data
+  console.log('Editing certificate:', certificate)
+}
+
+const deleteCertificate = async (certificateId) => {
+  if (!confirm('Are you sure you want to delete this certificate?')) {
+    return
+  }
+
+  try {
+    // TODO: Replace with actual API call
+    // await api.delete(`/auth/certificates/${certificateId}/`)
+    
+    // Remove from local state
+    if (careerEnhancement.value.certificates) {
+      careerEnhancement.value.certificates = careerEnhancement.value.certificates.filter(c => c.id !== certificateId)
+    }
+    console.log('Certificate deleted:', certificateId)
+  } catch (error) {
+    console.error('Error deleting certificate:', error)
+    alert('Failed to delete certificate')
+  }
+}
+
+const editCSE = () => {
+  selectedCareerEnhancement.value = careerEnhancement.value
+  showCareerEnhancementModal.value = true
+}
+
+const closeCareerEnhancementModal = () => {
+  showCareerEnhancementModal.value = false
+  selectedCareerEnhancement.value = null
+}
+
+const saveCareerEnhancement = async (careerEnhancementData) => {
+  try {
+    // TODO: Replace with actual API call
+    // const response = await api.put('/auth/career-enhancement/', careerEnhancementData)
+    
+    // Update local state
+    careerEnhancement.value = careerEnhancementData
+    
+    closeCareerEnhancementModal()
+    console.log('Career enhancement saved:', careerEnhancementData)
+  } catch (error) {
+    console.error('Error saving career enhancement:', error)
+    alert('Failed to save career enhancement')
+  }
+}
+
+const handleCareerEnhancementVisibilityChange = (data) => {
+  console.log('Career enhancement visibility change:', data)
 }
 
 // Lifecycle
@@ -1074,6 +1406,57 @@ watch(() => route.params.userIdentifier, () => {
               @delete="deleteAchievement"
               @toggle-visibility="handleAchievementVisibilityChange"
             />
+
+            <!-- Memberships Section -->
+            <ProfileMembershipsSection
+              :memberships="memberships"
+              :is-own-profile="isOwnProfile"
+              @add="addMembership"
+              @edit="editMembership"
+              @delete="deleteMembership"
+              @visibility-changed="handleMembershipVisibilityChange"
+            />
+
+            <!-- Non-Academic Recognitions Section -->
+            <ProfileRecognitionsSection
+              :recognitions="recognitions"
+              :is-own-profile="isOwnProfile"
+              @add="addRecognition"
+              @edit="editRecognition"
+              @delete="deleteRecognition"
+              @visibility-changed="handleRecognitionVisibilityChange"
+            />
+
+            <!-- Trainings Section -->
+            <ProfileTrainingsSection
+              :trainings="trainings"
+              :is-own-profile="isOwnProfile"
+              @add="addTraining"
+              @edit="editTraining"
+              @delete="deleteTraining"
+              @visibility-changed="handleTrainingVisibilityChange"
+            />
+
+            <!-- Publications Section -->
+            <ProfilePublicationsSection
+              :publications="publications"
+              :is-own-profile="isOwnProfile"
+              @add="addPublication"
+              @edit="editPublication"
+              @delete="deletePublication"
+              @visibility-changed="handlePublicationVisibilityChange"
+            />
+
+            <!-- Career Enhancement Section -->
+            <ProfileCareerEnhancementSection
+              :career-enhancement="careerEnhancement"
+              :is-own-profile="isOwnProfile"
+              @add="addCareerEnhancement"
+              @edit-certificate="editCertificate"
+              @delete-certificate="deleteCertificate"
+              @edit-cse="editCSE"
+              @visibility-changed="handleCareerEnhancementVisibilityChange"
+            />
           </div>
 
           <!-- Posts Tab Content -->
@@ -1143,6 +1526,46 @@ watch(() => route.params.userIdentifier, () => {
       :achievement="selectedAchievement"
       @close="closeAchievementModal"
       @save="saveAchievement"
+    />
+
+    <!-- Membership Modal -->
+    <MembershipModal
+      v-if="showMembershipModal"
+      :membership="selectedMembership"
+      @close="closeMembershipModal"
+      @save="saveMembership"
+    />
+
+    <!-- Recognition Modal -->
+    <RecognitionModal
+      v-if="showRecognitionModal"
+      :recognition="selectedRecognition"
+      @close="closeRecognitionModal"
+      @save="saveRecognition"
+    />
+
+    <!-- Training Modal -->
+    <TrainingModal
+      v-if="showTrainingModal"
+      :training="selectedTraining"
+      @close="closeTrainingModal"
+      @save="saveTraining"
+    />
+
+    <!-- Publication Modal -->
+    <PublicationModal
+      v-if="showPublicationModal"
+      :publication="selectedPublication"
+      @close="closePublicationModal"
+      @save="savePublication"
+    />
+
+    <!-- Career Enhancement Modal -->
+    <CareerEnhancementModal
+      v-if="showCareerEnhancementModal"
+      :career-enhancement="selectedCareerEnhancement"
+      @close="closeCareerEnhancementModal"
+      @save="saveCareerEnhancement"
     />
   </div>
 </template>

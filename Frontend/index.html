@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alumni System - CCIS CarSU</title>
     <meta name="description" content="Alumni Management System for College of Computing and Information Sciences - Caraga State University" />
+    
+    <!-- Prevent flash of wrong theme by applying theme class immediately -->
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        const isDark = savedTheme === 'dark';
+        
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

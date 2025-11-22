@@ -350,6 +350,31 @@ const addComment = async (postId, content) => {
   }
 };
 
+const reactToComment = async (data) => {
+  try {
+    console.log('👍 Reacting to comment:', data);
+    await axios.post(`${BASE_URL}/api/posts/comments/${data.commentId}/react/`, {
+      reaction_type: data.reactionType
+    }, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    });
+
+    console.log('✅ Comment reaction added');
+    if (selectedPost.value) {
+      await fetchCommentsForPost(selectedPost.value.id);
+    }
+
+  } catch (error) {
+    console.error('❌ Failed to react to comment:', error);
+    notifications.value.unshift({
+      id: Date.now(),
+      type: 'error',
+      message: 'Failed to react to comment. Please try again.',
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
 // Add function to fetch comments for a specific post
 const fetchCommentsForPost = async (postId) => {
   try {
@@ -849,6 +874,7 @@ onUnmounted(() => {
       @close="closePostModal"
       @react-to-post="reactToPost"
       @add-comment="addComment"
+      @react-to-comment="reactToComment"
       @copy-link="copyPostLink"
       @load-comments="fetchCommentsForPost"
       @navigate="navigateToPost"

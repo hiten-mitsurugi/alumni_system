@@ -425,13 +425,13 @@ class CommentCreateView(APIView):
         try:
             post = Post.objects.get(id=post_id)
             
-            # Get all comments for this post ordered by creation time
-            comments = post.comments.all().order_by('created_at')
+            # Get only top-level comments (parent=None) - replies will be included via serializer
+            comments = post.comments.filter(parent=None).order_by('created_at')
             
             serializer = CommentSerializer(comments, many=True, context={'request': request})
             return Response({
                 'comments': serializer.data,
-                'total_count': post.comments.count()
+                'total_count': post.comments.filter(parent=None).count()  # Only count top-level comments
             }, status=status.HTTP_200_OK)
             
         except Post.DoesNotExist:
@@ -463,8 +463,8 @@ class CommentCreateView(APIView):
             if serializer.is_valid():
                 comment = serializer.save(user=request.user, post=post)
                 
-                # Update post comment count immediately and simply
-                post.comments_count = post.comments.count()
+                # Update post comment count immediately and simply (only top-level comments)
+                post.comments_count = post.comments.filter(parent=None).count()
                 post.save(update_fields=['comments_count'])
                 
                 # Clear all cache to ensure fresh data on refresh - simple approach
@@ -619,6 +619,162 @@ class CommentDeleteView(APIView):
                 'deletion_reason': deletion_reason,
                 'timestamp': timezone.now().isoformat()
             }
+        )
+
+class CommentReactionView(APIView):
+    """Handle comment reactions (Facebook-style)"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, comment_id):
+        """Get all reactions for a comment"""
+        try:
+            comment = Comment.objects.get(id=comment_id)
+            content_type = ContentType.objects.get_for_model(Comment)
+            
+            reactions = Reaction.objects.filter(
+                content_type=content_type,
+                object_id=comment.id
+            ).select_related('user').order_by('-created_at')
+            
+            serializer = ReactionSerializer(reactions, many=True, context={'request': request})
+            
+            return Response({
+                'reactions': serializer.data,
+                'total_count': reactions.count()
+            })
+            
+        except Comment.DoesNotExist:
+            return Response(
+                {'error': 'Comment not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    def post(self, request, comment_id):
+        """Add or update reaction to a comment"""
+        try:
+            print(f"DEBUG: Received comment reaction request - comment_id: {comment_id}")
+            print(f"DEBUG: Request data: {request.data}")
+            
+            reaction_type = request.data.get('reaction_type')
+            print(f"DEBUG: Extracted reaction_type: '{reaction_type}'")
+            
+            # Handle null reaction (remove reaction)
+            if reaction_type is None or reaction_type == 'null' or reaction_type == '':
+                return self._remove_reaction(request, comment_id)
+            
+            if reaction_type not in dict(Reaction.REACTION_TYPES).keys():
+                return Response(
+                    {'error': f'Invalid reaction type: {reaction_type}. Valid types: {list(dict(Reaction.REACTION_TYPES).keys())}'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            print(f"DEBUG: Error in comment reaction validation: {e}")
+            return Response(
+                {'error': f'Validation error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        try:
+            comment = Comment.objects.get(id=comment_id)
+            content_type = ContentType.objects.get_for_model(Comment)
+            
+            # Get or create reaction (update if exists)
+            reaction, created = Reaction.objects.update_or_create(
+                user=request.user,
+                content_type=content_type,
+                object_id=comment.id,
+                defaults={'reaction_type': reaction_type}
+            )
+            
+            # Update comment reaction count
+            self._update_comment_reaction_count(comment)
+            
+            # Broadcast reaction update
+            self._broadcast_comment_reaction(comment, reaction, request.user)
+            
+            action = 'created' if created else 'updated'
+            
+            return Response({
+                'message': f'Comment reaction {action} successfully',
+                'reaction_type': reaction_type,
+                'emoji': reaction.emoji,
+                'comment_id': comment_id
+            }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+            
+        except Comment.DoesNotExist:
+            return Response(
+                {'error': 'Comment not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    def _remove_reaction(self, request, comment_id):
+        """Remove user's reaction from comment"""
+        try:
+            comment = Comment.objects.get(id=comment_id)
+            content_type = ContentType.objects.get_for_model(Comment)
+            
+            reaction = Reaction.objects.filter(
+                user=request.user,
+                content_type=content_type,
+                object_id=comment.id
+            ).first()
+            
+            if reaction:
+                reaction.delete()
+                self._update_comment_reaction_count(comment)
+                self._broadcast_comment_reaction(comment, None, request.user, removed=True)
+                
+                return Response({
+                    'message': 'Comment reaction removed successfully',
+                    'comment_id': comment_id
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'message': 'No reaction to remove',
+                    'comment_id': comment_id
+                }, status=status.HTTP_200_OK)
+                
+        except Comment.DoesNotExist:
+            return Response(
+                {'error': 'Comment not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    def _update_comment_reaction_count(self, comment):
+        """Update the comment's likes count based on reactions"""
+        content_type = ContentType.objects.get_for_model(Comment)
+        reaction_count = Reaction.objects.filter(
+            content_type=content_type,
+            object_id=comment.id
+        ).count()
+        
+        comment.likes_count = reaction_count
+        comment.save(update_fields=['likes_count'])
+    
+    def _broadcast_comment_reaction(self, comment, reaction, user, removed=False):
+        """Broadcast comment reaction update to real-time subscribers"""
+        channel_layer = get_channel_layer()
+        
+        message = {
+            'type': 'comment_reaction_updated',
+            'comment_id': comment.id,
+            'post_id': comment.post.id,
+            'user_id': user.id,
+            'user_name': f"{user.first_name} {user.last_name}",
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        if removed:
+            message['reaction_type'] = None
+            message['action'] = 'removed'
+        else:
+            message['reaction_type'] = reaction.reaction_type
+            message['emoji'] = reaction.emoji
+            message['action'] = 'added'
+        
+        async_to_sync(channel_layer.group_send)(
+            f'post_{comment.post.id}',
+            message
         )
 
 class PostShareView(APIView):

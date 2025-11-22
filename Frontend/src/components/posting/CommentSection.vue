@@ -29,31 +29,16 @@
     
     <!-- Comments List -->
     <div v-if="comments && comments.length > 0" class="px-4 py-2 space-y-2">
-      <div
+      <CommentItem
         v-for="comment in comments"
         :key="comment.id"
-        class="flex space-x-2 items-start"
-      >
-        <img 
-          :src="comment.user?.profile_picture || '/default-avatar.png'"
-          alt="Profile"
-          class="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5"
-        />
-        <div class="flex-1 min-w-0">
-          <div class="bg-gray-50 rounded-lg px-3 py-1.5 inline-block">
-            <div class="font-medium text-xs text-gray-900">{{ comment.user?.name || 'Anonymous' }}</div>
-            <MentionText 
-              :content="comment.content"
-              :mentions="comment.mentions || []"
-              :available-users="{ [comment.user.username]: { full_name: comment.user.full_name, name: comment.user.name } }"
-              className="text-sm text-gray-800"
-            />
-          </div>
-          <div class="text-xs text-gray-500 px-3 mt-0.5">
-            {{ formatTimeAgo(comment.created_at) }}
-          </div>
-        </div>
-      </div>
+        :comment="comment"
+        :user-profile-picture="userProfilePicture"
+        :current-user-id="currentUserId"
+        @react-to-comment="handleReactToComment"
+        @reply-to-comment="handleReplyToComment"
+        @delete-comment="handleDeleteComment"
+      />
     </div>
     
     <!-- Empty Comments State -->
@@ -68,7 +53,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import MentionText from '@/components/common/MentionText.vue'
+import CommentItem from '@/components/posting/CommentItem.vue'
 
 // Props
 const props = defineProps({
@@ -87,11 +72,15 @@ const props = defineProps({
   userProfilePicture: {
     type: String,
     default: ''
+  },
+  currentUserId: {
+    type: Number,
+    required: true
   }
 })
 
 // Emits
-const emit = defineEmits(['add-comment'])
+const emit = defineEmits(['add-comment', 'react-to-comment', 'reply-to-comment', 'delete-comment'])
 
 // Local state
 const localComment = ref('')
@@ -105,17 +94,16 @@ const addComment = () => {
   localComment.value = ''
 }
 
-const formatTimeAgo = (dateString) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now - date) / 1000)
-  
-  if (diffInSeconds < 60) return 'Just now'
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
-  
-  return date.toLocaleDateString()
+const handleReactToComment = (data) => {
+  emit('react-to-comment', data)
+}
+
+const handleReplyToComment = (data) => {
+  emit('reply-to-comment', data)
+}
+
+const handleDeleteComment = (commentId) => {
+  emit('delete-comment', commentId)
 }
 </script>
 

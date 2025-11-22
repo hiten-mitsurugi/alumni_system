@@ -99,14 +99,15 @@
           :current-user-id="currentUserId"
           @react-to-comment="handleReactionSelected"
           @reply-to-comment="handleReplyToComment"
+          @delete-comment="handleDeleteComment"
         />
       </div>
     </div>
   </div>
 
   <!-- Delete Confirmation Modal -->
-  <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+  <div v-if="showDeleteModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 border border-gray-200">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Delete Comment</h3>
       <p class="text-gray-600 mb-6">Are you sure you want to delete this comment? This action cannot be undone.</p>
       <div class="flex justify-end space-x-3">
@@ -175,6 +176,11 @@ const toggleReply = () => {
 const handleReplyToComment = (data) => {
   emit('reply-to-comment', data)
   emit('reply', data)
+}
+
+const handleDeleteComment = (commentId) => {
+  emit('delete-comment', commentId)
+  emit('delete', commentId)
 }
 
 const formatTimeAgo = (dateString) => {

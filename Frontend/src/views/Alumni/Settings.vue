@@ -1,28 +1,32 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div class="w-full p-6 bg-amber-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+  <div class="w-full p-6 min-h-screen transition-colors duration-200">
     <!-- Header -->
     <div class="max-w-5xl mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-      <p class="text-gray-600 dark:text-gray-400">Manage your account and preferences</p>
+      <h1 :style="{color: themeStore.isDarkMode ? '#e5e7eb' : '#1f2937'}" class="text-3xl font-bold mb-2">Settings</h1>
+      <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#4b5563'}" class="">Manage your account and preferences</p>
     </div>
 
     <!-- Settings Layout -->
     <div class="max-w-5xl grid lg:grid-cols-4 gap-8">
       <!-- Sidebar Navigation -->
       <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sticky top-6">
+        <div :style="{backgroundColor: themeStore.isDarkMode ? '#1f2937' : '#ffffff', borderColor: themeStore.isDarkMode ? '#374151' : '#e5e7eb'}" class="rounded-xl shadow-sm border p-4 sticky top-6">
           <nav class="space-y-1">
             <button
               v-for="section in settingsSections"
               :key="section.id"
               @click="activeSection = section.id"
-              :class="[
-                'w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200',
-                activeSection === section.id
-                  ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-l-4 border-orange-500'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
-              ]"
+              :style="{
+                backgroundColor: activeSection === section.id 
+                  ? (themeStore.isDarkMode ? 'rgba(234, 88, 12, 0.2)' : '#fed7aa') 
+                  : (themeStore.isDarkMode ? 'transparent' : 'transparent'),
+                color: activeSection === section.id 
+                  ? (themeStore.isDarkMode ? '#fb923c' : '#c2410c') 
+                  : (themeStore.isDarkMode ? '#d1d5db' : '#374151'),
+                borderLeft: activeSection === section.id ? '4px solid #ea580c' : 'none'
+              }"
+              class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               <component :is="section.icon" class="h-5 w-5 mr-3" />
               {{ section.name }}
@@ -33,17 +37,17 @@
 
       <!-- Content Area -->
       <div class="lg:col-span-3">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div :style="{backgroundColor: themeStore.isDarkMode ? '#1f2937' : '#ffffff', borderColor: themeStore.isDarkMode ? '#374151' : '#e5e7eb'}" class="rounded-xl shadow-sm border">
           <!-- Profile Settings -->
           <div v-if="activeSection === 'profile'" class="p-6">
-            <div class="border-b border-gray-200 dark:border-gray-600 pb-6 mb-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Profile Information</h2>
-              <p class="text-gray-600 dark:text-gray-400">Update your profile details and personal information</p>
+            <div :style="{borderBottomColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border-b pb-6 mb-6">
+              <h2 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-xl font-semibold mb-1">Profile Information</h2>
+              <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#4b5563'}">Update your profile details and personal information</p>
             </div>
 
             <!-- Profile Picture Section -->
             <div class="mb-8">
-              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Profile Picture</h3>
+              <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-lg font-medium mb-4">Profile Picture</h3>
               <div class="flex items-center space-x-6">
                 <div class="relative">
                   <img 
@@ -52,15 +56,22 @@
                     alt="Profile" 
                     class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600"
                   />
-                  <button class="absolute bottom-0 right-0 bg-orange-600 text-white p-2 rounded-full hover:bg-orange-700 transition-colors">
+                  <button @click="triggerFileInput" class="absolute bottom-0 right-0 bg-orange-600 text-white p-2 rounded-full hover:bg-orange-700 transition-colors">
                     <CameraIcon class="h-4 w-4" />
                   </button>
+                  <input 
+                    ref="fileInput"
+                    type="file" 
+                    accept="image/*" 
+                    @change="handleFileUpload" 
+                    class="hidden"
+                  />
                 </div>
                 <div>
-                  <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors mr-3">
+                  <button @click="triggerFileInput" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors mr-3">
                     Upload New Photo
                   </button>
-                  <button class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <button @click="removeProfilePicture" :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#d1d5db' : '#374151'}" class="border px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     Remove
                   </button>
                 </div>
@@ -71,45 +82,38 @@
             <form @submit.prevent="updateProfile" class="space-y-6">
               <div class="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+                  <label :style="{color: themeStore.isDarkMode ? '#d1d5db' : '#374151'}" class="block text-sm font-medium mb-2">First Name</label>
                   <input 
                     v-model="profileForm.firstName" 
                     type="text" 
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
+                    :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}"
+                    class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+                  <label :style="{color: themeStore.isDarkMode ? '#d1d5db' : '#374151'}" class="block text-sm font-medium mb-2">Last Name</label>
                   <input 
                     v-model="profileForm.lastName" 
                     type="text" 
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
+                    :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}"
+                    class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                <label :style="{color: themeStore.isDarkMode ? '#d1d5db' : '#374151'}" class="block text-sm font-medium mb-2">Email</label>
                 <input 
                   v-model="profileForm.email" 
                   type="email" 
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
+                  :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}"
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
-                <textarea 
-                  v-model="profileForm.bio" 
-                  rows="4" 
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="Tell us about yourself..."
-                ></textarea>
-              </div>
-
               <div class="flex justify-end">
-                <button type="submit" class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
-                  Save Changes
+                <button type="submit" :disabled="isUpdatingProfile" class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ isUpdatingProfile ? 'Saving...' : 'Save Changes' }}
                 </button>
               </div>
             </form>
@@ -117,135 +121,126 @@
 
           <!-- Privacy Settings -->
           <div v-if="activeSection === 'privacy'" class="p-6">
-            <div class="border-b border-gray-200 dark:border-gray-600 pb-6 mb-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Privacy Settings</h2>
-              <p class="text-gray-600 dark:text-gray-400">Control who can see your information and activities</p>
+            <div :style="{borderBottomColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border-b pb-6 mb-6">
+              <h2 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-xl font-semibold mb-1">Privacy Settings</h2>
+              <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#4b5563'}">Control who can see your information and activities</p>
             </div>
 
             <div class="space-y-6">
               <!-- Profile Visibility -->
-              <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Profile Visibility</h3>
+              <div :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border rounded-lg p-4">
+                <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-lg font-medium mb-3">Profile Visibility</h3>
                 <div class="space-y-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="font-medium text-gray-900 dark:text-gray-100">Make profile visible to</p>
-                      <p class="text-sm text-gray-500 dark:text-gray-400">Choose who can see your profile information</p>
+                      <p :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="font-medium">Make profile visible to</p>
+                      <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#6b7280'}" class="text-sm">Choose who can see your profile information</p>
                     </div>
-                    <select v-model="privacySettings.profileVisibility" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2">
-                      <option value="everyone" class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700">Everyone</option>
-                      <option value="alumni" class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700">Alumni Only</option>
-                      <option value="connections" class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700">My Connections</option>
+                    <select v-model="privacySettings.profileVisibility" :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                      <option value="everyone">Everyone</option>
+                      <option value="alumni">Alumni Only</option>
+                      <option value="connections">My Connections</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              <!-- Contact Information -->
-              <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Contact Information</h3>
-                <div class="space-y-4">
-                  <div class="flex items-center justify-between">
-                    <span class="text-gray-700 dark:text-gray-300">Show email address</span>
-                    <ToggleSwitch v-model="privacySettings.showEmail" />
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-gray-700 dark:text-gray-300">Show phone number</span>
-                    <ToggleSwitch v-model="privacySettings.showPhone" />
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-gray-700 dark:text-gray-300">Show graduation year</span>
-                    <ToggleSwitch v-model="privacySettings.showGraduation" />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
           <!-- Account Settings -->
           <div v-if="activeSection === 'account'" class="p-6">
-            <div class="border-b border-gray-200 dark:border-gray-600 pb-6 mb-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Account Settings</h2>
-              <p class="text-gray-600 dark:text-gray-400">Manage your account security and preferences</p>
+            <div :style="{borderBottomColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border-b pb-6 mb-6">
+              <h2 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-xl font-semibold mb-1">Account Settings</h2>
+              <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#4b5563'}">Manage your account security and preferences</p>
             </div>
 
             <div class="space-y-6">
               <!-- Password Change -->
-              <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Change Password</h3>
+              <div :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border rounded-lg p-4">
+                <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-lg font-medium mb-3">Change Password</h3>
                 <form @submit.prevent="changePassword" class="space-y-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Password</label>
+                    <label :style="{color: themeStore.isDarkMode ? '#d1d5db' : '#374151'}" class="block text-sm font-medium mb-2">Current Password</label>
                     <input 
                       v-model="passwordForm.currentPassword" 
                       type="password" 
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
+                      :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}"
+                      class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      required
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                    <label :style="{color: themeStore.isDarkMode ? '#d1d5db' : '#374151'}" class="block text-sm font-medium mb-2">New Password</label>
                     <input 
                       v-model="passwordForm.newPassword" 
                       type="password" 
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
+                      :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}"
+                      class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      required
+                      minlength="8"
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm New Password</label>
+                    <label :style="{color: themeStore.isDarkMode ? '#d1d5db' : '#374151'}" class="block text-sm font-medium mb-2">Confirm New Password</label>
                     <input 
                       v-model="passwordForm.confirmPassword" 
                       type="password" 
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
+                      :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}"
+                      class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      required
                     />
                   </div>
-                  <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
-                    Update Password
+                  
+                  <!-- Password Change Feedback -->
+                  <div v-if="passwordMessage" :class="[
+                    'p-3 rounded-lg text-sm',
+                    passwordMessageType === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' :
+                    passwordMessageType === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+                  ]">
+                    {{ passwordMessage }}
+                  </div>
+                  
+                  <button type="submit" :disabled="isChangingPassword" :class="[
+                    'px-4 py-2 rounded-lg transition-colors',
+                    isChangingPassword 
+                      ? 'bg-gray-400 text-white cursor-not-allowed' 
+                      : 'bg-orange-600 text-white hover:bg-orange-700'
+                  ]">
+                    {{ isChangingPassword ? 'Updating...' : 'Update Password' }}
                   </button>
                 </form>
-              </div>
-
-              <!-- Two-Factor Authentication -->
-              <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Two-Factor Authentication</h3>
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="font-medium text-gray-900 dark:text-gray-100">Enable 2FA</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Add an extra layer of security to your account</p>
-                  </div>
-                  <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
-                    Setup
-                  </button>
-                </div>
               </div>
             </div>
           </div>
 
           <!-- Appearance Settings -->
           <div v-if="activeSection === 'appearance'" class="p-6">
-            <div class="border-b border-gray-200 dark:border-gray-600 pb-6 mb-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Appearance</h2>
-              <p class="text-gray-600 dark:text-gray-400">Customize how the interface looks</p>
+            <div :style="{borderBottomColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border-b pb-6 mb-6">
+              <h2 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-xl font-semibold mb-1">Appearance</h2>
+              <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#4b5563'}">Customize how the interface looks</p>
             </div>
 
             <div class="space-y-6">
               <!-- Theme Selection -->
-              <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Theme</h3>
+              <div :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border rounded-lg p-4">
+                <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-lg font-medium mb-3">Theme</h3>
                 <div class="grid grid-cols-3 gap-4">
                   <button 
                     v-for="theme in themes"
                     :key="theme.id"
                     @click="handleThemeChange(theme.id)"
                     :class="[
-                      'p-4 border-2 rounded-lg transition-all duration-200',
+                      'p-4 border-2 rounded-lg transition-all duration-200 bg-white dark:bg-gray-700',
                       currentTheme === theme.id 
-                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' 
+                        ? 'border-orange-500 ring-2 ring-orange-200 dark:ring-orange-800' 
                         : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                     ]"
                   >
                     <div class="flex flex-col items-center">
                       <div :class="['w-12 h-8 rounded mb-2', theme.preview]"></div>
-                      <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ theme.name }}</span>
+                      <span :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-sm font-medium">{{ theme.name }}</span>
                     </div>
                   </button>
                 </div>
@@ -264,12 +259,12 @@
               </div>
 
               <!-- Language -->
-              <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Language</h3>
-                <select v-model="selectedLanguage" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2">
-                  <option value="en" class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700">English</option>
-                  <option value="es" class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700">Español</option>
-                  <option value="fr" class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700">Français</option>
+              <div :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border rounded-lg p-4">
+                <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-lg font-medium mb-3">Language</h3>
+                <select v-model="selectedLanguage" :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
                 </select>
               </div>
             </div>
@@ -277,43 +272,44 @@
 
           <!-- Help & Support -->
           <div v-if="activeSection === 'support'" class="p-6">
-            <div class="border-b border-gray-200 dark:border-gray-600 pb-6 mb-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Help & Support</h2>
-              <p class="text-gray-600 dark:text-gray-400">Get help and contact support</p>
+            <div :style="{borderBottomColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border-b pb-6 mb-6">
+              <h2 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-xl font-semibold mb-1">Help & Support</h2>
+              <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#4b5563'}">Get help and contact support</p>
             </div>
 
             <div class="space-y-6">
               <!-- Help Resources -->
               <div class="grid md:grid-cols-2 gap-6">
-                <a href="#" class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-orange-300 dark:hover:border-orange-500 transition-colors">
+                <a href="#" :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border rounded-lg p-4 hover:border-orange-300 dark:hover:border-orange-500 transition-colors">
                   <div class="flex items-center">
                     <QuestionMarkCircleIcon class="h-8 w-8 text-orange-600 mr-3" />
                     <div>
-                      <h3 class="font-semibold text-gray-900 dark:text-gray-100">FAQ</h3>
-                      <p class="text-sm text-gray-500 dark:text-gray-400">Find answers to common questions</p>
+                      <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="font-semibold">FAQ</h3>
+                      <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#6b7280'}" class="text-sm">Find answers to common questions</p>
                     </div>
                   </div>
                 </a>
-                <a href="#" class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-orange-300 dark:hover:border-orange-500 transition-colors">
+                <a href="#" :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border rounded-lg p-4 hover:border-orange-300 dark:hover:border-orange-500 transition-colors">
                   <div class="flex items-center">
                     <ChatBubbleLeftRightIcon class="h-8 w-8 text-orange-600 mr-3" />
                     <div>
-                      <h3 class="font-semibold text-gray-900 dark:text-gray-100">Contact Support</h3>
-                      <p class="text-sm text-gray-500 dark:text-gray-400">Get help from our support team</p>
+                      <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="font-semibold">Contact Support</h3>
+                      <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#6b7280'}" class="text-sm">Get help from our support team</p>
                     </div>
                   </div>
                 </a>
               </div>
 
               <!-- Feedback -->
-              <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Send Feedback</h3>
+              <div :style="{borderColor: themeStore.isDarkMode ? '#4b5563' : '#e5e7eb'}" class="border rounded-lg p-4">
+                <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-lg font-medium mb-3">Send Feedback</h3>
                 <form @submit.prevent="submitFeedback" class="space-y-4">
                   <textarea 
                     v-model="feedbackText" 
                     rows="4" 
                     placeholder="Tell us what you think..."
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-500 dark:placeholder-gray-400"
+                    :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}"
+                    class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   ></textarea>
                   <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
                     Send Feedback
@@ -342,28 +338,6 @@ import {
   CameraIcon 
 } from '@heroicons/vue/24/outline'
 
-// Components
-const ToggleSwitch = {
-  props: ['modelValue'],
-  emits: ['update:modelValue'],
-  template: `
-    <button 
-      @click="$emit('update:modelValue', !modelValue)"
-      :class="[
-        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-        modelValue ? 'bg-orange-600' : 'bg-gray-200 dark:bg-gray-600'
-      ]"
-    >
-      <span 
-        :class="[
-          'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-          modelValue ? 'translate-x-6' : 'translate-x-1'
-        ]"
-      ></span>
-    </button>
-  `
-}
-
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`
@@ -373,6 +347,12 @@ const activeSection = ref('profile')
 const selectedTheme = ref('light')
 const selectedLanguage = ref('en')
 const feedbackText = ref('')
+const fileInput = ref(null)
+const isUpdatingProfile = ref(false)
+const isUploadingPhoto = ref(false)
+const isChangingPassword = ref(false)
+const passwordMessage = ref('')
+const passwordMessageType = ref('')
 
 // Settings sections
 const settingsSections = [
@@ -385,14 +365,15 @@ const settingsSections = [
 
 // Theme options
 const themes = [
-  { id: 'light', name: 'Light', preview: 'bg-white border border-gray-200' },
-  { id: 'dark', name: 'Dark', preview: 'bg-gray-800' },
-  { id: 'auto', name: 'Auto', preview: 'bg-gradient-to-r from-white to-gray-800' }
+  { id: 'light', name: 'Light', preview: 'bg-white border border-gray-300' },
+  { id: 'dark', name: 'Dark', preview: 'bg-gray-800 border border-gray-600' },
+  { id: 'auto', name: 'Auto', preview: 'bg-gradient-to-r from-white via-gray-400 to-gray-800 border border-gray-300' }
 ]
 
 // Computed
 const currentTheme = computed(() => {
-  return themeStore.isDarkMode ? 'dark' : 'light'
+  // Return the selected theme preference, not just the current mode
+  return selectedTheme.value
 })
 
 const isDarkMode = computed(() => themeStore.isDarkMode)
@@ -401,8 +382,7 @@ const isDarkMode = computed(() => themeStore.isDarkMode)
 const profileForm = ref({
   firstName: '',
   lastName: '',
-  email: '',
-  bio: ''
+  email: ''
 })
 
 const passwordForm = ref({
@@ -412,10 +392,7 @@ const passwordForm = ref({
 })
 
 const privacySettings = ref({
-  profileVisibility: 'alumni',
-  showEmail: true,
-  showPhone: false,
-  showGraduation: true
+  profileVisibility: 'alumni'
 })
 
 // Computed
@@ -444,14 +421,203 @@ function handleImageError(event) {
   event.target.src = '/default-avatar.png'
 }
 
-function updateProfile() {
-  console.log('Updating profile:', profileForm.value)
-  // Add API call to update profile
+async function updateProfile() {
+  if (isUpdatingProfile.value) return
+  
+  try {
+    isUpdatingProfile.value = true
+    
+    const updateData = {
+      first_name: profileForm.value.firstName,
+      last_name: profileForm.value.lastName,
+      email: profileForm.value.email
+    }
+    
+    console.log('Updating profile with:', updateData)
+    
+    const response = await fetch(`${BASE_URL}/api/auth/profile/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token}`
+      },
+      body: JSON.stringify(updateData)
+    })
+    
+    if (response.ok) {
+      const updatedUser = await response.json()
+      authStore.setUser(updatedUser)
+      
+      // Update the form with the new data to prevent reversion on refresh
+      profileForm.value = {
+        firstName: updatedUser.first_name || '',
+        lastName: updatedUser.last_name || '',
+        email: updatedUser.email || ''
+      }
+      
+      console.log('Profile updated successfully')
+      // You could add a success notification here
+    } else {
+      console.error('Failed to update profile:', await response.text())
+      // You could add an error notification here
+    }
+  } catch (error) {
+    console.error('Error updating profile:', error)
+  } finally {
+    isUpdatingProfile.value = false
+  }
 }
 
-function changePassword() {
-  console.log('Changing password')
-  // Add API call to change password
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+async function handleFileUpload(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  
+  try {
+    isUploadingPhoto.value = true
+    
+    const formData = new FormData()
+    formData.append('profile_picture', file)
+    
+    console.log('Uploading profile picture...')
+    
+    const response = await fetch(`${BASE_URL}/api/auth/profile/`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      },
+      body: formData
+    })
+    
+    if (response.ok) {
+      const updatedUser = await response.json()
+      authStore.setUser(updatedUser)
+      
+      // Update form data to reflect current user state
+      profileForm.value = {
+        firstName: updatedUser.first_name || '',
+        lastName: updatedUser.last_name || '',
+        email: updatedUser.email || ''
+      }
+      
+      console.log('Profile picture updated successfully')
+      // You could add a success notification here
+    } else {
+      console.error('Failed to update profile picture:', await response.text())
+      // You could add an error notification here
+    }
+  } catch (error) {
+    console.error('Error uploading profile picture:', error)
+  } finally {
+    isUploadingPhoto.value = false
+    // Clear the file input
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+  }
+}
+
+async function removeProfilePicture() {
+  try {
+    isUploadingPhoto.value = true
+    
+    const response = await fetch(`${BASE_URL}/api/auth/profile/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token}`
+      },
+      body: JSON.stringify({ profile_picture: null })
+    })
+    
+    if (response.ok) {
+      const updatedUser = await response.json()
+      authStore.setUser(updatedUser)
+      
+      // Update form data to reflect current user state
+      profileForm.value = {
+        firstName: updatedUser.first_name || '',
+        lastName: updatedUser.last_name || '',
+        email: updatedUser.email || ''
+      }
+      
+      console.log('Profile picture removed successfully')
+      // You could add a success notification here
+    } else {
+      console.error('Failed to remove profile picture:', await response.text())
+      // You could add an error notification here
+    }
+  } catch (error) {
+    console.error('Error removing profile picture:', error)
+  } finally {
+    isUploadingPhoto.value = false
+  }
+}
+
+async function changePassword() {
+  if (isChangingPassword.value) return
+  
+  // Reset previous messages
+  passwordMessage.value = ''
+  passwordMessageType.value = ''
+  
+  // Validate passwords match
+  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    passwordMessage.value = 'New passwords do not match'
+    passwordMessageType.value = 'error'
+    return
+  }
+  
+  // Validate password length
+  if (passwordForm.value.newPassword.length < 8) {
+    passwordMessage.value = 'Password must be at least 8 characters long'
+    passwordMessageType.value = 'error'
+    return
+  }
+  
+  try {
+    isChangingPassword.value = true
+    
+    const response = await fetch(`${BASE_URL}/api/auth/change-password/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token}`
+      },
+      body: JSON.stringify({
+        current_password: passwordForm.value.currentPassword,
+        new_password: passwordForm.value.newPassword
+      })
+    })
+    
+    if (response.ok) {
+      passwordMessage.value = 'Password updated successfully! You can now use your new password to login.'
+      passwordMessageType.value = 'success'
+      
+      // Clear the form
+      passwordForm.value = {
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+      
+      console.log('Password changed successfully')
+    } else {
+      const errorData = await response.json()
+      passwordMessage.value = errorData.error || errorData.message || 'Failed to update password'
+      passwordMessageType.value = 'error'
+      console.error('Failed to change password:', errorData)
+    }
+  } catch (error) {
+    passwordMessage.value = 'An error occurred while updating password'
+    passwordMessageType.value = 'error'
+    console.error('Error changing password:', error)
+  } finally {
+    isChangingPassword.value = false
+  }
 }
 
 function submitFeedback() {
@@ -461,19 +627,53 @@ function submitFeedback() {
 
 function handleThemeChange(themeId) {
   console.log('🌙 Theme change requested:', themeId)
-  console.log('🌙 Current theme state before:', themeStore.isDarkMode)
   
+  // AGGRESSIVE theme switching - bypass store initially
   if (themeId === 'light') {
+    console.log('🌙 FORCING LIGHT MODE')
+    // Force remove dark class multiple ways
+    document.documentElement.classList.remove('dark')
+    document.body.classList.remove('dark')
+    document.querySelector('html').classList.remove('dark')
+    
+    // Set localStorage directly
+    localStorage.setItem('theme', 'light')
+    selectedTheme.value = 'light'
+    
+    // Update store state
     themeStore.setTheme('light')
+    
   } else if (themeId === 'dark') {
+    console.log('🌙 FORCING DARK MODE')
+    // Force add dark class
+    document.documentElement.classList.add('dark')
+    document.body.classList.add('dark')
+    
+    localStorage.setItem('theme', 'dark')
+    selectedTheme.value = 'dark'
     themeStore.setTheme('dark')
+    
   } else if (themeId === 'auto') {
-    // For auto, we'll just toggle for now - you can enhance this later
-    themeStore.toggleTheme()
+    console.log('🌙 Setting AUTO mode')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    if (prefersDark) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+    selectedTheme.value = 'auto'
   }
   
-  console.log('🌙 Theme state after:', themeStore.isDarkMode)
-  console.log('🌙 HTML dark class:', document.documentElement.classList.contains('dark'))
+  // Log final state
+  setTimeout(() => {
+    console.log('🔍 FINAL CHECK:')
+    console.log('🔍 HTML has dark class:', document.documentElement.classList.contains('dark'))
+    console.log('🔍 HTML classList:', [...document.documentElement.classList])
+    console.log('🔍 localStorage theme:', localStorage.getItem('theme'))
+    console.log('🔍 themeStore.isDarkMode:', themeStore.isDarkMode)
+  }, 100)
 }
 
 // Initialize with user data
@@ -483,11 +683,52 @@ onMounted(() => {
     profileForm.value = {
       firstName: user.first_name || '',
       lastName: user.last_name || '',
-      email: user.email || '',
-      bio: user.bio || ''
+      email: user.email || ''
     }
   }
+  
+  // Initialize theme selection based on current theme
+  const savedTheme = localStorage.getItem('theme')
+  console.log('🔍 Settings page mounted - Checking theme:')
+  console.log('🔍 localStorage theme:', savedTheme)
+  console.log('🔍 themeStore.isDarkMode:', themeStore.isDarkMode)
+  console.log('🔍 document.documentElement has dark class:', document.documentElement.classList.contains('dark'))
+  
+  // Force sync theme from localStorage
+  if (savedTheme === 'light') {
+    console.log('✅ Forcing light mode')
+    document.documentElement.classList.remove('dark')
+    document.body.classList.remove('dark')
+    selectedTheme.value = 'light'
+  } else if (savedTheme === 'dark') {
+    console.log('✅ Forcing dark mode')
+    document.documentElement.classList.add('dark')
+    document.body.classList.add('dark')
+    selectedTheme.value = 'dark'
+  }
+  
+  // Verify after forcing
+  setTimeout(() => {
+    console.log('🔍 After force - document has dark class:', document.documentElement.classList.contains('dark'))
+  }, 50)
 })
+
+// Watch for auth store changes to keep form in sync
+import { watch } from 'vue'
+watch(
+  () => authStore.user,
+  (newUser) => {
+    if (newUser) {
+      profileForm.value = {
+        firstName: newUser.first_name || '',
+        lastName: newUser.last_name || '',
+        email: newUser.email || ''
+      }
+      console.log('📱 Settings: Auth store updated, refreshing form data')
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped>

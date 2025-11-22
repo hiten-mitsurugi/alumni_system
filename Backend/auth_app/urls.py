@@ -7,7 +7,7 @@ from .views import (
     WorkHistoryListCreateView, WorkHistoryDetailView, BlockUserView, UnblockUserView,
     ProfileView, CheckAlumniDirectoryView, PendingAlumniListView, UserViewSet, TestStatusBroadcastView,
     AlumniDirectoryListCreateView, AlumniDirectoryDetailView, AlumniDirectoryImportView, DebugUsersView, ClearCacheView,
-    CheckEmailExistsView, AdminAnalyticsView, ForgotPasswordView,
+    CheckEmailExistsView, AdminAnalyticsView, ForgotPasswordView, ChangePasswordView,
     # LinkedIn-style views
     FollowUserView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
@@ -33,6 +33,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('register/', RegisterView.as_view(), name='register'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot_password'),
+    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('create-user/', UserCreateView.as_view(), name='create_user'),
     path('pending-alumni/', PendingAlumniListView.as_view(), name='pending_alumni'),
     path('approve-user/<int:user_id>/', ApproveUserView.as_view(), name='approve_user'),

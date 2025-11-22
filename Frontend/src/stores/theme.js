@@ -17,22 +17,28 @@ export const useThemeStore = defineStore('theme', () => {
       isDarkMode: isDarkMode.value
     })
     
-    // Don't apply theme here - HTML script and interval already handle it
-    // Just ensure reactive state is correct
+    // Apply theme to ensure DOM is in sync with reactive state
+    applyTheme()
   }
 
   // Apply theme to document
   const applyTheme = () => {
     console.log('⚡ Applying theme, isDarkMode:', isDarkMode.value)
+    
+    // Force remove/add to ensure clean state
+    document.documentElement.classList.remove('dark')
+    document.body.classList.remove('dark')
+    
     if (isDarkMode.value) {
       document.documentElement.classList.add('dark')
       document.body.classList.add('dark')
       console.log('✅ Added dark class')
     } else {
-      document.documentElement.classList.remove('dark')
-      document.body.classList.remove('dark')
-      console.log('✅ Removed dark class')
+      console.log('✅ Removed dark class (light mode active)')
     }
+    
+    // Log final state for debugging
+    console.log('🔍 Final state - HTML has dark class:', document.documentElement.classList.contains('dark'))
   }
 
   // Toggle theme
@@ -53,8 +59,23 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Set specific theme
   const setTheme = (theme) => {
+    console.log('🎨 setTheme called with:', theme)
     isDarkMode.value = theme === 'dark'
     localStorage.setItem('theme', theme)
+    
+    // Force immediate DOM update
+    if (theme === 'light') {
+      document.documentElement.classList.remove('dark')
+      document.body.classList.remove('dark')
+    } else {
+      document.documentElement.classList.add('dark')
+      document.body.classList.add('dark')
+    }
+    
+    console.log('🎨 setTheme - isDarkMode is now:', isDarkMode.value)
+    console.log('🎨 setTheme - HTML classList:', [...document.documentElement.classList])
+    
+    // Also call applyTheme for consistency
     applyTheme()
   }
 

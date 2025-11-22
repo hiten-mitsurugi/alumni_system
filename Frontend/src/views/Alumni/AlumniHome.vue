@@ -42,6 +42,7 @@ const showCreateForm = ref(false);
 const showMobileSearch = ref(false);
 const isLoading = ref(false);
 const isPosting = ref(false);
+const isAddingComment = ref(false);
 
 // Component refs
 const postCreateForm = ref(null);
@@ -156,13 +157,6 @@ const connectWebSocket = () => {
 
   postsSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    console.log('📨 Raw WebSocket message received:', data);
-
-    // Handle successful post group join
-    if (data.type === 'joined_post') {
-      console.log('✅ Successfully joined post group:', data.post_id);
-    }
-
     handleWebSocketMessage(data);
   };
 
@@ -188,7 +182,6 @@ const handleWebSocketMessage = (data) => {
       updatePostReaction(data);
       break;
     case 'new_comment':
-      console.log('🔔 Received new_comment WebSocket message:', data);
       addNewComment(data);
       break;
   }
@@ -197,7 +190,6 @@ const handleWebSocketMessage = (data) => {
 // API Functions
 const fetchPosts = async () => {
   try {
-    console.log('🔄 Fetching posts from API...');
     const response = await axios.get(`${BASE_URL}/api/posts/`, {
       headers: { Authorization: `Bearer ${authStore.token}` },
       params: {
@@ -206,15 +198,12 @@ const fetchPosts = async () => {
       }
     });
 
-    console.log('✅ Posts response:', response.data);
     posts.value = response.data.results || response.data;
-    console.log('📊 Loaded posts:', posts.value.length);
 
     // Initialize selectedReaction from backend user_reaction data
     posts.value.forEach(post => {
       if (post.reactions_summary && post.reactions_summary.user_reaction) {
         selectedReaction.value[post.id] = post.reactions_summary.user_reaction;
-        console.log(`🎯 Initialized reaction for post ${post.id}: ${post.reactions_summary.user_reaction}`);
       } else {
         // Ensure no old reactions remain for posts without current user reactions
         selectedReaction.value[post.id] = null;
@@ -228,7 +217,6 @@ const fetchPosts = async () => {
 
   } catch (error) {
     console.error('❌ Failed to fetch posts:', error);
-    console.error('Response:', error.response?.data);
     showNotification('Failed to load posts. Please try again.', 'error');
   }
 };
@@ -379,8 +367,13 @@ const reactToPost = async (postId, reactionType) => {
 };
 
 const addComment = async (postId, commentContent, parentId = null, mentions = []) => {
+  // Prevent double submissions
+  if (isAddingComment.value) {
+    return;
+  }
+
   try {
-    console.log(`💬 Adding comment to post ${postId}:`, commentContent);
+    isAddingComment.value = true;
 
     const requestData = {
       content: commentContent,
@@ -392,31 +385,33 @@ const addComment = async (postId, commentContent, parentId = null, mentions = []
       requestData.mentions = mentions;
     }
 
-    const response = await axios.post(`${BASE_URL}/api/posts/${postId}/comment/`, requestData, {
+    await axios.post(`${BASE_URL}/api/posts/${postId}/comment/`, requestData, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
 
-    console.log('✅ Comment added:', response.data);
-    showNotification('Comment added successfully! 💬', 'success');
-
-    // Refresh comments for this post
-    await fetchCommentsForPost(postId);
-    await fetchPosts(); // Also refresh posts to update comment counts
-
-  } catch (error) {
+    showNotification('Comment added successfully! 💬', 'success');  // Always refresh comments to get proper nested structure from API
+  await fetchCommentsForPost(postId);
+  
+  // Update the comment count only for top-level comments (not replies)
+  if (!parentId) {
+    const postIndex = posts.value.findIndex(p => p.id === postId);
+    if (postIndex !== -1) {
+      posts.value[postIndex].comments_count = (posts.value[postIndex].comments_count || 0) + 1;
+    }
+  }  } catch (error) {
     console.error('❌ Failed to add comment:', error);
     showNotification('Failed to add comment. Please try again.', 'error');
+  } finally {
+    isAddingComment.value = false;
   }
 };
 
 const fetchCommentsForPost = async (postId) => {
   try {
-    console.log(`🔄 Fetching comments for post ${postId}`);
     const response = await axios.get(`${BASE_URL}/api/posts/${postId}/comments/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
 
-    console.log('✅ Comments fetched:', response.data);
     comments.value[postId] = response.data.comments || response.data;
 
   } catch (error) {
@@ -470,12 +465,10 @@ const copyPostLink = (postId) => {
 
 const deleteComment = async (commentId) => {
   try {
-    console.log(`🗑️ Deleting comment ${commentId}`);
     await axios.delete(`${BASE_URL}/api/posts/comments/${commentId}/delete/`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
 
-    console.log('✅ Comment deleted successfully');
     showNotification('Comment deleted successfully! 🗑️', 'success');
 
     // Refresh comments for the currently selected post
@@ -516,8 +509,6 @@ const reactToComment = async (data) => {
 
 const replyToComment = async (data) => {
   try {
-    console.log('💬 Replying to comment:', data);
-    // Use the commentId as the parent_id for nested replies
     await addComment(selectedPost.value.id, data.content, data.commentId, data.mentions || []);
 
   } catch (error) {
@@ -566,6 +557,13 @@ const updatePostReaction = (data) => {
 
 const addNewComment = (data) => {
   console.log('🔔 Adding new comment via WebSocket:', data);
+  
+  // Skip if this is a comment/reply that was just added by the current user
+  // to prevent duplication with the API response
+  if (data.user_id === currentUser?.value?.id && isAddingComment.value) {
+    console.log('⏭️ Skipping WebSocket comment - just added by current user');
+    return;
+  }
 
   // Add comment to the comments array for this post
   if (!comments.value[data.post_id]) {
@@ -575,25 +573,39 @@ const addNewComment = (data) => {
   // Check if comment already exists to avoid duplicates
   const existingComment = comments.value[data.post_id].find(c => c.id === data.comment_id);
   if (!existingComment) {
-    comments.value[data.post_id].push({
+    const newComment = {
       id: data.comment_id,
       user: {
         id: data.user_id,
         first_name: data.user_name.split(' ')[0],
-        last_name: data.user_name.split(' ').slice(1).join(' ')
+        last_name: data.user_name.split(' ').slice(1).join(' '),
+        full_name: data.user_name
       },
       content: data.content,
       parent_id: data.parent_id,
       created_at: data.timestamp,
       likes_count: 0,
-      replies_count: 0
-    });
+      replies_count: 0,
+      replies: []
+    };
 
-    console.log('✅ New comment added via WebSocket');
+    // If this is a reply, add it to the parent comment's replies array
+    if (data.parent_id) {
+      const parentComment = comments.value[data.post_id].find(c => c.id === data.parent_id);
+      if (parentComment) {
+        if (!parentComment.replies) parentComment.replies = [];
+        parentComment.replies.push(newComment);
+      }
+    } else {
+      // This is a top-level comment
+      comments.value[data.post_id].push(newComment);
+    }
+
+    // Only refresh posts if this comment wasn't added by the current user
+    if (data.user_id !== currentUser?.value?.id) {
+      fetchPosts();
+    }
   }
-
-  // Also refresh posts to update comment counts
-  fetchPosts();
 };
 
 const handleReactionUpdated = (postId, reactionType) => {

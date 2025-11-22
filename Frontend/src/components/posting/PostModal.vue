@@ -193,7 +193,7 @@
             </div>
             <button
               @click="addComment"
-              :disabled="!newComment.trim()"
+              :disabled="!newComment.trim() || isSubmittingComment"
               class="flex items-center justify-center flex-shrink-0 w-8 h-8 font-medium text-white transition-all duration-200 bg-orange-600 rounded-full hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,9 +346,11 @@
                 :current-user-id="currentUserId"
                 :is-replying="replyContext?.commentId === comment.id"
                 @reply="handleReplyToComment"
+                @reply-to-comment="handleReplyToComment"
                 @like="handleCommentLike"
                 @edit="handleCommentEdit"
                 @delete="handleCommentDelete"
+                @delete-comment="handleDeleteComment"
                 @cancel-reply="cancelReply"
               />
             </div>
@@ -408,7 +410,7 @@
               </div>
               <button
                 @click="addComment"
-                :disabled="!newComment.trim()"
+                :disabled="!newComment.trim() || isSubmittingComment"
                 class="flex-shrink-0 px-4 py-2 font-medium text-white transition-all duration-200 bg-orange-600 rounded-full hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -514,6 +516,7 @@ const currentMediaIndex = ref(0)
 // const focusCommentInput = ref(false) // Add missing property to prevent Vue warning
 const showReactionsModal = ref(false)
 const showEmojiPicker = ref(false)
+const isSubmittingComment = ref(false)
 const commentInputRef = ref(null)
 const mentionedUsers = ref([])
 
@@ -617,28 +620,43 @@ const cancelReply = () => {
 }
 
 const addComment = () => {
+  if (isSubmittingComment.value) {
+    return;
+  }
+  
   const content = newComment.value?.trim()
-  if (!content) return
-
-  // Extract mentions from the comment
-  const mentions = extractMentions(content)
-
-  if (isReplying.value && replyContext.value) {
-    // This is a reply to a specific comment
-    emit('reply-to-comment', {
-      commentId: replyContext.value.commentId,
-      content: content,
-      mentions: mentions
-    })
-  } else {
-    // This is a new top-level comment - emit with same signature as expected by AlumniHome
-    emit('add-comment', props.post.id, content, null, mentions)
+  if (!content) {
+    return;
   }
 
-  // Reset form
-  newComment.value = ''
-  mentionedUsers.value = []
-  clearReplyContext()
+  try {
+    isSubmittingComment.value = true;
+    
+    // Extract mentions from the comment
+    const mentions = extractMentions(content)
+
+    if (isReplying.value && replyContext.value) {
+      // This is a reply to a specific comment
+      emit('reply-to-comment', {
+        commentId: replyContext.value.commentId,
+        content: content,
+        mentions: mentions
+      })
+    } else {
+      // This is a new top-level comment - emit with same signature as expected by AlumniHome
+      emit('add-comment', props.post.id, content, null, mentions)
+    }
+
+    // Reset form
+    newComment.value = ''
+    mentionedUsers.value = []
+    clearReplyContext()
+  } finally {
+    // Reset loading state after a short delay to prevent rapid clicking
+    setTimeout(() => {
+      isSubmittingComment.value = false;
+    }, 500);
+  }
 }
 
 const handleReaction = (postId, reactionType) => {
@@ -706,10 +724,23 @@ const handleReplyToComment = (data) => {
   }
   isReplying.value = true
 
-  // Focus the main comment input
+  // Focus the main comment input safely
   nextTick(() => {
-    if (commentInputRef.value) {
-      commentInputRef.value.focus()
+    try {
+      if (commentInputRef.value) {
+        // Try to focus the MentionTextarea component
+        if (commentInputRef.value.focus) {
+          commentInputRef.value.focus()
+        } else if (commentInputRef.value.$el) {
+          // Try to focus the underlying element
+          const inputElement = commentInputRef.value.$el.querySelector('textarea') || commentInputRef.value.$el.querySelector('input')
+          if (inputElement && inputElement.focus) {
+            inputElement.focus()
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Could not focus comment input:', error)
     }
   })
 }

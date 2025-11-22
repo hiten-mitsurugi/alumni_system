@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     PostFeedView, PostCreateView, PostDetailView, PostReactionView, 
-    CommentCreateView, CommentDeleteView, PostShareView, PostRepostView,
+    CommentCreateView, CommentDeleteView, CommentReactionView, PostShareView, PostRepostView,
     PostApprovalView, SavePostView, PostReportView, AdminReportListView, 
     AdminReportActionView, PostPinView, PostDeleteView
 )
@@ -20,6 +20,8 @@ urlpatterns = [
     path('<int:post_id>/comment/', CommentCreateView.as_view(), name='post-comment'),
     path('<int:post_id>/comments/', CommentCreateView.as_view(), name='post-comments'),
     path('comments/<int:comment_id>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+    path('comments/<int:comment_id>/react/', CommentReactionView.as_view(), name='comment-react'),
+    path('comments/<int:comment_id>/reactions/', CommentReactionView.as_view(), name='comment-reactions'),
     
     # Share and Repost
     path('<int:post_id>/share/', PostShareView.as_view(), name='post-share'),

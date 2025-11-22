@@ -13,30 +13,133 @@ class ProfileView(APIView):
         if cached_data:
             return Response(cached_data)
 
-        serializer = ProfileSerializer(user)
-        data = serializer.data
-        cache.set(cache_key, data, timeout=300)
-        return Response(data)
+        # Simple user data without complex relationships - DON'T create Profile objects
+        user_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'middle_name': user.middle_name,
+            'profile_picture': user.profile_picture.url if user.profile_picture else None,
+            'contact_number': user.contact_number,
+            'program': user.program,
+            'year_graduated': user.year_graduated,
+            'birth_date': user.birth_date,
+            'user_type': user.user_type,
+            'is_approved': user.is_approved,
+            'is_active': user.is_active,
+            'sex': user.sex,
+            'gender': user.gender,
+            'civil_status': user.civil_status,
+            'employment_status': user.employment_status,
+        }
+        
+        cache.set(cache_key, user_data, timeout=300)
+        return Response(user_data)
 
     def put(self, request):
-        user = request.user
-        serializer = ProfileSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            cache_key = f"user_profile_{user.id}"
-            cache.set(cache_key, serializer.data, timeout=300)
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.patch(request)
 
     def patch(self, request):
         user = request.user
-        serializer = ProfileSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            cache_key = f"user_profile_{user.id}"
-            cache.set(cache_key, serializer.data, timeout=300)
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Only update basic user fields, avoid complex relationships
+        updatable_fields = {
+            'first_name': request.data.get('first_name'),
+            'last_name': request.data.get('last_name'), 
+            'email': request.data.get('email'),
+            'middle_name': request.data.get('middle_name'),
+            'contact_number': request.data.get('contact_number'),
+            'program': request.data.get('program'),
+            'year_graduated': request.data.get('year_graduated'),
+            'birth_date': request.data.get('birth_date'),
+            'sex': request.data.get('sex'),
+            'gender': request.data.get('gender'),
+            'civil_status': request.data.get('civil_status'),
+            'employment_status': request.data.get('employment_status'),
+        }
+        
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            try:
+                pic = request.FILES['profile_picture']
+                # Generate unique filename
+                import uuid
+                import os
+                ext = os.path.splitext(pic.name)[1] or ''
+                new_name = f"profile_{user.id}_{uuid.uuid4().hex}{ext}"
+                user.profile_picture.save(new_name, pic, save=False)
+                logger.info(f"Profile picture uploaded for user {user.id}: {new_name}")
+            except Exception as e:
+                logger.error(f"Failed to upload profile picture for user {user.id}: {str(e)}")
+                return Response({'error': 'Failed to upload profile picture'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Handle profile picture removal
+        if request.data.get('profile_picture') is None and 'profile_picture' in request.data:
+            if user.profile_picture:
+                try:
+                    # Delete the old file
+                    user.profile_picture.delete(save=False)
+                    logger.info(f"Profile picture removed for user {user.id}")
+                except Exception as e:
+                    logger.error(f"Failed to delete profile picture for user {user.id}: {str(e)}")
+        
+        # Update only fields that are provided and not None
+        for field, value in updatable_fields.items():
+            if value is not None:
+                setattr(user, field, value)
+        
+        # Save the user directly without any Profile model interaction
+        try:
+            user.save()
+            logger.info(f"User {user.id} profile updated successfully")
+        except Exception as e:
+            logger.error(f"Failed to save user {user.id}: {str(e)}")
+            return Response({'error': 'Failed to update profile'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        # Clear cache
+        cache_key = f"user_profile_{user.id}"
+        cache.delete(cache_key)
+        
+        # Clear additional user-related caches
+        cache.delete(f"user_detail_{user.id}")
+        cache.delete("approved_alumni_list")
+        
+        # Clear alumni list cache patterns that might include user name
+        if hasattr(user, 'first_name') and hasattr(user, 'last_name'):
+            for emp_status in ['', 'employed_locally', 'employed_internationally', 'self_employed', 'unemployed', 'retired']:
+                for gender in ['', 'male', 'female']:
+                    for status_filter in ['', 'active', 'blocked']:
+                        cache_key_pattern = f"approved_alumni_list_{emp_status}_{gender}_{user.year_graduated or ''}_{user.program or ''}_{status_filter}_"
+                        cache.delete(cache_key_pattern)
+                        # Also clear with search terms
+                        cache.delete(f"{cache_key_pattern}{user.first_name.lower()}")
+                        cache.delete(f"{cache_key_pattern}{user.last_name.lower()}")
+        
+        # Return updated user data
+        updated_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'middle_name': user.middle_name,
+            'profile_picture': user.profile_picture.url if user.profile_picture else None,
+            'contact_number': user.contact_number,
+            'program': user.program,
+            'year_graduated': user.year_graduated,
+            'birth_date': user.birth_date,
+            'user_type': user.user_type,
+            'is_approved': user.is_approved,
+            'is_active': user.is_active,
+            'sex': user.sex,
+            'gender': user.gender,
+            'civil_status': user.civil_status,
+            'employment_status': user.employment_status,
+        }
+        
+        return Response(updated_data)
 
 
 class EnhancedProfileView(APIView):

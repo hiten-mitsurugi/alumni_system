@@ -2,7 +2,7 @@
 try:
     from .authentication import (
         RegisterView, LoginView, LogoutView, ConfirmTokenView, 
-        CheckEmailExistsView, ForgotPasswordView
+        CheckEmailExistsView, ForgotPasswordView, ChangePasswordView
     )
     from .user_management import (
         ApproveUserView, RejectUserView, BlockUserView, UnblockUserView,
@@ -50,7 +50,7 @@ except ImportError as e:
 __all__ = [
     # Authentication
     'RegisterView', 'LoginView', 'LogoutView', 'ConfirmTokenView', 
-    'CheckEmailExistsView', 'ForgotPasswordView',
+    'CheckEmailExistsView', 'ForgotPasswordView', 'ChangePasswordView',
     
     # User Management
     'ApproveUserView', 'RejectUserView', 'BlockUserView', 'UnblockUserView',

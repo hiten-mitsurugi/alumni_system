@@ -414,3 +414,46 @@ Alumni Mates Support Team
                 {'detail': 'An error occurred processing your request. Please try again later.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        
+        if not current_password or not new_password:
+            return Response({
+                'error': 'Both current password and new password are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify current password
+        if not user.check_password(current_password):
+            return Response({
+                'error': 'Current password is incorrect'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate new password length
+        if len(new_password) < 8:
+            return Response({
+                'error': 'New password must be at least 8 characters long'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Set new password
+            user.set_password(new_password)
+            user.save()
+            
+            logger.info(f"Password changed successfully for user {user.id}")
+            
+            return Response({
+                'message': 'Password updated successfully'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error changing password for user {user.id}: {str(e)}")
+            return Response({
+                'error': 'Failed to update password'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

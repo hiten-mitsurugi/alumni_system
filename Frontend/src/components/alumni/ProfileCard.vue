@@ -334,6 +334,20 @@ onMounted(() => {
   fetchUserData()
 })
 
+// Watch auth store for user changes to update ProfileCard in real-time
+import { watch } from 'vue'
+watch(
+  () => authStore.user,
+  (newUser) => {
+    if (newUser) {
+      userData.value = newUser
+      profileData.value = newUser.profile || null
+      console.log('📱 ProfileCard: Auth store updated, refreshing user data')
+    }
+  },
+  { deep: true, immediate: true }
+)
+
 // Method to refresh stats (can be called when posts are added/deleted)
 const refreshStats = async () => {
   await fetchUserStats()
