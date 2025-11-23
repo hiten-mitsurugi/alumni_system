@@ -261,6 +261,19 @@ class FollowUserView(APIView):
             status='pending'
         )
         
+        # Create notification for connection invitation
+        from notifications_app.utils import create_notification
+        create_notification(
+            user=target_user,
+            actor=request.user,
+            notification_type='social',
+            title='Connection Request',
+            message=f"{request.user.first_name} {request.user.last_name} wants to connect with you",
+            link_route='/alumni/connections',
+            link_params={'tab': 'invitations'},
+            metadata={'invitation_id': following.id}
+        )
+        
         return Response({
             'message': 'Connection request sent successfully',
             'status': 'pending'
@@ -484,6 +497,19 @@ class InvitationAcceptView(APIView):
             # Accept the invitation
             invitation.status = 'accepted'
             invitation.save()
+            
+            # Create notification for the person who sent the invitation
+            from notifications_app.utils import create_notification
+            create_notification(
+                user=invitation.follower,  # Person who sent the invitation
+                actor=request.user,        # Person who accepted
+                notification_type='social',
+                title='Connection Accepted',
+                message=f"{request.user.first_name} {request.user.last_name} accepted your connection request",
+                link_route='/alumni/profile',
+                link_params={'userId': request.user.id},
+                metadata={'connection_id': invitation.id}
+            )
             
             logger.info(f"Successfully accepted invitation {invitation_id}")
             

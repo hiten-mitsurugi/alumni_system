@@ -33,8 +33,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         
-        # User-specific notification group
-        self.notification_group = f'notifications_user_{self.user.id}'
+        # User-specific notification group (match auth_app naming)
+        self.notification_group = f'user_{self.user.id}'
         
         # Join notification group
         await self.channel_layer.group_add(

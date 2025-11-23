@@ -64,6 +64,11 @@ def broadcast_notification(user_id, notification):
     notification_data = NotificationSerializer(notification).data
     
     try:
+        print(f"🚀 Broadcasting notification to group 'user_{user_id}': {notification.title}")
+        print(f"   → Target user: {user_id}")
+        print(f"   → Notification type: {notification.type}")
+        print(f"   → Actor: {notification.actor.get_full_name() if notification.actor else 'System'}")
+        
         async_to_sync(channel_layer.group_send)(
             f'user_{user_id}',
             {
@@ -71,7 +76,7 @@ def broadcast_notification(user_id, notification):
                 'notification': notification_data
             }
         )
-        print(f"📡 Broadcasted notification to group 'user_{user_id}': {notification.title}")
+        print(f"✅ Successfully broadcasted notification to user {user_id}")
     except Exception as e:
         print(f"⚠️ Failed to broadcast notification to user {user_id}: {e}")
 

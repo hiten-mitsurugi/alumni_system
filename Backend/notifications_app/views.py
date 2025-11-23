@@ -45,7 +45,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
             user=request.user,
             read_at__isnull=True
         ).count()
-        return Response({'count': count})
+        return Response({'unread_count': count})
     
     @action(detail=True, methods=['patch'])
     def mark_as_read(self, request, pk=None):

@@ -493,8 +493,11 @@ class CommentCreateView(APIView):
     
     def _broadcast_new_comment(self, comment, user):
         """Broadcast new comment to real-time subscribers"""
+        from notifications_app.utils import create_notification
+        
         channel_layer = get_channel_layer()
         
+        # Broadcast to post-specific group for real-time updates
         async_to_sync(channel_layer.group_send)(
             f'post_{comment.post.id}',
             {
@@ -508,6 +511,27 @@ class CommentCreateView(APIView):
                 'timestamp': comment.created_at.isoformat()
             }
         )
+        
+        # Send personal notification to post author (if not commenting on own post)
+        if comment.post.user.id != user.id:
+            try:
+                create_notification(
+                    user=comment.post.user,
+                    notification_type='comment',
+                    title='New Comment on Your Post',
+                    message=f"{user.first_name} {user.last_name} commented on your post: '{comment.content[:50]}{'...' if len(comment.content) > 50 else ''}'",
+                    link_route='/alumni/home',
+                    link_params={'postId': comment.post.id},
+                    metadata={
+                        'post_id': comment.post.id,
+                        'comment_id': comment.id,
+                        'commenter_name': f"{user.first_name} {user.last_name}"
+                    },
+                    actor=user
+                )
+            except Exception as e:
+                print(f"⚠️ Failed to create comment notification: {e}")
+                # Don't fail the comment creation if notification fails
     
     def _invalidate_post_feed_cache(self):
         """Invalidate post feed cache entries"""
@@ -808,6 +832,20 @@ class PostShareView(APIView):
             # Update share count
             original_post.shares_count += 1
             original_post.save(update_fields=['shares_count'])
+            
+            # Create notification for original post author (if not sharing own post)
+            if original_post.user != request.user:
+                from notifications_app.utils import create_notification
+                create_notification(
+                    user=original_post.user,
+                    actor=request.user,
+                    notification_type='post',
+                    title='Post Shared',
+                    message=f"{request.user.first_name} {request.user.last_name} shared your post",
+                    link_route='/alumni/home',
+                    link_params={'postId': original_post.id},
+                    metadata={'shared_post_id': shared_post.id, 'shared_text': shared_text}
+                )
             
             # Broadcast share
             self._broadcast_post_share(shared_post, original_post, request.user)

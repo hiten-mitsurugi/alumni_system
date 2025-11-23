@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useThemeStore } from '@/stores/theme';
+import { useNotificationsStore } from '@/stores/notifications';
 import axios from 'axios';
 
 // Import dedicated CSS file
@@ -29,6 +30,7 @@ const props = defineProps({
 const router = useRouter();
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
+const notificationsStore = useNotificationsStore();
 
 // State
 const posts = ref([]);
@@ -649,6 +651,10 @@ onMounted(() => {
   console.log('🚀 AlumniHome component mounted, initializing...');
   connectWebSocket();
   fetchPosts();
+  
+  // Initialize notifications store for real-time comment notifications
+  console.log('🔔 Initializing notification store for comment notifications...');
+  notificationsStore.initialize();
 });
 
 onUnmounted(() => {
@@ -656,6 +662,9 @@ onUnmounted(() => {
   if (postsSocket) {
     postsSocket.close();
   }
+  
+  // Note: Don't disconnect notification WebSocket here since it's used across the app
+  // The notification store manages its own lifecycle
 });
 </script>
 

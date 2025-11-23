@@ -5,7 +5,6 @@ import axios from 'axios';
 export const useNotificationsStore = defineStore('notifications', () => {
   // State
   const items = ref([]);
-  const unreadCount = ref(0);
   const isLoading = ref(false);
   const wsConnected = ref(false);
   const ws = ref(null);
@@ -15,6 +14,13 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const unreadNotifications = computed(() => 
     items.value.filter(n => !n.read_at)
   );
+
+  // Computed unread count (reactive based on items)
+  const unreadCount = computed(() => {
+    const count = items.value.filter(n => !n.read_at).length;
+    console.log('🔢 Computing unreadCount:', count, 'from', items.value.length, 'total notifications');
+    return count;
+  });
 
   // Actions
   async function fetchNotifications(filters = {}) {
@@ -34,26 +40,11 @@ export const useNotificationsStore = defineStore('notifications', () => {
       );
       
       items.value = response.data.results || response.data;
-      await fetchUnreadCount();
+      console.log('📥 Fetched notifications:', items.value.length, 'total, unread count will be computed automatically');
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  async function fetchUnreadCount() {
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get(
-        'http://localhost:8000/api/notifications/unread_count/',
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      unreadCount.value = response.data.unread_count || 0;
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
     }
   }
 
@@ -72,7 +63,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
       const notification = items.value.find(n => n.id === notificationId);
       if (notification && !notification.read_at) {
         notification.read_at = new Date().toISOString();
-        unreadCount.value = Math.max(0, unreadCount.value - 1);
+        console.log('✅ Marked notification as read, unread count will update automatically');
       }
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
@@ -96,7 +87,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
           n.read_at = new Date().toISOString();
         }
       });
-      unreadCount.value = 0;
+      console.log('✅ Marked all notifications as read, unread count will update automatically');
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
     }
@@ -142,9 +133,6 @@ export const useNotificationsStore = defineStore('notifications', () => {
         // Prepend new notification to list IMMEDIATELY
         items.value.unshift(data.notification);
         
-        // Increment unread count
-        unreadCount.value++;
-        
         console.log('   New unread count AFTER:', unreadCount.value);
         console.log('   Total notifications in store:', items.value.length);
         console.log('✅ Notification added to store successfully!');
@@ -184,7 +172,6 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   function reset() {
     items.value = [];
-    unreadCount.value = 0;
     isLoading.value = false;
     isInitialized.value = false;
     disconnectWebSocket();
@@ -208,12 +195,6 @@ export const useNotificationsStore = defineStore('notifications', () => {
     }
   }
 
-  // Force refresh counts (for ensuring real-time accuracy)
-  async function forceRefresh() {
-    console.log('🔄 Force refreshing notification counts...');
-    await fetchUnreadCount();
-  }
-
   return {
     // State
     items,
@@ -227,13 +208,11 @@ export const useNotificationsStore = defineStore('notifications', () => {
     
     // Actions
     fetchNotifications,
-    fetchUnreadCount,
     markAsRead,
     markAllAsRead,
     connectWebSocket,
     disconnectWebSocket,
     initialize,
-    forceRefresh,
     reset
   };
 });
