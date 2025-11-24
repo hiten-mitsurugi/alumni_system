@@ -93,6 +93,10 @@ class ActiveSurveyQuestionsView(APIView):
             has_any_response = answered_count > 0
             is_complete = (answered_count >= total_questions) and total_questions > 0
             
+            # Calculate visible questions based on conditional logic and user's responses
+            from ..utils import calculate_visible_questions_for_user
+            visibility_info = calculate_visible_questions_for_user(template, request.user)
+            
             template_categories = []
             for category in categories:
                 active_questions = category.questions.filter(is_active=True).order_by('order', 'question_text')
@@ -119,9 +123,13 @@ class ActiveSurveyQuestionsView(APIView):
                         'allow_multiple_responses': allow_multiple,
                         'has_answered': has_any_response,  # Keep for backward compatibility
                         'has_any_response': has_any_response,  # New: any response exists
-                        'is_complete': is_complete,  # New: all questions answered
+                        'is_complete': is_complete,  # Old: all raw questions answered
                         'answered_count': answered_count,
                         'total_questions': total_questions,
+                        # New conditional logic fields
+                        'visible_questions': visibility_info['visible_questions'],
+                        'answered_visible': visibility_info['answered_visible'],
+                        'branching_complete': visibility_info['branching_complete'],
                     },
                     'categories': template_categories
                 })

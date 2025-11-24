@@ -272,3 +272,132 @@ def get_survey_response_statistics(survey_template, programs=None, graduation_ye
         'total_questions': total_questions,
         'min_answers_required': min_answers_required
     }
+
+
+def calculate_visible_questions_for_user(template, user):
+    """
+    Calculate how many questions are actually visible to a user based on conditional logic.
+    This considers category and question-level dependencies and the user's current responses.
+    
+    Args:
+        template (SurveyTemplate): The survey template
+        user (User): The user whose responses determine visibility
+    
+    Returns:
+        dict: {
+            'visible_questions': int,
+            'total_questions': int,
+            'answered_visible': int,
+            'branching_complete': bool
+        }
+    """
+    from survey_app.models import SurveyResponse, SurveyTemplateCategory
+    
+    # Get user's responses for this template
+    category_ids = list(template.categories.values_list('id', flat=True))
+    user_responses = SurveyResponse.objects.filter(
+        user=user,
+        question__category_id__in=category_ids
+    ).select_related('question')
+    
+    # Build response map: question_id -> response_value
+    response_map = {}
+    for resp in user_responses:
+        try:
+            response_map[resp.question.id] = resp.response_data.get('value') if isinstance(resp.response_data, dict) else resp.response_data
+        except:
+            response_map[resp.question.id] = resp.response_data
+    
+    # Helper: Normalize values for comparison
+    def normalize_value(value):
+        if value is None or value == '':
+            return None
+        if isinstance(value, bool):
+            return 'Yes' if value else 'No'
+        return str(value)
+    
+    # Helper: Parse dependency value (handle JSON arrays)
+    def parse_dependency_value(dep_value):
+        if not dep_value:
+            return []
+        try:
+            import json
+            parsed = json.loads(dep_value)
+            return parsed if isinstance(parsed, list) else [parsed]
+        except:
+            return [dep_value]
+    
+    # Helper: Check if category should be visible
+    def is_category_visible(category, all_categories):
+        if not category.depends_on_category_id:
+            return True
+        
+        # Find dependency category
+        dep_cat = next((c for c in all_categories if c.id == category.depends_on_category_id), None)
+        if not dep_cat:
+            return False
+        
+        # Find dependency question by text
+        dep_question = dep_cat.questions.filter(
+            is_active=True,
+            question_text=category.depends_on_question_text
+        ).first()
+        
+        if not dep_question:
+            return False
+        
+        # Check user's answer
+        user_answer = normalize_value(response_map.get(dep_question.id))
+        if not user_answer:
+            return False
+        
+        # Check if answer matches required values
+        required_values = parse_dependency_value(category.depends_on_value)
+        return any(normalize_value(val) == user_answer for val in required_values)
+    
+    # Helper: Check if question should be visible
+    def is_question_visible(question):
+        if not question.depends_on_question_id:
+            return True
+        
+        dep_answer = normalize_value(response_map.get(question.depends_on_question_id))
+        if not dep_answer:
+            return False
+        
+        required_values = parse_dependency_value(question.depends_on_value)
+        return any(normalize_value(val) == dep_answer for val in required_values)
+    
+    # Get all categories for this template
+    template_categories = template.categories.filter(is_active=True).prefetch_related('questions').order_by(
+        'surveytemplatecategory__order', 'order'
+    )
+    categories_list = list(template_categories)
+    
+    total_questions = 0
+    visible_questions = 0
+    answered_visible = 0
+    
+    for category in categories_list:
+        active_questions = category.questions.filter(is_active=True)
+        total_questions += active_questions.count()
+        
+        # Check if this category is visible based on dependencies
+        if not is_category_visible(category, categories_list):
+            continue
+        
+        # Category is visible, check each question
+        for question in active_questions:
+            if is_question_visible(question):
+                visible_questions += 1
+                if question.id in response_map:
+                    answered_visible += 1
+    
+    # User has completed branching path if they answered all visible questions
+    branching_complete = (visible_questions > 0 and answered_visible >= visible_questions)
+    
+    return {
+        'visible_questions': visible_questions,
+        'total_questions': total_questions,
+        'answered_visible': answered_visible,
+        'branching_complete': branching_complete
+    }

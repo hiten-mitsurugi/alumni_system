@@ -167,8 +167,8 @@ const getFormProgress = (formIndex) => {
     }
   })
   
-  // If form is complete, show full progress
-  if (form?.template?.is_complete) {
+  // If form is complete (branching-aware or legacy), show full progress
+  if (form?.template?.branching_complete || form?.template?.is_complete) {
     return {
       answered: totalQuestions,
       total: totalQuestions,
@@ -187,12 +187,24 @@ const getFormProgress = (formIndex) => {
 const getFormStatus = (formIndex) => {
   const form = surveyData.value[formIndex]
   
-  // Check if form is complete
+  // Check if form is complete (branching-aware)
+  if (form?.template?.branching_complete) {
+    return 'complete'
+  }
+  
+  // Legacy: check old is_complete flag
   if (form?.template?.is_complete) {
     return 'complete'
   }
   
   const progress = getFormProgress(formIndex)
+  
+  // If user has responses but none are visible (due to conditional logic changes),
+  // still show as in-progress rather than not-started
+  if (progress.answered === 0 && form?.template?.has_any_response) {
+    return 'in-progress'
+  }
+  
   if (progress.answered === 0) return 'not-started'
   if (progress.answered === progress.total) return 'complete'
   return 'in-progress'
@@ -398,8 +410,8 @@ const loadExistingResponses = async () => {
 const openForm = (formIndex) => {
   const form = surveyData.value[formIndex]
   
-  // Check if form is complete and not allowing multiple responses
-  if (form?.template?.is_complete && !form?.template?.allow_multiple_responses) {
+  // Check if form is complete (branching-aware) and not allowing multiple responses
+  if ((form?.template?.branching_complete || form?.template?.is_complete) && !form?.template?.allow_multiple_responses) {
     // Still open but will show the notice banner
     currentFormIndex.value = formIndex
     showCardGrid.value = false
@@ -818,19 +830,19 @@ watch(
         <div
           v-for="(form, formIndex) in surveyData"
           :key="form?.template?.id || formIndex"
-          @click="form?.template?.is_complete && !form?.template?.allow_multiple_responses ? null : openForm(formIndex)"
+          @click="(form?.template?.branching_complete || form?.template?.is_complete) && !form?.template?.allow_multiple_responses ? null : openForm(formIndex)"
           :class="[
             'rounded-lg shadow-md transition-all duration-300 overflow-hidden',
-            form?.template?.is_complete && !form?.template?.allow_multiple_responses 
+            (form?.template?.branching_complete || form?.template?.is_complete) && !form?.template?.allow_multiple_responses 
               ? 'opacity-75 cursor-not-allowed' 
               : 'cursor-pointer hover:shadow-xl',
             themeStore.isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200',
-            !form?.template?.is_complete || form?.template?.allow_multiple_responses ? (themeStore.isDarkMode ? 'hover:bg-gray-750' : 'hover:border-blue-300') : ''
+            !(form?.template?.branching_complete || form?.template?.is_complete) || form?.template?.allow_multiple_responses ? (themeStore.isDarkMode ? 'hover:bg-gray-750' : 'hover:border-blue-300') : ''
           ]"
         >
           <!-- Already Answered Badge (Top Banner) -->
           <div 
-            v-if="form?.template?.is_complete && !form?.template?.allow_multiple_responses"
+            v-if="(form?.template?.branching_complete || form?.template?.is_complete) && !form?.template?.allow_multiple_responses"
             class="bg-orange-600 text-white text-center py-2 px-4 text-sm font-medium"
           >
             ✓ You have already answered this form
@@ -978,7 +990,7 @@ watch(
       <div v-else-if="currentForm && currentCategory" class="max-w-3xl mx-auto">
         <!-- Already Answered Notice (Full-width banner above form) -->
         <div
-          v-if="currentForm?.template?.is_complete && !currentForm?.template?.allow_multiple_responses"
+          v-if="(currentForm?.template?.branching_complete || currentForm?.template?.is_complete) && !currentForm?.template?.allow_multiple_responses"
           class="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-6 text-center"
         >
           <div class="flex items-center justify-center gap-3 mb-2">
