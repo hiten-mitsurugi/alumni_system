@@ -12,6 +12,12 @@ from .views import (
     FollowUserView, AchievementListCreateView,
     AchievementDetailView, EducationListCreateView, EducationDetailView, ProfileSearchView,
     SuggestedConnectionsView, UserByNameView,
+    # Membership views
+    MembershipListCreateView, MembershipDetailView,
+    RecognitionListCreateView, RecognitionDetailView,
+    TrainingListCreateView, TrainingDetailView,
+    PublicationListCreateView, PublicationDetailView,
+    CertificateListCreateView, CertificateDetailView, CSEStatusView,
     # Additional views for comprehensive model coverage (temporarily commented out)
     # AddressListCreateView, AddressDetailView, SkillsRelevanceView, CurriculumRelevanceView,
     # PerceptionStudiesView, FeedbackView
@@ -103,6 +109,33 @@ urlpatterns = [
     # Address endpoints
     path('profile/<int:user_id>/addresses/', UserAddressesView.as_view(), name='user_addresses'),
     
+    # Membership endpoints
+    path('memberships/', MembershipListCreateView.as_view(), name='memberships_list_create'),
+    path('memberships/<int:pk>/', MembershipDetailView.as_view(), name='membership_detail'),
+    path('memberships/user/<int:user_id>/', MembershipListCreateView.as_view(), name='user_memberships'),
+    
+    # Recognition endpoints
+    path('recognitions/', RecognitionListCreateView.as_view(), name='recognitions_list_create'),
+    path('recognitions/<int:pk>/', RecognitionDetailView.as_view(), name='recognition_detail'),
+    path('recognitions/user/<int:user_id>/', RecognitionListCreateView.as_view(), name='user_recognitions'),
+    
+    # Training endpoints
+    path('trainings/', TrainingListCreateView.as_view(), name='trainings_list_create'),
+    path('trainings/<int:pk>/', TrainingDetailView.as_view(), name='training_detail'),
+    path('trainings/user/<int:user_id>/', TrainingListCreateView.as_view(), name='user_trainings'),
+    
+    # Publication endpoints
+    path('publications/', PublicationListCreateView.as_view(), name='publications_list_create'),
+    path('publications/<int:pk>/', PublicationDetailView.as_view(), name='publication_detail'),
+    path('publications/user/<int:user_id>/', PublicationListCreateView.as_view(), name='user_publications'),
+    
+    # Certificate endpoints
+    path('certificates/', CertificateListCreateView.as_view(), name='certificates_list_create'),
+    path('certificates/<int:pk>/', CertificateDetailView.as_view(), name='certificate_detail'),
+    path('certificates/user/<int:user_id>/', CertificateListCreateView.as_view(), name='user_certificates'),
+    
+    # CSE Status endpoint
+    path('cse-status/', CSEStatusView.as_view(), name='cse_status'),
 
     
     # Survey and questionnaire endpoints (temporarily commented out)

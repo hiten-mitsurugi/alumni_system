@@ -27,7 +27,7 @@ const handleProceedSurvey = () => {
           <GraduationCap class="w-20 h-20" />
         </div>
       </div>
-      <h1 class="text-5xl font-bold mb-3">Welcome to A-Connect</h1>
+      <h1 class="text-5xl font-bold mb-3">Welcome to ATENDA</h1>
       <p class="text-orange-100 text-xl">Your Alumni Engagement Platform</p>
     </div>
 
@@ -37,10 +37,10 @@ const handleProceedSurvey = () => {
       <div class="mb-12 bg-white rounded-2xl p-8 shadow-lg">
         <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
           <div class="w-1.5 h-10 bg-orange-500 rounded"></div>
-          About A-Connect
+          About ATENDA
         </h2>
         <p class="text-gray-700 text-lg leading-relaxed">
-          A-Connect is Caraga State University Main Campus's dedicated platform designed to strengthen the bond between 
+          ATENDA is Caraga State University Main Campus's dedicated platform designed to strengthen the bond between 
           the College of Computing and Information Sciences and its alumni community. We believe that staying connected with our graduates is 
           essential for continuous improvement and maintaining the excellence of our institution.
         </p>

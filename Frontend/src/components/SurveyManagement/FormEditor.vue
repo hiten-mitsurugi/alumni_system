@@ -83,6 +83,12 @@
           :form="form"
         />
 
+        <!-- Non-Respondents Tab -->
+        <NonRespondentsView
+          v-else-if="activeTab === 'non-respondents'"
+          :form="form"
+        />
+
         <!-- Comprehensive Report Tab -->
         <ComprehensiveReportView
           v-else-if="activeTab === 'comprehensive-report'"
@@ -463,6 +469,7 @@ import SectionsGrid from './SectionsGrid.vue'
 import SectionView from './SectionView.vue'
 import FormSettings from './FormSettings.vue'
 import ResponsesView from './ResponsesView.vue'
+import NonRespondentsView from './NonRespondentsView.vue'
 import ComprehensiveReportView from './ComprehensiveReportView.vue'
 import DraggableModal from './DraggableModal.vue'
 import QuestionModal from './QuestionModal.vue'
@@ -503,6 +510,7 @@ const sectionForm = reactive({
 const tabs = [
   { id: 'sections', name: 'Sections & Questions' },
   { id: 'settings', name: 'Settings' },
+  { id: 'non-respondents', name: 'Non-Respondents' },
   { id: 'comprehensive-report', name: 'Comprehensive Report' }
 ]
 

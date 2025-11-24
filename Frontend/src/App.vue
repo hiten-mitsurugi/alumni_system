@@ -7,6 +7,7 @@ import { useRoute } from 'vue-router';
 import { websocketService } from '@/services/websocket';
 import GlobalLoading from '@/components/common/GlobalLoading.vue';
 import { useUiStore } from '@/stores/ui';
+import AIChatbot from '@/components/AIChat/AIChatbot.vue';
 
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
@@ -90,5 +91,8 @@ onUnmounted(() => {
   ]">
     <RouterView />
     <GlobalLoading v-if="ui.isLoading" :message="ui.message" />
+    
+    <!-- AI Chatbot - Show only when user is authenticated -->
+    <AIChatbot v-if="authStore.token" />
   </div>
 </template>

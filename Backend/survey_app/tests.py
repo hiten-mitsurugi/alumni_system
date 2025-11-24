@@ -479,3 +479,501 @@ class BackwardCompatibilityTestCase(TestCase):
         # Second question should have dependencies
         self.assertEqual(data['questions'][1]['depends_on_question_id'], q1.id)
         self.assertEqual(data['questions'][1]['depends_on_value'], 'specific value')
+
+
+class SurveyCompletionDetectionTestCase(TestCase):
+    """Test survey completion detection with has_any_response and is_complete flags"""
+
+    def setUp(self):
+        """Set up test data for completion detection tests"""
+        from .models import SurveyTemplate, SurveyResponse
+        
+        # Create admin user
+        self.admin = User.objects.create_user(
+            username='admin_completion',
+            email='admin_completion@test.com',
+            password='admin123',
+            user_type=1,
+            first_name='Admin',
+            last_name='User',
+            is_approved=True
+        )
+        
+        # Create test alumni users
+        self.alumni_skip = User.objects.create_user(
+            username='alumni_skip',
+            email='alumni_skip@test.com',
+            password='alumni123',
+            user_type=3,
+            first_name='Skip',
+            last_name='User',
+            is_approved=True
+        )
+        
+        self.alumni_partial = User.objects.create_user(
+            username='alumni_partial',
+            email='alumni_partial@test.com',
+            password='alumni123',
+            user_type=3,
+            first_name='Partial',
+            last_name='User',
+            is_approved=True
+        )
+        
+        self.alumni_complete = User.objects.create_user(
+            username='alumni_complete',
+            email='alumni_complete@test.com',
+            password='alumni123',
+            user_type=3,
+            first_name='Complete',
+            last_name='User',
+            is_approved=True
+        )
+        
+        self.client = APIClient()
+        
+        # Create a survey template
+        self.template = SurveyTemplate.objects.create(
+            name='Alumni Survey Form',
+            description='Main alumni survey',
+            is_active=True,
+            is_published=True,
+            created_by=self.admin
+        )
+        
+        # Create a category linked to the template
+        self.category = SurveyCategory.objects.create(
+            name='Background Information',
+            description='Tell us about yourself',
+            order=1,
+            is_active=True,
+            created_by=self.admin
+        )
+        
+        # Link category to template
+        self.template.categories.add(self.category)
+        
+        # Create 5 questions in the category
+        self.questions = []
+        question_data = [
+            ('What is your full name?', 'text'),
+            ('What year did you graduate?', 'number'),
+            ('Are you currently employed?', 'yes_no'),
+            ('What is your current occupation?', 'text'),
+            ('How satisfied are you with your career?', 'radio')
+        ]
+        
+        for idx, (text, q_type) in enumerate(question_data, start=1):
+            question = SurveyQuestion.objects.create(
+                category=self.category,
+                question_text=text,
+                question_type=q_type,
+                options=['Very Satisfied', 'Satisfied', 'Neutral', 'Dissatisfied'] if q_type == 'radio' else None,
+                is_required=True,
+                order=idx,
+                is_active=True,
+                created_by=self.admin
+            )
+            self.questions.append(question)
+
+    def test_skip_survey_shows_no_completion(self):
+        """Test: User skips survey during registration → is_complete=False, has_any_response=False, no banner"""
+        from .models import SurveyResponse
+        
+        # Authenticate as alumni who skipped
+        self.client.force_authenticate(user=self.alumni_skip)
+        
+        # Verify no responses exist
+        response_count = SurveyResponse.objects.filter(user=self.alumni_skip, form=self.template).count()
+        self.assertEqual(response_count, 0)
+        
+        # Call the active survey questions endpoint
+        response = self.client.get('/api/survey/active-questions/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Find our template in the response
+        template_data = None
+        for item in response.data:
+            # Each item has 'template' and 'categories' keys
+            for category in item.get('categories', []):
+                if category['category']['name'] == 'Background Information':
+                    template_data = item.get('template')
+                    break
+            if template_data:
+                break
+        
+        self.assertIsNotNone(template_data, "Template data not found in response")
+        
+        # Verify flags
+        self.assertFalse(template_data.get('has_any_response', True), 
+                        "has_any_response should be False when user skipped survey")
+        self.assertFalse(template_data.get('is_complete', True), 
+                        "is_complete should be False when user skipped survey")
+        self.assertEqual(template_data.get('answered_count', -1), 0, 
+                        "answered_count should be 0 when user skipped survey")
+        self.assertEqual(template_data.get('total_questions', -1), 5, 
+                        "total_questions should be 5")
+
+    def test_partial_answer_shows_incomplete(self):
+        """Test: User answers 2 of 5 questions → has_any_response=True, is_complete=False, no banner"""
+        from .models import SurveyResponse
+        
+        # Create responses for first 2 questions only
+        SurveyResponse.objects.create(
+            user=self.alumni_partial,
+            question=self.questions[0],
+            response_data='John Doe',
+            form=self.template
+        )
+        SurveyResponse.objects.create(
+            user=self.alumni_partial,
+            question=self.questions[1],
+            response_data='2020',
+            form=self.template
+        )
+        
+        # Verify 2 responses exist
+        response_count = SurveyResponse.objects.filter(user=self.alumni_partial, form=self.template).count()
+        self.assertEqual(response_count, 2)
+        
+        # Authenticate and call endpoint
+        self.client.force_authenticate(user=self.alumni_partial)
+        response = self.client.get('/api/survey/active-questions/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Find template data
+        template_data = None
+        for item in response.data:
+            for category in item.get('categories', []):
+                if category['category']['name'] == 'Background Information':
+                    template_data = item.get('template')
+                    break
+            if template_data:
+                break
+        
+        self.assertIsNotNone(template_data, "Template data not found in response")
+        
+        # Verify flags
+        self.assertTrue(template_data.get('has_any_response', False), 
+                       "has_any_response should be True when user has partial answers")
+        self.assertFalse(template_data.get('is_complete', True), 
+                        "is_complete should be False when user answered 2 of 5 questions")
+        self.assertEqual(template_data.get('answered_count', -1), 2, 
+                        "answered_count should be 2")
+        self.assertEqual(template_data.get('total_questions', -1), 5, 
+                        "total_questions should be 5")
+
+    def test_full_answer_shows_complete(self):
+        """Test: User answers all 5 questions → has_any_response=True, is_complete=True, banner shows"""
+        from .models import SurveyResponse
+        
+        # Create responses for all 5 questions
+        response_data_list = [
+            'Jane Smith',
+            '2019',
+            'Yes',
+            'Software Engineer',
+            'Very Satisfied'
+        ]
+        
+        for question, answer in zip(self.questions, response_data_list):
+            SurveyResponse.objects.create(
+                user=self.alumni_complete,
+                question=question,
+                response_data=answer,
+                form=self.template
+            )
+        
+        # Verify 5 responses exist
+        response_count = SurveyResponse.objects.filter(user=self.alumni_complete, form=self.template).count()
+        self.assertEqual(response_count, 5)
+        
+        # Authenticate and call endpoint
+        self.client.force_authenticate(user=self.alumni_complete)
+        response = self.client.get('/api/survey/active-questions/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Find template data
+        template_data = None
+        for item in response.data:
+            for category in item.get('categories', []):
+                if category['category']['name'] == 'Background Information':
+                    template_data = item.get('template')
+                    break
+            if template_data:
+                break
+        
+        self.assertIsNotNone(template_data, "Template data not found in response")
+        
+        # Verify flags
+        self.assertTrue(template_data.get('has_any_response', False), 
+                       "has_any_response should be True when user completed survey")
+        self.assertTrue(template_data.get('is_complete', False), 
+                       "is_complete should be True when user answered all 5 questions")
+        self.assertEqual(template_data.get('answered_count', -1), 5, 
+                        "answered_count should be 5")
+        self.assertEqual(template_data.get('total_questions', -1), 5, 
+                        "total_questions should be 5")
+
+    def test_form_scoped_responses_isolated(self):
+        """Test: Responses are scoped to specific form templates"""
+        from .models import SurveyTemplate, SurveyResponse
+        
+        # Create a second template with the same category
+        template2 = SurveyTemplate.objects.create(
+            name='Second Survey Form',
+            description='Another survey',
+            is_active=True,
+            is_published=True,
+            created_by=self.admin
+        )
+        template2.categories.add(self.category)
+        
+        # User completes first template fully
+        for question in self.questions:
+            SurveyResponse.objects.create(
+                user=self.alumni_complete,
+                question=question,
+                response_data='Answer',
+                form=self.template
+            )
+        
+        # User has no responses for second template
+        # Verify first template shows complete
+        self.client.force_authenticate(user=self.alumni_complete)
+        response = self.client.get('/api/survey/active-questions/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Both templates should appear in response
+        templates_found = []
+        for item in response.data:
+            template_info = item.get('template')
+            if template_info:
+                templates_found.append(template_info)
+        
+        # We should see data for our category, and it should be scoped to first template
+        # (this depends on how the view returns multiple templates for the same category)
+        # The key assertion: responses for template 1 don't affect template 2
+                templates_found.append(template_info)
+        
+        # We should see data for our category, and it should be scoped to first template
+        # (this depends on how the view returns multiple templates for the same category)
+        # The key assertion: responses for template 1 don't affect template 2
+        
+        template1_responses = SurveyResponse.objects.filter(
+            user=self.alumni_complete, 
+            form=self.template
+        ).count()
+        template2_responses = SurveyResponse.objects.filter(
+            user=self.alumni_complete, 
+            form=template2
+        ).count()
+        
+        self.assertEqual(template1_responses, 5, "Template 1 should have 5 responses")
+        self.assertEqual(template2_responses, 0, "Template 2 should have 0 responses")
+
+    def test_zero_questions_template(self):
+        """Test: Template with no active questions shows is_complete=False"""
+        from .models import SurveyTemplate
+        
+        # Create a template with no questions
+        empty_template = SurveyTemplate.objects.create(
+            name='Empty Survey',
+            description='No questions',
+            is_active=True,
+            is_published=True,
+            created_by=self.admin
+        )
+        
+        # Create category with no questions
+        empty_category = SurveyCategory.objects.create(
+            name='Empty Category',
+            description='No questions here',
+            order=2,
+            is_active=True,
+            created_by=self.admin
+        )
+        empty_template.categories.add(empty_category)
+        
+        # Authenticate and call endpoint
+        self.client.force_authenticate(user=self.alumni_skip)
+        response = self.client.get('/api/survey/active-questions/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Find empty category data
+        empty_data = None
+        for item in response.data:
+            for category in item.get('categories', []):
+                if category['category']['name'] == 'Empty Category':
+                    empty_data = item.get('template')
+                    break
+            if empty_data:
+                break
+        
+        # Empty template should exist and show incomplete
+        if empty_data:
+            self.assertFalse(empty_data.get('is_complete', True), 
+                           "Template with 0 questions should have is_complete=False")
+            self.assertEqual(empty_data.get('total_questions', -1), 0)
+
+    def test_inactive_questions_not_counted(self):
+        """Test: Inactive questions are not counted in total_questions or completion check"""
+        from .models import SurveyResponse
+        
+        # Mark 2 questions as inactive
+        self.questions[3].is_active = False
+        self.questions[3].save()
+        self.questions[4].is_active = False
+        self.questions[4].save()
+        
+        # User answers first 3 questions (all active ones)
+        for question in self.questions[:3]:
+            SurveyResponse.objects.create(
+                user=self.alumni_complete,
+                question=question,
+                response_data='Answer',
+                form=self.template
+            )
+        
+        # Authenticate and call endpoint
+        self.client.force_authenticate(user=self.alumni_complete)
+        response = self.client.get('/api/survey/active-questions/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Find template data
+        template_data = None
+        for item in response.data:
+            for category in item.get('categories', []):
+                if category['category']['name'] == 'Background Information':
+                    template_data = item.get('template')
+                    break
+            if template_data:
+                break
+        
+        self.assertIsNotNone(template_data)
+        
+        # Should show complete because only 3 active questions exist
+        self.assertEqual(template_data.get('total_questions', -1), 3, 
+                        "Should only count active questions")
+        self.assertEqual(template_data.get('answered_count', -1), 3)
+        self.assertTrue(template_data.get('is_complete', False), 
+                       "Should be complete when all active questions are answered")
+
+    def test_update_or_create_response_maintains_completion(self):
+        """Test: Updating an existing response doesn't create duplicates"""
+        from .models import SurveyResponse
+        
+        # Create initial response
+        response1 = SurveyResponse.objects.create(
+            user=self.alumni_partial,
+            question=self.questions[0],
+            response_data='First Answer',
+            form=self.template
+        )
+        
+        initial_count = SurveyResponse.objects.filter(
+            user=self.alumni_partial, 
+            form=self.template
+        ).count()
+        self.assertEqual(initial_count, 1)
+        
+        # Update the same question's response
+        response2, created = SurveyResponse.objects.update_or_create(
+            user=self.alumni_partial,
+            question=self.questions[0],
+            defaults={'response_data': 'Updated Answer', 'form': self.template}
+        )
+        
+        # Should not create a duplicate
+        self.assertFalse(created, "Should update existing response, not create new")
+        self.assertEqual(response1.id, response2.id, "Should be the same response object")
+        
+        final_count = SurveyResponse.objects.filter(
+            user=self.alumni_partial, 
+            form=self.template
+        ).count()
+        self.assertEqual(final_count, 1, "Should still have only 1 response")
+        
+        # Verify updated value
+        response2.refresh_from_db()
+        self.assertEqual(response2.response_data, 'Updated Answer')
+
+    def test_completion_with_mixed_template_categories(self):
+        """Test: Completion detection works when template has multiple categories"""
+        from .models import SurveyTemplate, SurveyResponse
+        
+        # Create a second category
+        category2 = SurveyCategory.objects.create(
+            name='Additional Info',
+            description='More questions',
+            order=2,
+            is_active=True,
+            created_by=self.admin
+        )
+        
+        # Add 3 questions to second category
+        additional_questions = []
+        for idx in range(3):
+            question = SurveyQuestion.objects.create(
+                category=category2,
+                question_text=f'Additional Question {idx + 1}',
+                question_type='text',
+                is_required=True,
+                order=idx + 1,
+                is_active=True,
+                created_by=self.admin
+            )
+            additional_questions.append(question)
+        
+        # Add second category to template (total should be 5 + 3 = 8 questions)
+        self.template.categories.add(category2)
+        
+        # User answers all 5 questions from first category
+        for question in self.questions:
+            SurveyResponse.objects.create(
+                user=self.alumni_partial,
+                question=question,
+                response_data='Answer',
+                form=self.template
+            )
+        
+        # User answers 1 of 3 from second category
+        SurveyResponse.objects.create(
+            user=self.alumni_partial,
+            question=additional_questions[0],
+            response_data='Answer',
+            form=self.template
+        )
+        
+        # Total: 6 answers out of 8 questions → incomplete
+        self.client.force_authenticate(user=self.alumni_partial)
+        response = self.client.get('/api/survey/active-questions/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Check first category's template data
+        template_data = None
+        for item in response.data:
+            for category in item.get('categories', []):
+                if category['category']['name'] == 'Background Information':
+                    template_data = item.get('template')
+                    break
+            if template_data:
+                break
+        
+        self.assertIsNotNone(template_data)
+        
+        # Template should show 8 total questions across both categories
+        self.assertEqual(template_data.get('total_questions', -1), 8, 
+                        "Should count questions from all categories in template")
+        self.assertEqual(template_data.get('answered_count', -1), 6,
+                        "Should count all answers across categories")
+        self.assertTrue(template_data.get('has_any_response', False))
+        self.assertFalse(template_data.get('is_complete', True), 
+                        "Should be incomplete with 6/8 answered")

@@ -185,11 +185,13 @@ class SurveyService {
 
   /**
    * Get response statistics for a specific survey
-   * @param {number} surveyId - Survey ID
+   * @param {Object} params - Parameters including survey_id and optional filters
    * @returns {Promise} Survey statistics
    */
-  async getSurveyStatistics(surveyId) {
-    return api.get(`/survey/${surveyId}/statistics/`)
+  async getSurveyStatistics(params = {}) {
+    const surveyId = params.survey_id
+    delete params.survey_id
+    return api.get(`/survey/${surveyId}/statistics/`, { params })
   }
 
   /**

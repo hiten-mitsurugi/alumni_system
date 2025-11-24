@@ -141,7 +141,7 @@ onUnmounted(() => {
       <!-- Left Section (Hidden on mobile) -->
       <div class="hidden md:flex w-1/2 justify-center">
         <div class="flex flex-col items-center text-white ml-12 text-center">
-          <h1 class="text-6xl font-extrabold">Welcome to Alumni Mates</h1>
+          <h1 class="text-6xl font-extrabold">Welcome to atenda</h1>
           <p class="text-4xl mt-4">Connecting Alumni, Building Futures</p>
           <div class="flex space-x-8 mt-10">
             <img src="@/assets/CSU Icon.png" alt="Logo 2" class="h-68" />

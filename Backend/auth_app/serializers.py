@@ -8,7 +8,8 @@ import json
 from .models import (
     CustomUser, Skill, UserSkill, WorkHistory, AlumniDirectory, SkillsRelevance,
     CurriculumRelevance, PerceptionFurtherStudies, FeedbackRecommendations, Profile,
-    Following, Achievement, Education, Address, FieldPrivacySetting
+    Following, Achievement, Education, Address, FieldPrivacySetting, Membership, Recognition, Training, Publication,
+    Certificate, CSEStatus
 )
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -258,14 +259,31 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Handle dynamic survey responses
         if survey_responses_data:
-            from survey_app.models import SurveyResponse, SurveyQuestion
+            from survey_app.models import SurveyResponse, SurveyQuestion, SurveyTemplate
+            
+            # Determine which template (form) these responses belong to
+            form_template = None
+            if survey_responses_data:
+                try:
+                    first_question = SurveyQuestion.objects.select_related('category').get(
+                        id=survey_responses_data[0]['question']
+                    )
+                    # Find the registration template (default template or one containing this category)
+                    form_template = SurveyTemplate.objects.filter(
+                        categories=first_question.category,
+                        is_active=True
+                    ).first()
+                except (SurveyQuestion.DoesNotExist, IndexError):
+                    pass
+            
             for response_data in survey_responses_data:
                 try:
                     question = SurveyQuestion.objects.get(id=response_data['question'])
                     SurveyResponse.objects.create(
                         user=user,
                         question=question,
-                        response_data=response_data['response_data']
+                        response_data=response_data['response_data'],
+                        form=form_template  # Link to template
                     )
                 except SurveyQuestion.DoesNotExist:
                     # Log error but don't fail registration
@@ -596,6 +614,161 @@ class EnhancedProfileSerializer(serializers.ModelSerializer):
         return False
 
 
+class MembershipSerializer(serializers.ModelSerializer):
+    """Serializer for organization memberships"""
+    is_current = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Membership
+        fields = [
+            'id',
+            'organization_name',
+            'position',
+            'membership_type',
+            'date_joined',
+            'date_ended',
+            'description',
+            'is_current',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def validate(self, data):
+        """Validate that end date is after join date"""
+        date_joined = data.get('date_joined')
+        date_ended = data.get('date_ended')
+        
+        if date_joined and date_ended and date_ended < date_joined:
+            raise serializers.ValidationError({
+                'date_ended': 'End date must be after join date.'
+            })
+        
+        return data
+
+
+class RecognitionSerializer(serializers.ModelSerializer):
+    """Serializer for recognitions and awards"""
+    
+    class Meta:
+        model = Recognition
+        fields = [
+            'id',
+            'title',
+            'issuing_organization',
+            'date_received',
+            'description',
+            'certificate_file',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class TrainingSerializer(serializers.ModelSerializer):
+    """Serializer for trainings and seminars"""
+    
+    class Meta:
+        model = Training
+        fields = [
+            'id',
+            'title',
+            'organization',
+            'date_start',
+            'date_end',
+            'location',
+            'certificate_file',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def validate(self, data):
+        """Validate that end date is after start date"""
+        date_start = data.get('date_start')
+        date_end = data.get('date_end')
+        
+        if date_start and date_end and date_end < date_start:
+            raise serializers.ValidationError({
+                'date_end': 'End date must be after start date.'
+            })
+        
+        return data
+
+
+class PublicationSerializer(serializers.ModelSerializer):
+    """Serializer for publications"""
+    
+    class Meta:
+        model = Publication
+        fields = [
+            'id',
+            'title',
+            'publication_type',
+            'authors',
+            'date_published',
+            'publisher',
+            'url',
+            'doi',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class CertificateSerializer(serializers.ModelSerializer):
+    """Serializer for professional certificates"""
+    is_active = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Certificate
+        fields = [
+            'id',
+            'certificate_type',
+            'certificate_number',
+            'date_issued',
+            'expiry_date',
+            'issuing_body',
+            'certificate_file',
+            'is_active',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class CSEStatusSerializer(serializers.ModelSerializer):
+    """Serializer for CSE (Current Student Employment) Status"""
+    
+    class Meta:
+        model = CSEStatus
+        fields = [
+            'id',
+            'status',
+            'current_position',
+            'current_company',
+            'industry',
+            'start_date',
+            'end_date',
+            'is_current',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def validate(self, data):
+        """Validate that end date is after start date"""
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        if start_date and end_date and end_date < start_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+        
+        return data
+
+
 class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     """Enhanced User serializer with LinkedIn-style profile features"""
     profile = EnhancedProfileSerializer(read_only=True)
@@ -603,6 +776,12 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     achievements = AchievementSerializer(many=True, read_only=True)
     education = serializers.SerializerMethodField()
     user_skills = UserSkillSerializer(many=True, read_only=True)
+    memberships = MembershipSerializer(many=True, read_only=True)
+    recognitions = RecognitionSerializer(many=True, read_only=True)
+    trainings = TrainingSerializer(many=True, read_only=True)
+    publications = PublicationSerializer(many=True, read_only=True)
+    certificates = CertificateSerializer(many=True, read_only=True)
+    cse_status = CSEStatusSerializer(read_only=True)
     real_time_status = serializers.SerializerMethodField()
     
     def get_work_histories(self, obj):
@@ -707,6 +886,74 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
                 else:
                     print(f"🚫 Hiding skill {skill['id']} (visibility: {visibility})")
             data['user_skills'] = filtered_skills
+        
+        # Filter memberships
+        if 'memberships' in data and data['memberships']:
+            filtered_memberships = []
+            for membership in data['memberships']:
+                field_name = f"membership_{membership['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_memberships.append(membership)
+                else:
+                    print(f"🚫 Hiding membership {membership['id']} (visibility: {visibility})")
+            data['memberships'] = filtered_memberships
+        
+        # Filter recognitions
+        if 'recognitions' in data and data['recognitions']:
+            filtered_recognitions = []
+            for recognition in data['recognitions']:
+                field_name = f"recognition_{recognition['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_recognitions.append(recognition)
+                else:
+                    print(f"🚫 Hiding recognition {recognition['id']} (visibility: {visibility})")
+            data['recognitions'] = filtered_recognitions
+        
+        # Filter trainings
+        if 'trainings' in data and data['trainings']:
+            filtered_trainings = []
+            for training in data['trainings']:
+                field_name = f"training_{training['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_trainings.append(training)
+                else:
+                    print(f"🚫 Hiding training {training['id']} (visibility: {visibility})")
+            data['trainings'] = filtered_trainings
+        
+        # Filter publications
+        if 'publications' in data and data['publications']:
+            filtered_publications = []
+            for publication in data['publications']:
+                field_name = f"publication_{publication['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_publications.append(publication)
+                else:
+                    print(f"🚫 Hiding publication {publication['id']} (visibility: {visibility})")
+            data['publications'] = filtered_publications
+        
+        # Filter certificates
+        if 'certificates' in data and data['certificates']:
+            filtered_certificates = []
+            for certificate in data['certificates']:
+                field_name = f"certificate_{certificate['id']}"
+                visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+                if self._is_item_visible(visibility, requesting_user, target_user):
+                    filtered_certificates.append(certificate)
+                else:
+                    print(f"🚫 Hiding certificate {certificate['id']} (visibility: {visibility})")
+            data['certificates'] = filtered_certificates
+        
+        # Filter CSE status
+        if 'cse_status' in data and data['cse_status']:
+            field_name = "cse_status"
+            visibility = FieldPrivacySetting.get_user_field_visibility(target_user, field_name)
+            if not self._is_item_visible(visibility, requesting_user, target_user):
+                print(f"🚫 Hiding CSE status (visibility: {visibility})")
+                data['cse_status'] = None
         
         return data
     

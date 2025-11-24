@@ -544,16 +544,29 @@ const pieChartOptions = {
 
 // Computed - Stats
 const stats = computed(() => {
-  const uniqueUsers = new Set(responses.value.map(r => r.user?.id).filter(Boolean))
   const latest = responses.value.length > 0
     ? responses.value.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
     : null
 
+  // Use backend statistics if available (includes completion threshold)
+  if (props.form._backendStats) {
+    return {
+      totalResponses: responses.value.length,
+      uniqueRespondents: props.form._backendStats.total_respondents,
+      completionRate: props.form._backendStats.response_rate,
+      latestResponse: latest ? formatRelativeTime(latest.submitted_at) : 'N/A',
+      partialRespondents: props.form._backendStats.partial_respondents || 0
+    }
+  }
+
+  // Fallback to local calculation if backend stats not provided
+  const uniqueUsers = new Set(responses.value.map(r => r.user?.id).filter(Boolean))
   return {
     totalResponses: responses.value.length,
     uniqueRespondents: uniqueUsers.size,
     completionRate: calculateCompletionRate(),
-    latestResponse: latest ? formatRelativeTime(latest.submitted_at) : 'N/A'
+    latestResponse: latest ? formatRelativeTime(latest.submitted_at) : 'N/A',
+    partialRespondents: 0
   }
 })
 

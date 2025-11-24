@@ -17,16 +17,16 @@
       </div>
 
       <form @submit.prevent="handleSubmit" class="p-6 space-y-4">
-        <!-- Certificate Name -->
+        <!-- Certificate Type -->
         <div>
           <label :class="[
             'block text-sm font-medium mb-2',
             themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
           ]">
-            Certificate Name *
+            Certificate Type *
           </label>
           <input
-            v-model="formData.certificate_name"
+            v-model="formData.certificate_type"
             type="text"
             required
             :class="[
@@ -39,16 +39,16 @@
           />
         </div>
 
-        <!-- Issuing Authority -->
+        <!-- Issuing Body -->
         <div>
           <label :class="[
             'block text-sm font-medium mb-2',
             themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
           ]">
-            Issuing Authority *
+            Issuing Body *
           </label>
           <input
-            v-model="formData.issuing_authority"
+            v-model="formData.issuing_body"
             type="text"
             required
             :class="[
@@ -61,16 +61,16 @@
           />
         </div>
 
-        <!-- Date Obtained -->
+        <!-- Date Issued -->
         <div>
           <label :class="[
             'block text-sm font-medium mb-2',
             themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
           ]">
-            Date Obtained
+            Date Issued
           </label>
           <input
-            v-model="formData.date_obtained"
+            v-model="formData.date_issued"
             type="date"
             :class="[
               'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -101,16 +101,16 @@
           />
         </div>
 
-        <!-- Credential ID -->
+        <!-- Certificate Number -->
         <div>
           <label :class="[
             'block text-sm font-medium mb-2',
             themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
           ]">
-            Credential ID
+            Certificate Number
           </label>
           <input
-            v-model="formData.credential_id"
+            v-model="formData.certificate_number"
             type="text"
             :class="[
               'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -141,10 +141,10 @@
           </button>
           <button
             type="submit"
-            :disabled="!formData.certificate_name.trim() || !formData.issuing_authority.trim()"
+            :disabled="!formData.certificate_type.trim() || !formData.issuing_body.trim()"
             :class="[
               'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              (formData.certificate_name.trim() && formData.issuing_authority.trim())
+              (formData.certificate_type.trim() && formData.issuing_body.trim())
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
                 : 'bg-gray-400 text-gray-200 cursor-not-allowed'
             ]"
@@ -174,37 +174,40 @@ const themeStore = useThemeStore()
 
 // Form data
 const formData = ref({
-  certificate_name: '',
-  issuing_authority: '',
-  date_obtained: '',
+  certificate_type: '',
+  issuing_body: '',
+  date_issued: '',
   expiry_date: '',
-  credential_id: ''
+  certificate_number: '',
+  certificate_file: null
 })
 
 // Watch for changes in certificate prop to populate form
 watch(() => props.certificate, (newCertificate) => {
   if (newCertificate) {
     formData.value = {
-      certificate_name: newCertificate.certificate_name || '',
-      issuing_authority: newCertificate.issuing_authority || '',
-      date_obtained: newCertificate.date_obtained || '',
+      certificate_type: newCertificate.certificate_type || '',
+      issuing_body: newCertificate.issuing_body || '',
+      date_issued: newCertificate.date_issued || '',
       expiry_date: newCertificate.expiry_date || '',
-      credential_id: newCertificate.credential_id || ''
+      certificate_number: newCertificate.certificate_number || '',
+      certificate_file: null
     }
   } else {
     // Reset form for new certificate
     formData.value = {
-      certificate_name: '',
-      issuing_authority: '',
-      date_obtained: '',
+      certificate_type: '',
+      issuing_body: '',
+      date_issued: '',
       expiry_date: '',
-      credential_id: ''
+      certificate_number: '',
+      certificate_file: null
     }
   }
 }, { immediate: true })
 
 const handleSubmit = () => {
-  if (!formData.value.certificate_name.trim() || !formData.value.issuing_authority.trim()) {
+  if (!formData.value.certificate_type.trim() || !formData.value.issuing_body.trim()) {
     return
   }
 

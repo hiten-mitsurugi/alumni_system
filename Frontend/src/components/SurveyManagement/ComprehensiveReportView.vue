@@ -204,6 +204,7 @@ const questionAnalytics = ref([])
 const selectedSectionId = ref(null)
 const availablePrograms = ref([])
 const availableYears = ref([])
+const backendStats = ref(null)
 // Dropdown visibility state
 const showProgramDropdown = ref(false)
 const showYearDropdown = ref(false)
@@ -220,16 +221,29 @@ const hasActiveFilters = computed(() => {
 })
 
 const stats = computed(() => {
-  const uniqueUsers = new Set(responses.value.map(r => r.user?.id).filter(Boolean))
   const latest = responses.value.length > 0
     ? responses.value.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
     : null
 
+  // Use backend statistics if available (includes completion threshold)
+  if (backendStats.value) {
+    return {
+      totalResponses: responses.value.length,
+      uniqueRespondents: backendStats.value.total_respondents,
+      completionRate: backendStats.value.response_rate,
+      latestResponse: latest ? formatRelativeTime(latest.submitted_at) : 'N/A',
+      partialRespondents: backendStats.value.partial_respondents || 0
+    }
+  }
+
+  // Fallback to local calculation if backend stats not loaded yet
+  const uniqueUsers = new Set(responses.value.map(r => r.user?.id).filter(Boolean))
   return {
     totalResponses: responses.value.length,
     uniqueRespondents: uniqueUsers.size,
     completionRate: calculateCompletionRate(),
-    latestResponse: latest ? formatRelativeTime(latest.submitted_at) : 'N/A'
+    latestResponse: latest ? formatRelativeTime(latest.submitted_at) : 'N/A',
+    partialRespondents: 0
   }
 })
 
@@ -239,7 +253,8 @@ const formWithFilteredData = computed(() => {
     ...props.form,
     _filteredAnalytics: questionAnalytics.value,
     _filteredResponses: responses.value,
-    _isFiltered: hasActiveFilters.value
+    _isFiltered: hasActiveFilters.value,
+    _backendStats: backendStats.value  // Pass backend statistics
   }
 })
 
@@ -337,6 +352,9 @@ const applyFilters = async () => {
     const responsesResult = await surveyService.getResponses(responseFilters)
     responses.value = responsesResult.data || []
 
+    // Fetch backend statistics with completion threshold
+    await fetchBackendStatistics(filterParams)
+
     // Set default selected section
     if (!selectedSectionId.value && props.form.sections && props.form.sections.length > 0) {
       selectedSectionId.value = props.form.sections[0].category.id
@@ -345,6 +363,27 @@ const applyFilters = async () => {
     console.error('Failed to load filtered data:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const fetchBackendStatistics = async (filterParams = {}) => {
+  try {
+    const params = {
+      survey_id: props.form.id
+    }
+    
+    if (filterParams.programs && filterParams.programs.length > 0) {
+      params.programs = filterParams.programs.join(',')
+    }
+    if (filterParams.graduation_years && filterParams.graduation_years.length > 0) {
+      params.graduation_years = filterParams.graduation_years.join(',')
+    }
+
+    const response = await surveyService.getSurveyStatistics(params)
+    backendStats.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch backend statistics:', error)
+    backendStats.value = null
   }
 }
 

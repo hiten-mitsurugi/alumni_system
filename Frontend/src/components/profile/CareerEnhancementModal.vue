@@ -57,16 +57,16 @@
                     'font-medium',
                     themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
                   ]">
-                    {{ cert.certificate_name }}
+                    {{ cert.certificate_type }}
                   </h4>
                   <p :class="[
                     'text-sm',
                     themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   ]">
-                    Issued by {{ cert.issuing_authority }}
+                    Issued by {{ cert.issuing_body }}
                   </p>
                   <div class="flex items-center space-x-4 text-xs text-gray-500 mt-1">
-                    <span v-if="cert.date_obtained">Obtained: {{ formatDate(cert.date_obtained) }}</span>
+                    <span v-if="cert.date_issued">Issued: {{ formatDate(cert.date_issued) }}</span>
                     <span v-if="cert.expiry_date">Expires: {{ formatDate(cert.expiry_date) }}</span>
                   </div>
                 </div>
@@ -104,7 +104,7 @@
           </div>
         </div>
 
-        <!-- Civil Service Examination Section -->
+        <!-- Current Employment Status Section -->
         <div :class="[
           'border-t pt-6',
           themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-200'
@@ -113,51 +113,55 @@
             'text-lg font-medium mb-4',
             themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
           ]">
-            Civil Service Examination Status
+            Current Employment Status
           </h3>
 
-          <!-- CSE Passer Status -->
+          <!-- Employment Status -->
           <div class="space-y-4">
             <div>
-              <label class="flex items-center space-x-3">
-                <input
-                  v-model="formData.cse_status.is_passer"
-                  type="checkbox"
-                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <span :class="[
-                  'font-medium',
-                  themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">
-                  I am a Civil Service Examination passer
-                </span>
+              <label :class="[
+                'block text-sm font-medium mb-2',
+                themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              ]">
+                Status
               </label>
+              <select
+                v-model="formData.cse_status.status"
+                :class="[
+                  'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                  themeStore.isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                ]"
+              >
+                <option value="employed">Employed</option>
+                <option value="unemployed">Unemployed</option>
+                <option value="self_employed">Self-Employed</option>
+                <option value="student">Student</option>
+                <option value="retired">Retired</option>
+              </select>
             </div>
 
-            <!-- CSE Details (shown only if is_passer is true) -->
-            <div v-if="formData.cse_status.is_passer" class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-7">
+            <!-- Employment Details (shown only if employed or self_employed) -->
+            <div v-if="formData.cse_status.status === 'employed' || formData.cse_status.status === 'self_employed'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label :class="[
                   'block text-sm font-medium mb-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 ]">
-                  Examination Type
+                  Current Position
                 </label>
-                <select
-                  v-model="formData.cse_status.examination_type"
+                <input
+                  v-model="formData.cse_status.current_position"
+                  type="text"
                   :class="[
                     'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                     themeStore.isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
                   ]"
-                >
-                  <option value="">Select type</option>
-                  <option value="professional">Professional Level</option>
-                  <option value="subprofessional">Sub-professional Level</option>
-                  <option value="first_level">First Level</option>
-                  <option value="second_level">Second Level</option>
-                </select>
+                  placeholder="e.g., Software Engineer"
+                />
               </div>
 
               <div>
@@ -165,10 +169,50 @@
                   'block text-sm font-medium mb-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 ]">
-                  Date Passed
+                  Current Company
                 </label>
                 <input
-                  v-model="formData.cse_status.date_passed"
+                  v-model="formData.cse_status.current_company"
+                  type="text"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                    themeStore.isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  ]"
+                  placeholder="e.g., Tech Company Inc."
+                />
+              </div>
+
+              <div>
+                <label :class="[
+                  'block text-sm font-medium mb-2',
+                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                ]">
+                  Industry
+                </label>
+                <input
+                  v-model="formData.cse_status.industry"
+                  type="text"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                    themeStore.isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  ]"
+                  placeholder="e.g., Information Technology"
+                />
+              </div>
+
+              <div>
+                <label :class="[
+                  'block text-sm font-medium mb-2',
+                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                ]">
+                  Start Date
+                </label>
+                <input
+                  v-model="formData.cse_status.start_date"
                   type="date"
                   :class="[
                     'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -180,45 +224,37 @@
               </div>
 
               <div>
-                <label :class="[
-                  'block text-sm font-medium mb-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">
-                  Rating (%)
+                <label class="flex items-center space-x-3">
+                  <input
+                    v-model="formData.cse_status.is_current"
+                    type="checkbox"
+                    class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span :class="[
+                    'font-medium',
+                    themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+                  ]">
+                    I currently work here
+                  </span>
                 </label>
-                <input
-                  v-model="formData.cse_status.rating"
-                  type="number"
-                  min="75"
-                  max="100"
-                  step="0.1"
-                  :class="[
-                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                    themeStore.isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  ]"
-                  placeholder="87.5"
-                />
               </div>
 
-              <div>
+              <div v-if="!formData.cse_status.is_current">
                 <label :class="[
                   'block text-sm font-medium mb-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 ]">
-                  Eligibility
+                  End Date
                 </label>
                 <input
-                  v-model="formData.cse_status.eligibility"
-                  type="text"
+                  v-model="formData.cse_status.end_date"
+                  type="date"
                   :class="[
                     'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                     themeStore.isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
                   ]"
-                  placeholder="e.g., Professional Level Eligibility"
                 />
               </div>
             </div>
@@ -315,11 +351,13 @@ const selectedCertificateIndex = ref(-1)
 const formData = ref({
   certificates: [],
   cse_status: {
-    is_passer: false,
-    examination_type: '',
-    date_passed: '',
-    rating: '',
-    eligibility: ''
+    status: 'unemployed',
+    current_position: '',
+    current_company: '',
+    industry: '',
+    start_date: '',
+    end_date: '',
+    is_current: true
   },
   visibility: 'connections_only'
 })
@@ -376,11 +414,13 @@ watch(() => props.careerEnhancement, (newCareerEnhancement) => {
     formData.value = {
       certificates: newCareerEnhancement.certificates || [],
       cse_status: {
-        is_passer: newCareerEnhancement.cse_status?.is_passer || false,
-        examination_type: newCareerEnhancement.cse_status?.examination_type || '',
-        date_passed: newCareerEnhancement.cse_status?.date_passed || '',
-        rating: newCareerEnhancement.cse_status?.rating || '',
-        eligibility: newCareerEnhancement.cse_status?.eligibility || ''
+        status: newCareerEnhancement.cse_status?.status || 'unemployed',
+        current_position: newCareerEnhancement.cse_status?.current_position || '',
+        current_company: newCareerEnhancement.cse_status?.current_company || '',
+        industry: newCareerEnhancement.cse_status?.industry || '',
+        start_date: newCareerEnhancement.cse_status?.start_date || '',
+        end_date: newCareerEnhancement.cse_status?.end_date || '',
+        is_current: newCareerEnhancement.cse_status?.is_current ?? true
       },
       visibility: newCareerEnhancement.visibility || 'connections_only'
     }
@@ -389,11 +429,13 @@ watch(() => props.careerEnhancement, (newCareerEnhancement) => {
     formData.value = {
       certificates: [],
       cse_status: {
-        is_passer: false,
-        examination_type: '',
-        date_passed: '',
-        rating: '',
-        eligibility: ''
+        status: 'unemployed',
+        current_position: '',
+        current_company: '',
+        industry: '',
+        start_date: '',
+        end_date: '',
+        is_current: true
       },
       visibility: 'connections_only'
     }
@@ -404,23 +446,12 @@ const handleSubmit = () => {
   // Clean up form data
   const cleanedData = { ...formData.value }
   
-  // If CSE is not a passer, clear CSE details
-  if (!cleanedData.cse_status.is_passer) {
-    cleanedData.cse_status = {
-      is_passer: false,
-      examination_type: null,
-      date_passed: null,
-      rating: null,
-      eligibility: null
+  // Remove empty strings for CSE fields
+  Object.keys(cleanedData.cse_status).forEach(key => {
+    if (cleanedData.cse_status[key] === '') {
+      cleanedData.cse_status[key] = null
     }
-  } else {
-    // Remove empty strings for CSE fields
-    Object.keys(cleanedData.cse_status).forEach(key => {
-      if (cleanedData.cse_status[key] === '') {
-        cleanedData.cse_status[key] = null
-      }
-    })
-  }
+  })
 
   emit('save', cleanedData)
 }

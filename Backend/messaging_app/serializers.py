@@ -127,6 +127,7 @@ class MessageReadSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSearchSerializer(read_only=True)
     receiver = UserSearchSerializer(read_only=True)
+    content = serializers.SerializerMethodField()  # Handle encrypted content safely
     reply_to = serializers.SerializerMethodField()
     forwarded_from = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(many=True, read_only=True)
@@ -156,6 +157,14 @@ class MessageSerializer(serializers.ModelSerializer):
             'link_previews',
             'read_by'  # Add seen indicator data
         ]
+    
+    def get_content(self, obj):
+        """Safely retrieve message content, handling encryption errors"""
+        try:
+            return obj.content
+        except Exception:
+            # Encryption key mismatch - return placeholder
+            return '[Message content unavailable - encryption key mismatch]'
 
     def get_reaction_stats(self, obj):
         """Get reaction statistics for this message"""
@@ -225,9 +234,15 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def get_reply_to(self, obj):
         if obj.reply_to:
+            # Try to get content, handle encryption errors
+            try:
+                reply_content = obj.reply_to.content
+            except Exception:
+                reply_content = '[Message content unavailable]'
+            
             return {
                 'id': str(obj.reply_to.id),  # ✅ FIX: Convert UUID to string
-                'content': obj.reply_to.content,
+                'content': reply_content,
                 'sender': {
                     'id': str(obj.reply_to.sender.id),  # ✅ FIX: Convert sender UUID to string
                     'first_name': obj.reply_to.sender.first_name,
@@ -239,9 +254,15 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def get_forwarded_from(self, obj):
         if obj.forwarded_from:
+            # Try to get content, handle encryption errors
+            try:
+                forwarded_content = obj.forwarded_from.content
+            except Exception:
+                forwarded_content = '[Message content unavailable]'
+            
             return {
                 'id': str(obj.forwarded_from.id),
-                'content': obj.forwarded_from.content,
+                'content': forwarded_content,
                 'sender': {
                     'id': str(obj.forwarded_from.sender.id),
                     'first_name': obj.forwarded_from.sender.first_name,
@@ -263,6 +284,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         # Pass request context to nested serializers
         data = super().to_representation(instance)
+        
         if self.context.get('request'):
             data['attachments'] = AttachmentSerializer(
                 instance.attachments.all(), 

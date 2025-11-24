@@ -186,6 +186,22 @@ class SurveyResponseSubmissionSerializer(serializers.Serializer):
         user = self.context['request'].user
         responses = validated_data['responses']
         
+        # Determine which form (template) these responses belong to
+        # by finding the template that contains the first question's category
+        form_template = None
+        if responses:
+            first_question_id = responses[0]['question_id']
+            try:
+                first_question = SurveyQuestion.objects.select_related('category').get(id=first_question_id)
+                # Find active template containing this category
+                form_template = SurveyTemplate.objects.filter(
+                    categories=first_question.category,
+                    is_active=True,
+                    is_published=True
+                ).first()
+            except SurveyQuestion.DoesNotExist:
+                pass
+        
         created_responses = []
         for response_data in responses:
             question_id = response_data['question_id']
@@ -200,7 +216,8 @@ class SurveyResponseSubmissionSerializer(serializers.Serializer):
                     question=question,
                     defaults={
                         'response_data': response_value,
-                        'ip_address': self.context.get('ip_address')
+                        'ip_address': self.context.get('ip_address'),
+                        'form': form_template  # Link to template
                     }
                 )
                 created_responses.append(response_obj)

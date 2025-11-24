@@ -60,6 +60,8 @@ from .monitoring_views import (
     SurveyNonRespondentsView,
     SurveyStatisticsView,
     AllSurveysStatisticsView,
+    NotifyNonRespondentsView,
+    NotifySingleNonRespondentView,
 )
 
 __all__ = [
@@ -108,4 +110,6 @@ __all__ = [
     'SurveyNonRespondentsView',
     'SurveyStatisticsView',
     'AllSurveysStatisticsView',
+    'NotifyNonRespondentsView',
+    'NotifySingleNonRespondentView',
 ]

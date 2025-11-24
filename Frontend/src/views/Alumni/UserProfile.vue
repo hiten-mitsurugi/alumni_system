@@ -222,6 +222,57 @@
               @edit="() => {}"
               @delete="() => {}"
             />
+
+            <!-- Memberships Section -->
+            <ProfileMembershipsSection
+              :memberships="memberships"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @delete="() => {}"
+              @visibility-changed="() => {}"
+            />
+
+            <!-- Non-Academic Recognitions Section -->
+            <ProfileRecognitionsSection
+              :recognitions="recognitions"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @delete="() => {}"
+              @visibility-changed="() => {}"
+            />
+
+            <!-- Trainings Section -->
+            <ProfileTrainingsSection
+              :trainings="trainings"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @delete="() => {}"
+              @visibility-changed="() => {}"
+            />
+
+            <!-- Publications Section -->
+            <ProfilePublicationsSection
+              :publications="publications"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit="() => {}"
+              @delete="() => {}"
+              @visibility-changed="() => {}"
+            />
+
+            <!-- Career Enhancement Section -->
+            <ProfileCareerEnhancementSection
+              :career-enhancement="careerEnhancement"
+              :is-own-profile="false"
+              @add="() => {}"
+              @edit-certificate="() => {}"
+              @delete-certificate="() => {}"
+              @edit-cse="() => {}"
+              @visibility-changed="() => {}"
+            />
           </div>
 
           <!-- Posts Tab Content -->
@@ -257,6 +308,11 @@ import ProfileEducationSection from '@/components/profile/ProfileEducationSectio
 import ProfileExperienceSection from '@/components/profile/ProfileExperienceSection.vue'
 import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
 import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
+import ProfileMembershipsSection from '@/components/profile/ProfileMembershipsSection.vue'
+import ProfileRecognitionsSection from '@/components/profile/ProfileRecognitionsSection.vue'
+import ProfileTrainingsSection from '@/components/profile/ProfileTrainingsSection.vue'
+import ProfilePublicationsSection from '@/components/profile/ProfilePublicationsSection.vue'
+import ProfileCareerEnhancementSection from '@/components/profile/ProfileCareerEnhancementSection.vue'
 import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnectionsWidget.vue'
 import PostsTab from '@/components/profile/tabs/PostsTab.vue'
 
@@ -273,6 +329,11 @@ const education = ref([])
 const workHistories = ref([])
 const skills = ref([])
 const achievements = ref([])
+const memberships = ref([])
+const recognitions = ref([])
+const trainings = ref([])
+const publications = ref([])
+const careerEnhancement = ref({})
 const connections = ref(0)
 const isFollowing = ref(false)
 const isConnecting = ref(false)
@@ -430,12 +491,52 @@ const applyPrivacyFiltering = async (data) => {
       achievements: achievements.value.length
     })
     
+    // Filter memberships based on privacy
+    memberships.value = (data.memberships || []).filter(membership => {
+      const privacy = privacySettings[`membership_${membership.id}`] || 'connections_only'
+      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+      console.log(`🔐 Membership ${membership.id}: privacy="${privacy}", visible=${isVisible}`)
+      return isVisible
+    })
+    
+    // Filter recognitions based on privacy
+    recognitions.value = (data.recognitions || []).filter(recognition => {
+      const privacy = privacySettings[`recognition_${recognition.id}`] || 'connections_only'
+      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+      console.log(`🔐 Recognition ${recognition.id}: privacy="${privacy}", visible=${isVisible}`)
+      return isVisible
+    })
+    
+    // Filter trainings based on privacy
+    trainings.value = (data.trainings || []).filter(training => {
+      const privacy = privacySettings[`training_${training.id}`] || 'connections_only'
+      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+      console.log(`🔐 Training ${training.id}: privacy="${privacy}", visible=${isVisible}`)
+      return isVisible
+    })
+    
+    // Filter publications based on privacy
+    publications.value = (data.publications || []).filter(publication => {
+      const privacy = privacySettings[`publication_${publication.id}`] || 'connections_only'
+      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
+      console.log(`🔐 Publication ${publication.id}: privacy="${privacy}", visible=${isVisible}`)
+      return isVisible
+    })
+    
+    // Career enhancement data (no item-level filtering, whole section visibility)
+    careerEnhancement.value = data.career_enhancement || {}
+    
   } catch (error) {
     console.error('❌ Error applying privacy filtering:', error)
     // Fallback: show everything if privacy check fails
     education.value = data.education || []
     workHistories.value = data.work_histories || []
     achievements.value = data.achievements || []
+    memberships.value = data.memberships || []
+    recognitions.value = data.recognitions || []
+    trainings.value = data.trainings || []
+    publications.value = data.publications || []
+    careerEnhancement.value = data.career_enhancement || {}
   }
 }
 

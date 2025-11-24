@@ -62,18 +62,36 @@ class ActiveSurveyQuestionsView(APIView):
                 'surveytemplatecategory__order', 'order', 'name'
             )
             
-            # Check if user has already answered this template (form)
-            # User is considered to have answered if they have ANY response to questions in this template
-            has_answered = False
+            # Check user's response status for this template (form)
             allow_multiple = template.form_settings.get('allow_multiple_responses', False) if template.form_settings else False
             
-            if not allow_multiple:
-                # Check if user has any responses for questions in this template's categories
-                category_ids = list(categories.values_list('id', flat=True))
-                has_answered = SurveyResponse.objects.filter(
+            # Count total active questions in this template
+            total_questions = 0
+            for cat in categories:
+                total_questions += cat.questions.filter(is_active=True).count()
+            
+            # Count user's responses (prefer form-scoped if available, fallback to category-based)
+            category_ids = list(categories.values_list('id', flat=True))
+            
+            # Try form-scoped query first (for new responses that set the form FK)
+            form_responses = SurveyResponse.objects.filter(
+                user=request.user,
+                form=template
+            )
+            
+            if form_responses.exists():
+                # Use form-scoped responses (most accurate)
+                answered_count = form_responses.count()
+            else:
+                # Fallback to category-based (for legacy responses without form FK)
+                answered_count = SurveyResponse.objects.filter(
                     user=request.user,
                     question__category_id__in=category_ids
-                ).exists()
+                ).count()
+            
+            # Determine completion status
+            has_any_response = answered_count > 0
+            is_complete = (answered_count >= total_questions) and total_questions > 0
             
             template_categories = []
             for category in categories:
@@ -99,7 +117,11 @@ class ActiveSurveyQuestionsView(APIView):
                         'name': template.name,
                         'description': template.description,
                         'allow_multiple_responses': allow_multiple,
-                        'has_answered': has_answered,
+                        'has_answered': has_any_response,  # Keep for backward compatibility
+                        'has_any_response': has_any_response,  # New: any response exists
+                        'is_complete': is_complete,  # New: all questions answered
+                        'answered_count': answered_count,
+                        'total_questions': total_questions,
                     },
                     'categories': template_categories
                 })

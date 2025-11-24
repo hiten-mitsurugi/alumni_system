@@ -160,10 +160,11 @@ class ConversationListView(APIView):
         users_dict = {user.id: user for user in users_queryset}
 
         # 🚀 SPEED: Batch fetch latest messages for all conversations
+        # Defer 'content' field to avoid automatic decryption which may fail with key mismatch
         latest_messages_qs = Message.objects.filter(
             Q(sender=current_user, receiver_id__in=user_ids) |
             Q(sender_id__in=user_ids, receiver=current_user)
-        ).select_related('sender', 'receiver').order_by('receiver_id', 'sender_id', '-timestamp')
+        ).select_related('sender', 'receiver').defer('content').order_by('receiver_id', 'sender_id', '-timestamp')
         
         # Group latest messages by conversation
         latest_messages_dict = {}
@@ -193,50 +194,63 @@ class ConversationListView(APIView):
             other_user = users_dict[user_id]
             latest_message = latest_messages_dict.get(user_id)
 
+            # Build absolute URL for profile picture
+            profile_picture_url = None
+            if other_user.profile_picture:
+                profile_picture_url = request.build_absolute_uri(other_user.profile_picture.url)
+            
+            # Check blocking status
+            is_blocked_by_me = user_id in blocked_user_ids
+            is_blocked_by_them = user_id in blocked_by_user_ids
+            
+            # Try to get message content and timestamp
             if latest_message:
-                # Build absolute URL for profile picture
-                profile_picture_url = None
-                if other_user.profile_picture:
-                    profile_picture_url = request.build_absolute_uri(other_user.profile_picture.url)
-                
-                # Check blocking status
-                is_blocked_by_me = user_id in blocked_user_ids
-                is_blocked_by_them = user_id in blocked_by_user_ids
-                
-                # Create conversation object
-                conversation = {
-                    'type': 'private',
-                    'mate': {
-                        'id': user_id,
-                        'username': other_user.username,
-                        'first_name': other_user.first_name,
-                        'last_name': other_user.last_name,
-                        'profile_picture': profile_picture_url,
-                        'profile': {
-                            'status': getattr(other_user.profile, 'status', 'offline') if hasattr(other_user, 'profile') and other_user.profile else 'offline',
-                            'last_seen': getattr(other_user.profile, 'last_seen', None) if hasattr(other_user, 'profile') and other_user.profile else None,
-                        }
-                    },
-                    'lastMessage': latest_message.content[:50] + ('...' if len(latest_message.content) > 50 else ''),
-                    'timestamp': latest_message.timestamp.isoformat(),
-                    'unreadCount': unread_dict.get(user_id, 0),
-                    'isBlockedByMe': is_blocked_by_me,
-                    'isBlockedByThem': is_blocked_by_them,
-                    'canSendMessage': not (is_blocked_by_me or is_blocked_by_them)
-                }
-                conversations.append(conversation)
+                try:
+                    last_message_text = latest_message.content[:50] + ('...' if len(latest_message.content) > 50 else '')
+                except Exception:
+                    # Encryption error - message exists but can't be decrypted
+                    last_message_text = '[Message content unavailable]'
+                timestamp = latest_message.timestamp.isoformat()
+            else:
+                # No latest message available (possibly due to encryption error)
+                last_message_text = '[Message content unavailable]'
+                timestamp = conv_data['last_message_time'].isoformat()
+            
+            # Create conversation object
+            conversation = {
+                'type': 'private',
+                'mate': {
+                    'id': user_id,
+                    'username': other_user.username,
+                    'first_name': other_user.first_name,
+                    'last_name': other_user.last_name,
+                    'profile_picture': profile_picture_url,
+                    'profile': {
+                        'status': getattr(other_user.profile, 'status', 'offline') if hasattr(other_user, 'profile') and other_user.profile else 'offline',
+                        'last_seen': getattr(other_user.profile, 'last_seen', None) if hasattr(other_user, 'profile') and other_user.profile else None,
+                    }
+                },
+                'lastMessage': last_message_text,
+                'timestamp': timestamp,
+                'unreadCount': unread_dict.get(user_id, 0),
+                'isBlockedByMe': is_blocked_by_me,
+                'isBlockedByThem': is_blocked_by_them,
+                'canSendMessage': not (is_blocked_by_me or is_blocked_by_them)
+            }
+            conversations.append(conversation)
 
         # 🆕 ADDITION: Include pending message requests sent by current user
         # This allows users to see their outgoing messages immediately, even if not yet accepted
+        # Defer 'content' field to avoid automatic decryption which may fail with key mismatch
         pending_requests = MessageRequest.objects.filter(
             sender=current_user,
             accepted=False
         ).exclude(
             receiver_id__in=conversation_dict.keys()  # Don't duplicate existing conversations
-        ).select_related('receiver', 'receiver__profile')
+        ).select_related('receiver', 'receiver__profile').defer('content')
         
-        for request in pending_requests:
-            receiver = request.receiver
+        for msg_request in pending_requests:
+            receiver = msg_request.receiver
             
             # Skip if receiver is blocked
             is_blocked_by_me = receiver.id in blocked_user_ids
@@ -246,6 +260,12 @@ class ConversationListView(APIView):
             profile_picture_url = None
             if receiver.profile_picture:
                 profile_picture_url = request.build_absolute_uri(receiver.profile_picture.url)
+            
+            # Try to get message content, handle encryption errors
+            try:
+                pending_message_text = f"[Pending] {msg_request.content[:50]}" + ('...' if len(msg_request.content) > 50 else '')
+            except Exception:
+                pending_message_text = '[Pending message - content unavailable]'
             
             # Create conversation object for pending request
             conversation = {
@@ -261,14 +281,14 @@ class ConversationListView(APIView):
                         'last_seen': getattr(receiver.profile, 'last_seen', None) if hasattr(receiver, 'profile') and receiver.profile else None,
                     }
                 },
-                'lastMessage': f"[Pending] {request.content[:50]}" + ('...' if len(request.content) > 50 else ''),
-                'timestamp': request.timestamp.isoformat(),
+                'lastMessage': pending_message_text,
+                'timestamp': msg_request.timestamp.isoformat(),
                 'unreadCount': 0,  # No unread count for pending requests
                 'isBlockedByMe': is_blocked_by_me,
                 'isBlockedByThem': is_blocked_by_them,
                 'canSendMessage': not (is_blocked_by_me or is_blocked_by_them),
                 'isPending': True,  # Flag to indicate this is a pending request
-                'requestId': str(request.id)
+                'requestId': str(msg_request.id)
             }
             conversations.append(conversation)
 
@@ -414,11 +434,12 @@ class MessageListView(APIView):
                     return Response(cached_messages)
                 
                 # Fetch group messages with optimized query
+                # Defer 'content' field to avoid automatic decryption which may fail with key mismatch
                 messages = Message.objects.filter(group=group).select_related(
                     'sender', 'sender__profile', 'reply_to', 'reply_to__sender'
                 ).prefetch_related(
                     'attachments', 'reactions', 'reactions__user'
-                ).order_by("timestamp")
+                ).defer('content').order_by("timestamp")
                 
                 serializer = MessageSerializer(messages, many=True, context={'request': request})
                 serialized_data = serializer.data
@@ -453,6 +474,7 @@ class MessageListView(APIView):
             # Only block sending new messages (handled in SendMessageView)
             
             # Fetch messages with optimized query
+            # Defer 'content' field to avoid automatic decryption which may fail with key mismatch
             messages = Message.objects.filter(
                 sender=request.user, receiver=receiver
             ) | Message.objects.filter(
@@ -463,7 +485,7 @@ class MessageListView(APIView):
                 'reply_to', 'reply_to__sender'
             ).prefetch_related(
                 'attachments', 'reactions', 'reactions__user'
-            ).order_by("timestamp")
+            ).defer('content').order_by("timestamp")
 
             serializer = MessageSerializer(messages, many=True, context={'request': request})
             serialized_data = serializer.data

@@ -62,6 +62,10 @@ urlpatterns = [
     path('<int:survey_id>/statistics/', views.SurveyStatisticsView.as_view(), name='survey-statistics'),
     path('<int:survey_id>/non-respondents/', views.SurveyNonRespondentsView.as_view(), name='survey-non-respondents'),
     
+    # Notification/Reminder Endpoints
+    path('<int:survey_id>/notify-non-respondents/', views.NotifyNonRespondentsView.as_view(), name='notify-non-respondents'),
+    path('<int:survey_id>/notify-user/', views.NotifySingleNonRespondentView.as_view(), name='notify-single-user'),
+    
     # =============================================================================
     # ALUMNI ENDPOINTS - Survey Taking (Alumni & Authenticated Users)
     # =============================================================================

@@ -18,7 +18,11 @@ try:
         SkillListCreateView, UserSkillListCreateView, UserSkillDetailView, 
         WorkHistoryListCreateView, WorkHistoryDetailView,
         AchievementListCreateView, AchievementDetailView, EducationListCreateView,
-        EducationDetailView
+        EducationDetailView, MembershipListCreateView, MembershipDetailView,
+        RecognitionListCreateView, RecognitionDetailView,
+        TrainingListCreateView, TrainingDetailView,
+        PublicationListCreateView, PublicationDetailView,
+        CertificateListCreateView, CertificateDetailView, CSEStatusView
     )
     from .alumni_directory import (
         AlumniDirectoryListCreateView, AlumniDirectoryDetailView, 
@@ -66,7 +70,11 @@ __all__ = [
     'SkillListCreateView', 'UserSkillListCreateView', 'UserSkillDetailView',
     'WorkHistoryListCreateView', 'WorkHistoryDetailView',
     'AchievementListCreateView', 'AchievementDetailView', 'EducationListCreateView',
-    'EducationDetailView',
+    'EducationDetailView', 'MembershipListCreateView', 'MembershipDetailView',
+    'RecognitionListCreateView', 'RecognitionDetailView',
+    'TrainingListCreateView', 'TrainingDetailView',
+    'PublicationListCreateView', 'PublicationDetailView',
+    'CertificateListCreateView', 'CertificateDetailView', 'CSEStatusView',
     
     # Alumni Directory
     'AlumniDirectoryListCreateView', 'AlumniDirectoryDetailView', 

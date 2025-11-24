@@ -2,6 +2,8 @@
 Skills and Work History Views - Skills, Work History, Achievements, Education CRUD operations
 """
 from .base_imports import *
+from auth_app.models import Membership, Recognition, Training, Publication, Certificate, CSEStatus
+from auth_app.serializers import MembershipSerializer, RecognitionSerializer, TrainingSerializer, PublicationSerializer, CertificateSerializer, CSEStatusSerializer
 
 class SkillListCreateView(ListCreateAPIView):
     serializer_class = SkillSerializer
@@ -213,3 +215,139 @@ class EducationDetailView(RetrieveUpdateDestroyAPIView):
         # Import here to avoid circular imports
         from auth_app.models import Education
         return Education.objects.filter(user=self.request.user)
+
+
+class MembershipListCreateView(ListCreateAPIView):
+    """List and create organization memberships for authenticated user"""
+    serializer_class = MembershipSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Check if viewing another user's memberships
+        user_id = self.kwargs.get('user_id')
+        
+        if user_id:
+            # Viewing another user's memberships (with privacy filtering in enhanced-profile)
+            return Membership.objects.filter(user_id=user_id).order_by('-date_joined', '-created_at')
+        else:
+            # Current user's memberships
+            return Membership.objects.filter(user=self.request.user).order_by('-date_joined', '-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class MembershipDetailView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a specific membership"""
+    serializer_class = MembershipSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Membership.objects.filter(user=self.request.user)
+
+
+class RecognitionListCreateView(ListCreateAPIView):
+    """List or create recognitions"""
+    serializer_class = RecognitionSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            return Recognition.objects.filter(user_id=user_id)
+        return Recognition.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class RecognitionDetailView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a specific recognition"""
+    serializer_class = RecognitionSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Recognition.objects.filter(user=self.request.user)
+
+
+class TrainingListCreateView(ListCreateAPIView):
+    """List or create trainings"""
+    serializer_class = TrainingSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            return Training.objects.filter(user_id=user_id)
+        return Training.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class TrainingDetailView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a specific training"""
+    serializer_class = TrainingSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Training.objects.filter(user=self.request.user)
+
+
+class PublicationListCreateView(ListCreateAPIView):
+    """List or create publications"""
+    serializer_class = PublicationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            return Publication.objects.filter(user_id=user_id)
+        return Publication.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class PublicationDetailView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a specific publication"""
+    serializer_class = PublicationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Publication.objects.filter(user=self.request.user)
+
+
+class CertificateListCreateView(ListCreateAPIView):
+    """List or create certificates"""
+    serializer_class = CertificateSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            return Certificate.objects.filter(user_id=user_id)
+        return Certificate.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class CertificateDetailView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a specific certificate"""
+    serializer_class = CertificateSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Certificate.objects.filter(user=self.request.user)
+
+
+class CSEStatusView(RetrieveUpdateAPIView):
+    """Retrieve or update CSE status (one per user)"""
+    serializer_class = CSEStatusSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        obj, created = CSEStatus.objects.get_or_create(user=self.request.user)
+        return obj
+

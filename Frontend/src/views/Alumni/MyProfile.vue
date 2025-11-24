@@ -833,8 +833,7 @@ const deleteMembership = async (membershipId) => {
   }
 
   try {
-    // TODO: Replace with actual API call
-    // await api.delete(`/auth/memberships/${membershipId}/`)
+    await api.delete(`/auth/memberships/${membershipId}/`)
     
     // Remove from local state
     memberships.value = memberships.value.filter(m => m.id !== membershipId)
@@ -852,26 +851,23 @@ const closeMembershipModal = () => {
 
 const saveMembership = async (membershipData) => {
   try {
+    let response
     if (selectedMembership.value) {
       // Update existing membership
-      // TODO: Replace with actual API call
-      // const response = await api.put(`/auth/memberships/${selectedMembership.value.id}/`, membershipData)
+      response = await api.put(`/auth/memberships/${selectedMembership.value.id}/`, membershipData)
       
       const index = memberships.value.findIndex(m => m.id === selectedMembership.value.id)
       if (index !== -1) {
-        memberships.value[index] = { ...membershipData, id: selectedMembership.value.id }
+        memberships.value[index] = response.data
       }
     } else {
       // Create new membership
-      // TODO: Replace with actual API call
-      // const response = await api.post('/auth/memberships/', membershipData)
-      
-      const newMembership = { ...membershipData, id: Date.now() } // Temporary ID
-      memberships.value.push(newMembership)
+      response = await api.post('/auth/memberships/', membershipData)
+      memberships.value.push(response.data)
     }
     
     closeMembershipModal()
-    console.log('Membership saved:', membershipData)
+    console.log('Membership saved:', response.data)
   } catch (error) {
     console.error('Error saving membership:', error)
     alert('Failed to save membership')
@@ -900,8 +896,7 @@ const deleteRecognition = async (recognitionId) => {
   }
 
   try {
-    // TODO: Replace with actual API call
-    // await api.delete(`/auth/recognitions/${recognitionId}/`)
+    await api.delete(`/auth/recognitions/${recognitionId}/`)
     
     // Remove from local state
     recognitions.value = recognitions.value.filter(r => r.id !== recognitionId)
@@ -919,20 +914,26 @@ const closeRecognitionModal = () => {
 
 const saveRecognition = async (recognitionData) => {
   try {
+    let response
     if (selectedRecognition.value) {
       // Update existing recognition
+      response = await api.put(`/auth/recognitions/${selectedRecognition.value.id}/`, recognitionData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       const index = recognitions.value.findIndex(r => r.id === selectedRecognition.value.id)
       if (index !== -1) {
-        recognitions.value[index] = { ...recognitionData, id: selectedRecognition.value.id }
+        recognitions.value[index] = response.data
       }
     } else {
       // Create new recognition
-      const newRecognition = { ...recognitionData, id: Date.now() }
-      recognitions.value.push(newRecognition)
+      response = await api.post('/auth/recognitions/', recognitionData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      recognitions.value.push(response.data)
     }
     
     closeRecognitionModal()
-    console.log('Recognition saved:', recognitionData)
+    console.log('Recognition saved:', response.data)
   } catch (error) {
     console.error('Error saving recognition:', error)
     alert('Failed to save recognition')
@@ -960,8 +961,7 @@ const deleteTraining = async (trainingId) => {
   }
 
   try {
-    // TODO: Replace with actual API call
-    // await api.delete(`/auth/trainings/${trainingId}/`)
+    await api.delete(`/auth/trainings/${trainingId}/`)
     
     // Remove from local state
     trainings.value = trainings.value.filter(t => t.id !== trainingId)
@@ -979,20 +979,26 @@ const closeTrainingModal = () => {
 
 const saveTraining = async (trainingData) => {
   try {
+    let response
     if (selectedTraining.value) {
       // Update existing training
+      response = await api.put(`/auth/trainings/${selectedTraining.value.id}/`, trainingData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       const index = trainings.value.findIndex(t => t.id === selectedTraining.value.id)
       if (index !== -1) {
-        trainings.value[index] = { ...trainingData, id: selectedTraining.value.id }
+        trainings.value[index] = response.data
       }
     } else {
       // Create new training
-      const newTraining = { ...trainingData, id: Date.now() }
-      trainings.value.push(newTraining)
+      response = await api.post('/auth/trainings/', trainingData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      trainings.value.push(response.data)
     }
     
     closeTrainingModal()
-    console.log('Training saved:', trainingData)
+    console.log('Training saved:', response.data)
   } catch (error) {
     console.error('Error saving training:', error)
     alert('Failed to save training')
@@ -1020,8 +1026,7 @@ const deletePublication = async (publicationId) => {
   }
 
   try {
-    // TODO: Replace with actual API call
-    // await api.delete(`/auth/publications/${publicationId}/`)
+    await api.delete(`/auth/publications/${publicationId}/`)
     
     // Remove from local state
     publications.value = publications.value.filter(p => p.id !== publicationId)
@@ -1039,20 +1044,22 @@ const closePublicationModal = () => {
 
 const savePublication = async (publicationData) => {
   try {
+    let response
     if (selectedPublication.value) {
       // Update existing publication
+      response = await api.put(`/auth/publications/${selectedPublication.value.id}/`, publicationData)
       const index = publications.value.findIndex(p => p.id === selectedPublication.value.id)
       if (index !== -1) {
-        publications.value[index] = { ...publicationData, id: selectedPublication.value.id }
+        publications.value[index] = response.data
       }
     } else {
       // Create new publication
-      const newPublication = { ...publicationData, id: Date.now() }
-      publications.value.push(newPublication)
+      response = await api.post('/auth/publications/', publicationData)
+      publications.value.push(response.data)
     }
     
     closePublicationModal()
-    console.log('Publication saved:', publicationData)
+    console.log('Publication saved:', response.data)
   } catch (error) {
     console.error('Error saving publication:', error)
     alert('Failed to save publication')
@@ -1085,8 +1092,7 @@ const deleteCertificate = async (certificateId) => {
   }
 
   try {
-    // TODO: Replace with actual API call
-    // await api.delete(`/auth/certificates/${certificateId}/`)
+    await api.delete(`/auth/certificates/${certificateId}/`)
     
     // Remove from local state
     if (careerEnhancement.value.certificates) {
@@ -1111,11 +1117,62 @@ const closeCareerEnhancementModal = () => {
 
 const saveCareerEnhancement = async (careerEnhancementData) => {
   try {
-    // TODO: Replace with actual API call
-    // const response = await api.put('/auth/career-enhancement/', careerEnhancementData)
+    // Handle certificates
+    if (careerEnhancementData.certificates) {
+      const certificates = Array.isArray(careerEnhancementData.certificates) 
+        ? careerEnhancementData.certificates 
+        : [careerEnhancementData.certificates]
+      
+      for (const cert of certificates) {
+        const formData = new FormData()
+        
+        if (cert.certificate_type) formData.append('certificate_type', cert.certificate_type)
+        if (cert.certificate_number) formData.append('certificate_number', cert.certificate_number)
+        if (cert.issuing_body) formData.append('issuing_body', cert.issuing_body)
+        if (cert.date_issued) formData.append('date_issued', cert.date_issued)
+        if (cert.expiry_date) formData.append('expiry_date', cert.expiry_date)
+        if (cert.certificate_file instanceof File) {
+          formData.append('certificate_file', cert.certificate_file)
+        }
+        
+        if (cert.id) {
+          // Update existing
+          const response = await api.put(`/auth/certificates/${cert.id}/`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          // Update in local state
+          const index = careerEnhancement.value.certificates.findIndex(c => c.id === cert.id)
+          if (index !== -1) {
+            careerEnhancement.value.certificates[index] = response.data
+          }
+        } else {
+          // Create new
+          const response = await api.post('/auth/certificates/', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          if (!careerEnhancement.value.certificates) {
+            careerEnhancement.value.certificates = []
+          }
+          careerEnhancement.value.certificates.push(response.data)
+        }
+      }
+    }
     
-    // Update local state
-    careerEnhancement.value = careerEnhancementData
+    // Handle CSE status
+    if (careerEnhancementData.cseStatus) {
+      const statusData = {
+        status: careerEnhancementData.cseStatus.status,
+        current_position: careerEnhancementData.cseStatus.current_position,
+        current_company: careerEnhancementData.cseStatus.current_company,
+        industry: careerEnhancementData.cseStatus.industry,
+        start_date: careerEnhancementData.cseStatus.start_date,
+        end_date: careerEnhancementData.cseStatus.end_date,
+        is_current: careerEnhancementData.cseStatus.is_current
+      }
+      
+      const response = await api.put('/auth/cse-status/', statusData)
+      careerEnhancement.value.cseStatus = response.data
+    }
     
     closeCareerEnhancementModal()
     console.log('Career enhancement saved:', careerEnhancementData)

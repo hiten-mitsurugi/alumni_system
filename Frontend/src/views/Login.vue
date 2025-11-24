@@ -77,7 +77,7 @@ const login = async () => {
       <!-- Left Section -->
       <div class="hidden md:flex w-1/2 justify-center">
         <div class="flex flex-col items-center text-white ml-12 text-center">
-          <h1 class="text-6xl font-extrabold">Welcome to Alumni Mates</h1>
+          <h1 class="text-6xl font-extrabold">Welcome to ATENDA</h1>
           <p class="text-4xl mt-4">Connecting Alumni, Building Futures</p>
           <div class="flex space-x-8 mt-10">
             <img src="@/assets/CSU Icon.png" alt="Logo 2" class="h-68" />
@@ -89,11 +89,7 @@ const login = async () => {
       <!-- Right Section (Login Form) -->
       <div class="w-full md:w-1/2 flex justify-center">
         <div class="login-form bg-white bg-opacity-90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full">
-          <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">Alumni Mates</h2>
-          <div class="flex justify-center items-center space-x-4 mb-6">
-            <img src="@/assets/CSU Icon.png" alt="Logo 1" class="h-12" />
-            <img src="@/assets/CCIS.png" alt="Logo 2" class="h-12" />
-          </div>
+          <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">ATENDA</h2>
           <h3 class="text-xl font-semibold text-center mb-6 text-black">Login</h3>
 
           <!-- Form Start -->
