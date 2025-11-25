@@ -92,11 +92,10 @@
               'block text-sm font-medium mb-2',
               themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
             ]">
-              Authors Type *
+              Authors Type
             </label>
             <select
               v-model="formData.authors_type"
-              required
               :class="[
                 'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                 themeStore.isDarkMode 
@@ -199,46 +198,25 @@
           </div>
         </div>
 
-        <!-- Pages and DOI -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label :class="[
-              'block text-sm font-medium mb-2',
-              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            ]">
-              Pages
-            </label>
-            <input
-              v-model="formData.pages"
-              type="text"
-              :class="[
-                'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                themeStore.isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              ]"
-              placeholder="e.g., 45-62 or pp. 123-145"
-            />
-          </div>
-          <div>
-            <label :class="[
-              'block text-sm font-medium mb-2',
-              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            ]">
-              DOI
-            </label>
-            <input
-              v-model="formData.doi"
-              type="text"
-              :class="[
-                'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                themeStore.isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              ]"
-              placeholder="10.1234/ijwt.2023.001"
-            />
-          </div>
+        <!-- Pages -->
+        <div>
+          <label :class="[
+            'block text-sm font-medium mb-2',
+            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+          ]">
+            Pages
+          </label>
+          <input
+            v-model.number="formData.pages"
+            type="number"
+            :class="[
+              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+              themeStore.isDarkMode 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            ]"
+            placeholder="e.g., 45"
+          />
         </div>
 
         <!-- Co-authors -->
@@ -279,49 +257,7 @@
           </div>
         </div>
 
-        <!-- Abstract -->
-        <div>
-          <label :class="[
-            'block text-sm font-medium mb-2',
-            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          ]">
-            Abstract
-          </label>
-          <textarea
-            v-model="formData.abstract"
-            rows="4"
-            :class="[
-              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-              themeStore.isDarkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
-                : 'bg-white border-gray-300 text-gray-900'
-            ]"
-            placeholder="Brief abstract or summary of the publication"
-          ></textarea>
-        </div>
 
-        <!-- Privacy Setting -->
-        <div>
-          <label :class="[
-            'block text-sm font-medium mb-2',
-            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          ]">
-            Visibility
-          </label>
-          <select
-            v-model="formData.visibility"
-            :class="[
-              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-              themeStore.isDarkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
-                : 'bg-white border-gray-300 text-gray-900'
-            ]"
-          >
-            <option value="public">Public</option>
-            <option value="connections_only">Connections Only</option>
-            <option value="private">Private</option>
-          </select>
-        </div>
 
         <!-- Form Actions -->
         <div :class="[
@@ -346,7 +282,7 @@
             :class="[
               'px-4 py-2 text-sm font-medium rounded-md transition-colors',
               isFormValid
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
                 : 'bg-gray-400 text-gray-200 cursor-not-allowed'
             ]"
           >
@@ -384,10 +320,7 @@ const formData = ref({
   volume: '',
   issue: '',
   pages: '',
-  doi: '',
-  co_authors: [],
-  abstract: '',
-  visibility: 'connections_only'
+  co_authors: []
 })
 
 const coAuthorsInput = ref('')
@@ -395,8 +328,7 @@ const coAuthorsInput = ref('')
 const isFormValid = computed(() => {
   return formData.value.title.trim() && 
          formData.value.year_published && 
-         formData.value.place_of_publication.trim() && 
-         formData.value.authors_type
+         formData.value.place_of_publication.trim()
 })
 
 // Watch co-authors input for comma-separated values
@@ -434,10 +366,10 @@ watch(() => props.publication, (newPublication) => {
       volume: newPublication.volume || '',
       issue: newPublication.issue || '',
       pages: newPublication.pages || '',
-      doi: newPublication.doi || '',
+      // doi removed
       co_authors: newPublication.co_authors || [],
-      abstract: newPublication.abstract || '',
-      visibility: newPublication.visibility || 'connections_only'
+      // abstract removed
+      // visibility removed
     }
     coAuthorsInput.value = ''
   } else {
@@ -452,10 +384,10 @@ watch(() => props.publication, (newPublication) => {
       volume: '',
       issue: '',
       pages: '',
-      doi: '',
+      // doi removed
       co_authors: [],
-      abstract: '',
-      visibility: 'connections_only'
+      // abstract removed
+      // visibility removed
     }
     coAuthorsInput.value = ''
   }

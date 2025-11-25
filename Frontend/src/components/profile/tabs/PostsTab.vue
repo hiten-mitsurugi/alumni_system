@@ -13,6 +13,7 @@
         :key="post.id"
         :post="post"
         :categories="categories"
+        :current-user-id="authStore.user.id"
         @copy-link="handleCopyLink"
         @repost="handleRepost"
       />

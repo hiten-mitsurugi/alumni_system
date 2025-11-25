@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
 import re
 import json
 
@@ -107,14 +108,13 @@ class UserSkillSerializer(serializers.ModelSerializer):
         exclude = ['user']
 
 class WorkHistorySerializer(serializers.ModelSerializer):
-    skills = SkillSerializer(many=True, required=False)
     class Meta:
         model = WorkHistory
         fields = [
-            'id', 'occupation', 'employing_agency', 'classification', 
-            'length_of_service', 'description', 'start_date', 'end_date', 'skills',
-            'job_type', 'employment_status', 'how_got_job', 'monthly_income',
-            'is_breadwinner', 'college_education_relevant'
+            'id', 'job_type', 'employment_status', 'classification',
+            'occupation', 'employing_agency', 'how_got_job', 'monthly_income',
+            'is_breadwinner', 'length_of_service', 'college_education_relevant',
+            'start_date', 'end_date', 'description'
         ]
 
 class SkillsRelevanceSerializer(serializers.ModelSerializer):
@@ -785,9 +785,8 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     real_time_status = serializers.SerializerMethodField()
     
     def get_work_histories(self, obj):
-        """Get work histories deferring the problematic is_current_job field"""
-        # Defer the is_current_job field that doesn't exist in database
-        work_histories = obj.work_histories.all().defer('is_current_job')
+        """Get work histories for the user"""
+        work_histories = obj.work_histories.all()
         return WorkHistorySerializer(work_histories, many=True).data
     
     def get_education(self, obj):
@@ -827,13 +826,76 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
             print(f"🔓 Own profile - returning all data for user {instance.id}")
             return ret
         
-        # Apply privacy filtering for other users
-        print(f"🔒 Filtering privacy for user {instance.id}, viewed by {requesting_user.id if requesting_user else 'anonymous'}")
+        # PROFILE-LEVEL PRIVACY CHECK (NEW)
+        # Check profile_visibility BEFORE applying per-field filters
+        profile_visibility = 'public'  # default
+        if hasattr(instance, 'profile') and instance.profile:
+            profile_visibility = instance.profile.profile_visibility
         
-        # Filter individual items based on privacy settings
+        print(f"🔒 Profile visibility: {profile_visibility} for user {instance.id}, viewed by {requesting_user.id if requesting_user else 'anonymous'}")
+        
+        # If profile is PRIVATE and viewer is not the owner, return minimal card
+        if profile_visibility == 'private':
+            print(f"🚫 PRIVATE profile - returning minimal card")
+            return self._get_minimal_profile_card(instance, 'private')
+        
+        # If profile is CONNECTIONS_ONLY, check if viewer is connected
+        if profile_visibility == 'connections_only':
+            if not requesting_user or requesting_user.is_anonymous:
+                print(f"🚫 CONNECTIONS_ONLY profile - viewer not authenticated, returning minimal card")
+                return self._get_minimal_profile_card(instance, 'connections_only')
+            
+            # Check if viewer is connected to profile owner
+            is_connected = self._is_user_connected(requesting_user, instance)
+            if not is_connected:
+                print(f"🚫 CONNECTIONS_ONLY profile - viewer not connected, returning minimal card")
+                return self._get_minimal_profile_card(instance, 'connections_only')
+            else:
+                print(f"✅ CONNECTIONS_ONLY profile - viewer IS connected, showing full profile")
+        
+        # Profile is PUBLIC or viewer is authorized -> Apply per-field privacy filtering
+        print(f"🔒 Filtering per-field privacy for user {instance.id}")
         ret = self._filter_privacy_items(ret, instance, requesting_user)
         
         return ret
+    
+    def _is_user_connected(self, requesting_user, target_user):
+        """
+        Check if requesting_user is connected to target_user.
+        Connection = accepted Following relationship with is_mutual=True in either direction
+        """
+        from .models import Following
+        
+        # Check if users are connected (either direction with is_mutual and accepted status)
+        connection_exists = Following.objects.filter(
+            Q(follower=requesting_user, following=target_user) | 
+            Q(follower=target_user, following=requesting_user),
+            is_mutual=True,
+            status='accepted'
+        ).exists()
+        
+        print(f"🔍 Connection check: {requesting_user.username} ↔ {target_user.username} = {connection_exists}")
+        return connection_exists
+    
+    def _get_minimal_profile_card(self, instance, visibility_type):
+        """
+        Return a minimal profile card when full profile is not accessible.
+        Includes only basic public info + a flag indicating why it's restricted.
+        """
+        return {
+            'id': instance.id,
+            'username': instance.username,
+            'first_name': instance.first_name,
+            'last_name': instance.last_name,
+            'profile_picture': instance.profile_picture.url if instance.profile_picture else None,
+            'is_restricted': True,
+            'restriction_reason': visibility_type,  # 'private' or 'connections_only'
+            'message': 'This profile is private' if visibility_type == 'private' 
+                      else 'This profile is only visible to connections',
+            'profile': {
+                'profile_visibility': visibility_type
+            } if hasattr(instance, 'profile') and instance.profile else None
+        }
     
     def _filter_privacy_items(self, data, target_user, requesting_user):
         """Filter individual items based on their privacy settings"""
@@ -959,21 +1021,53 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     
     def _is_item_visible(self, visibility, requesting_user, target_user):
         """Check if an item should be visible based on privacy settings"""
+        print(f"🔍 _is_item_visible: visibility={visibility}, requesting_user={requesting_user.id if requesting_user else None}, target_user={target_user.id}")
+        
         if visibility == 'everyone':
+            print(f"✅ Visible to everyone")
             return True
         elif visibility == 'only_me':
+            print(f"🚫 Visible only to owner")
             return False
         elif visibility == 'connections_only':
             if not requesting_user or requesting_user.is_anonymous:
+                print(f"🚫 Not visible - user not authenticated")
                 return False
-            # Check if users are connected
+            
+            # Check if users are connected (mutual connection)
             from .models import Following
-            return Following.objects.filter(
+            
+            # Check both directions for mutual connection
+            connection_exists = Following.objects.filter(
                 follower=requesting_user,
                 following=target_user,
                 is_mutual=True,
                 status='accepted'
             ).exists()
+            
+            print(f"🔍 Checking connection: {requesting_user.username} → {target_user.username}")
+            print(f"🔍 Connection exists (is_mutual=True, status=accepted): {connection_exists}")
+            
+            if not connection_exists:
+                # Also check reverse direction
+                reverse_connection = Following.objects.filter(
+                    follower=target_user,
+                    following=requesting_user,
+                    is_mutual=True,
+                    status='accepted'
+                ).exists()
+                print(f"🔍 Reverse connection: {target_user.username} → {requesting_user.username}: {reverse_connection}")
+                connection_exists = reverse_connection
+            
+            # Debug: Show all connections for these users
+            all_connections_from_requester = Following.objects.filter(follower=requesting_user)
+            all_connections_to_target = Following.objects.filter(following=target_user)
+            print(f"📊 All connections FROM {requesting_user.username}: {list(all_connections_from_requester.values('following__username', 'is_mutual', 'status'))}")
+            print(f"📊 All connections TO {target_user.username}: {list(all_connections_to_target.values('follower__username', 'is_mutual', 'status'))}")
+            
+            return connection_exists
+        
+        print(f"⚠️ Unknown visibility: {visibility}")
         return False
     
     class Meta:
@@ -985,7 +1079,9 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
             'contact_number', 'birth_date', 'year_graduated', 'mothers_name',
             'mothers_occupation', 'fathers_name', 'fathers_occupation',
             'is_active', 'is_staff', 'is_superuser', 'last_login', 'date_joined',
-            'profile', 'work_histories', 'achievements', 'education', 'user_skills', 'real_time_status'
+            'profile', 'work_histories', 'achievements', 'education', 'user_skills',
+            'memberships', 'recognitions', 'trainings', 'publications', 'certificates',
+            'cse_status', 'real_time_status'
         ]
     
     def get_real_time_status(self, obj):
@@ -1048,6 +1144,6 @@ class ProfileFieldUpdateSerializer(serializers.Serializer):
     visibility = serializers.ChoiceField(
         choices=FieldPrivacySetting.VISIBILITY_CHOICES, 
         required=False,
-        default='connections_only'
+        default='everyone'
     )
     target_user_id = serializers.IntegerField(required=False)

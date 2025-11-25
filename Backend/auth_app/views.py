@@ -1423,26 +1423,39 @@ class InvitationAcceptView(APIView):
         """Accept a connection invitation"""
         try:
             from .models import Following
+            print(f"🔍 Accepting invitation {invitation_id} for user {request.user.id}")
+            
             invitation = Following.objects.get(
                 id=invitation_id,
                 following=request.user,  # Invitation sent TO current user
                 status='pending'
             )
             
-            # Accept the invitation
-            invitation.status = 'accepted'
-            invitation.save()
+            print(f"✅ Found invitation: {invitation.follower.username} → {invitation.following.username}")
             
-            return Response({
-                'message': f'Connection accepted with {invitation.follower.first_name} {invitation.follower.last_name}!',
-                'status': 'accepted'
-            }, status=status.HTTP_200_OK)
+            # Use the model's accept_invitation method which handles mutual connections
+            success = invitation.accept_invitation()
+            
+            if success:
+                print(f"✅ Invitation accepted successfully, mutual connection created")
+                return Response({
+                    'message': f'Connection accepted with {invitation.follower.first_name} {invitation.follower.last_name}!',
+                    'status': 'accepted',
+                    'is_mutual': True
+                }, status=status.HTTP_200_OK)
+            else:
+                print(f"⚠️ Invitation was not in pending state")
+                return Response({'error': 'Invitation is not pending'}, status=status.HTTP_400_BAD_REQUEST)
             
         except Following.DoesNotExist:
+            print(f"❌ Invitation {invitation_id} not found for user {request.user.id}")
             return Response({'error': 'Invitation not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            import traceback
             logger.error(f"Error accepting invitation {invitation_id}: {str(e)}")
-            return Response({'error': 'Failed to accept invitation'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print(f"❌ Error accepting invitation {invitation_id}: {str(e)}")
+            print(f"❌ Traceback: {traceback.format_exc()}")
+            return Response({'error': f'Failed to accept invitation: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class InvitationRejectView(APIView):

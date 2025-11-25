@@ -231,20 +231,27 @@ class WorkHistory(models.Model):
     )
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='work_histories')
-    # Core fields
+    
+    # Fields matching actual database structure
+    job_type = models.CharField(max_length=100, blank=True, null=True)
+    employment_status = models.CharField(max_length=100, blank=True, null=True)
+    classification = models.CharField(max_length=50, choices=CLASSIFICATION_CHOICES)
     occupation = models.CharField(max_length=255)
     employing_agency = models.CharField(max_length=255)
-    classification = models.CharField(max_length=50, choices=CLASSIFICATION_CHOICES)
+    how_got_job = models.CharField(max_length=255, blank=True, null=True)
+    monthly_income = models.CharField(max_length=100, blank=True, null=True)
+    is_breadwinner = models.BooleanField(default=False)
     length_of_service = models.CharField(max_length=50, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    is_current_job = models.BooleanField(default=False)
+    college_education_relevant = models.CharField(max_length=100, blank=True, null=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    skills = models.ManyToManyField(Skill, related_name='work_histories', blank=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Note: is_current_job and skills fields don't exist in database
+    # They may be in serializer for frontend compatibility but not stored
 
     def __str__(self):
-        current_status = "Current" if self.is_current_job else "Previous"
-        return f"{self.occupation} at {self.employing_agency} ({current_status})"
+        return f"{self.occupation} at {self.employing_agency}"
 
 class SkillsRelevance(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='skills_relevance')
@@ -341,11 +348,11 @@ class Profile(models.Model):
     profile_visibility = models.CharField(
         max_length=20, 
         choices=[
-            ('public', 'For Everyone'),
-            ('connections_only', 'For Connections'),
-            ('private', 'Only for Me')
+            ('public', 'Public'),
+            ('connections_only', 'Connections Only'),
+            ('private', 'Private')
         ],
-        default='connections_only'
+        default='public'
     )
     allow_contact = models.BooleanField(default=True)
     allow_messaging = models.BooleanField(default=True)
@@ -446,10 +453,17 @@ class Following(models.Model):
         if self.follower == self.following:
             raise ValueError("Users cannot follow themselves")
         
+        # Check if this is an update to an existing record
+        is_update = self.pk is not None
+        
         super().save(*args, **kwargs)
         
-        # Only update mutual status for accepted connections
-        if self.status == 'accepted':
+        # Only update mutual status for accepted connections on status change
+        # Avoid recursive calls by checking if we're only updating is_mutual
+        update_fields = kwargs.get('update_fields', None)
+        if (self.status == 'accepted' and 
+            is_update and 
+            (update_fields is None or 'is_mutual' not in update_fields)):
             self.update_mutual_status()
     
     def update_mutual_status(self):
@@ -610,7 +624,7 @@ class FieldPrivacySetting(models.Model):
             setting = cls.objects.get(user=user, field_name=field_name)
             return setting.visibility
         except cls.DoesNotExist:
-            return 'connections_only'  # Default visibility
+            return 'everyone'  # Default visibility (public)
     
     @classmethod
     def set_user_field_visibility(cls, user, field_name, visibility):

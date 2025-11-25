@@ -39,16 +39,16 @@
           />
         </div>
 
-        <!-- Awarded By -->
+        <!-- Issuing Organization -->
         <div>
           <label :class="[
             'block text-sm font-medium mb-2',
             themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
           ]">
-            Awarded By *
+            Issuing Organization *
           </label>
           <input
-            v-model="formData.awarded_by"
+            v-model="formData.issuing_organization"
             type="text"
             required
             :class="[
@@ -61,69 +61,18 @@
           />
         </div>
 
-        <!-- Category and Level -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label :class="[
-              'block text-sm font-medium mb-2',
-              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            ]">
-              Category
-            </label>
-            <select
-              v-model="formData.category"
-              :class="[
-                'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                themeStore.isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              ]"
-            >
-              <option value="">Select category</option>
-              <option value="community_service">Community Service</option>
-              <option value="leadership">Leadership</option>
-              <option value="volunteer">Volunteer Work</option>
-              <option value="sports">Sports</option>
-              <option value="arts">Arts & Culture</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label :class="[
-              'block text-sm font-medium mb-2',
-              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            ]">
-              Level
-            </label>
-            <select
-              v-model="formData.level"
-              :class="[
-                'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                themeStore.isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              ]"
-            >
-              <option value="">Select level</option>
-              <option value="local">Local</option>
-              <option value="regional">Regional</option>
-              <option value="national">National</option>
-              <option value="international">International</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Date Awarded -->
+        <!-- Date Received -->
         <div>
           <label :class="[
             'block text-sm font-medium mb-2',
             themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
           ]">
-            Date Awarded
+            Date Received *
           </label>
           <input
-            v-model="formData.date_awarded"
+            v-model="formData.date_received"
             type="date"
+            required
             :class="[
               'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
               themeStore.isDarkMode 
@@ -154,29 +103,6 @@
           ></textarea>
         </div>
 
-        <!-- Privacy Setting -->
-        <div>
-          <label :class="[
-            'block text-sm font-medium mb-2',
-            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          ]">
-            Visibility
-          </label>
-          <select
-            v-model="formData.visibility"
-            :class="[
-              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-              themeStore.isDarkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
-                : 'bg-white border-gray-300 text-gray-900'
-            ]"
-          >
-            <option value="public">Public</option>
-            <option value="connections_only">Connections Only</option>
-            <option value="private">Private</option>
-          </select>
-        </div>
-
         <!-- Form Actions -->
         <div :class="[
           'flex justify-end space-x-3 pt-4 border-t',
@@ -196,11 +122,11 @@
           </button>
           <button
             type="submit"
-            :disabled="!formData.title.trim() || !formData.awarded_by.trim()"
+            :disabled="!formData.title.trim() || !formData.issuing_organization.trim() || !formData.date_received"
             :class="[
               'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              (formData.title.trim() && formData.awarded_by.trim())
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+              (formData.title.trim() && formData.issuing_organization.trim() && formData.date_received)
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
                 : 'bg-gray-400 text-gray-200 cursor-not-allowed'
             ]"
           >
@@ -230,12 +156,9 @@ const themeStore = useThemeStore()
 // Form data
 const formData = ref({
   title: '',
-  awarded_by: '',
-  category: '',
-  level: '',
-  date_awarded: '',
-  description: '',
-  visibility: 'connections_only'
+  issuing_organization: '',
+  date_received: '',
+  description: ''
 })
 
 // Watch for changes in recognition prop to populate form
@@ -243,29 +166,23 @@ watch(() => props.recognition, (newRecognition) => {
   if (newRecognition) {
     formData.value = {
       title: newRecognition.title || '',
-      awarded_by: newRecognition.awarded_by || '',
-      category: newRecognition.category || '',
-      level: newRecognition.level || '',
-      date_awarded: newRecognition.date_awarded || '',
-      description: newRecognition.description || '',
-      visibility: newRecognition.visibility || 'connections_only'
+      issuing_organization: newRecognition.issuing_organization || '',
+      date_received: newRecognition.date_received || '',
+      description: newRecognition.description || ''
     }
   } else {
     // Reset form for new recognition
     formData.value = {
       title: '',
-      awarded_by: '',
-      category: '',
-      level: '',
-      date_awarded: '',
-      description: '',
-      visibility: 'connections_only'
+      issuing_organization: '',
+      date_received: '',
+      description: ''
     }
   }
 }, { immediate: true })
 
 const handleSubmit = () => {
-  if (!formData.value.title.trim() || !formData.value.awarded_by.trim()) {
+  if (!formData.value.title.trim() || !formData.value.issuing_organization.trim() || !formData.value.date_received) {
     return
   }
 

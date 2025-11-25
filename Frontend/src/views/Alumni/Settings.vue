@@ -132,15 +132,36 @@
                 <h3 :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="text-lg font-medium mb-3">Profile Visibility</h3>
                 <div class="space-y-4">
                   <div class="flex items-center justify-between">
-                    <div>
+                    <div class="flex-1">
                       <p :style="{color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="font-medium">Make profile visible to</p>
                       <p :style="{color: themeStore.isDarkMode ? '#9ca3af' : '#6b7280'}" class="text-sm">Choose who can see your profile information</p>
                     </div>
                     <select v-model="privacySettings.profileVisibility" :style="{backgroundColor: themeStore.isDarkMode ? '#374151' : '#ffffff', borderColor: themeStore.isDarkMode ? '#4b5563' : '#d1d5db', color: themeStore.isDarkMode ? '#f3f4f6' : '#111827'}" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                      <option value="everyone">Everyone</option>
-                      <option value="alumni">Alumni Only</option>
-                      <option value="connections">My Connections</option>
+                      <option value="public">Public - Everyone can see</option>
+                      <option value="connections_only">Connections Only</option>
+                      <option value="private">Private - Only me</option>
                     </select>
+                  </div>
+                  
+                  <!-- Save Button and Feedback -->
+                  <div class="flex items-center gap-3">
+                    <button 
+                      @click="savePrivacySettings" 
+                      :disabled="isSavingPrivacy"
+                      :class="[
+                        'px-4 py-2 rounded-lg transition-colors font-medium',
+                        isSavingPrivacy 
+                          ? 'bg-gray-400 text-white cursor-not-allowed' 
+                          : 'bg-orange-600 text-white hover:bg-orange-700'
+                      ]">
+                      {{ isSavingPrivacy ? 'Saving...' : 'Save Privacy Settings' }}
+                    </button>
+                    <div v-if="privacyMessage" :class="[
+                      'text-sm font-medium',
+                      privacyMessageType === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    ]">
+                      {{ privacyMessage }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -351,8 +372,11 @@ const fileInput = ref(null)
 const isUpdatingProfile = ref(false)
 const isUploadingPhoto = ref(false)
 const isChangingPassword = ref(false)
+const isSavingPrivacy = ref(false)
 const passwordMessage = ref('')
 const passwordMessageType = ref('')
+const privacyMessage = ref('')
+const privacyMessageType = ref('success')
 
 // Settings sections
 const settingsSections = [
@@ -392,7 +416,7 @@ const passwordForm = ref({
 })
 
 const privacySettings = ref({
-  profileVisibility: 'alumni'
+  profileVisibility: 'public'  // will be loaded from user data
 })
 
 // Computed
@@ -620,6 +644,49 @@ async function changePassword() {
   }
 }
 
+async function savePrivacySettings() {
+  if (isSavingPrivacy.value) return
+  
+  try {
+    isSavingPrivacy.value = true
+    privacyMessage.value = ''
+    
+    const response = await fetch(`${BASE_URL}/api/auth/profile/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token}`
+      },
+      body: JSON.stringify({
+        profile_visibility: privacySettings.value.profileVisibility
+      })
+    })
+    
+    if (response.ok) {
+      const result = await response.json()
+      privacyMessage.value = 'Privacy settings saved successfully!'
+      privacyMessageType.value = 'success'
+      console.log('✅ Privacy settings updated:', result)
+      
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        privacyMessage.value = ''
+      }, 3000)
+    } else {
+      const error = await response.json()
+      privacyMessage.value = error.error || 'Failed to save privacy settings'
+      privacyMessageType.value = 'error'
+      console.error('❌ Failed to save privacy settings:', error)
+    }
+  } catch (error) {
+    privacyMessage.value = 'Network error. Please try again.'
+    privacyMessageType.value = 'error'
+    console.error('❌ Error saving privacy settings:', error)
+  } finally {
+    isSavingPrivacy.value = false
+  }
+}
+
 function submitFeedback() {
   console.log('Submitting feedback:', feedbackText.value)
   // Add API call to submit feedback
@@ -677,13 +744,31 @@ function handleThemeChange(themeId) {
 }
 
 // Initialize with user data
-onMounted(() => {
+onMounted(async () => {
   const user = authStore.user
   if (user) {
     profileForm.value = {
       firstName: user.first_name || '',
       lastName: user.last_name || '',
       email: user.email || ''
+    }
+    
+    // Load current profile visibility
+    try {
+      const response = await fetch(`${BASE_URL}/api/auth/enhanced-profile/`, {
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.profile && data.profile.profile_visibility) {
+          privacySettings.value.profileVisibility = data.profile.profile_visibility
+          console.log('✅ Loaded profile visibility:', data.profile.profile_visibility)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile visibility:', error)
     }
   }
   

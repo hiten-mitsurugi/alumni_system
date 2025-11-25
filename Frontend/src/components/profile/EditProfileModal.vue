@@ -196,22 +196,22 @@
                 <input 
                   v-model="formData.profile_visibility"
                   type="radio"
-                  value="alumni_only"
+                  value="connections_only"
                   class="text-green-600 focus:ring-green-500"
                 />
                 <span class="ml-2 text-sm text-gray-700">
-                  Alumni Only - Only fellow alumni can view your profile
+                  Connections Only - Only your connections can view your profile
                 </span>
               </label>
               <label class="flex items-center">
                 <input 
                   v-model="formData.profile_visibility"
                   type="radio"
-                  value="connections_only"
+                  value="private"
                   class="text-green-600 focus:ring-green-500"
                 />
                 <span class="ml-2 text-sm text-gray-700">
-                  Connections Only - Only your connections can view your profile
+                  Private - Only you can view your profile
                 </span>
               </label>
             </div>

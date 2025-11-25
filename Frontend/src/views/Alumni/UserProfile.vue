@@ -168,6 +168,61 @@
 
           <!-- About Tab Content -->
           <div v-show="activeTab === 'about'" class="space-y-6">
+            <!-- Empty Profile Privacy Notice -->
+            <div 
+              v-if="isProfileFilteredByPrivacy" 
+              :class="[
+                'rounded-lg p-8 text-center',
+                themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'
+              ]"
+            >
+              <div class="mx-auto w-16 h-16 mb-4">
+                <svg 
+                  class="w-full h-full text-gray-400" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
+              <h3 :class="[
+                'text-xl font-semibold mb-2',
+                themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+              ]">
+                Profile Information Not Available
+              </h3>
+              <p :class="[
+                'mb-4',
+                themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              ]">
+                <template v-if="!isFollowing">
+                  Connect with {{ user?.first_name }} to view their profile information.
+                </template>
+                <template v-else>
+                  {{ user?.first_name }} hasn't added profile information yet, or their privacy settings restrict visibility.
+                </template>
+              </p>
+              <button
+                v-if="!isFollowing"
+                @click="connectUser"
+                :disabled="isConnecting"
+                :class="[
+                  'px-6 py-2 rounded-lg font-medium transition-colors',
+                  isConnecting
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-orange-600 hover:bg-orange-700 text-white'
+                ]"
+              >
+                {{ isConnecting ? 'Sending Request...' : 'Send Connection Request' }}
+              </button>
+            </div>
+
             <!-- About Section -->
             <ProfileAboutSection
               :profile="profile"
@@ -379,6 +434,26 @@ const currentJob = computed(() => {
   return sorted[0]
 })
 
+// Compute total visible items to detect empty profile
+const totalVisibleItems = computed(() => {
+  return (
+    education.value.length +
+    workHistories.value.length +
+    skills.value.length +
+    achievements.value.length +
+    memberships.value.length +
+    recognitions.value.length +
+    trainings.value.length +
+    publications.value.length +
+    (careerEnhancement.value.certificates?.length || 0)
+  )
+})
+
+// Check if profile appears empty due to privacy
+const isProfileFilteredByPrivacy = computed(() => {
+  return totalVisibleItems.value === 0 && !loading.value && user.value
+})
+
 const displayHeadline = computed(() => {
   // Priority: Profile headline > Current job title > Current education > Default
   if (profile.value?.headline) {
@@ -437,98 +512,46 @@ const applyPrivacyFiltering = async (data) => {
     const currentUserResponse = await api.get('/auth/user/')
     const currentUser = currentUserResponse.data
     
-    // If viewing own profile, show everything
+    console.log('🔐 Privacy filtering - Current user:', currentUser.id, 'Viewing user:', data.id)
+    console.log('🔐 Connection status (isFollowing):', isFollowing.value)
+    console.log('🔐 Raw data from backend:', {
+      education: data.education?.length || 0,
+      work_histories: data.work_histories?.length || 0,
+      achievements: data.achievements?.length || 0,
+      memberships: data.memberships?.length || 0,
+      recognitions: data.recognitions?.length || 0,
+      trainings: data.trainings?.length || 0,
+      publications: data.publications?.length || 0,
+      certificates: data.certificates?.length || 0,
+      user_skills: data.user_skills?.length || 0
+    })
+    
+    // If viewing own profile, use all backend data directly
     if (currentUser.id === data.id) {
+      console.log('🔓 Own profile - using all backend data without filtering')
       education.value = data.education || []
       workHistories.value = data.work_histories || []
       achievements.value = data.achievements || []
+      memberships.value = data.memberships || []
+      recognitions.value = data.recognitions || []
+      trainings.value = data.trainings || []
+      publications.value = data.publications || []
+      careerEnhancement.value = {
+        certificates: data.certificates || [],
+        cseStatus: data.cse_status || null
+      }
+      console.log('✅ Own profile data loaded:', {
+        education: education.value.length,
+        workHistories: workHistories.value.length,
+        achievements: achievements.value.length
+      })
       return
     }
     
-    // For other users, get their privacy settings (with timestamp to avoid cache)
-    const privacyResponse = await api.get(`/auth/profile/field-update/`, {
-      params: { 
-        user_id: data.id,
-        _t: Date.now() // Prevent caching
-      }
-    })
+    // For other users: Backend EnhancedUserDetailSerializer already applies privacy filtering
+    // Trust the backend filtering and use the data as-is
+    console.log('🔒 Other user profile - using backend-filtered data')
     
-    const privacySettings = {}
-    privacyResponse.data.forEach(setting => {
-      privacySettings[setting.field_name] = setting.visibility
-    })
-    
-    console.log('🔐 Privacy settings for user:', privacySettings)
-    console.log('🔐 Connection status (isFollowing):', isFollowing.value)
-    
-    // Filter education based on privacy
-    education.value = (data.education || []).filter(edu => {
-      const privacy = privacySettings[`education_${edu.id}`] || 'connections_only'
-      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-      console.log(`🔐 Education ${edu.id}: privacy="${privacy}", visible=${isVisible}`)
-      return isVisible
-    })
-    
-    // Filter work histories based on privacy
-    workHistories.value = (data.work_histories || []).filter(work => {
-      const privacy = privacySettings[`experience_${work.id}`] || 'connections_only'
-      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-      console.log(`🔐 Experience ${work.id}: privacy="${privacy}", visible=${isVisible}`)
-      return isVisible
-    })
-    
-    // Filter achievements based on privacy
-    achievements.value = (data.achievements || []).filter(achievement => {
-      const privacy = privacySettings[`achievement_${achievement.id}`] || 'connections_only'
-      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-      console.log(`🔐 Achievement ${achievement.id}: privacy="${privacy}", visible=${isVisible}`)
-      return isVisible
-    })
-    
-    console.log('🔐 After privacy filtering:', {
-      education: education.value.length,
-      workHistories: workHistories.value.length, 
-      achievements: achievements.value.length
-    })
-    
-    // Filter memberships based on privacy
-    memberships.value = (data.memberships || []).filter(membership => {
-      const privacy = privacySettings[`membership_${membership.id}`] || 'connections_only'
-      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-      console.log(`🔐 Membership ${membership.id}: privacy="${privacy}", visible=${isVisible}`)
-      return isVisible
-    })
-    
-    // Filter recognitions based on privacy
-    recognitions.value = (data.recognitions || []).filter(recognition => {
-      const privacy = privacySettings[`recognition_${recognition.id}`] || 'connections_only'
-      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-      console.log(`🔐 Recognition ${recognition.id}: privacy="${privacy}", visible=${isVisible}`)
-      return isVisible
-    })
-    
-    // Filter trainings based on privacy
-    trainings.value = (data.trainings || []).filter(training => {
-      const privacy = privacySettings[`training_${training.id}`] || 'connections_only'
-      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-      console.log(`🔐 Training ${training.id}: privacy="${privacy}", visible=${isVisible}`)
-      return isVisible
-    })
-    
-    // Filter publications based on privacy
-    publications.value = (data.publications || []).filter(publication => {
-      const privacy = privacySettings[`publication_${publication.id}`] || 'connections_only'
-      const isVisible = privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-      console.log(`🔐 Publication ${publication.id}: privacy="${privacy}", visible=${isVisible}`)
-      return isVisible
-    })
-    
-    // Career enhancement data (no item-level filtering, whole section visibility)
-    careerEnhancement.value = data.career_enhancement || {}
-    
-  } catch (error) {
-    console.error('❌ Error applying privacy filtering:', error)
-    // Fallback: show everything if privacy check fails
     education.value = data.education || []
     workHistories.value = data.work_histories || []
     achievements.value = data.achievements || []
@@ -536,7 +559,54 @@ const applyPrivacyFiltering = async (data) => {
     recognitions.value = data.recognitions || []
     trainings.value = data.trainings || []
     publications.value = data.publications || []
-    careerEnhancement.value = data.career_enhancement || {}
+    
+    
+    // Career enhancement data - map backend fields to expected structure (same as MyProfile)
+    careerEnhancement.value = {
+      certificates: data.certificates || [],
+      cseStatus: data.cse_status || null
+    }
+    
+    console.log('✅ Backend-filtered data applied:', {
+      education: education.value.length,
+      workHistories: workHistories.value.length,
+      achievements: achievements.value.length,
+      memberships: memberships.value.length,
+      recognitions: recognitions.value.length,
+      trainings: trainings.value.length,
+      publications: publications.value.length,
+      certificates: careerEnhancement.value.certificates.length,
+      cseStatus: careerEnhancement.value.cseStatus ? 'Yes' : 'No'
+    })
+    
+    // Log if everything is empty (might indicate privacy settings issue)
+    const totalItems = education.value.length + workHistories.value.length + 
+                      achievements.value.length + memberships.value.length + 
+                      recognitions.value.length + trainings.value.length + 
+                      publications.value.length + careerEnhancement.value.certificates.length
+    
+    if (totalItems === 0 && !isFollowing.value) {
+      console.log('⚠️ No items visible - User might have all privacy set to "connections_only" and you are not connected')
+      console.log('💡 To see this user\'s profile, try connecting with them first')
+    } else if (totalItems === 0 && isFollowing.value) {
+      console.log('⚠️ No items visible despite being connected - Check backend privacy filtering or user might not have added any information')
+    }
+    
+  } catch (error) {
+    console.error('❌ Error applying privacy filtering:', error)
+    // Fallback: use backend data directly (backend already applies privacy filtering)
+    education.value = data.education || []
+    workHistories.value = data.work_histories || []
+    achievements.value = data.achievements || []
+    memberships.value = data.memberships || []
+    recognitions.value = data.recognitions || []
+    trainings.value = data.trainings || []
+    publications.value = data.publications || []
+    careerEnhancement.value = {
+      certificates: data.certificates || [],
+      cseStatus: data.cse_status || null
+    }
+    console.log('⚠️ Using backend-filtered data as fallback')
   }
 }
 
@@ -608,50 +678,25 @@ const loadUserSkills = async () => {
   try {
     if (!user.value) return
     
-    // For UserProfile, we're viewing another user's profile, but the /auth/user-skills/ endpoint
-    // only returns skills for the authenticated user. Since we can't get other users' skills directly,
-    // we'll need to check if this is our own profile or implement a different approach.
-    
     // Check if we're viewing our own profile
     const currentUserResponse = await api.get('/auth/user/')
     const currentUser = currentUserResponse.data
     
     if (currentUser.id === user.value.id) {
-      // If viewing own profile, use the user-skills endpoint
+      // If viewing own profile, use the user-skills endpoint (like MyProfile does)
       const response = await api.get('/auth/user-skills/')
       skills.value = response.data || []
+      console.log('🔐 Own profile - loaded skills from /user-skills/:', skills.value.length)
     } else {
-      // For other users' profiles, apply privacy filtering to skills
-      const allSkills = user.value.user_skills || []
-      
-      try {
-        // Get privacy settings for skills
-        const privacyResponse = await api.get(`/auth/profile/field-update/`, {
-          params: { user_id: user.value.id }
-        })
-        
-        const privacySettings = {}
-        privacyResponse.data.forEach(setting => {
-          privacySettings[setting.field_name] = setting.visibility
-        })
-        
-        // Filter skills based on privacy
-        skills.value = allSkills.filter(skill => {
-          const privacy = privacySettings[`skill_${skill.id}`] || 'connections_only'
-          return privacy === 'everyone' || (privacy === 'connections_only' && isFollowing.value)
-        })
-        
-        console.log('🔐 Skills after privacy filtering:', skills.value.length, 'of', allSkills.length)
-        
-      } catch (error) {
-        console.error('❌ Error filtering skills privacy:', error)
-        // Fallback: show all skills if privacy check fails
-        skills.value = allSkills
-      }
+      // For other users' profiles, use user_skills from the enhanced-profile response
+      // The backend EnhancedUserDetailSerializer already applies privacy filtering
+      skills.value = user.value.user_skills || []
+      console.log('🔐 Other user profile - using user_skills from response:', skills.value.length)
     }
   } catch (error) {
     console.error('Error loading user skills:', error)
-    skills.value = []
+    // Fallback to user_skills from response
+    skills.value = user.value?.user_skills || []
   }
 }
 

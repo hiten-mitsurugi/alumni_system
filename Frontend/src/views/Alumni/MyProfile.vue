@@ -303,6 +303,32 @@ const fetchProfile = async () => {
       visibility: getItemPrivacy('achievement', achievement.id) || 'connections_only'
     }))
 
+    memberships.value = (data.memberships || []).map(membership => ({
+      ...membership,
+      visibility: getItemPrivacy('membership', membership.id) || 'connections_only'
+    }))
+
+    recognitions.value = (data.recognitions || []).map(recognition => ({
+      ...recognition,
+      visibility: getItemPrivacy('recognition', recognition.id) || 'connections_only'
+    }))
+
+    trainings.value = (data.trainings || []).map(training => ({
+      ...training,
+      visibility: getItemPrivacy('training', training.id) || 'connections_only'
+    }))
+
+    publications.value = (data.publications || []).map(publication => ({
+      ...publication,
+      visibility: getItemPrivacy('publication', publication.id) || 'connections_only'
+    }))
+
+    // Map backend response fields to careerEnhancement structure
+    careerEnhancement.value = {
+      certificates: data.certificates || [],
+      cseStatus: data.cse_status || null
+    }
+
     // Load user skills separately
     await loadUserSkills()
 
@@ -851,23 +877,16 @@ const closeMembershipModal = () => {
 
 const saveMembership = async (membershipData) => {
   try {
-    let response
     if (selectedMembership.value) {
       // Update existing membership
-      response = await api.put(`/auth/memberships/${selectedMembership.value.id}/`, membershipData)
-      
-      const index = memberships.value.findIndex(m => m.id === selectedMembership.value.id)
-      if (index !== -1) {
-        memberships.value[index] = response.data
-      }
+      await api.put(`/auth/memberships/${selectedMembership.value.id}/`, membershipData)
     } else {
       // Create new membership
-      response = await api.post('/auth/memberships/', membershipData)
-      memberships.value.push(response.data)
+      await api.post('/auth/memberships/', membershipData)
     }
     
     closeMembershipModal()
-    console.log('Membership saved:', response.data)
+    await fetchProfile() // Refresh to get updated memberships with privacy settings
   } catch (error) {
     console.error('Error saving membership:', error)
     alert('Failed to save membership')
@@ -914,29 +933,20 @@ const closeRecognitionModal = () => {
 
 const saveRecognition = async (recognitionData) => {
   try {
-    let response
     if (selectedRecognition.value) {
       // Update existing recognition
-      response = await api.put(`/auth/recognitions/${selectedRecognition.value.id}/`, recognitionData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      const index = recognitions.value.findIndex(r => r.id === selectedRecognition.value.id)
-      if (index !== -1) {
-        recognitions.value[index] = response.data
-      }
+      await api.put(`/auth/recognitions/${selectedRecognition.value.id}/`, recognitionData)
     } else {
       // Create new recognition
-      response = await api.post('/auth/recognitions/', recognitionData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      recognitions.value.push(response.data)
+      await api.post('/auth/recognitions/', recognitionData)
     }
     
     closeRecognitionModal()
-    console.log('Recognition saved:', response.data)
+    await fetchProfile() // Refresh to get updated recognitions
   } catch (error) {
     console.error('Error saving recognition:', error)
-    alert('Failed to save recognition')
+    console.error('Error response:', error.response?.data)
+    alert('Failed to save recognition: ' + (error.response?.data?.detail || error.message))
   }
 }
 
@@ -1044,25 +1054,62 @@ const closePublicationModal = () => {
 
 const savePublication = async (publicationData) => {
   try {
+    // Transform frontend data to match backend PublicationSerializer
+    const backendData = {
+      title: publicationData.title,
+      publication_type: publicationData.publication_type || 'journal',
+      // Combine co_authors array into single authors string
+      authors: publicationData.co_authors && publicationData.co_authors.length > 0
+        ? publicationData.co_authors.join(', ')
+        : 'Unknown',
+      // Convert year_published (number) to date_published (YYYY-MM-DD)
+      date_published: publicationData.year_published 
+        ? `${publicationData.year_published}-01-01`
+        : new Date().toISOString().split('T')[0],
+      // Map place_of_publication to publisher
+      publisher: publicationData.place_of_publication || null,
+      url: publicationData.url || null,
+      doi: publicationData.doi || null
+      // Note: journal_name, volume, issue, pages, authors_type are not in backend model
+    }
+
+    console.log('📝 Saving publication with data:', backendData)
+
     let response
     if (selectedPublication.value) {
       // Update existing publication
-      response = await api.put(`/auth/publications/${selectedPublication.value.id}/`, publicationData)
+      response = await api.put(`/auth/publications/${selectedPublication.value.id}/`, backendData)
       const index = publications.value.findIndex(p => p.id === selectedPublication.value.id)
       if (index !== -1) {
         publications.value[index] = response.data
       }
     } else {
       // Create new publication
-      response = await api.post('/auth/publications/', publicationData)
+      response = await api.post('/auth/publications/', backendData)
       publications.value.push(response.data)
     }
     
     closePublicationModal()
-    console.log('Publication saved:', response.data)
+    console.log('✅ Publication saved successfully:', response.data)
   } catch (error) {
-    console.error('Error saving publication:', error)
-    alert('Failed to save publication')
+    console.error('❌ Error saving publication:', error)
+    console.error('❌ Error response data:', error.response?.data)
+    console.error('❌ Error status:', error.response?.status)
+    
+    // Show detailed error message
+    let errorMessage = 'Failed to save publication'
+    if (error.response?.data) {
+      if (typeof error.response.data === 'object') {
+        // DRF validation errors
+        const errors = Object.entries(error.response.data)
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+          .join('\n')
+        errorMessage += ':\n' + errors
+      } else {
+        errorMessage += ': ' + error.response.data
+      }
+    }
+    alert(errorMessage)
   }
 }
 

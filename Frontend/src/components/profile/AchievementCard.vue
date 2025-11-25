@@ -98,44 +98,23 @@
                 <span class="text-sm font-medium text-gray-700">Attachment:</span>
               </div>
               
-              <!-- Check if attachment is an image -->
-              <div v-if="isImageAttachment(achievement.attachment)">
-                <div class="relative overflow-hidden rounded-lg group cursor-pointer mb-2" @click="openAttachment">
-                  <img 
-                    :src="achievement.attachment" 
-                    :alt="achievement.title"
-                    class="w-full max-w-md h-48 object-cover transition-all duration-300 group-hover:scale-105"
-                  />
-                  <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                    <div class="bg-white bg-opacity-90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <p class="text-xs text-gray-500">📸 {{ getFileType(achievement.attachment).toUpperCase() }} • Click to open</p>
-              </div>
-              
-              <!-- Non-image attachments (PDF, DOC, DOCX) -->
-              <div v-else>
-                <div 
-                  class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 cursor-pointer group"
-                  @click="openAttachment"
-                >
-                  <div class="flex items-center justify-center w-10 h-10 rounded-lg" :class="getFileIconColor(achievement.attachment)">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </div>
-                  <div class="flex-1">
-                    <p class="font-medium text-gray-900 group-hover:text-blue-700">{{ getFileName(achievement.attachment) }}</p>
-                    <p class="text-sm text-gray-500">{{ getFileType(achievement.attachment).toUpperCase() }} Document • Click to open</p>
-                  </div>
-                  <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              <!-- All attachments shown as clickable links -->
+              <div 
+                class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 cursor-pointer group"
+                @click="openAttachment"
+              >
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg" :class="getFileIconColor(achievement.attachment)">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                 </div>
+                <div class="flex-1">
+                  <p class="font-medium text-gray-900 group-hover:text-blue-700">{{ getFileName(achievement.attachment) }}</p>
+                  <p class="text-sm text-gray-500">{{ getFileType(achievement.attachment).toUpperCase() }} • Click to open</p>
+                </div>
+                <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
               </div>
             </div>
           </div>

@@ -28,37 +28,18 @@
             </div>
             
             <div class="ml-6 mt-2 space-y-2">
-              <div v-if="publication.year_published" class="flex items-center text-sm">
+              <!-- Authors -->
+              <div v-if="publication.authors" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Year Published:</span>
-                <span :class="[
-                  'px-2 py-1 rounded bg-emerald-100 text-emerald-800 text-xs font-semibold'
-                ]">{{ publication.year_published }}</span>
-              </div>
-              
-              <div v-if="publication.place_of_publication" class="flex items-center text-sm">
-                <span :class="[
-                  'font-medium mr-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Place of Publication:</span>
+                ]">Authors:</span>
                 <span :class="[
                   themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ publication.place_of_publication }}</span>
+                ]">{{ publication.authors }}</span>
               </div>
               
-              <div v-if="publication.authors_type" class="flex items-center text-sm">
-                <span :class="[
-                  'font-medium mr-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Author Type:</span>
-                <span :class="[
-                  'px-2 py-1 rounded-full text-xs',
-                  getAuthorTypeClass(publication.authors_type)
-                ]">{{ formatAuthorType(publication.authors_type) }}</span>
-              </div>
-              
+              <!-- Publication Type -->
               <div v-if="publication.publication_type" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
@@ -70,45 +51,42 @@
                 ]">{{ formatPublicationType(publication.publication_type) }}</span>
               </div>
               
-              <div v-if="publication.journal_name" class="flex items-center text-sm">
+              <!-- Date Published -->
+              <div v-if="publication.date_published" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Journal:</span>
+                ]">Published:</span>
                 <span :class="[
-                  'italic',
-                  themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ publication.journal_name }}</span>
+                  'px-2 py-1 rounded bg-emerald-100 text-emerald-800 text-xs font-semibold'
+                ]">{{ formatDate(publication.date_published) }}</span>
               </div>
               
-              <div v-if="publication.volume" class="flex items-center text-sm">
+              <!-- Publisher -->
+              <div v-if="publication.publisher" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Volume:</span>
+                ]">Publisher:</span>
                 <span :class="[
                   themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ publication.volume }}</span>
-                
-                <span v-if="publication.issue" :class="[
-                  'ml-4 font-medium mr-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Issue:</span>
-                <span v-if="publication.issue" :class="[
-                  themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ publication.issue }}</span>
+                ]">{{ publication.publisher }}</span>
               </div>
               
-              <div v-if="publication.pages" class="flex items-center text-sm">
+              <!-- URL -->
+              <div v-if="publication.url" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Pages:</span>
-                <span :class="[
-                  themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ publication.pages }}</span>
+                ]">URL:</span>
+                <a 
+                  :href="publication.url"
+                  target="_blank"
+                  class="text-blue-600 hover:text-blue-800 underline text-xs break-all"
+                >{{ publication.url }}</a>
               </div>
               
+              <!-- DOI -->
               <div v-if="publication.doi" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
@@ -119,29 +97,6 @@
                   target="_blank"
                   class="text-blue-600 hover:text-blue-800 underline font-mono text-xs"
                 >{{ publication.doi }}</a>
-              </div>
-              
-              <div v-if="publication.co_authors && publication.co_authors.length > 0" class="text-sm">
-                <span :class="[
-                  'font-medium',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Co-authors:</span>
-                <div class="mt-1">
-                  <span :class="[
-                    themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  ]">{{ publication.co_authors.join(', ') }}</span>
-                </div>
-              </div>
-              
-              <div v-if="publication.abstract" class="text-sm">
-                <span :class="[
-                  'font-medium',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Abstract:</span>
-                <p :class="[
-                  'mt-1 text-justify',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">{{ publication.abstract }}</p>
               </div>
             </div>
           </div>
@@ -213,24 +168,10 @@ const handleVisibilityChange = (visibility) => {
   emit('visibility-changed', { section: 'publications', visibility })
 }
 
-const getAuthorTypeClass = (type) => {
-  const classes = {
-    'primary': 'bg-blue-100 text-blue-800',
-    'co_author': 'bg-green-100 text-green-800',
-    'corresponding': 'bg-purple-100 text-purple-800',
-    'contributor': 'bg-yellow-100 text-yellow-800'
-  }
-  return classes[type] || 'bg-gray-100 text-gray-800'
-}
-
-const formatAuthorType = (type) => {
-  const types = {
-    'primary': 'Primary Author',
-    'co_author': 'Co-author',
-    'corresponding': 'Corresponding Author',
-    'contributor': 'Contributor'
-  }
-  return types[type] || type
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 const getPublicationTypeClass = (type) => {

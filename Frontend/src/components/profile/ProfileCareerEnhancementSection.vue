@@ -30,51 +30,89 @@
                 <div class="flex items-center space-x-3">
                   <div class="flex-shrink-0 w-3 h-3 bg-green-600 rounded-full"></div>
                   <h5 :class="[
-                    'font-medium',
+                    'font-medium text-lg',
                     themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                  ]">{{ certificate.certificate_name }}</h5>
+                  ]">{{ certificate.certificate_type }}</h5>
+                  <span v-if="certificate.is_active === false" class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Expired
+                  </span>
+                  <span v-else-if="certificate.is_active" class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Active
+                  </span>
                 </div>
                 
-                <div class="ml-6 mt-2 space-y-1 text-sm">
-                  <div v-if="certificate.issuing_authority" class="flex items-center">
+                <div class="ml-6 mt-3 space-y-2 text-sm">
+                  <!-- Issuing Body -->
+                  <div v-if="certificate.issuing_body" class="flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                     <span :class="[
                       'font-medium mr-2',
                       themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
                     ]">Issued by:</span>
                     <span :class="[
                       themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                    ]">{{ certificate.issuing_authority }}</span>
+                    ]">{{ certificate.issuing_body }}</span>
                   </div>
                   
-                  <div v-if="certificate.date_obtained" class="flex items-center">
+                  <!-- Certificate Number -->
+                  <div v-if="certificate.certificate_number" class="flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                    </svg>
                     <span :class="[
                       'font-medium mr-2',
                       themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    ]">Date Obtained:</span>
+                    ]">Certificate #:</span>
                     <span :class="[
-                      themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                    ]">{{ formatDate(certificate.date_obtained) }}</span>
+                      'px-2 py-1 rounded text-xs font-mono',
+                      themeStore.isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
+                    ]">{{ certificate.certificate_number }}</span>
                   </div>
                   
+                  <!-- Date Issued -->
+                  <div v-if="certificate.date_issued" class="flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span :class="[
+                      'font-medium mr-2',
+                      themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    ]">Date Issued:</span>
+                    <span :class="[
+                      themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
+                    ]">{{ formatDate(certificate.date_issued) }}</span>
+                  </div>
+                  
+                  <!-- Expiry Date -->
                   <div v-if="certificate.expiry_date" class="flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     <span :class="[
                       'font-medium mr-2',
                       themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
                     ]">Expires:</span>
-                    <span :class="[
-                      getExpiryClass(certificate.expiry_date)
-                    ]">{{ formatDate(certificate.expiry_date) }}</span>
+                    <span :class="getExpiryClass(certificate.expiry_date)">
+                      {{ formatDate(certificate.expiry_date) }}
+                    </span>
                   </div>
                   
-                  <div v-if="certificate.credential_id" class="flex items-center">
+                  <!-- Certificate File -->
+                  <div v-if="certificate.certificate_file" class="flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
                     <span :class="[
                       'font-medium mr-2',
                       themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    ]">Credential ID:</span>
-                    <span :class="[
-                      'px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs font-mono',
-                      themeStore.isDarkMode ? 'bg-gray-700 text-gray-300' : ''
-                    ]">{{ certificate.credential_id }}</span>
+                    ]">Document:</span>
+                    <a 
+                      :href="certificate.certificate_file"
+                      target="_blank"
+                      class="text-blue-600 hover:text-blue-800 underline text-xs"
+                    >View Certificate</a>
                   </div>
                 </div>
               </div>

@@ -44,6 +44,31 @@ class ProfileView(APIView):
     def patch(self, request):
         user = request.user
         
+        # Handle profile_visibility update (PROFILE MODEL FIELD)
+        if 'profile_visibility' in request.data:
+            profile_visibility = request.data.get('profile_visibility')
+            if profile_visibility in ['public', 'connections_only', 'private']:
+                # Get or create profile for the user
+                from ..models import Profile
+                profile, created = Profile.objects.get_or_create(user=user)
+                profile.profile_visibility = profile_visibility
+                profile.save()
+                logger.info(f"Profile visibility updated for user {user.id}: {profile_visibility}")
+                
+                # Clear caches
+                cache.delete(f"user_profile_{user.id}")
+                cache.delete(f"user_detail_{user.id}")
+                cache.delete(f"enhanced_profile_{user.id}")
+                
+                return Response({
+                    'message': 'Profile visibility updated successfully',
+                    'profile_visibility': profile_visibility
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': 'Invalid profile_visibility value. Must be: public, connections_only, or private'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
         # Only update basic user fields, avoid complex relationships
         updatable_fields = {
             'first_name': request.data.get('first_name'),
@@ -780,4 +805,92 @@ class UserMentionSearchView(APIView):
             return Response({
                 'error': 'Failed to search users',
                 'users': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TestConnectionStatusView(APIView):
+    """Test endpoint to verify connection status between users"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, user_id):
+        """Check connection status with another user"""
+        try:
+            from ..models import Following, CustomUser
+            
+            requesting_user = request.user
+            target_user = CustomUser.objects.get(id=user_id)
+            
+            # Check all Following records between these users
+            forward_connection = Following.objects.filter(
+                follower=requesting_user,
+                following=target_user
+            ).first()
+            
+            reverse_connection = Following.objects.filter(
+                follower=target_user,
+                following=requesting_user
+            ).first()
+            
+            # Check mutual connection (either direction)
+            is_connected = Following.objects.filter(
+                follower=requesting_user,
+                following=target_user,
+                is_mutual=True,
+                status='accepted'
+            ).exists() or Following.objects.filter(
+                follower=target_user,
+                following=requesting_user,
+                is_mutual=True,
+                status='accepted'
+            ).exists()
+            
+            return Response({
+                'requesting_user': {
+                    'id': requesting_user.id,
+                    'username': requesting_user.username,
+                    'name': f"{requesting_user.first_name} {requesting_user.last_name}"
+                },
+                'target_user': {
+                    'id': target_user.id,
+                    'username': target_user.username,
+                    'name': f"{target_user.first_name} {target_user.last_name}"
+                },
+                'forward_connection': {
+                    'exists': forward_connection is not None,
+                    'id': forward_connection.id if forward_connection else None,
+                    'is_mutual': forward_connection.is_mutual if forward_connection else False,
+                    'status': forward_connection.status if forward_connection else None,
+                    'created_at': forward_connection.created_at if forward_connection else None
+                } if forward_connection else None,
+                'reverse_connection': {
+                    'exists': reverse_connection is not None,
+                    'id': reverse_connection.id if reverse_connection else None,
+                    'is_mutual': reverse_connection.is_mutual if reverse_connection else False,
+                    'status': reverse_connection.status if reverse_connection else None,
+                    'created_at': reverse_connection.created_at if reverse_connection else None
+                } if reverse_connection else None,
+                'is_connected': is_connected,
+                'summary': {
+                    'are_connected': is_connected,
+                    'forward_exists': forward_connection is not None,
+                    'reverse_exists': reverse_connection is not None,
+                    'both_mutual': (
+                        forward_connection and forward_connection.is_mutual and
+                        reverse_connection and reverse_connection.is_mutual
+                    ) if (forward_connection and reverse_connection) else False,
+                    'recommendation': (
+                        '✅ Fully connected (mutual)' if is_connected else
+                        '⚠️ Partial connection - check is_mutual and status fields' if (forward_connection or reverse_connection) else
+                        '❌ Not connected'
+                    )
+                }
+            })
+            
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            import traceback
+            return Response({
+                'error': str(e),
+                'traceback': traceback.format_exc()
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

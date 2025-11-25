@@ -147,7 +147,7 @@
             <button
               type="submit"
               :disabled="loading"
-              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+              class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50"
             >
               <span v-if="loading" class="animate-spin mr-2">⟳</span>
               {{ isEditing ? 'Update' : 'Save' }}

@@ -35,7 +35,7 @@
             <button
               @click="addCertificate"
               type="button"
-              class="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              class="px-3 py-2 text-sm bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
             >
               Add Certificate
             </button>
@@ -74,7 +74,7 @@
                   <button
                     @click="editCertificate(index)"
                     type="button"
-                    class="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                    class="p-1 text-orange-600 hover:bg-orange-100 rounded"
                   >
                     <PencilIcon class="w-4 h-4" />
                   </button>
@@ -104,188 +104,7 @@
           </div>
         </div>
 
-        <!-- Current Employment Status Section -->
-        <div :class="[
-          'border-t pt-6',
-          themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        ]">
-          <h3 :class="[
-            'text-lg font-medium mb-4',
-            themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-          ]">
-            Current Employment Status
-          </h3>
 
-          <!-- Employment Status -->
-          <div class="space-y-4">
-            <div>
-              <label :class="[
-                'block text-sm font-medium mb-2',
-                themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              ]">
-                Status
-              </label>
-              <select
-                v-model="formData.cse_status.status"
-                :class="[
-                  'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                  themeStore.isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'bg-white border-gray-300 text-gray-900'
-                ]"
-              >
-                <option value="employed">Employed</option>
-                <option value="unemployed">Unemployed</option>
-                <option value="self_employed">Self-Employed</option>
-                <option value="student">Student</option>
-                <option value="retired">Retired</option>
-              </select>
-            </div>
-
-            <!-- Employment Details (shown only if employed or self_employed) -->
-            <div v-if="formData.cse_status.status === 'employed' || formData.cse_status.status === 'self_employed'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label :class="[
-                  'block text-sm font-medium mb-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">
-                  Current Position
-                </label>
-                <input
-                  v-model="formData.cse_status.current_position"
-                  type="text"
-                  :class="[
-                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                    themeStore.isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  ]"
-                  placeholder="e.g., Software Engineer"
-                />
-              </div>
-
-              <div>
-                <label :class="[
-                  'block text-sm font-medium mb-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">
-                  Current Company
-                </label>
-                <input
-                  v-model="formData.cse_status.current_company"
-                  type="text"
-                  :class="[
-                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                    themeStore.isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  ]"
-                  placeholder="e.g., Tech Company Inc."
-                />
-              </div>
-
-              <div>
-                <label :class="[
-                  'block text-sm font-medium mb-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">
-                  Industry
-                </label>
-                <input
-                  v-model="formData.cse_status.industry"
-                  type="text"
-                  :class="[
-                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                    themeStore.isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  ]"
-                  placeholder="e.g., Information Technology"
-                />
-              </div>
-
-              <div>
-                <label :class="[
-                  'block text-sm font-medium mb-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">
-                  Start Date
-                </label>
-                <input
-                  v-model="formData.cse_status.start_date"
-                  type="date"
-                  :class="[
-                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                    themeStore.isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  ]"
-                />
-              </div>
-
-              <div>
-                <label class="flex items-center space-x-3">
-                  <input
-                    v-model="formData.cse_status.is_current"
-                    type="checkbox"
-                    class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span :class="[
-                    'font-medium',
-                    themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                  ]">
-                    I currently work here
-                  </span>
-                </label>
-              </div>
-
-              <div v-if="!formData.cse_status.is_current">
-                <label :class="[
-                  'block text-sm font-medium mb-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">
-                  End Date
-                </label>
-                <input
-                  v-model="formData.cse_status.end_date"
-                  type="date"
-                  :class="[
-                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                    themeStore.isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  ]"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Privacy Setting -->
-        <div :class="[
-          'border-t pt-6',
-          themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        ]">
-          <label :class="[
-            'block text-sm font-medium mb-2',
-            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          ]">
-            Visibility
-          </label>
-          <select
-            v-model="formData.visibility"
-            :class="[
-              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-              themeStore.isDarkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
-                : 'bg-white border-gray-300 text-gray-900'
-            ]"
-          >
-            <option value="public">Public</option>
-            <option value="connections_only">Connections Only</option>
-            <option value="private">Private</option>
-          </select>
-        </div>
 
         <!-- Form Actions -->
         <div :class="[
@@ -307,7 +126,7 @@
           <button
             type="button"
             @click="handleSubmit"
-            class="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            class="px-4 py-2 text-sm font-medium bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
           >
             {{ careerEnhancement ? 'Update' : 'Save' }}
           </button>
@@ -349,17 +168,7 @@ const selectedCertificateIndex = ref(-1)
 
 // Form data
 const formData = ref({
-  certificates: [],
-  cse_status: {
-    status: 'unemployed',
-    current_position: '',
-    current_company: '',
-    industry: '',
-    start_date: '',
-    end_date: '',
-    is_current: true
-  },
-  visibility: 'connections_only'
+  certificates: []
 })
 
 // Certificate management
@@ -412,47 +221,17 @@ const formatDate = (dateString) => {
 watch(() => props.careerEnhancement, (newCareerEnhancement) => {
   if (newCareerEnhancement) {
     formData.value = {
-      certificates: newCareerEnhancement.certificates || [],
-      cse_status: {
-        status: newCareerEnhancement.cse_status?.status || 'unemployed',
-        current_position: newCareerEnhancement.cse_status?.current_position || '',
-        current_company: newCareerEnhancement.cse_status?.current_company || '',
-        industry: newCareerEnhancement.cse_status?.industry || '',
-        start_date: newCareerEnhancement.cse_status?.start_date || '',
-        end_date: newCareerEnhancement.cse_status?.end_date || '',
-        is_current: newCareerEnhancement.cse_status?.is_current ?? true
-      },
-      visibility: newCareerEnhancement.visibility || 'connections_only'
+      certificates: newCareerEnhancement.certificates || []
     }
   } else {
     // Reset form for new career enhancement
     formData.value = {
-      certificates: [],
-      cse_status: {
-        status: 'unemployed',
-        current_position: '',
-        current_company: '',
-        industry: '',
-        start_date: '',
-        end_date: '',
-        is_current: true
-      },
-      visibility: 'connections_only'
+      certificates: []
     }
   }
 }, { immediate: true })
 
 const handleSubmit = () => {
-  // Clean up form data
-  const cleanedData = { ...formData.value }
-  
-  // Remove empty strings for CSE fields
-  Object.keys(cleanedData.cse_status).forEach(key => {
-    if (cleanedData.cse_status[key] === '') {
-      cleanedData.cse_status[key] = null
-    }
-  })
-
-  emit('save', cleanedData)
+  emit('save', formData.value)
 }
 </script>

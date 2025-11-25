@@ -1,54 +1,54 @@
 # Django Framework
-Django==4.2.16
-djangorestframework==3.14.0
-djangorestframework-simplejwt==5.3.0
+Django==4.2.26     # latest in the 4.2 LTS series :contentReference[oaicite:0]{index=0}  
+djangorestframework==3.16.1     # latest DRF release :contentReference[oaicite:1]{index=1}  
+djangorestframework-simplejwt==5.3.0  
 
 # Environment variables
-django-environ==0.11.2
+django-environ==0.11.2  
 
 # CORS handling
-django-cors-headers==4.4.0
+django-cors-headers==4.9.0     # latest as of now :contentReference[oaicite:2]{index=2}  
 
 # Channels for WebSocket support
-channels==4.0.0
-channels-redis==4.2.0
+channels==4.0.0  
+channels-redis==4.2.0  
 
-# Database
-psycopg2-binary==2.9.9
+# Database (Python 3.13 compatible)
+psycopg[binary]==3.2.13  
 
 # Redis for caching and channels
-redis==5.0.1
-django-redis==5.4.0
+redis==5.0.1  
+django-redis==5.4.0  
 
 # Image handling
-Pillow==10.1.0
+Pillow==11.0.0  
+
+# PDF generation / reporting
+reportlab==4.0.7   # added per your request  
 
 # Excel/CSV processing
-pandas==2.1.4
-openpyxl==3.1.2
+pandas==2.2.3  
+openpyxl==3.1.2  
 
 # Security
-django-axes==6.1.1
-django-cryptography==1.1
-itsdangerous==2.1.2
+django-axes==6.1.1  
+django-cryptography==1.1  
+itsdangerous==2.1.2  
 
 # Static files
-whitenoise==6.6.0
+whitenoise==6.6.0  
 
 # Web scraping and parsing
-beautifulsoup4==4.12.2
-requests==2.31.0
+beautifulsoup4==4.12.2  
+requests==2.31.0  
 
 # Developer tools
-django-extensions==3.2.3
+django-extensions==3.2.3  
 
 # Time zone handling
-pytz==2023.3
-python-dateutil==2.8.2
-
-# Environment variables (alternative)
-python-decouple==3.8
+pytz==2023.3  
+python-dateutil==2.8.2  
 
 # ASGI server
-daphne==4.0.0
-uvicorn==0.24.0
+daphne==4.0.0  
+uvicorn==0.24.0  

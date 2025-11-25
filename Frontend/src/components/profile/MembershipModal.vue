@@ -85,6 +85,28 @@
           </select>
         </div>
 
+        <!-- Currently a Member Checkbox -->
+        <div class="flex items-center">
+          <input
+            id="currently-member"
+            v-model="currentlyMember"
+            type="checkbox"
+            :class="[
+              'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded',
+              themeStore.isDarkMode ? 'bg-gray-700 border-gray-600' : ''
+            ]"
+          />
+          <label
+            for="currently-member"
+            :class="[
+              'ml-2 block text-sm',
+              themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            ]"
+          >
+            I am still a member here
+          </label>
+        </div>
+
         <!-- Date Range -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -115,11 +137,13 @@
             <input
               v-model="formData.date_ended"
               type="date"
+              :disabled="currentlyMember"
               :class="[
                 'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                 themeStore.isDarkMode 
                   ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
+                  : 'bg-white border-gray-300 text-gray-900',
+                currentlyMember ? 'opacity-50 cursor-not-allowed' : ''
               ]"
             />
           </div>
@@ -146,29 +170,6 @@
           ></textarea>
         </div>
 
-        <!-- Privacy Setting -->
-        <div>
-          <label :class="[
-            'block text-sm font-medium mb-2',
-            themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          ]">
-            Visibility
-          </label>
-          <select
-            v-model="formData.visibility"
-            :class="[
-              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-              themeStore.isDarkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
-                : 'bg-white border-gray-300 text-gray-900'
-            ]"
-          >
-            <option value="public">Public</option>
-            <option value="connections_only">Connections Only</option>
-            <option value="private">Private</option>
-          </select>
-        </div>
-
         <!-- Form Actions -->
         <div :class="[
           'flex justify-end space-x-3 pt-4 border-t',
@@ -192,7 +193,7 @@
             :class="[
               'px-4 py-2 text-sm font-medium rounded-md transition-colors',
               formData.organization_name.trim()
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
                 : 'bg-gray-400 text-gray-200 cursor-not-allowed'
             ]"
           >
@@ -219,6 +220,8 @@ const emit = defineEmits(['close', 'save'])
 
 const themeStore = useThemeStore()
 
+const currentlyMember = ref(false)
+
 // Form data
 const formData = ref({
   organization_name: '',
@@ -226,8 +229,7 @@ const formData = ref({
   membership_type: '',
   date_joined: '',
   date_ended: '',
-  description: '',
-  visibility: 'connections_only'
+  description: ''
 })
 
 // Watch for changes in membership prop to populate form
@@ -239,9 +241,10 @@ watch(() => props.membership, (newMembership) => {
       membership_type: newMembership.membership_type || '',
       date_joined: newMembership.date_joined || '',
       date_ended: newMembership.date_ended || '',
-      description: newMembership.description || '',
-      visibility: newMembership.visibility || 'connections_only'
+      description: newMembership.description || ''
     }
+    // Set currently member if no end date
+    currentlyMember.value = !newMembership.date_ended
   } else {
     // Reset form for new membership
     formData.value = {
@@ -250,11 +253,18 @@ watch(() => props.membership, (newMembership) => {
       membership_type: '',
       date_joined: '',
       date_ended: '',
-      description: '',
-      visibility: 'connections_only'
+      description: ''
     }
+    currentlyMember.value = false
   }
 }, { immediate: true })
+
+// Watch currentlyMember to clear date_ended when checked
+watch(currentlyMember, (isCurrentlyMember) => {
+  if (isCurrentlyMember) {
+    formData.value.date_ended = ''
+  }
+})
 
 const handleSubmit = () => {
   if (!formData.value.organization_name.trim()) {

@@ -85,10 +85,23 @@
               <input
                 v-model="form.end_date"
                 type="date"
-                :disabled="form.is_current_job"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
+                :disabled="currentlyWorking"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
+          </div>
+
+          <!-- Currently Working Checkbox -->
+          <div class="flex items-center">
+            <input
+              id="currently-working"
+              v-model="currentlyWorking"
+              type="checkbox"
+              class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            />
+            <label for="currently-working" class="ml-2 block text-sm text-gray-700">
+              I am currently working here
+            </label>
           </div>
 
           <!-- Length of Service -->
@@ -117,19 +130,6 @@
             ></textarea>
           </div>
 
-          <!-- Currently Employed -->
-          <div class="flex items-center">
-            <input
-              v-model="form.is_current_job"
-              type="checkbox"
-              id="is_current_job"
-              class="rounded border-gray-300 text-green-600 focus:ring-green-500"
-            />
-            <label for="is_current_job" class="ml-2 text-sm text-gray-700">
-              I am currently employed here
-            </label>
-          </div>
-
           <!-- Form Actions -->
           <div class="flex justify-end space-x-3 pt-4">
             <button
@@ -142,7 +142,7 @@
             <button
               type="submit"
               :disabled="loading"
-              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+              class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50"
             >
               <span v-if="loading" class="animate-spin mr-2">⟳</span>
               {{ isEditing ? 'Update' : 'Save' }}
@@ -168,6 +168,7 @@ const emit = defineEmits(['close', 'save'])
 
 const loading = ref(false)
 const isEditing = ref(false)
+const currentlyWorking = ref(false)
 
 const form = reactive({
   occupation: '',
@@ -176,8 +177,7 @@ const form = reactive({
   start_date: '',
   end_date: '',
   length_of_service: '',
-  description: '',
-  is_current_job: false
+  description: ''
 })
 
 // Initialize form data if editing
@@ -188,11 +188,13 @@ if (props.experience) {
       form[key] = props.experience[key]
     }
   })
+  // Set currently working if no end date
+  currentlyWorking.value = !props.experience.end_date
 }
 
-// Clear end date for current job
-watch(() => form.is_current_job, (newValue) => {
-  if (newValue) {
+// Watch currentlyWorking to clear end_date when checked
+watch(currentlyWorking, (isCurrentlyWorking) => {
+  if (isCurrentlyWorking) {
     form.end_date = ''
   }
 })

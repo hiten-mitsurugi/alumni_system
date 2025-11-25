@@ -12,6 +12,8 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
   const error = ref(null)
   const isInitialized = ref(false)
   const wsConnected = ref(false)
+  const hasAuthError = ref(false) // Track authentication failures
+  const autoRefreshInterval = ref(null) // Store interval ID for cleanup
 
   // Computed
   const totalUnreadCount = computed(() => {
@@ -24,6 +26,12 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
 
   // Actions
   async function fetchUnreadCounts() {
+    // Skip if we've encountered authentication errors
+    if (hasAuthError.value) {
+      console.log('⚠️ Skipping fetch due to previous authentication error')
+      return
+    }
+    
     isLoading.value = true
     error.value = null
     
@@ -39,6 +47,9 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
       unreadMessages.value = newUnreadMessages
       unreadMessageRequests.value = newUnreadRequests
       
+      // Clear auth error flag on successful fetch
+      hasAuthError.value = false
+      
       console.log('📊 Messaging Notification Store: Fetched unread counts:', {
         messages: unreadMessages.value,
         requests: unreadMessageRequests.value,
@@ -49,6 +60,14 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
     } catch (err) {
       console.error('❌ Failed to fetch messaging unread counts:', err)
       console.error('❌ Error details:', err.response?.data || err.message)
+      
+      // Check if it's an authentication error (401, 403)
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        console.error('🚫 Authentication error detected, stopping auto-refresh')
+        hasAuthError.value = true
+        stopAutoRefresh() // Stop the interval
+      }
+      
       error.value = err.message
       
       // Set to zero on error to prevent showing stale counts
@@ -178,8 +197,9 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
       console.log('🌐 Messaging Notification: Added listener to WebSocket connection')
       
       // 🔧 ENHANCEMENT: Set up periodic refresh to ensure real-time accuracy
-      setInterval(async () => {
-        if (isInitialized.value) {
+      // Store interval ID so we can stop it later
+      autoRefreshInterval.value = setInterval(async () => {
+        if (isInitialized.value && !hasAuthError.value) {
           console.log('🔄 Auto-refreshing notification counts...')
           await fetchUnreadCounts()
         }
@@ -187,6 +207,15 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
       
     } catch (error) {
       console.error('❌ Failed to add messaging notification listener:', error)
+    }
+  }
+  
+  // Stop auto-refresh interval
+  function stopAutoRefresh() {
+    if (autoRefreshInterval.value) {
+      clearInterval(autoRefreshInterval.value)
+      autoRefreshInterval.value = null
+      console.log('🛑 Stopped auto-refresh interval')
     }
   }
 
@@ -233,9 +262,11 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
 
   // Cleanup
   function cleanup() {
+    stopAutoRefresh() // Stop the interval first
     websocketService.removeListener('notifications', handleNotificationUpdate)
     wsConnected.value = false
     isInitialized.value = false
+    hasAuthError.value = false
     clearAllCounts()
     console.log('🧹 Messaging notification store cleaned up')
   }
@@ -265,6 +296,7 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
     error,
     isInitialized,
     wsConnected,
+    hasAuthError,
     
     // Computed
     totalUnreadCount,
@@ -282,6 +314,7 @@ export const useMessagingNotificationStore = defineStore('messagingNotifications
     initialize,
     cleanup,
     forceRefresh,
+    stopAutoRefresh,
     testIncrement,
     testDecrement,
     

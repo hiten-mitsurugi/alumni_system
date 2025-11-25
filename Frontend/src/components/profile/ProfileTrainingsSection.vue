@@ -24,88 +24,38 @@
               <h3 :class="[
                 'text-lg font-semibold',
                 themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-              ]">{{ training.training_title }}</h3>
+              ]">{{ training.title }}</h3>
             </div>
             
             <div class="ml-6 mt-2 space-y-2">
-              <div v-if="training.conducted_by" class="flex items-center text-sm">
+              <div v-if="training.organization" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Conducted by:</span>
+                ]">Organization:</span>
                 <span :class="[
                   themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ training.conducted_by }}</span>
+                ]">{{ training.organization }}</span>
               </div>
               
-              <div v-if="training.training_type" class="flex items-center text-sm">
-                <span :class="[
-                  'font-medium mr-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Type:</span>
-                <span :class="[
-                  'px-2 py-1 rounded-full text-xs',
-                  getTrainingTypeClass(training.training_type)
-                ]">{{ formatTrainingType(training.training_type) }}</span>
-              </div>
-              
-              <div v-if="training.duration" class="flex items-center text-sm">
+              <div v-if="training.date_start || training.date_end" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
                 ]">Duration:</span>
                 <span :class="[
                   themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ training.duration }}</span>
+                ]">{{ formatDateRange(training.date_start, training.date_end) }}</span>
               </div>
               
-              <div v-if="training.date_completed" class="flex items-center text-sm">
+              <div v-if="training.location" class="flex items-center text-sm">
                 <span :class="[
                   'font-medium mr-2',
                   themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Date Completed:</span>
+                ]">Location:</span>
                 <span :class="[
                   themeStore.isDarkMode ? 'text-white' : 'text-gray-900'
-                ]">{{ formatDate(training.date_completed) }}</span>
-              </div>
-              
-              <div v-if="training.certificate_number" class="flex items-center text-sm">
-                <span :class="[
-                  'font-medium mr-2',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Certificate #:</span>
-                <span :class="[
-                  'px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs font-mono',
-                  themeStore.isDarkMode ? 'bg-gray-700 text-gray-300' : ''
-                ]">{{ training.certificate_number }}</span>
-              </div>
-              
-              <div v-if="training.skills_gained && training.skills_gained.length > 0" class="text-sm">
-                <span :class="[
-                  'font-medium',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Skills Gained:</span>
-                <div class="mt-1 flex flex-wrap gap-2">
-                  <span 
-                    v-for="skill in training.skills_gained" 
-                    :key="skill"
-                    :class="[
-                      'px-2 py-1 rounded-full text-xs',
-                      'bg-indigo-100 text-indigo-800'
-                    ]"
-                  >{{ skill }}</span>
-                </div>
-              </div>
-              
-              <div v-if="training.description" class="text-sm">
-                <span :class="[
-                  'font-medium',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                ]">Description:</span>
-                <p :class="[
-                  'mt-1',
-                  themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]">{{ training.description }}</p>
+                ]">{{ training.location }}</span>
               </div>
             </div>
           </div>
@@ -177,28 +127,26 @@ const handleVisibilityChange = (visibility) => {
   emit('visibility-changed', { section: 'trainings', visibility })
 }
 
-const getTrainingTypeClass = (type) => {
-  const classes = {
-    'workshop': 'bg-blue-100 text-blue-800',
-    'seminar': 'bg-green-100 text-green-800',
-    'certification': 'bg-purple-100 text-purple-800',
-    'bootcamp': 'bg-red-100 text-red-800',
-    'online_course': 'bg-yellow-100 text-yellow-800',
-    'conference': 'bg-pink-100 text-pink-800'
+const formatDateRange = (startDate, endDate) => {
+  if (!startDate) return ''
+  
+  const start = new Date(startDate)
+  const formattedStart = start.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short'
+  })
+  
+  if (!endDate) {
+    return `${formattedStart} - Present`
   }
-  return classes[type] || 'bg-gray-100 text-gray-800'
-}
-
-const formatTrainingType = (type) => {
-  const types = {
-    'workshop': 'Workshop',
-    'seminar': 'Seminar',
-    'certification': 'Certification',
-    'bootcamp': 'Bootcamp',
-    'online_course': 'Online Course',
-    'conference': 'Conference'
-  }
-  return types[type] || type
+  
+  const end = new Date(endDate)
+  const formattedEnd = end.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short'
+  })
+  
+  return `${formattedStart} - ${formattedEnd}`
 }
 
 const formatDate = (dateString) => {

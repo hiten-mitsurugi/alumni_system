@@ -24,7 +24,10 @@ from .views import (
 )
 
 # Import the working EnhancedProfileView and UserConnectionsView from profile_social module
-from .views.profile_social import EnhancedProfileView, UserMentionSearchView, UserConnectionsView, InvitationAcceptView, InvitationRejectView
+from .views.profile_social import (
+    EnhancedProfileView, UserMentionSearchView, UserConnectionsView, 
+    InvitationAcceptView, InvitationRejectView, TestConnectionStatusView
+)
 
 # Import field privacy views
 from .views_field_privacy import ProfileFieldUpdateView, ProfileAboutDataView, UserAddressesView
@@ -79,6 +82,9 @@ urlpatterns = [
     # Invitation management
     path('invitations/<int:invitation_id>/accept/', InvitationAcceptView.as_view(), name='accept_invitation'),
     path('invitations/<int:invitation_id>/reject/', InvitationRejectView.as_view(), name='reject_invitation'),
+    
+    # Test/Debug endpoints
+    path('test-connection/<int:user_id>/', TestConnectionStatusView.as_view(), name='test_connection_status'),
     
     # Achievements endpoints
     path('achievements/', AchievementListCreateView.as_view(), name='achievements_list_create'),
