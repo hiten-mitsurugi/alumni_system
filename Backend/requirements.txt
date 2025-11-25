@@ -24,7 +24,8 @@ django-redis==5.4.0
 Pillow==11.0.0  
 
 # PDF generation / reporting
-reportlab==4.0.7   # added per your request  
+reportlab==4.0.7   # added per your request
+xhtml2pdf==0.2.16  # HTML to PDF conversion  
 
 # Excel/CSV processing
 pandas==2.2.3  

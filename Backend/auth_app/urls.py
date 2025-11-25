@@ -23,6 +23,9 @@ from .views import (
     # PerceptionStudiesView, FeedbackView
 )
 
+# Import CV export view
+from .views.cv_export import export_cv
+
 # Import the working EnhancedProfileView and UserConnectionsView from profile_social module
 from .views.profile_social import (
     EnhancedProfileView, UserMentionSearchView, UserConnectionsView, 
@@ -111,6 +114,7 @@ urlpatterns = [
     path('profile/field-update/', ProfileFieldUpdateView.as_view(), name='profile_field_update'),
     path('profile/about-data/', ProfileAboutDataView.as_view(), name='profile_about_data'),
     path('profile/about-data/<int:user_id>/', ProfileAboutDataView.as_view(), name='profile_about_data_user'),
+    path('profile/export-cv/', export_cv, name='export_cv'),  # CV PDF export
     
     # Address endpoints
     path('profile/<int:user_id>/addresses/', UserAddressesView.as_view(), name='user_addresses'),

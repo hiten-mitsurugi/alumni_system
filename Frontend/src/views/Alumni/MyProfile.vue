@@ -16,6 +16,7 @@ import ProfileRecognitionsSection from '@/components/profile/ProfileRecognitions
 import ProfileTrainingsSection from '@/components/profile/ProfileTrainingsSection.vue'
 import ProfilePublicationsSection from '@/components/profile/ProfilePublicationsSection.vue'
 import ProfileCareerEnhancementSection from '@/components/profile/ProfileCareerEnhancementSection.vue'
+import ExportCvModal from '@/components/profile/ExportCvModal.vue'
 
 import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
 import SuggestedConnectionsWidget from '@/components/profile/SuggestedConnectionsWidget.vue'
@@ -57,6 +58,7 @@ const showRecognitionModal = ref(false)
 const showTrainingModal = ref(false)
 const showPublicationModal = ref(false)
 const showCareerEnhancementModal = ref(false)
+const showExportCvModal = ref(false)
 
 // Selected items for editing
 const selectedEducation = ref(null)
@@ -400,6 +402,10 @@ const editCoverPhoto = () => {
 
 const editProfilePicture = () => {
   showProfilePictureModal.value = true
+}
+
+const handleCvExportSuccess = () => {
+  console.log('CV exported successfully')
 }
 
 const updateProfile = async (profileData) => {
@@ -1395,7 +1401,17 @@ watch(() => route.params.userIdentifier, () => {
               </div>
 
               <!-- Edit Profile Button for own profile -->
-              <div v-else class="mt-4 lg:mt-0">
+              <div v-else class="flex gap-3 mt-4 lg:mt-0">
+                <button
+                  @click="showExportCvModal = true"
+                  class="px-6 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  Export CV
+                </button>
                 <button
                   @click="editProfile"
                   class="px-6 py-2 font-medium text-white transition-colors bg-orange-500 rounded-lg hover:bg-orange-600"
@@ -1670,6 +1686,13 @@ watch(() => route.params.userIdentifier, () => {
       :career-enhancement="selectedCareerEnhancement"
       @close="closeCareerEnhancementModal"
       @save="saveCareerEnhancement"
+    />
+
+    <!-- Export CV Modal -->
+    <ExportCvModal
+      :is-open="showExportCvModal"
+      @close="showExportCvModal = false"
+      @success="handleCvExportSuccess"
     />
   </div>
 </template>

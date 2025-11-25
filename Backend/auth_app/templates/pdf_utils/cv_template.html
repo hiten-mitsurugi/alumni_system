@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            line-height: 1.6;
+            background: white;
+        }
+        .container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0;
+            background: white;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .left-column {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            vertical-align: top;
+            padding: 40px 25px;
+        }
+        .right-column {
+            background-color: #ecf0f1;
+            vertical-align: top;
+            padding: 40px 35px;
+        }
+        
+        /* Profile Photo Styling */
+        .profile-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #34495e;
+            border: 3px solid #5d6d7e;
+            color: #5d6d7e;
+            font-size: 48px;
+            text-align: center;
+            line-height: 120px;
+            margin: 0 auto 25px;
+            font-weight: 300;
+            overflow: hidden;
+        }
+        .profile-circle img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+        }
+        
+        /* Left Column Section Styling */
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #5d6d7e;
+        }
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+        
+        /* Skills */
+        .skill-item {
+            margin-bottom: 12px;
+        }
+        .skill-name {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        .skill-level {
+            font-size: 11px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+        
+        /* Contact Items */
+        .contact-item {
+            margin-bottom: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .contact-label {
+            font-size: 11px;
+            color: #95a5a6;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        /* Social Links */
+        .link-item {
+            margin-bottom: 12px;
+        }
+        .link-name {
+            font-weight: 500;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        .link-url {
+            color: #3498db;
+            font-size: 11px;
+            word-break: break-all;
+            text-decoration: none;
+        }
+        
+        /* Right Column Styling */
+        .name-header {
+            font-size: 36px;
+            font-weight: 300;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .job-title {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .right-column .section-title {
+            color: #2c3e50;
+            border-bottom-color: #3498db;
+            font-size: 14px;
+            margin: 25px 0 15px 0;
+        }
+        .right-column .section-title:first-of-type {
+            margin-top: 0;
+        }
+        
+        /* Timeline Items */
+        .timeline-item {
+            margin-bottom: 20px;
+            padding-left: 15px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .timeline-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
+        .timeline-subtitle {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        .timeline-date {
+            color: #95a5a6;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+        .timeline-description {
+            margin-top: 5px;
+            color: #34495e;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        /* Simple List Items */
+        .simple-list-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #d5dbdb;
+            color: #34495e;
+            font-size: 12px;
+        }
+        .simple-list-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Bio/About Text */
+        .bio-text {
+            color: #34495e;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        
+        /* Address Sections */
+        .address-content {
+            font-size: 12px;
+            line-height: 1.6;
+            color: #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <table>
+            <tr>
+                <td class="left-column">
+                    <!-- Profile Photo -->
+                    <div class="profile-circle">
+                        {% if include_photo and profile_picture_path %}
+                        <img src="{{ profile_picture_path }}" alt="Profile"/>
+                        {% else %}
+                        {{ initials }}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Skills -->
+                    {% if skills %}
+                    <div class="section-title">Skills</div>
+                    {% for skill in skills %}
+                    <div class="skill-item">
+                        <div class="skill-name">{{ skill.name }}</div>
+                        <div class="skill-level">{{ skill.level }}</div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Social Links -->
+                    {% if social_links %}
+                    <div class="section-title">Web & Social</div>
+                    {% for link in social_links %}
+                    <div class="link-item">
+                        <div class="link-name">{{ link.name }}</div>
+                        <a href="{{ link.url }}" class="link-url">{{ link.url }}</a>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Contact Information -->
+                    <div class="section-title">Contact</div>
+                    {% if user.contact_number %}
+                    <div class="contact-item">
+                        <span class="contact-label">Phone</span>
+                        {{ user.contact_number }}
+                    </div>
+                    {% endif %}
+                    {% if user.birth_date %}
+                    <div class="contact-item">
+                        <span class="contact-label">Birthday</span>
+                        {{ user.birth_date|date:"F d, Y" }}
+                    </div>
+                    {% endif %}
+                    {% if gender_display %}
+                    <div class="contact-item">
+                        <span class="contact-label">Gender</span>
+                        {{ gender_display }}
+                    </div>
+                    {% endif %}
+                    {% if civil_status_display %}
+                    <div class="contact-item">
+                        <span class="contact-label">Civil Status</span>
+                        {{ civil_status_display }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Present Address -->
+                    {% if present_address %}
+                    <div class="section-title">Present Address</div>
+                    <div class="address-content">{{ present_address }}</div>
+                    {% endif %}
+                    
+                    <!-- Permanent Address -->
+                    {% if permanent_address %}
+                    <div class="section-title">Permanent Address</div>
+                    <div class="address-content">{{ permanent_address }}</div>
+                    {% endif %}
+                    
+                </td>
+                <td class="right-column">
+                    <!-- Name and Title -->
+                    <div class="name-header">{{ full_name }}</div>
+                    <div class="job-title">{{ job_title }}</div>
+                    
+                    <!-- Email -->
+                    {% if user.email %}
+                    <div style="color:#34495e;font-size:12px;margin-bottom:20px;">
+                        📧 {{ user.email }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Bio/About -->
+                    {% if bio %}
+                    <div class="section-title">About</div>
+                    <div class="bio-text">{{ bio }}</div>
+                    {% endif %}
+                    
+                    <!-- Work History -->
+                    {% if work_history %}
+                    <div class="section-title">Experience</div>
+                    {% for work in work_history %}
+                    <div class="timeline-item">
+                        <div class="timeline-title">{{ work.occupation }}</div>
+                        <div class="timeline-subtitle">{{ work.agency }}</div>
+                        <div class="timeline-date">{{ work.date_range }}</div>
+                        {% if work.description %}
+                        <div class="timeline-description">{{ work.description }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Education -->
+                    {% if education %}
+                    <div class="section-title">Education</div>
+                    {% for edu in education %}
+                    <div class="timeline-item">
+                        <div class="timeline-title">{{ edu.degree }}</div>
+                        <div class="timeline-subtitle">{{ edu.institution }}</div>
+                        <div class="timeline-date">{{ edu.date_range }}</div>
+                        {% if edu.extra_info %}
+                        <div class="timeline-description">{{ edu.extra_info }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Achievements -->
+                    {% if achievements %}
+                    <div class="section-title">Achievements</div>
+                    {% for achievement in achievements %}
+                    <div class="simple-list-item">{{ achievement }}</div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Memberships -->
+                    {% if memberships %}
+                    <div class="section-title">Membership & Organizations</div>
+                    {% for membership in memberships %}
+                    <div class="simple-list-item">{{ membership }}</div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Recognitions -->
+                    {% if recognitions %}
+                    <div class="section-title">Non-Academic Recognition</div>
+                    {% for recognition in recognitions %}
+                    <div class="simple-list-item">{{ recognition }}</div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Trainings -->
+                    {% if trainings %}
+                    <div class="section-title">Trainings & Certifications</div>
+                    {% for training in trainings %}
+                    <div class="simple-list-item">{{ training }}</div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Publications -->
+                    {% if publications %}
+                    <div class="section-title">Related Publications</div>
+                    {% for publication in publications %}
+                    <div class="simple-list-item">{{ publication }}</div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Career Enhancement -->
+                    {% if career_enhancement %}
+                    <div class="section-title">Career Enhancement</div>
+                    <div class="bio-text">{{ career_enhancement }}</div>
+                    {% endif %}
+                    
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
