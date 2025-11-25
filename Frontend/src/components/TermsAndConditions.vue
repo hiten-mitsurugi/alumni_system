@@ -46,7 +46,7 @@ defineEmits(['close'])
             <section>
               <h3 class="font-bold text-lg text-gray-900 mb-2">1. Acceptance of Terms</h3>
               <p>
-                By registering and using the Alumni Mates platform, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions. If you do not agree to any part of these terms, please do not proceed with registration.
+                By registering and using the ATENDA platform, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions. If you do not agree to any part of these terms, please do not proceed with registration.
               </p>
             </section>
 
@@ -65,63 +65,77 @@ defineEmits(['close'])
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">4. Accurate Information</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">4. Data Privacy Act Compliance (Republic Act No. 10173)</h3>
+              <p class="mb-3">
+                In compliance with the <span class="font-semibold">Data Privacy Act of 2012 (Republic Act No. 10173)</span>, we are committed to protecting your personal information and ensuring your privacy rights. By using this platform, you acknowledge and agree to the following:
+              </p>
+              <ul class="list-disc pl-6 space-y-2">
+                <li><span class="font-semibold">Lawful Processing:</span> Your personal data will be collected, processed, and stored in accordance with the principles of transparency, legitimate purpose, and proportionality as mandated by the DPA.</li>
+                <li><span class="font-semibold">Your Rights:</span> You have the right to be informed, object to processing, access your data, rectify inaccuracies, erase or block your data, claim damages, and file complaints with the National Privacy Commission.</li>
+                <li><span class="font-semibold">Data Security:</span> We implement appropriate organizational, physical, and technical security measures to protect your personal data against unauthorized access, disclosure, alteration, or destruction.</li>
+                <li><span class="font-semibold">Consent:</span> By registering and using this platform, you provide your voluntary, informed, and specific consent to the collection and processing of your personal information for legitimate educational and institutional purposes.</li>
+                <li><span class="font-semibold">Data Retention:</span> Your data will be retained only for as long as necessary to fulfill the purposes for which it was collected or as required by applicable laws and regulations.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">5. Accurate Information</h3>
               <p>
                 You agree to provide accurate, current, and complete information during registration. You will promptly update your account information to maintain its accuracy. We reserve the right to suspend or terminate accounts with false or misleading information.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">5. Acceptable Use</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">6. Acceptable Use</h3>
               <p>
                 You agree not to use the platform for any unlawful or prohibited activities. You will not upload, share, or transmit any content that is offensive, defamatory, or violates intellectual property rights. This includes harassment, discrimination, or inappropriate conduct toward other users.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">6. Intellectual Property</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">7. Intellectual Property</h3>
               <p>
-                All content, features, and functionality of the Alumni Mates platform are owned by the institution, its content suppliers, or other providers of such material and are protected by international copyright, trademark, and other intellectual property laws.
+                All content, features, and functionality of the ATENDA platform are owned by the institution, its content suppliers, or other providers of such material and are protected by international copyright, trademark, and other intellectual property laws.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">7. Survey Participation</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">8. Survey Participation</h3>
               <p>
                 Your participation in surveys is voluntary. The survey responses you provide will be used for institutional research and improvement purposes. Your responses will be kept confidential, and individual responses will not be disclosed to unauthorized parties.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">8. Limitation of Liability</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">9. Limitation of Liability</h3>
               <p>
                 The platform is provided "as is" without warranties of any kind, either express or implied. We are not liable for any direct, indirect, incidental, special, or consequential damages arising from your use of or inability to use the platform.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">9. Termination</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">10. Termination</h3>
               <p>
                 We reserve the right to suspend or terminate your account at any time for violations of these terms or for any other reason we deem appropriate. Upon termination, you must cease using the platform immediately.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">10. Changes to Terms</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">11. Changes to Terms</h3>
               <p>
                 We reserve the right to modify these Terms and Conditions at any time. Changes will be effective immediately upon posting. Your continued use of the platform following the posting of modified terms means you accept and agree to the changes.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">11. Governing Law</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">12. Governing Law</h3>
               <p>
                 These Terms and Conditions are governed by and construed in accordance with the laws of the Philippines, and you irrevocably submit to the exclusive jurisdiction of the courts located therein.
               </p>
             </section>
 
             <section>
-              <h3 class="font-bold text-lg text-gray-900 mb-2">12. Contact Information</h3>
+              <h3 class="font-bold text-lg text-gray-900 mb-2">13. Contact Information</h3>
               <p>
                 If you have any questions regarding these Terms and Conditions, please contact us at the provided institutional email address.
               </p>

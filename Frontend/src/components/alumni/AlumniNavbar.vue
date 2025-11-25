@@ -19,7 +19,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      <img src="@/assets/A-C-Logo.png" alt="Alumni System Logo" class="w-auto h-10" />
+      <img src="@/assets/CCIS.png" alt="CCIS Logo" class="w-auto h-10" />
 
       <!-- Search Bar - Positioned with margin when sidebar expands -->
       <div v-if="isHomePage" :class="[

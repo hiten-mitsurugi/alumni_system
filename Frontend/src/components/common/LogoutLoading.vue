@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-amber-50">
     <div class="flex flex-col items-center">
-      <img src="@/assets/A-C-Logo.png" alt="Alumni System Logo" class="h-20 w-auto mb-8 animate-bounce" />
+      <img src="@/assets/CCIS.png" alt="CCIS Logo" class="h-20 w-auto mb-8 animate-bounce" />
       <div class="loader mb-4"></div>
       <span class="text-xl font-semibold text-gray-700">Logging out...</span>
     </div>

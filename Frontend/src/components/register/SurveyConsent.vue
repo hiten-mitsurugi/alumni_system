@@ -84,7 +84,7 @@ const emit = defineEmits(['accept', 'decline']);
             <div class="flex gap-3">
               <span class="text-orange-600 font-bold mt-1">•</span>
               <p>
-                <span class="font-semibold">Alumni Network:</span> Strengthen connections and opportunities 
+                <span class="font-semibold">Alumni Network:</span> Strengthen ATENDA and opportunities 
                 within our alumni community
               </p>
             </div>
@@ -121,7 +121,7 @@ const emit = defineEmits(['accept', 'decline']);
             <div class="bg-orange-50 rounded-lg p-4 border-l-4 border-orange-600">
               <p class="font-semibold text-gray-800 mb-2">Networking Opportunities</p>
               <p class="text-sm text-gray-600">
-                Participating connects you with fellow alumni and institutional programs
+                Participating engages you with fellow alumni through ATENDA and institutional programs
               </p>
             </div>
           </div>
@@ -153,6 +153,38 @@ const emit = defineEmits(['accept', 'decline']);
               <p class="text-lg font-bold text-blue-600">Optional</p>
             </div>
           </div>
+        </div>
+
+        <!-- Data Privacy Act Compliance -->
+        <div class="p-8 border-b border-gray-200 bg-blue-50">
+          <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            Data Privacy Act Compliance (R.A. 10173)
+          </h3>
+          <p class="text-gray-700 leading-relaxed mb-4 ml-8">
+            In compliance with the <span class="font-semibold">Philippine Data Privacy Act of 2012 (Republic Act No. 10173)</span>, 
+            we assure you that your personal information is protected and will be processed with the highest standards of data privacy and security.
+          </p>
+          <ul class="space-y-2 ml-8 text-gray-700">
+            <li class="flex gap-3">
+              <span class="text-blue-600 font-bold">🔒</span>
+              <p><span class="font-semibold">Your Rights:</span> You have the right to be informed, access your data, correct inaccuracies, object to processing, and file complaints with the National Privacy Commission.</p>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-blue-600 font-bold">🛡️</span>
+              <p><span class="font-semibold">Data Security:</span> We implement organizational, physical, and technical security measures to protect your information from unauthorized access or disclosure.</p>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-blue-600 font-bold">⚖️</span>
+              <p><span class="font-semibold">Lawful Processing:</span> Your data will be collected and processed only for legitimate educational purposes in accordance with principles of transparency and proportionality.</p>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-blue-600 font-bold">✅</span>
+              <p><span class="font-semibold">Your Consent:</span> By participating, you provide voluntary and informed consent to the collection and processing of your personal information for institutional research and development.</p>
+            </li>
+          </ul>
         </div>
 
         <!-- Confidentiality Statement -->

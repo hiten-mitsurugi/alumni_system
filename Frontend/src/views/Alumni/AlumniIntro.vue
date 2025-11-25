@@ -170,6 +170,86 @@ const handleProceedSurvey = () => {
         </div>
       </div>
 
+      <!-- Data Privacy Act Assurance -->
+      <div class="bg-white rounded-2xl p-10 shadow-xl mb-12 border-2 border-blue-200">
+        <div class="flex items-start gap-4 mb-6">
+          <div class="bg-blue-100 rounded-full p-4 flex-shrink-0">
+            <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Your Privacy is Protected</h2>
+            <p class="text-gray-600 text-lg">Data Privacy Act of 2012 (R.A. 10173) Compliance</p>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-8 border border-blue-200">
+          <p class="text-gray-700 leading-relaxed mb-6">
+            We are committed to protecting your personal information in accordance with the <span class="font-semibold">Philippine Data Privacy Act of 2012 (Republic Act No. 10173)</span>. 
+            Your data privacy rights are our priority, and we implement comprehensive measures to ensure your information is secure.
+          </p>
+          
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-start gap-3">
+                <div class="bg-blue-500 rounded-full p-2 mt-1 flex-shrink-0">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900 mb-1">Your Rights Protected</h4>
+                  <p class="text-gray-700 text-sm leading-relaxed">Right to be informed, access, rectify, erase, object to processing, and file complaints</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-start gap-3">
+                <div class="bg-blue-500 rounded-full p-2 mt-1 flex-shrink-0">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900 mb-1">Secure Data Handling</h4>
+                  <p class="text-gray-700 text-sm leading-relaxed">Organizational, physical, and technical security measures protect your personal information</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-start gap-3">
+                <div class="bg-blue-500 rounded-full p-2 mt-1 flex-shrink-0">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900 mb-1">Lawful Processing</h4>
+                  <p class="text-gray-700 text-sm leading-relaxed">Data collected only for legitimate educational purposes with transparency and proportionality</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-start gap-3">
+                <div class="bg-blue-500 rounded-full p-2 mt-1 flex-shrink-0">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900 mb-1">Voluntary Consent</h4>
+                  <p class="text-gray-700 text-sm leading-relaxed">Your participation is entirely voluntary with informed and specific consent for data processing</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Action Buttons -->
       <div class="flex justify-center mb-12">
         <button
