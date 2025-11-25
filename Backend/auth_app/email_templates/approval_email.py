@@ -6,7 +6,7 @@ def get_approval_email_template(user, login_url="http://localhost:5173/login"):
     """
     Generate approval email template
     """
-    subject = '🎉 Account Approved - Welcome to Alumni System!'
+    subject = '🎉 Account Approved - Welcome to ATENDA!'
     
     html_content = f"""
     <!DOCTYPE html>
@@ -14,7 +14,7 @@ def get_approval_email_template(user, login_url="http://localhost:5173/login"):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Alumni System</title>
+        <title>Welcome to ATENDA</title>
         <style>
             body {{
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -32,7 +32,7 @@ def get_approval_email_template(user, login_url="http://localhost:5173/login"):
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }}
             .header {{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
                 color: white;
                 padding: 20px;
                 border-radius: 8px;
@@ -49,7 +49,7 @@ def get_approval_email_template(user, login_url="http://localhost:5173/login"):
                 margin-bottom: 15px;
             }}
             .login-button {{
-                background: #007bff;
+                background: #ea580c;
                 color: white;
                 padding: 12px 30px;
                 text-decoration: none;
@@ -88,7 +88,7 @@ def get_approval_email_template(user, login_url="http://localhost:5173/login"):
     <body>
         <div class="container">
             <div class="header">
-                <h1>🎓 Welcome to Alumni System</h1>
+                <h1>🎓 Welcome to ATENDA</h1>
                 <div class="welcome-badge">Account Approved!</div>
             </div>
             
@@ -210,7 +210,7 @@ def get_rejection_email_template(user):
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }}
             .header {{
-                background: linear-gradient(135deg, #ff7b7b 0%, #d63384 100%);
+                background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
                 color: white;
                 padding: 20px;
                 border-radius: 8px;
@@ -249,7 +249,7 @@ def get_rejection_email_template(user):
             
             <p>Dear <strong>{user.first_name} {user.last_name}</strong>,</p>
             
-            <p>Thank you for your interest in joining our Alumni System. We have reviewed your account application and need additional information before we can approve your account.</p>
+            <p>Thank you for your interest in joining ATENDA. We have reviewed your account application and need additional information before we can approve your account.</p>
             
             <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="margin: 0 0 10px 0; color: #1976d2;">📋 Application Details:</h3>
@@ -299,7 +299,7 @@ def get_rejection_email_template(user):
     text_content = f"""
 Dear {user.first_name} {user.last_name},
 
-Thank you for your interest in joining our Alumni System.
+Thank you for your interest in joining ATENDA.
 
 We have reviewed your account application and need additional information before we can approve your account.
 

@@ -144,8 +144,8 @@ onUnmounted(() => {
           <h1 class="text-6xl font-extrabold">Welcome to atenda</h1>
           <p class="text-4xl mt-4">Connecting Alumni, Building Futures</p>
           <div class="flex space-x-8 mt-10">
-            <img src="@/assets/CSU Icon.png" alt="Logo 2" class="h-68" />
-            <img src="@/assets/ARO_logo-removebg-preview.png" alt="Logo 1" class="h-68" />
+            <img src="@/assets/CSU Icon.png" alt="CSU Logo" class="h-68" />
+            <img src="@/assets/CCIS.png" alt="CCIS Logo" class="h-68" />
           </div>
         </div>
       </div>
