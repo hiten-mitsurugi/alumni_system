@@ -6,12 +6,12 @@
   >
     <!-- Mobile Layout -->
     <div
-      class="flex flex-col w-full overflow-hidden bg-white lg:hidden"
+      class="flex flex-col w-full h-full overflow-hidden bg-white lg:hidden"
       style="height: calc(100vh - 80px); max-height: calc(100vh - 80px);"
       @click.stop
     >
       <!-- Mobile Header -->
-      <div class="flex items-center justify-between flex-shrink-0 p-4 bg-white border-b border-gray-200">
+      <div class="flex items-center justify-between shrink-0 p-4 bg-white border-b border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 truncate">
           {{ post.user.full_name }}'s Post
         </h3>
@@ -25,12 +25,14 @@
         </button>
       </div>
 
-      <!-- Mobile Media Section -->
-      <div
-        v-if="hasMedia"
-        class="flex items-center justify-center flex-shrink-0 bg-gray-900"
-        style="height: 35vh; min-height: 200px;"
-      >
+      <!-- Scrollable Content Area -->
+      <div class="flex-1 min-h-0 overflow-y-auto">
+        <!-- Mobile Media Section -->
+        <div
+          v-if="hasMedia"
+          class="flex items-center justify-center shrink-0 bg-gray-900"
+          style="height: 35vh; min-height: 200px;"
+        >
         <div class="relative flex items-center justify-center w-full h-full p-2">
           <!-- Image Display -->
           <div v-if="currentMediaType === 'image'" class="relative flex items-center justify-center w-full h-full">
@@ -103,7 +105,7 @@
         </div>
 
         <!-- Engagement Summary -->
-        <div v-if="hasEngagement" class="flex-shrink-0 px-4 py-3 bg-white border-b border-gray-200">
+        <div v-if="hasEngagement" class="shrink-0 px-4 py-3 bg-white border-b border-gray-200">
           <ReactionSummary
             :reactions-summary="post.reactions_summary"
             :post-id="post.id"
@@ -112,7 +114,7 @@
         </div>
 
         <!-- Post Actions -->
-        <div class="flex-shrink-0 px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div class="shrink-0 px-4 py-3 border-b border-gray-200 bg-gray-50">
           <PostActions
             :post-id="post.id"
             :selected-reaction="selectedReaction"
@@ -125,7 +127,7 @@
         </div>
 
         <!-- Comments Header -->
-        <div class="flex-shrink-0 px-4 py-2 border-b border-gray-200 bg-gray-50">
+        <div class="shrink-0 px-4 py-2 border-b border-gray-200 bg-gray-50">
           <h4 class="text-sm font-semibold text-gray-900">
             Comments ({{ comments.length || 0 }})
           </h4>
@@ -152,10 +154,11 @@
             />
           </div>
         </div>
+      </div>
 
-        <!-- Mobile Comment Input - Always at bottom -->
-        <div class="flex-shrink-0 px-4 py-3 bg-white border-t border-gray-200" style="padding-bottom: calc(env(safe-area-inset-bottom) + 16px); margin-bottom: 80px;">
-          <!-- Reply indicator -->
+      <!-- Mobile Comment Input - Fixed at bottom -->
+      <div class="shrink-0 px-4 py-3 bg-white border-t border-gray-200" style="padding-bottom: calc(env(safe-area-inset-bottom) + 16px);">
+        <!-- Reply indicator -->
           <div v-if="isReplying" class="px-3 py-2 mb-2 text-sm border border-blue-200 rounded-lg bg-blue-50">
             <span class="text-blue-600">📝 Replying to {{ replyContext?.authorName }}</span>
             <button

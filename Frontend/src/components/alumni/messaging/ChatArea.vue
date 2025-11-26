@@ -1,7 +1,7 @@
 <template>
-  <div class="flex-1 flex flex-col">
+  <div class="flex-1 flex flex-col h-full">
     <!-- Header with user/group info - Enhanced styling with integrated back button -->
-    <div class="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-b border-gray-200/60 flex items-center justify-between transition-all duration-200 shadow-sm">
+    <div class="p-4 md:p-6 bg-white/90 backdrop-blur-sm border-b border-gray-200/60 flex items-center justify-between transition-all duration-200 shadow-sm shrink-0">
       <div class="flex items-center gap-3 md:gap-4">
         <!-- Back button - integrated into header layout for mobile -->
         <button 
@@ -67,7 +67,7 @@
     <div 
       ref="messagesContainer"
       class="flex-1 overflow-y-auto p-4 md:p-6 chat-messages-container bg-gradient-to-br from-gray-50/80 to-slate-50/60 transition-all duration-200"
-      style="min-height: 0; max-height: calc(100vh - 300px);"
+      style="min-height: 0;"
     >
       <!-- Messages Display with enhanced spacing -->
       <div>
@@ -116,7 +116,7 @@
     </div>
 
     <!-- Message input or blocked indicator -->
-    <div class="flex-shrink-0 border-t border-gray-200  bg-white  p-2 transition-colors duration-200">
+    <div class="shrink-0 border-t border-gray-200  bg-white  p-2 transition-colors duration-200">
       <!-- Show blocked message if conversation is blocked -->
       <div v-if="conversation.isBlockedByMe || conversation.isBlockedByThem" 
            class="p-4 text-center">

@@ -32,8 +32,9 @@ export const useNotificationsStore = defineStore('notifications', () => {
       if (filters.read !== undefined) params.append('read', filters.read);
       if (filters.type) params.append('type', filters.type);
       
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       const response = await axios.get(
-        `http://localhost:8000/api/notifications/?${params}`,
+        `${apiBaseUrl}/api/notifications/?${params}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -51,8 +52,9 @@ export const useNotificationsStore = defineStore('notifications', () => {
   async function markAsRead(notificationId) {
     try {
       const token = localStorage.getItem('access_token');
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       await axios.patch(
-        `http://localhost:8000/api/notifications/${notificationId}/mark_as_read/`,
+        `${apiBaseUrl}/api/notifications/${notificationId}/mark_as_read/`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -73,8 +75,9 @@ export const useNotificationsStore = defineStore('notifications', () => {
   async function markAllAsRead() {
     try {
       const token = localStorage.getItem('access_token');
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       await axios.post(
-        'http://localhost:8000/api/notifications/mark_all_read/',
+        `${apiBaseUrl}/api/notifications/mark_all_read/`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -105,8 +108,10 @@ export const useNotificationsStore = defineStore('notifications', () => {
       ws.value.close();
     }
 
-    // Connect to WebSocket with auth token
-    const wsUrl = `ws://localhost:8000/ws/notifications/?token=${token}`;
+    // Connect to WebSocket with auth token using dynamic URL
+    const wsBaseUrl = import.meta.env.VITE_API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+    const wsUrl = `${wsBaseUrl}/ws/notifications/?token=${token}`;
+    console.log('🌐 Connecting to notifications WebSocket:', wsUrl);
     ws.value = new WebSocket(wsUrl);
 
     ws.value.onopen = () => {

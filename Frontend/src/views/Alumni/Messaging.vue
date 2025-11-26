@@ -282,7 +282,7 @@
 
  <!-- 💻 DESKTOP / 📱 MOBILE: Main Content Area -->
  <div :class="[
- 'flex flex-1',
+ 'flex flex-1 h-full overflow-hidden',
  // Mobile responsive visibility
  {
  'block': !isMobile || (currentMobileView === 'chat' || currentMobileView === 'chat-info'),
@@ -292,7 +292,7 @@
 
  <!-- 📱 MOBILE / 💻 DESKTOP: Chat Area -->
  <div :class="[
- 'flex flex-col flex-1',
+ 'flex flex-col flex-1 h-full',
  // Mobile responsive visibility
  {
  'block': !isMobile || currentMobileView === 'chat',
@@ -1784,7 +1784,8 @@ function setupWebSockets() {
  if (!token) return (isAuthenticated.value = false);
 
  // Set up private messaging WebSocket
- privateWs.value = new WebSocket(`ws://localhost:8000/ws/private/?token=${token}`);
+ const wsBaseUrl = import.meta.env.VITE_API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+ privateWs.value = new WebSocket(`${wsBaseUrl}/ws/private/?token=${token}`);
 
  privateWs.value.onopen = () => {
  console.log('Messaging.vue: Private WS connected');
@@ -1862,7 +1863,8 @@ function setupWebSockets() {
 
 function setupNotificationWebSocket(token) {
  console.log('🔔 Setting up notification WebSocket...');
- notificationWs.value = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${token}`);
+ const wsBaseUrl = import.meta.env.VITE_API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+ notificationWs.value = new WebSocket(`${wsBaseUrl}/ws/notifications/?token=${token}`);
 
  notificationWs.value.onopen = () => {
  console.log('🔔 Messaging.vue: Notification WS connected successfully!');
@@ -1936,7 +1938,8 @@ function setupGroupWebSocket(conv) {
  }
 
  console.log('Messaging.vue: Setting up group WebSocket for group:', conv.group.id);
- groupWs.value = new WebSocket(`ws://localhost:8000/ws/group/${conv.group.id}/?token=${token}`);
+ const wsBaseUrl = import.meta.env.VITE_API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+ groupWs.value = new WebSocket(`${wsBaseUrl}/ws/group/${conv.group.id}/?token=${token}`);
 
  groupWs.value.onopen = () => {
  console.log('Messaging.vue: Group WS connected');

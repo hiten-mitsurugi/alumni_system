@@ -35,7 +35,9 @@
           'absolute -top-2 -right-2 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-xs font-bold text-white',
           'transform transition-all duration-200',
           isActive ? 'scale-110' : 'scale-100',
-          getBadgeColor()
+          getBadgeColor(),
+          // Hide survey badge on mobile screens
+          to.includes('survey') ? 'hidden md:flex' : ''
         ]"
       >
         {{ badge.length > 2 ? '99+' : badge }}

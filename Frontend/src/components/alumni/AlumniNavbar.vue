@@ -99,7 +99,8 @@
         <!-- Notification Dropdown -->
         <div v-if="notificationOpen"
              :class="[
-               'absolute right-0 z-50 w-96 mt-2 rounded-lg border max-h-96 overflow-y-auto',
+               'absolute right-0 z-50 mt-2 rounded-lg border max-h-96 overflow-y-auto',
+               'w-96 max-w-[calc(100vw-2rem)]',
                themeStore.isDarkMode
                  ? 'bg-gray-800 border-gray-600 shadow-xl shadow-gray-900/50'
                  : 'bg-white border-gray-200 shadow-lg shadow-gray-300/20'

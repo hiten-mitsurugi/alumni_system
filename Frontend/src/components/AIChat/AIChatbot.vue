@@ -1,12 +1,23 @@
 <template>
-  <div class="fixed bottom-4 right-4 z-50">
+  <div 
+    ref="chatbotContainer"
+    class="fixed z-50"
+    :style="{ 
+      bottom: position.y + 'px', 
+      right: position.x + 'px',
+      touchAction: 'none'
+    }"
+  >
     <!-- Chat Toggle Button -->
     <button
       v-if="!isOpen"
       @click="toggleChat"
+      @mousedown="startDrag"
+      @touchstart="startDrag"
       :class="[
-        'p-4 rounded-full shadow-lg transition-all hover:scale-110',
-        themeStore.isDarkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-500 hover:bg-orange-600'
+        'p-4 rounded-full shadow-lg transition-all hover:scale-110 cursor-move',
+        themeStore.isDarkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-500 hover:bg-orange-600',
+        isDragging && 'scale-110'
       ]"
     >
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,7 +35,11 @@
         ]"
       >
         <!-- Header -->
-        <div class="flex items-center justify-between p-4 border-b bg-orange-600 rounded-t-lg">
+        <div 
+          class="flex items-center justify-between p-4 border-b bg-orange-600 rounded-t-lg cursor-move"
+          @mousedown="startDrag"
+          @touchstart="startDrag"
+        >
           <div class="flex items-center space-x-3">
             <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center">
               <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import axios from 'axios'
 
@@ -139,6 +154,12 @@ const inputMessage = ref('')
 const isTyping = ref(false)
 const messagesContainer = ref(null)
 const sessionId = ref('')
+const chatbotContainer = ref(null)
+
+// Dragging state
+const isDragging = ref(false)
+const position = ref({ x: 16, y: 80 }) // Default position (right: 16px, bottom: 80px on mobile)
+const dragStart = ref({ x: 0, y: 0 })
 
 // N8N Webhook Configuration
 const N8N_WEBHOOK_URL = 'https://romantik123.app.n8n.cloud/webhook/87db0748-958e-4a67-9ac2-db37f1ff4d71/chat'
@@ -153,7 +174,85 @@ onMounted(() => {
     text: 'Hello! Welcome to ATENDA. How may I help you today?',
     timestamp: new Date()
   })
+
+  // Set initial position based on screen size
+  const isMobile = window.innerWidth < 768
+  position.value = { x: 16, y: isMobile ? 80 : 16 }
+
+  // Add event listeners for dragging
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('touchmove', onDrag, { passive: false })
+  document.addEventListener('touchend', stopDrag)
 })
+
+onUnmounted(() => {
+  // Remove event listeners
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchend', stopDrag)
+})
+
+const startDrag = (e) => {
+  // Prevent opening chat when starting drag
+  e.stopPropagation()
+  
+  isDragging.value = true
+  
+  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY
+  
+  // Store the starting position
+  dragStart.value = {
+    x: clientX,
+    y: clientY,
+    initialX: position.value.x,
+    initialY: position.value.y
+  }
+}
+
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  
+  e.preventDefault()
+  
+  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY
+  
+  // Calculate new position (inverted X because we're using right positioning, normal Y for bottom)
+  const deltaX = dragStart.value.x - clientX
+  const deltaY = dragStart.value.y - clientY
+  
+  let newX = dragStart.value.initialX + deltaX
+  let newY = dragStart.value.initialY + deltaY
+  
+  // Get viewport dimensions
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  const chatbotWidth = chatbotContainer.value?.offsetWidth || 60
+  const chatbotHeight = chatbotContainer.value?.offsetHeight || 60
+  
+  // Constrain position within viewport
+  newX = Math.max(0, Math.min(newX, viewportWidth - chatbotWidth))
+  newY = Math.max(0, Math.min(newY, viewportHeight - chatbotHeight))
+  
+  position.value = { x: newX, y: newY }
+}
+
+const stopDrag = (e) => {
+  if (!isDragging.value) return
+  
+  const wasJustClick = Math.abs(position.value.x - dragStart.value.initialX) < 5 && 
+                        Math.abs(position.value.y - dragStart.value.initialY) < 5
+  
+  isDragging.value = false
+  
+  // If it was just a click (not a drag), toggle chat
+  if (wasJustClick && !isOpen.value) {
+    toggleChat()
+  }
+}
 
 const toggleChat = () => {
   isOpen.value = !isOpen.value
