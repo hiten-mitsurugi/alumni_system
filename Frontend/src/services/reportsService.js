@@ -16,9 +16,9 @@ export const reportsService = {
     console.log('👤 Current user:', authStore.user?.username, 'Type:', authStore.user?.user_type)
     
     try {
-      // Note: posts_app.urls defines routes like 'posts/reports/' and this file is included under '/api/posts/',
-      // so the full path is '/api/posts/posts/reports/' (yes, double 'posts').
-      const response = await axios.get(`${BASE_URL}/api/posts/posts/reports/`, {
+      // posts_app.urls defines routes like 'reports/' and this file is included under '/api/posts/',
+      // so the full path is '/api/posts/reports/'.
+      const response = await axios.get(`${BASE_URL}/api/posts/reports/`, {
         headers: { Authorization: `Bearer ${authStore.token}` },
         params
       })
@@ -40,7 +40,7 @@ export const reportsService = {
   async takeAction(reportId, data) {
     const authStore = useAuthStore()
     
-    const response = await axios.post(`${BASE_URL}/api/posts/posts/reports/${reportId}/action/`, data, {
+    const response = await axios.post(`${BASE_URL}/api/posts/reports/${reportId}/action/`, data, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     })
     
@@ -56,8 +56,8 @@ export const reportsService = {
   async reportPost(postId, data) {
     const authStore = useAuthStore()
     
-    // Reporting a post route is defined as 'posts/<int:post_id>/report/' inside posts_app, so full path is '/api/posts/posts/<id>/report/'
-    const response = await axios.post(`${BASE_URL}/api/posts/posts/${postId}/report/`, data, {
+    // Reporting a post route is defined as '<int:post_id>/report/' inside posts_app, so full path is '/api/posts/<id>/report/'
+    const response = await axios.post(`${BASE_URL}/api/posts/${postId}/report/`, data, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     })
     

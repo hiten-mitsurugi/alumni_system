@@ -9,10 +9,12 @@ import {
   ChevronRight,
   Send,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Eye
 } from 'lucide-vue-next'
 import surveyService from '@/services/surveyService'
 import { useThemeStore } from '@/stores/theme'
+import ViewResponsesModal from '@/components/survey/ViewResponsesModal.vue'
 
 // Theme store
 const themeStore = useThemeStore()
@@ -30,6 +32,8 @@ const showResults = ref(false)
 const showCardGrid = ref(true) // Toggle between card grid and form view
 const errorMessage = ref(null) // Error message for login required or already completed
 const errorType = ref(null) // Type of error: 'login_required' or 'already_completed'
+const showResponseModal = ref(false) // Modal state for viewing responses
+const selectedFormForView = ref(null) // Form data for modal
 
 // =============================
 // Conditional Logic Helpers
@@ -444,6 +448,21 @@ const closeForm = () => {
   currentFormIndex.value = null
   currentCategoryIndex.value = null
   showCardGrid.value = true
+}
+
+const openResponsesModal = (form, event) => {
+  event.stopPropagation() // Prevent card click
+  selectedFormForView.value = {
+    id: form.template?.id,
+    name: form.template?.name || 'Untitled Form',
+    categories: form.categories || [] // Pass categories
+  }
+  showResponseModal.value = true
+}
+
+const closeResponsesModal = () => {
+  showResponseModal.value = false
+  selectedFormForView.value = null
 }
 
 const goToCategory = (index) => {
@@ -928,19 +947,61 @@ watch(
           
           <!-- Card Footer -->
           <div :class="[
-            'px-4 py-3 border-t flex items-center justify-between',
+            'px-4 py-3 border-t',
             themeStore.isDarkMode ? 'bg-gray-750 border-gray-700' : 'bg-gray-50 border-gray-200'
           ]">
-            <span :class="[
-              'text-sm font-medium',
-              themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
-            ]">
-              Click to {{ getFormStatus(formIndex) === 'not-started' ? 'start' : 'continue' }}
-            </span>
-            <ChevronRight :class="[
-              'w-4 h-4',
-              themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
-            ]" />
+            <!-- View Responses Button (for completed forms) -->
+            <div 
+              v-if="(form?.template?.branching_complete || form?.template?.is_complete)"
+              class="flex items-center justify-between gap-2"
+            >
+              <button
+                @click="(e) => openResponsesModal(form, e)"
+                :class="[
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium',
+                  themeStore.isDarkMode 
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                    : 'bg-orange-600 hover:bg-orange-700 text-white'
+                ]"
+              >
+                <Eye class="w-4 h-4" />
+                View My Responses
+              </button>
+              
+              <!-- Show continue option if multiple responses allowed -->
+              <div 
+                v-if="form?.template?.allow_multiple_responses"
+                class="flex items-center gap-2"
+              >
+                <span :class="[
+                  'text-sm font-medium',
+                  themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                ]">
+                  Click to continue
+                </span>
+                <ChevronRight :class="[
+                  'w-4 h-4',
+                  themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                ]" />
+              </div>
+            </div>
+            
+            <!-- Default Start/Continue Button (for non-completed forms) -->
+            <div 
+              v-else
+              class="flex items-center justify-between"
+            >
+              <span :class="[
+                'text-sm font-medium',
+                themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
+              ]">
+                Click to {{ getFormStatus(formIndex) === 'not-started' ? 'start' : 'continue' }}
+              </span>
+              <ChevronRight :class="[
+                'w-4 h-4',
+                themeStore.isDarkMode ? 'text-blue-400' : 'text-blue-600'
+              ]" />
+            </div>
           </div>
         </div>
         </div>
@@ -1241,5 +1302,14 @@ watch(
         </p>
       </div>
     </div>
+    
+    <!-- View Responses Modal -->
+    <ViewResponsesModal
+      :show="showResponseModal"
+      :form-id="selectedFormForView?.id"
+      :form-name="selectedFormForView?.name"
+      :form-categories="selectedFormForView?.categories"
+      @close="closeResponsesModal"
+    />
   </div>
 </template>

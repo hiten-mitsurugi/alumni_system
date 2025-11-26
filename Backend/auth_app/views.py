@@ -75,6 +75,9 @@ class ApproveUserView(APIView):
                             cache.delete(f"{cache_key}{user.last_name.lower()}")
             
             # Send approval confirmation email
+            email_sent = False
+            email_error_msg = None
+            
             try:
                 subject, html_content, text_content = get_approval_email_template(user)
                 
@@ -90,27 +93,15 @@ class ApproveUserView(APIView):
                 
                 # Log successful email sending
                 logger.info(f"Approval email sent successfully to {user.email} (User ID: {user.id})")
-                
-                # Send WebSocket notification to update admin interfaces
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                    'admin_group',
-                    {
-                        'type': 'notification',
-                        'message': f'User {user.first_name} {user.last_name} has been approved.',
-                    }
-                )
-                
-                return Response({
-                    'message': 'User approved successfully and email notification sent',
-                    'email_sent': True
-                }, status=status.HTTP_200_OK)
+                email_sent = True
                 
             except Exception as email_error:
                 # User is still approved even if email fails
                 logger.error(f"Failed to send approval email to {user.email}: {str(email_error)}")
-                
-                # Send WebSocket notification even if email failed
+                email_error_msg = str(email_error)
+            
+            # Send WebSocket notification to update admin interfaces (regardless of email status)
+            try:
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
                     'admin_group',
@@ -119,11 +110,20 @@ class ApproveUserView(APIView):
                         'message': f'User {user.first_name} {user.last_name} has been approved.',
                     }
                 )
-                
+            except Exception as ws_error:
+                logger.error(f"WebSocket notification failed: {str(ws_error)}")
+            
+            # Return response based on email status
+            if email_sent:
+                return Response({
+                    'message': 'User approved successfully and email notification sent',
+                    'email_sent': True
+                }, status=status.HTTP_200_OK)
+            else:
                 return Response({
                     'message': 'User approved successfully but email notification failed',
                     'email_sent': False,
-                    'email_error': str(email_error)
+                    'email_error': email_error_msg
                 }, status=status.HTTP_200_OK)
                 
         except CustomUser.DoesNotExist:

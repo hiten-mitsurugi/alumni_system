@@ -266,16 +266,17 @@ async function loadConversations() {
   try {
     loading.value = true
     const token = authStore.token
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
     // Fetch private conversations and group chats in parallel
     const [privateRes, groupRes] = await Promise.all([
-      fetch('http://localhost:8000/api/message/conversations/', {
+      fetch(`${BASE_URL}/api/message/conversations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       }),
-      fetch('http://localhost:8000/api/message/group/', {
+      fetch(`${BASE_URL}/api/message/group/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -348,7 +349,8 @@ async function forwardMessage() {
     console.log('ForwardModal: Prepared destinations:', destinations)
     
     const token = authStore.token
-    const response = await fetch('http://localhost:8000/api/message/forward/', {
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    const response = await fetch(`${BASE_URL}/api/message/forward/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

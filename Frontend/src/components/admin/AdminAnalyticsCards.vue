@@ -204,7 +204,7 @@
           :class="['mt-2 text-xs hover:underline disabled:opacity-50', themeStore.isAdminDark() ? 'text-blue-400' : 'text-blue-600']"
         >
           <span v-if="loading">Refreshing...</span>
-          <span v-else">Refresh Now</span>
+          <span v-else>Refresh Now</span>
         </button>
       </div>
     </div>

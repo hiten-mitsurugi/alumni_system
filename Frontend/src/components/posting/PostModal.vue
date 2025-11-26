@@ -171,7 +171,7 @@
 
           <div class="flex items-center space-x-3">
             <img
-              :src="getProfilePictureUrl(userProfilePicture) || '/default-avatar.png'"
+              :src="getProfilePictureUrl(userProfilePicture)"
               alt="Your avatar"
               class="flex-shrink-0 object-cover w-8 h-8 rounded-full"
             />
@@ -216,7 +216,12 @@
     </div>
 
     <!-- Desktop Layout -->
-    <div class="hidden h-full max-w-6xl mx-auto overflow-hidden bg-white rounded-lg shadow-2xl lg:flex">
+    <div 
+      :class="[
+        'hidden h-full mx-auto overflow-hidden bg-white rounded-lg shadow-2xl lg:flex',
+        hasMedia ? 'max-w-6xl' : 'max-w-3xl w-full'
+      ]"
+    >
       <!-- Desktop Media Section -->
       <div
         v-if="hasMedia"
@@ -278,7 +283,12 @@
       </div>
 
       <!-- Desktop Content Section -->
-      <div :class="hasMedia ? 'basis-1/3' : 'flex-1'" class="flex flex-col h-full bg-white border-l border-gray-200">
+      <div 
+        :class="[
+          'flex flex-col h-full bg-white border-l border-gray-200',
+          hasMedia ? 'basis-1/3 min-w-[400px]' : 'w-full'
+        ]"
+      >
         <!-- Desktop Header -->
         <div class="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 class="text-lg font-semibold text-gray-900 truncate">
@@ -389,7 +399,7 @@
 
             <div class="flex items-end space-x-3">
               <img
-                :src="userProfilePicture"
+                :src="getProfilePictureUrl(userProfilePicture)"
                 alt="Your avatar"
                 class="flex-shrink-0 object-cover w-10 h-10 rounded-full"
               />

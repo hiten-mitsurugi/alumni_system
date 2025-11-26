@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Override backend for development
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./Backend:/app  # Mount source code for hot reload
+      - media_files:/app/media
+      - static_files:/app/static
+    environment:
+      - DEBUG=True  # Enable debug mode
+    command: >
+      sh -c "(python manage.py migrate --fake-initial --noinput || true) &&
+             python manage.py collectstatic --noinput &&
+             daphne -b 0.0.0.0 -p 8000 alumni_system.asgi:application"
+
+  # Override celery for development
+  celery:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./Backend:/app
+      - media_files:/app/media
+    environment:
+      - DEBUG=True
+    command: >
+      sh -c "echo 'Waiting for backend to complete migrations...' && sleep 15 &&
+             celery -A alumni_system worker -l info"
+
+  # Override frontend for development (Vite dev server)
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./Frontend:/app  # Mount source code for hot reload
+      - /app/node_modules  # Preserve node_modules
+    ports:
+      - "5173:5173"  # Vite dev server port
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000/api
+      - VITE_WS_URL=ws://localhost:8000/ws/notifications/
+    command: npm run dev
+
+volumes:
+  media_files:
+  static_files:

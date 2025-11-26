@@ -36,7 +36,7 @@ class AdminService {
 
   async approvePost(postId) {
     try {
-      const response = await apiClient.post(`/posts/posts/${postId}/approve/`)
+      const response = await apiClient.post(`/posts/${postId}/approve/`)
       return response.data
     } catch (error) {
       console.error('Failed to approve post:', error)
@@ -44,19 +44,19 @@ class AdminService {
     }
   }
 
-  async rejectPost(postId) {
+  async declinePost(postId) {
     try {
-      const response = await apiClient.patch(`/posts/posts/${postId}/`, { status: 'declined' })
+      const response = await apiClient.patch(`/posts/${postId}/`, { status: 'declined' })
       return response.data
     } catch (error) {
-      console.error('Failed to reject post:', error)
+      console.error('Failed to decline post:', error)
       throw this.handleError(error)
     }
   }
 
   async deletePost(postId) {
     try {
-      const response = await apiClient.delete(`/posts/posts/${postId}/`)
+      const response = await apiClient.delete(`/posts/${postId}/`)
       return response.data
     } catch (error) {
       console.error('Failed to delete post:', error)
@@ -122,7 +122,7 @@ class AdminService {
   // Reports management endpoints
   async getPostReports(status = 'pending') {
     try {
-      const response = await apiClient.get('/posts/posts/reports/')
+      const response = await apiClient.get('/posts/reports/')
       const data = response.data
       return Array.isArray(data) ? data : (data.results || data.items || [])
     } catch (error) {

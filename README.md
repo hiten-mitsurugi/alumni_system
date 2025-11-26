@@ -70,10 +70,12 @@ npm run dev
 npm run dev -- --host 0.0.0.0
 
 python manage.py create_admin_accounts
-python manage.py populate_from_tracer --tracer-file="../tracer.txt"
+Super Admin
 
+Email: superadmin@alumni.system
+Password: Admin@123
+Admin
 
-or you can directly run 
-
-if you are still starting from scratch: setup_and_run_full.bat
-if dependencies and directly run the files: run_servers_only.bat
+Email: admin@alumni.system
+Password: Admin@123
+You can change these by passing 

@@ -304,7 +304,8 @@ const filteredAvailableUsers = computed(() => {
 const getProfilePictureUrl = (user) => {
   if (!user.profile_picture) return null
   if (user.profile_picture.startsWith('http')) return user.profile_picture
-  return `http://localhost:8000${user.profile_picture}`
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+  return `${BASE_URL}${user.profile_picture}`
 }
 
 // Search function - using the same pattern as the main messaging component

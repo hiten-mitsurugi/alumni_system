@@ -998,18 +998,14 @@ const saveTraining = async (trainingData) => {
     let response
     if (selectedTraining.value) {
       // Update existing training
-      response = await api.put(`/auth/trainings/${selectedTraining.value.id}/`, trainingData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      response = await api.put(`/auth/trainings/${selectedTraining.value.id}/`, trainingData)
       const index = trainings.value.findIndex(t => t.id === selectedTraining.value.id)
       if (index !== -1) {
         trainings.value[index] = response.data
       }
     } else {
       // Create new training
-      response = await api.post('/auth/trainings/', trainingData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      response = await api.post('/auth/trainings/', trainingData)
       trainings.value.push(response.data)
     }
     
