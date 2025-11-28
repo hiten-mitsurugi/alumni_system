@@ -233,16 +233,61 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# === CORS Settings ===
+# For development, allow specific origins. For production, set via environment variable.
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5173,http://127.0.0.1:5173,http://192.168.1.11:5173,http://localhost:8080',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
+CORS_ALLOW_ALL_ORIGINS = False  # Changed to False for security
+CORS_ALLOW_CREDENTIALS = True  # Allow credentials (cookies, authorization headers)
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# === Security Settings ===
+# Cookie settings for cross-origin requests (if using session auth)
+SESSION_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
+SESSION_COOKIE_SECURE = not DEBUG  # Require HTTPS in production
+CSRF_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
+# Security headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# HTTPS settings (enable in production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
 # === Other Settings ===
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# === CORS Settings ===
-# CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:8000,http://localhost:8080,http://localhost:5173', cast=lambda v: [s.strip() for s in v.split(',')])
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for development
 # === Axes (Brute-force protection) ===
 AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 5

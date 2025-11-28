@@ -53,7 +53,7 @@ services:
     environment:
       - DEBUG=${DEBUG:-False}
       - SECRET_KEY=${SECRET_KEY}
-      - DB_NAME=${POSTGRES_DB:-thesis_db}
+      - DB_NAME=${POSTGRES_DB:-atenda}
       - DB_USER=${POSTGRES_USER:-postgres}
       - DB_PASSWORD=${POSTGRES_PASSWORD:-1031}
       - DB_HOST=postgres
@@ -92,7 +92,7 @@ services:
     environment:
       - DEBUG=${DEBUG:-False}
       - SECRET_KEY=${SECRET_KEY}
-      - DB_NAME=${POSTGRES_DB:-thesis_db}
+      - DB_NAME=${POSTGRES_DB:-atenda}
       - DB_USER=${POSTGRES_USER:-postgres}
       - DB_PASSWORD=${POSTGRES_PASSWORD:-1031}
       - DB_HOST=postgres

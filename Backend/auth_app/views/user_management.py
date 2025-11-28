@@ -261,10 +261,14 @@ class UserCreateView(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
 
     def post(self, request):
-        serializer = UserCreateSerializer(data=request.data)
+        # Pass request in context so serializer.validate() can inspect request.user
+        serializer = UserCreateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.save()
-            return Response(UserDetailSerializer(user).data, status=status.HTTP_201_CREATED)
+            return Response(UserDetailSerializer(user, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+        # Log validation errors to help debugging when requests come from other devices
+        logger.warning(f"UserCreate validation errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -78,4 +78,3 @@ Admin
 
 Email: admin@alumni.system
 Password: Admin@123
-You can change these by passing 
