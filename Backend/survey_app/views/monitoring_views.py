@@ -205,6 +205,7 @@ class NotifyNonRespondentsView(APIView):
     
     Send reminder notifications to alumni who haven't responded to a survey.
     Supports bulk notifications by filters or specific recipient IDs.
+    Can send both in-app notifications and email reminders.
     
     Request Body:
         - recipient_ids: Optional list of specific user IDs to notify
@@ -213,17 +214,23 @@ class NotifyNonRespondentsView(APIView):
         - message: Optional custom message (default includes survey name)
         - link_route: Optional route (default: "/alumni/survey")
         - link_params: Optional dict (default: {surveyId: <id>})
+        - send_email: Optional boolean (default: true) - whether to send email reminders
     
     Returns:
         - notified: Count of users notified
         - skipped: Count of users skipped (errors)
         - total_candidates: Total non-respondents matching criteria
+        - email_status: Email sending status (if enabled)
     """
     permission_classes = [IsSurveyAdmin]
     
     def post(self, request, survey_id):
-        """Send notifications to non-respondents"""
+        """Send notifications and emails to non-respondents"""
         from notifications_app.utils import create_bulk_notifications
+        from notifications_app.tasks import send_survey_reminder_emails_bulk
+        from django.contrib.auth import get_user_model
+        
+        User = get_user_model()
         
         try:
             survey = SurveyTemplate.objects.get(id=survey_id)
@@ -240,6 +247,7 @@ class NotifyNonRespondentsView(APIView):
         message = request.data.get('message')
         link_route = request.data.get('link_route', '/alumni/survey')
         link_params = request.data.get('link_params', {'surveyId': survey_id})
+        send_email = request.data.get('send_email', True)  # Default to True
         
         # Default message if not provided
         if not message:
@@ -248,9 +256,6 @@ class NotifyNonRespondentsView(APIView):
         # Get non-respondents based on filters or specific IDs
         if recipient_ids:
             # Filter by specific IDs
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            
             non_respondents = User.objects.filter(
                 id__in=recipient_ids,
                 user_type=3,
@@ -272,10 +277,11 @@ class NotifyNonRespondentsView(APIView):
                 'message': 'No non-respondents found matching the criteria',
                 'notified': 0,
                 'skipped': 0,
-                'total_candidates': 0
+                'total_candidates': 0,
+                'email_status': 'skipped - no recipients'
             })
         
-        # Send bulk notifications
+        # Send bulk in-app notifications
         created_notifications = create_bulk_notifications(
             users=non_respondents,
             notification_type='survey',
@@ -293,11 +299,87 @@ class NotifyNonRespondentsView(APIView):
         notified_count = len(created_notifications)
         skipped_count = total_candidates - notified_count
         
+        # Send email reminders if enabled
+        email_status = 'disabled'
+        if send_email:
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            try:
+                # Build survey link
+                survey_link = request.build_absolute_uri(
+                    f"{link_route}?surveyId={survey_id}"
+                )
+                
+                # Get user IDs for email task
+                user_ids = list(non_respondents.values_list('id', flat=True))
+                
+                # Format end date for email (no longer used but kept for compatibility)
+                end_date = None
+                
+                # Try async with Celery, fallback to sync if unavailable
+                try:
+                    send_survey_reminder_emails_bulk.delay(
+                        user_ids=user_ids,
+                        survey_name=survey.name,
+                        survey_link=survey_link,
+                        custom_message=message,
+                        end_date=end_date
+                    )
+                    email_status = f'queued for {len(user_ids)} recipients'
+                    logger.info(f"Queued {len(user_ids)} survey reminder emails")
+                except Exception as celery_error:
+                    # Celery not available, send synchronously
+                    logger.info(f"Celery unavailable, sending emails synchronously: {celery_error}")
+                    from notifications_app.tasks import send_survey_reminder_email_sync
+                    success_count = 0
+                    failed_count = 0
+                    error_messages = []
+                    
+                    import time
+                    for idx, user_id in enumerate(user_ids):
+                        try:
+                            result = send_survey_reminder_email_sync(
+                                user_id=user_id,
+                                survey_name=survey.name,
+                                survey_link=survey_link,
+                                custom_message=message,
+                                end_date=end_date
+                            )
+                            if result['status'] == 'success':
+                                success_count += 1
+                                logger.info(f"Email sent to user {user_id}")
+                            else:
+                                failed_count += 1
+                                error_messages.append(f"User {user_id}: {result.get('message', 'Unknown error')}")
+                        except Exception as email_error:
+                            failed_count += 1
+                            error_msg = str(email_error)
+                            error_messages.append(f"User {user_id}: {error_msg}")
+                            logger.error(f"Failed to send email to user {user_id}: {error_msg}")
+                        
+                        # Small delay between emails to avoid connection issues
+                        if idx < len(user_ids) - 1:
+                            time.sleep(1)
+                    
+                    if success_count > 0:
+                        email_status = f'sent to {success_count} users'
+                        if failed_count > 0:
+                            email_status += f' ({failed_count} failed)'
+                    else:
+                        email_status = f'failed: {error_messages[0] if error_messages else "Unknown error"}'
+                
+            except Exception as e:
+                error_msg = str(e)
+                logger.error(f"Email sending failed: {error_msg}")
+                email_status = f'error: {error_msg}'
+        
         return Response({
             'message': f'Successfully sent {notified_count} notifications',
             'notified': notified_count,
             'skipped': skipped_count,
             'total_candidates': total_candidates,
+            'email_status': email_status,
             'survey': {
                 'id': survey.id,
                 'name': survey.name
@@ -310,6 +392,7 @@ class NotifySingleNonRespondentView(APIView):
     POST /api/surveys/{survey_id}/notify-user/
     
     Send a reminder notification to a single non-respondent.
+    Can send both in-app notification and email reminder.
     
     Request Body:
         - user_id: Required user ID
@@ -317,13 +400,15 @@ class NotifySingleNonRespondentView(APIView):
         - message: Optional custom message (default includes survey name)
         - link_route: Optional route (default: "/alumni/survey")
         - link_params: Optional dict (default: {surveyId: <id>})
+        - send_email: Optional boolean (default: true) - whether to send email reminder
     """
     permission_classes = [IsSurveyAdmin]
     
     def post(self, request, survey_id):
-        """Send notification to a single user"""
+        """Send notification and email to a single user"""
         from django.contrib.auth import get_user_model
         from notifications_app.utils import create_notification
+        from notifications_app.tasks import send_survey_reminder_email
         
         User = get_user_model()
         
@@ -363,11 +448,12 @@ class NotifySingleNonRespondentView(APIView):
         message = request.data.get('message')
         link_route = request.data.get('link_route', '/alumni/survey')
         link_params = request.data.get('link_params', {'surveyId': survey_id})
+        send_email = request.data.get('send_email', True)  # Default to True
         
         if not message:
             message = f"Reminder: Please complete the '{survey.name}' survey. Your response is important to us!"
         
-        # Send notification
+        # Send in-app notification
         try:
             notification = create_notification(
                 user=user,
@@ -383,15 +469,56 @@ class NotifySingleNonRespondentView(APIView):
                 }
             )
             
+            # Send email reminder if enabled
+            email_status = 'disabled'
+            if send_email:
+                try:
+                    # Build survey link
+                    survey_link = request.build_absolute_uri(
+                        f"{link_route}?surveyId={survey_id}"
+                    )
+                    
+                    # Format end date for email
+                    end_date = None
+                    if survey.end_at:
+                        end_date = survey.end_at.strftime('%B %d, %Y at %I:%M %p')
+                    
+                    # Try async with Celery, fallback to sync if unavailable
+                    try:
+                        send_survey_reminder_email.delay(
+                            user_id=user.id,
+                            survey_name=survey.name,
+                            survey_link=survey_link,
+                            custom_message=message,
+                            end_date=end_date
+                        )
+                        email_status = 'queued'
+                    except Exception:
+                        # Celery not available, send synchronously
+                        from notifications_app.tasks import send_survey_reminder_email_sync
+                        result = send_survey_reminder_email_sync(
+                            user_id=user.id,
+                            survey_name=survey.name,
+                            survey_link=survey_link,
+                            custom_message=message,
+                            end_date=end_date
+                        )
+                        email_status = 'sent' if result['status'] == 'success' else result['status']
+                    
+                except Exception as e:
+                    email_status = f'error: {str(e)}'
+            
             return Response({
                 'message': f'Notification sent to {user.get_full_name() or user.email}',
                 'notification_id': notification.id,
+                'email_status': email_status,
                 'user': {
                     'id': user.id,
                     'name': user.get_full_name() or user.email,
                     'email': user.email
                 }
             })
+            
         except Exception as e:
             return Response(
                 {'error': f'Failed to send notification: {str(e)}'},

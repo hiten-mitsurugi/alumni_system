@@ -72,6 +72,28 @@
             Clear
           </button>
         </div>
+
+        <!-- Email Option -->
+        <div class="mt-3 flex items-center gap-2">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              v-model="sendEmail"
+              type="checkbox"
+              class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+            />
+            <span class="text-sm text-gray-700">
+              📧 Send email reminders (in addition to in-app notifications)
+            </span>
+          </label>
+          <div class="relative group">
+            <svg class="w-4 h-4 text-gray-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="absolute hidden group-hover:block z-10 w-64 p-2 mt-1 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-24">
+              When enabled, users will receive both an in-app notification and an email reminder
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Table -->
@@ -151,6 +173,7 @@ const filters = ref({
   program: '',
   year_graduated: ''
 });
+const sendEmail = ref(true); // Default to true - send both notification and email
 
 // Computed
 const availablePrograms = computed(() => {
@@ -212,19 +235,28 @@ const clearFilters = () => {
 
 const remindAll = async () => {
   const count = filteredNonRespondents.value.length;
-  if (!confirm(`Send survey reminders to ${count} non-respondent${count > 1 ? 's' : ''}?`)) return;
+  const reminderType = sendEmail.value ? 'in-app notifications and emails' : 'in-app notifications only';
+  if (!confirm(`Send survey reminders (${reminderType}) to ${count} non-respondent${count > 1 ? 's' : ''}?`)) return;
 
   sending.value = true;
 
   try {
-    const payload = { filters: {} };
+    const payload = { 
+      filters: {},
+      send_email: sendEmail.value // Include email preference
+    };
     if (filters.value.program) payload.filters.program = filters.value.program;
     if (filters.value.year_graduated) payload.filters.year_graduated = filters.value.year_graduated;
 
     const response = await api.post(`/survey/${props.form.id}/notify-non-respondents/`, payload);
-    const { notified, skipped, message } = response.data;
+    const { notified, skipped, message, email_status } = response.data;
 
-    alert(`✅ ${message}\n\nNotified: ${notified}\nSkipped: ${skipped}`);
+    let alertMessage = `✅ ${message}\n\nNotified: ${notified}\nSkipped: ${skipped}`;
+    if (email_status) {
+      alertMessage += `\nEmail Status: ${email_status}`;
+    }
+
+    alert(alertMessage);
     await fetchNonRespondents();
   } catch (err) {
     console.error('Failed to send reminders:', err);
