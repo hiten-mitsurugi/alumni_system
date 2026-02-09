@@ -66,10 +66,10 @@
                       </select>
                     </div>
 
-                    <!-- Sex Filter -->
+                    <!-- Gender Filter -->
                     <div>
-                      <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Sex</label>
-                      <select v-model="internalFilters.sex" @change="applyFilters"
+                      <label :class="['text-sm font-medium mb-1 block', themeStore.isAdminDark() ? 'text-gray-300' : 'text-gray-700']">Gender</label>
+                      <select v-model="internalFilters.gender" @change="applyFilters"
                         :class="['w-full text-sm rounded-md py-2 px-3 focus:ring-orange-500 focus:border-orange-500', 
                           themeStore.isAdminDark() 
                             ? 'border-gray-600 bg-gray-700 text-white' 
@@ -77,6 +77,10 @@
                         <option value="">All</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
+                        <option value="non_binary">Non-binary</option>
+                        <option value="transgender">Transgender</option>
+                        <option value="prefer_not_to_say">Prefer not to say</option>
+                        <option value="other_specify">Other</option>
                       </select>
                     </div>
 
@@ -202,7 +206,7 @@
               <th class="p-4 w-20 text-center">Profile</th>
               <th class="p-4 w-32 text-left">First Name</th>
               <th class="p-4 w-32 text-left">Last Name</th>
-              <th class="p-4 w-20 text-center">Sex</th>
+              <th class="p-4 w-20 text-center">Gender</th>
               <th class="p-4 w-40 text-left">Program</th>
               <th class="p-4 w-24 text-center">Year</th>
               <th class="p-4 w-32 text-left">Employment</th>
@@ -231,7 +235,7 @@
               </td>
               <td :class="['p-4 w-32 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.first_name }}</td>
               <td :class="['p-4 w-32 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.last_name }}</td>
-              <td :class="['p-4 w-20 text-center', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.sex || 'N/A' }}</td>
+              <td :class="['p-4 w-20 text-center', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ formatGender(user.gender) }}</td>
               <td :class="['p-4 w-40 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.program }}</td>
               <td :class="['p-4 w-24 text-center', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ user.year_graduated }}</td>
               <td :class="['p-4 w-32 text-left', themeStore.isAdminDark() ? 'text-white' : 'text-gray-900']">{{ formatEmployment(user.employment_status) }}</td>
@@ -333,6 +337,7 @@ const internalFilters = ref({
   year_graduated: '',
   program: '',
   status: '',
+  gender: ''
 });
 const programs = computed(() => {
   // Use `allUsers` when provided (full dataset), otherwise fall back to current users prop
@@ -490,12 +495,25 @@ const handleStatusUpdate = (data) => {
   }
 };
 
-// Utility function
+// Utility functions
 function formatEmployment(status) {
   if (!status) return 'N/A';
   return status
     .replace(/_/g, ' ')
     .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function formatGender(gender) {
+  if (!gender) return 'N/A';
+  const genderMap = {
+    'male': 'Male',
+    'female': 'Female',
+    'non_binary': 'Non-binary',
+    'transgender': 'Transgender',
+    'prefer_not_to_say': 'Prefer not to say',
+    'other_specify': 'Other'
+  };
+  return genderMap[gender] || gender;
 }
 
 // Lifecycle hooks
