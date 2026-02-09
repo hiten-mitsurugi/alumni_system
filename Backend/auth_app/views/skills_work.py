@@ -115,17 +115,16 @@ class AchievementListCreateView(ListCreateAPIView):
     """List and create achievements for authenticated user or specific user"""
     permission_classes = [IsAuthenticated]
     
+    def post(self, request, *args, **kwargs):
+        logger.info(f"AchievementListCreateView.post() called for user {request.user.id}")
+        logger.info(f"Request path: {request.path}")
+        logger.info(f"Request method: {request.method}")
+        return super().post(request, *args, **kwargs)
+    
     def get_serializer_class(self):
         # Import here to avoid circular imports
-        from auth_app.models import Achievement
-        from rest_framework import serializers
-        
-        class AchievementSerializer(serializers.ModelSerializer):
-            class Meta:
-                model = Achievement
-                fields = '__all__'
-                read_only_fields = ['user', 'created_at', 'updated_at']
-                
+        from auth_app.serializers import AchievementSerializer
+        logger.info(f"AchievementListCreateView.get_serializer_class() called - returning AchievementSerializer")
         return AchievementSerializer
     
     def get_queryset(self):
@@ -138,7 +137,24 @@ class AchievementListCreateView(ListCreateAPIView):
         return Achievement.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        logger.info(f"DEBUG: Creating achievement for user {self.request.user.id}")
+        logger.info(f"DEBUG: Request.POST: {dict(self.request.POST)}")
+        logger.info(f"DEBUG: Request.FILES: {dict(self.request.FILES)}")
+        logger.info(f"DEBUG: Request.data: {self.request.data}")
+        logger.info(f"DEBUG: Request content_type: {self.request.content_type}")
+        logger.info(f"DEBUG: Serializer validated_data: {serializer.validated_data}")
+        
+        # Check if critical fields are in validated_data
+        critical_fields = ['type', 'url', 'attachment']
+        for field in critical_fields:
+            if field in serializer.validated_data:
+                logger.info(f"✅ DEBUG: {field} found in validated_data: {serializer.validated_data[field]}")
+            else:
+                logger.info(f"❌ DEBUG: {field} MISSING from validated_data!")
+        
+        achievement = serializer.save(user=self.request.user)
+        logger.info(f"✅ DEBUG: Created achievement: {achievement.__dict__}")
+        return achievement
 
 
 class AchievementDetailView(RetrieveUpdateDestroyAPIView):
@@ -147,15 +163,7 @@ class AchievementDetailView(RetrieveUpdateDestroyAPIView):
     
     def get_serializer_class(self):
         # Import here to avoid circular imports
-        from auth_app.models import Achievement
-        from rest_framework import serializers
-        
-        class AchievementSerializer(serializers.ModelSerializer):
-            class Meta:
-                model = Achievement
-                fields = '__all__'
-                read_only_fields = ['user', 'created_at', 'updated_at']
-                
+        from auth_app.serializers import AchievementSerializer
         return AchievementSerializer
     
     def get_queryset(self):
@@ -170,15 +178,7 @@ class EducationListCreateView(ListCreateAPIView):
     
     def get_serializer_class(self):
         # Import here to avoid circular imports
-        from auth_app.models import Education
-        from rest_framework import serializers
-        
-        class EducationSerializer(serializers.ModelSerializer):
-            class Meta:
-                model = Education
-                fields = ['id', 'institution', 'degree_type', 'field_of_study', 'start_date', 'end_date', 'is_current', 'description', 'user']
-                read_only_fields = ['user']
-                
+        from auth_app.serializers import EducationSerializer
         return EducationSerializer
     
     def get_queryset(self):
@@ -191,7 +191,15 @@ class EducationListCreateView(ListCreateAPIView):
         return Education.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        logger.info(f"DEBUG: Creating education record for user {self.request.user.id}")
+        logger.info(f"DEBUG: Education data: {serializer.validated_data}")
+        education = serializer.save(user=self.request.user)
+        logger.info(f"DEBUG: Created education record with ID: {education.id}")
+        
+        # Verify it was saved correctly
+        from auth_app.models import Education
+        count = Education.objects.filter(user=self.request.user).count()
+        logger.info(f"DEBUG: User {self.request.user.id} now has {count} education records")
 
 
 class EducationDetailView(RetrieveUpdateDestroyAPIView):
@@ -200,15 +208,7 @@ class EducationDetailView(RetrieveUpdateDestroyAPIView):
     
     def get_serializer_class(self):
         # Import here to avoid circular imports
-        from auth_app.models import Education
-        from rest_framework import serializers
-        
-        class EducationSerializer(serializers.ModelSerializer):
-            class Meta:
-                model = Education
-                fields = ['id', 'institution', 'degree_type', 'field_of_study', 'start_date', 'end_date', 'is_current', 'description', 'user']
-                read_only_fields = ['user']
-                
+        from auth_app.serializers import EducationSerializer
         return EducationSerializer
     
     def get_queryset(self):

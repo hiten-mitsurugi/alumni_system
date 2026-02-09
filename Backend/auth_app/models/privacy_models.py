@@ -1,17 +1,20 @@
-from django.db import models
-from .models import CustomUser
+"""
+Privacy Settings Models
+"""
+from .base_models import *
+from .user_models import CustomUser
 
 class FieldPrivacySetting(models.Model):
     """Model to handle per-field privacy settings for user profiles"""
     VISIBILITY_CHOICES = [
-        ('public', 'For Everyone'),
+        ('everyone', 'For Everyone'),
         ('connections_only', 'For Connections'),
-        ('private', 'Only for Me'),
+        ('only_me', 'Only for Me'),
     ]
     
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='field_privacy_settings')
     field_name = models.CharField(max_length=100)  # e.g., 'first_name', 'email', 'contact_number'
-    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='alumni_only')
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='connections_only')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -32,7 +35,7 @@ class FieldPrivacySetting(models.Model):
             setting = cls.objects.get(user=user, field_name=field_name)
             return setting.visibility
         except cls.DoesNotExist:
-            return 'connections_only'  # Default visibility
+            return 'everyone'  # Default visibility (public)
     
     @classmethod
     def set_user_field_visibility(cls, user, field_name, visibility):
@@ -46,3 +49,8 @@ class FieldPrivacySetting(models.Model):
             setting.visibility = visibility
             setting.save()
         return setting
+
+
+class SectionPrivacySetting(models.Model):
+    """Placeholder for section privacy settings"""
+    pass

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from .serializers import ProfileFieldUpdateSerializer, FieldPrivacySettingSerializer
+from auth_app.serializers import ProfileFieldUpdateSerializer, FieldPrivacySettingSerializer
 
 class ProfileFieldUpdateView(APIView):
     """API view for updating individual profile fields with privacy settings"""

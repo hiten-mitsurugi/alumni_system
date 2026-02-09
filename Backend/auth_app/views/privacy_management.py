@@ -8,8 +8,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from .models_privacy import FieldPrivacySetting, VISIBILITY_CHOICES
-from .privacy_mixins import ProfilePrivacyHelper
+from auth_app.models import FieldPrivacySetting
+
+# Use VISIBILITY_CHOICES from FieldPrivacySetting model
+VISIBILITY_CHOICES = FieldPrivacySetting.VISIBILITY_CHOICES
+from auth_app.privacy_mixins import ProfilePrivacyHelper
 
 
 class PrivacySettingsView(APIView):

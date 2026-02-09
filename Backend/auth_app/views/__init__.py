@@ -9,11 +9,20 @@ try:
         UserCreateView, UserDetailView, UserUpdateView, UserViewSet,
         PendingAlumniListView, ApprovedAlumniListView
     )
-    from .profile_social import (
-        ProfileView, EnhancedProfileView, FollowUserView, UserConnectionsView,
-        InvitationManageView, InvitationAcceptView, InvitationRejectView,
-        ProfileSearchView, SuggestedConnectionsView, UserByNameView
+    # New modular structure - connections, profile, search
+    from .connections import (
+        FollowUserView, UserConnectionsView, InvitationManageView,
+        InvitationAcceptView, InvitationRejectView, TestConnectionStatusView
     )
+    from .profile import (
+        ProfileView, EnhancedProfileView, DebugEducationView
+    )
+    from .search import (
+        ProfileSearchView, SuggestedConnectionsView, UserByNameView,
+        UserMentionSearchView
+    )
+    # Keep old profile_social.py import for backwards compatibility (if needed)
+    # from .profile_social import ...
     from .skills_work import (
         SkillListCreateView, UserSkillListCreateView, UserSkillDetailView, 
         WorkHistoryListCreateView, WorkHistoryDetailView,
@@ -32,8 +41,24 @@ try:
         AdminAnalyticsView, DebugUsersView, ClearCacheView, 
         TestStatusBroadcastView
     )
+    from .field_privacy import (
+        ProfileFieldUpdateView
+    )
+    from .privacy_management import (
+        PrivacySettingsView, BulkPrivacyUpdateView
+    )
+    from .cv_export import export_cv
+    from .simple_profile import SimpleProfileView
+    from .survey_profile import (
+        AddressListCreateView, AddressDetailView,
+        SkillsRelevanceView, CurriculumRelevanceView,
+        PerceptionFurtherStudiesView, FeedbackRecommendationsView
+    )
 except ImportError as e:
     # Fallback to importing from the original views.py if the modular structure fails
+    print(f"WARNING: Import error in views/__init__.py: {e}")
+    import traceback
+    traceback.print_exc()
     import sys
     import os
     parent_dir = os.path.dirname(os.path.dirname(__file__))
@@ -65,6 +90,7 @@ __all__ = [
     'ProfileView', 'EnhancedProfileView', 'FollowUserView', 'UserConnectionsView',
     'InvitationManageView', 'InvitationAcceptView', 'InvitationRejectView',
     'ProfileSearchView', 'SuggestedConnectionsView', 'UserByNameView',
+    'UserMentionSearchView', 'TestConnectionStatusView', 'DebugEducationView',
     
     # Skills & Work
     'SkillListCreateView', 'UserSkillListCreateView', 'UserSkillDetailView',
@@ -82,5 +108,16 @@ __all__ = [
     
     # Admin & Utilities
     'AdminAnalyticsView', 'DebugUsersView', 'ClearCacheView', 
-    'TestStatusBroadcastView'
+    'TestStatusBroadcastView',
+    
+    # Privacy Management
+    'ProfileFieldUpdateView', 'PrivacySettingsView', 'BulkPrivacyUpdateView',
+    
+    # CV Export & Simple Profile
+    'export_cv', 'SimpleProfileView',
+    
+    # Survey & Profile Data
+    'AddressListCreateView', 'AddressDetailView',
+    'SkillsRelevanceView', 'CurriculumRelevanceView',
+    'PerceptionFurtherStudiesView', 'FeedbackRecommendationsView'
 ]

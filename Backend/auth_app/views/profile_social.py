@@ -799,6 +799,61 @@ class UserMentionSearchView(APIView):
                 'error': f'An error occurred: {str(e)}',
                 'users': []
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class DebugEducationView(APIView):
+    """Debug view to check education records directly"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        from auth_app.models import Education
+        education_records = Education.objects.filter(user=user)
+        
+        logger.info(f"DEBUG: User {user.id} has {education_records.count()} education records in DB")
+        for edu in education_records:
+            logger.info(f"  - ID: {edu.id}, Field: {edu.field_of_study}, Institution: {edu.institution}")
+        
+        from auth_app.serializers import EducationSerializer
+        serializer = EducationSerializer(education_records, many=True)
+        return Response({
+            'user_id': user.id,
+            'education_count': education_records.count(),
+            'education_records': serializer.data
+        })
+
+
+class TestConnectionStatusView(APIView):
+    """Test endpoint to check connection status between users"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, user_id):
+        try:
+            from auth_app.models import Following
+            
+            # Check if connection exists
+            connection = Following.objects.filter(
+                follower=request.user,
+                following_id=user_id
+            ).first()
+            
+            reverse_connection = Following.objects.filter(
+                follower_id=user_id,
+                following=request.user
+            ).first()
+            
+            return Response({
+                'current_user': request.user.id,
+                'target_user': user_id,
+                'connection_exists': connection is not None,
+                'connection_status': connection.status if connection else None,
+                'reverse_connection_exists': reverse_connection is not None,
+                'reverse_connection_status': reverse_connection.status if reverse_connection else None,
+                'is_mutual': connection.is_mutual if connection else False
+            })
+        except Exception as e:
+            logger.error(f"Error checking connection status: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
         except Exception as e:
             logger.error(f"Error in UserMentionSearchView: {str(e)}")

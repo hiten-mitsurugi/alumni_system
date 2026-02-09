@@ -18,22 +18,17 @@ from .views import (
     TrainingListCreateView, TrainingDetailView,
     PublicationListCreateView, PublicationDetailView,
     CertificateListCreateView, CertificateDetailView, CSEStatusView,
-    # Additional views for comprehensive model coverage (temporarily commented out)
-    # AddressListCreateView, AddressDetailView, SkillsRelevanceView, CurriculumRelevanceView,
-    # PerceptionStudiesView, FeedbackView
+    # Survey and profile data views
+    AddressListCreateView, AddressDetailView, SkillsRelevanceView, CurriculumRelevanceView,
+    PerceptionFurtherStudiesView, FeedbackRecommendationsView
 )
 
-# Import CV export view
-from .views.cv_export import export_cv
-
-# Import the working EnhancedProfileView and UserConnectionsView from profile_social module
-from .views.profile_social import (
-    EnhancedProfileView, UserMentionSearchView, UserConnectionsView, 
+# Import CV export and profile/social/privacy views from the new modular structure
+from .views import (
+    export_cv, EnhancedProfileView, UserMentionSearchView, UserConnectionsView,
     InvitationAcceptView, InvitationRejectView, TestConnectionStatusView
 )
-
-# Import field privacy views
-from .views_field_privacy import ProfileFieldUpdateView, ProfileAboutDataView, UserAddressesView
+from .views.field_privacy import ProfileFieldUpdateView, ProfileAboutDataView, UserAddressesView
 
 
 
@@ -147,10 +142,11 @@ urlpatterns = [
     # CSE Status endpoint
     path('cse-status/', CSEStatusView.as_view(), name='cse_status'),
 
-    
-    # Survey and questionnaire endpoints (temporarily commented out)
-    # path('skills-relevance/', SkillsRelevanceView.as_view(), name='skills_relevance'),
-    # path('curriculum-relevance/', CurriculumRelevanceView.as_view(), name='curriculum_relevance'),
-    # path('perception-studies/', PerceptionStudiesView.as_view(), name='perception_studies'),
-    # path('feedback/', FeedbackView.as_view(), name='feedback'),
+    # Survey and questionnaire endpoints
+    path('addresses/', AddressListCreateView.as_view(), name='addresses_list_create'),
+    path('addresses/<int:pk>/', AddressDetailView.as_view(), name='address_detail'),
+    path('skills-relevance/', SkillsRelevanceView.as_view(), name='skills_relevance'),
+    path('curriculum-relevance/', CurriculumRelevanceView.as_view(), name='curriculum_relevance'),
+    path('perception-studies/', PerceptionFurtherStudiesView.as_view(), name='perception_studies'),
+    path('feedback/', FeedbackRecommendationsView.as_view(), name='feedback'),
 ]

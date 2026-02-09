@@ -373,7 +373,7 @@ class ApprovedAlumniListView(ListAPIView):
         if employment_status:
             queryset = queryset.filter(employment_status__iexact=employment_status)
         if gender:
-            queryset = queryset.filter(sex__iexact=gender)
+            queryset = queryset.filter(gender__iexact=gender)
         if year_graduated:
             queryset = queryset.filter(year_graduated=year_graduated)
         if program:

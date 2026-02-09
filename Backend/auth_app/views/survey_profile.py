@@ -1,19 +1,28 @@
+"""
+Survey and profile-related views for questionnaire data collection
+Handles Address, Skills Relevance, Curriculum Relevance, Perception Studies, and Feedback
+"""
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from django.shortcuts import get_object_or_404
-from .models import Address, SkillsRelevance, CurriculumRelevance, PerceptionFurtherStudies, FeedbackRecommendations
-from .additional_serializers import (
-    AddressDetailSerializer, SkillsRelevanceDetailSerializer, CurriculumRelevanceDetailSerializer,
-    PerceptionFurtherStudiesDetailSerializer, FeedbackRecommendationsDetailSerializer, InvitationManageSerializer
+
+from ..models import (
+    Address, SkillsRelevance, CurriculumRelevance, 
+    PerceptionFurtherStudies, FeedbackRecommendations, Following
 )
+from ..serializers import (
+    AddressSerializer, SkillsRelevanceSerializer, CurriculumRelevanceSerializer,
+    PerceptionFurtherStudiesSerializer, FeedbackRecommendationsSerializer
+)
+
 
 # Address Views
 class AddressListCreateView(ListCreateAPIView):
     """List and create addresses for the authenticated user"""
-    serializer_class = AddressDetailSerializer
+    serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
@@ -25,7 +34,7 @@ class AddressListCreateView(ListCreateAPIView):
 
 class AddressDetailView(RetrieveUpdateDestroyAPIView):
     """Retrieve, update, or delete a specific address"""
-    serializer_class = AddressDetailSerializer
+    serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
@@ -40,14 +49,14 @@ class SkillsRelevanceView(APIView):
     def get(self, request):
         try:
             skills_relevance = SkillsRelevance.objects.get(user=request.user)
-            serializer = SkillsRelevanceDetailSerializer(skills_relevance)
+            serializer = SkillsRelevanceSerializer(skills_relevance)
             return Response(serializer.data)
         except SkillsRelevance.DoesNotExist:
             return Response({'detail': 'Skills relevance not found'}, status=status.HTTP_404_NOT_FOUND)
     
     def post(self, request):
         skills_relevance, created = SkillsRelevance.objects.get_or_create(user=request.user)
-        serializer = SkillsRelevanceDetailSerializer(skills_relevance, data=request.data)
+        serializer = SkillsRelevanceSerializer(skills_relevance, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -56,7 +65,7 @@ class SkillsRelevanceView(APIView):
     def put(self, request):
         try:
             skills_relevance = SkillsRelevance.objects.get(user=request.user)
-            serializer = SkillsRelevanceDetailSerializer(skills_relevance, data=request.data)
+            serializer = SkillsRelevanceSerializer(skills_relevance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
@@ -73,14 +82,14 @@ class CurriculumRelevanceView(APIView):
     def get(self, request):
         try:
             curriculum_relevance = CurriculumRelevance.objects.get(user=request.user)
-            serializer = CurriculumRelevanceDetailSerializer(curriculum_relevance)
+            serializer = CurriculumRelevanceSerializer(curriculum_relevance)
             return Response(serializer.data)
         except CurriculumRelevance.DoesNotExist:
             return Response({'detail': 'Curriculum relevance not found'}, status=status.HTTP_404_NOT_FOUND)
     
     def post(self, request):
         curriculum_relevance, created = CurriculumRelevance.objects.get_or_create(user=request.user)
-        serializer = CurriculumRelevanceDetailSerializer(curriculum_relevance, data=request.data)
+        serializer = CurriculumRelevanceSerializer(curriculum_relevance, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -89,7 +98,7 @@ class CurriculumRelevanceView(APIView):
     def put(self, request):
         try:
             curriculum_relevance = CurriculumRelevance.objects.get(user=request.user)
-            serializer = CurriculumRelevanceDetailSerializer(curriculum_relevance, data=request.data)
+            serializer = CurriculumRelevanceSerializer(curriculum_relevance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
@@ -106,14 +115,14 @@ class PerceptionFurtherStudiesView(APIView):
     def get(self, request):
         try:
             perception_studies = PerceptionFurtherStudies.objects.get(user=request.user)
-            serializer = PerceptionFurtherStudiesDetailSerializer(perception_studies)
+            serializer = PerceptionFurtherStudiesSerializer(perception_studies)
             return Response(serializer.data)
         except PerceptionFurtherStudies.DoesNotExist:
             return Response({'detail': 'Perception further studies not found'}, status=status.HTTP_404_NOT_FOUND)
     
     def post(self, request):
         perception_studies, created = PerceptionFurtherStudies.objects.get_or_create(user=request.user)
-        serializer = PerceptionFurtherStudiesDetailSerializer(perception_studies, data=request.data)
+        serializer = PerceptionFurtherStudiesSerializer(perception_studies, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -122,7 +131,7 @@ class PerceptionFurtherStudiesView(APIView):
     def put(self, request):
         try:
             perception_studies = PerceptionFurtherStudies.objects.get(user=request.user)
-            serializer = PerceptionFurtherStudiesDetailSerializer(perception_studies, data=request.data)
+            serializer = PerceptionFurtherStudiesSerializer(perception_studies, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
@@ -139,14 +148,14 @@ class FeedbackRecommendationsView(APIView):
     def get(self, request):
         try:
             feedback = FeedbackRecommendations.objects.get(user=request.user)
-            serializer = FeedbackRecommendationsDetailSerializer(feedback)
+            serializer = FeedbackRecommendationsSerializer(feedback)
             return Response(serializer.data)
         except FeedbackRecommendations.DoesNotExist:
             return Response({'detail': 'Feedback recommendations not found'}, status=status.HTTP_404_NOT_FOUND)
     
     def post(self, request):
         feedback, created = FeedbackRecommendations.objects.get_or_create(user=request.user)
-        serializer = FeedbackRecommendationsDetailSerializer(feedback, data=request.data)
+        serializer = FeedbackRecommendationsSerializer(feedback, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -155,24 +164,10 @@ class FeedbackRecommendationsView(APIView):
     def put(self, request):
         try:
             feedback = FeedbackRecommendations.objects.get(user=request.user)
-            serializer = FeedbackRecommendationsDetailSerializer(feedback, data=request.data)
+            serializer = FeedbackRecommendationsSerializer(feedback, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except FeedbackRecommendations.DoesNotExist:
             return Response({'detail': 'Feedback recommendations not found'}, status=status.HTTP_404_NOT_FOUND)
-
-
-# Invitation Management View (Enhanced)
-class InvitationListView(ListCreateAPIView):
-    """List and manage connection invitations"""
-    serializer_class = InvitationManageSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        # Get all pending invitations where current user is the receiver
-        return Following.objects.filter(
-            following=self.request.user,
-            status='pending'
-        )
