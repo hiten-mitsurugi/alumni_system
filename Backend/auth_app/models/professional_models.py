@@ -111,23 +111,26 @@ class Publication(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='publications')
     title = models.CharField(max_length=500)
     publication_type = models.CharField(max_length=20, choices=PUBLICATION_TYPE_CHOICES, default='journal')
+    # Legacy: `authors` stored as comma-separated string. We'll add a normalized M2M `authors_m2m`.
     authors = models.CharField(max_length=500, help_text='List of authors')
+    authors_m2m = models.ManyToManyField('Author', related_name='publications', blank=True)
     date_published = models.DateField()
     publisher = models.CharField(max_length=255, blank=True, null=True)
     url = models.URLField(blank=True, null=True, help_text='Link to publication')
     doi = models.CharField(max_length=100, blank=True, null=True, help_text='Digital Object Identifier')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['-date_published', '-created_at']
-        indexes = [
-            models.Index(fields=['user', 'date_published']),
-            models.Index(fields=['publication_type']),
-        ]
-    
+
+
+class Author(models.Model):
+    """Normalized author entity for Publication.authors"""
+    name = models.CharField(max_length=255, unique=True, db_index=True)
     def __str__(self):
-        return f"{self.user.get_full_name()} - {self.title}"
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+        indexes = [models.Index(fields=['name'])]
 
 
 class Certificate(models.Model):

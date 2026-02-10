@@ -9,34 +9,73 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="workhistory",
-            name="college_education_relevant",
-            field=models.CharField(blank=True, max_length=100, null=True),
-        ),
-        migrations.AddField(
-            model_name="workhistory",
-            name="employment_status",
-            field=models.CharField(blank=True, max_length=100, null=True),
-        ),
-        migrations.AddField(
-            model_name="workhistory",
-            name="how_got_job",
-            field=models.CharField(blank=True, max_length=255, null=True),
-        ),
-        migrations.AddField(
-            model_name="workhistory",
-            name="is_breadwinner",
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name="workhistory",
-            name="job_type",
-            field=models.CharField(blank=True, max_length=100, null=True),
-        ),
-        migrations.AddField(
-            model_name="workhistory",
-            name="monthly_income",
-            field=models.CharField(blank=True, max_length=100, null=True),
+        # Use conditional SQL to add columns only if they don't exist
+        migrations.RunSQL(
+            sql="""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'auth_app_workhistory' 
+                        AND column_name = 'college_education_relevant'
+                    ) THEN
+                        ALTER TABLE auth_app_workhistory 
+                        ADD COLUMN college_education_relevant VARCHAR(100) NULL;
+                    END IF;
+                    
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'auth_app_workhistory' 
+                        AND column_name = 'employment_status'
+                    ) THEN
+                        ALTER TABLE auth_app_workhistory 
+                        ADD COLUMN employment_status VARCHAR(100) NULL;
+                    END IF;
+                    
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'auth_app_workhistory' 
+                        AND column_name = 'how_got_job'
+                    ) THEN
+                        ALTER TABLE auth_app_workhistory 
+                        ADD COLUMN how_got_job VARCHAR(255) NULL;
+                    END IF;
+                    
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'auth_app_workhistory' 
+                        AND column_name = 'is_breadwinner'
+                    ) THEN
+                        ALTER TABLE auth_app_workhistory 
+                        ADD COLUMN is_breadwinner boolean DEFAULT false NOT NULL;
+                    END IF;
+                    
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'auth_app_workhistory' 
+                        AND column_name = 'job_type'
+                    ) THEN
+                        ALTER TABLE auth_app_workhistory 
+                        ADD COLUMN job_type VARCHAR(100) NULL;
+                    END IF;
+                    
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'auth_app_workhistory' 
+                        AND column_name = 'monthly_income'
+                    ) THEN
+                        ALTER TABLE auth_app_workhistory 
+                        ADD COLUMN monthly_income VARCHAR(100) NULL;
+                    END IF;
+                END $$;
+            """,
+            reverse_sql="""
+                ALTER TABLE auth_app_workhistory DROP COLUMN IF EXISTS college_education_relevant;
+                ALTER TABLE auth_app_workhistory DROP COLUMN IF EXISTS employment_status;
+                ALTER TABLE auth_app_workhistory DROP COLUMN IF EXISTS how_got_job;
+                ALTER TABLE auth_app_workhistory DROP COLUMN IF EXISTS is_breadwinner;
+                ALTER TABLE auth_app_workhistory DROP COLUMN IF EXISTS job_type;
+                ALTER TABLE auth_app_workhistory DROP COLUMN IF EXISTS monthly_income;
+            """,
         ),
     ]

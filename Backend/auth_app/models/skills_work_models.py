@@ -63,6 +63,10 @@ class WorkHistory(models.Model):
     how_got_job = models.CharField(max_length=255, blank=True, null=True)
     monthly_income = models.CharField(max_length=100, blank=True, null=True)
     is_breadwinner = models.BooleanField(default=False)
+    # Normalized relation to Skill instead of storing skills as text
+    skills = models.ManyToManyField(Skill, related_name='work_histories', blank=True)
+    # Explicit flag for current job (optional - can be inferred from end_date==None)
+    is_current_job = models.BooleanField(default=False)
     length_of_service = models.CharField(max_length=50, blank=True, null=True)
     college_education_relevant = models.CharField(max_length=100, blank=True, null=True)
     start_date = models.DateField(null=True, blank=True)
