@@ -4,7 +4,7 @@ Handles authentication, user status updates, message serialization, and connecti
 """
 import json
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from channels.db import database_sync_to_async
 from rest_framework_simplejwt.tokens import AccessToken, TokenError
 from django.contrib.auth import get_user_model

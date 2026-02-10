@@ -12,13 +12,13 @@ class ProfileFieldUpdateView(APIView):
     
     def get(self, request):
         """Get all field privacy settings for the user"""
-        from .models import FieldPrivacySetting
+        from ..models import FieldPrivacySetting
         
         # Check if requesting privacy settings for another user
         user_id = request.query_params.get('user_id')
         if user_id:
             try:
-                from .models import CustomUser
+                from ..models import CustomUser
                 target_user = CustomUser.objects.get(id=user_id)
                 # Only return privacy settings - not allowing modification
                 settings = FieldPrivacySetting.objects.filter(user=target_user)
@@ -34,7 +34,7 @@ class ProfileFieldUpdateView(APIView):
     
     def post(self, request):
         """Update a profile field value and/or its privacy setting"""
-        from .models import FieldPrivacySetting, Profile, CustomUser
+        from ..models import FieldPrivacySetting, Profile, CustomUser
         
         serializer = ProfileFieldUpdateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -69,7 +69,7 @@ class ProfileFieldUpdateView(APIView):
             if field_value is not None:
                 # Handle address fields
                 if field_name in ['present_address', 'permanent_address']:
-                    from .models import Address
+                    from ..models import Address
                     address_category = field_name.replace('_address', '')
                     
                     # For now, we'll treat field_value as the full formatted address
@@ -133,7 +133,7 @@ class ProfileAboutDataView(APIView):
     
     def get(self, request, user_id=None):
         """Get comprehensive profile data with privacy settings"""
-        from .models import FieldPrivacySetting, Profile, CustomUser
+        from ..models import FieldPrivacySetting, Profile, CustomUser
         
         # Get target user (self or other user)
         if user_id:
@@ -261,7 +261,7 @@ class ProfileAboutDataView(APIView):
             return False
         elif visibility == 'connections_only':
             # Check if viewer is connected to target user
-            from .models import Following
+            from ..models import Following
             return Following.objects.filter(
                 follower=viewer_user,
                 following=target_user,
@@ -277,7 +277,7 @@ class UserAddressesView(APIView):
     
     def get(self, request, user_id):
         """Get user addresses with privacy settings"""
-        from .models import CustomUser, Address, FieldPrivacySetting
+        from ..models import CustomUser, Address, FieldPrivacySetting
         
         # Get target user
         target_user = get_object_or_404(CustomUser, id=user_id)
@@ -320,7 +320,7 @@ class UserAddressesView(APIView):
             return False
         elif visibility == 'connections_only':
             # Check if viewer is connected to target user
-            from .models import Following
+            from ..models import Following
             return Following.objects.filter(
                 follower=viewer_user,
                 following=target_user,

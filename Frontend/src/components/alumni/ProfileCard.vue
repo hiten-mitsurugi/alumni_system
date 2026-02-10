@@ -154,13 +154,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { getProfilePictureUrl, getCoverPhotoUrl } from '@/utils/imageUrl'
 import api from '@/services/api'
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
+const router = useRouter()
 
 // Reactive data
 const loading = ref(true)
@@ -187,17 +190,9 @@ const user = computed(() => {
   const lastName = userData.value.last_name || ''
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ')
 
-  // Construct profile picture URL like in navbar
-  const pic = userData.value.profile_picture
-  const profilePictureUrl = pic
-    ? (pic.startsWith('http') ? pic : `http://127.0.0.1:8000${pic}`)
-    : '/default-avatar.png'
-
-  // Construct cover photo URL similarly
-  const coverPic = profileData.value?.cover_photo
-  const coverPhotoUrl = coverPic
-    ? (coverPic.startsWith('http') ? coverPic : `http://127.0.0.1:8000${coverPic}`)
-    : null
+  // Get profile picture and cover photo URLs using utility
+  const profilePictureUrl = getProfilePictureUrl(userData.value.profile_picture)
+  const coverPhotoUrl = getCoverPhotoUrl(profileData.value?.cover_photo)
 
   return {
     full_name: fullName || 'Alumni Member',
@@ -320,10 +315,6 @@ const fetchUserStats = async () => {
 // Emits
 // No emits needed - both buttons navigate directly
 
-// Router for navigation
-import { useRouter } from 'vue-router'
-const router = useRouter()
-
 // Go to current user's profile
 const goToMyProfile = () => {
   router.push({ name: 'AlumniMyProfile' })
@@ -335,7 +326,6 @@ onMounted(() => {
 })
 
 // Watch auth store for user changes to update ProfileCard in real-time
-import { watch } from 'vue'
 watch(
   () => authStore.user,
   (newUser) => {

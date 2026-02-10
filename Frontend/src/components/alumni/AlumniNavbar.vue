@@ -346,6 +346,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import { useNotificationsStore } from '@/stores/notifications'
+import { getProfilePictureUrl } from '@/utils/imageUrl'
 import LogoutLoading from '../common/LogoutLoading.vue'
 
 // ============================================================
@@ -357,7 +358,6 @@ const route = useRoute()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const notificationsStore = useNotificationsStore()
-const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000`
 
 // Define props
 const props = defineProps({
@@ -432,22 +432,7 @@ const profileSectionMargin = computed(() => {
 const profilePictureUrl = computed(() => {
   const user = authStore.user
   const pic = user?.profile_picture
-
-  if (!pic || pic === '' || pic === 'null') {
-    return '/default-avatar.png'
-  }
-
-  try {
-    if (pic.startsWith('http://') || pic.startsWith('https://')) {
-      return pic
-    }
-
-    const relativePath = pic.startsWith('/') ? pic : `/${pic}`
-    return `${BASE_URL}${relativePath}`
-  } catch (error) {
-    console.error('Error processing profile picture URL:', error)
-    return '/default-avatar.png'
-  }
+  return getProfilePictureUrl(pic)
 })
 
 // ============================================================
@@ -525,30 +510,29 @@ async function handleLogout() {
 // ============================================================
 
 function handleImageError(event) {
+  // Prevent infinite loop - only set fallback if not already using it
+  if (event.target.src.includes('default-avatar.png')) {
+    console.warn('Default avatar also failed, using inline SVG fallback')
+    // Use inline data URL SVG as ultimate fallback
+    event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%23e5e7eb"/%3E%3Cpath d="M50 45a12 12 0 100-24 12 12 0 000 24zm0 6c-16 0-25 8-25 16v8h50v-8c0-8-9-16-25-16z" fill="%239ca3af"/%3E%3C/svg%3E'
+    return
+  }
+  
   console.warn('Profile image failed to load, using default avatar')
   event.target.src = '/default-avatar.png'
 }
 
 function handleNotificationAvatarError(event) {
+  // Prevent infinite loop
+  if (event.target.src.includes('default-avatar.png')) {
+    event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%23e5e7eb"/%3E%3Cpath d="M50 45a12 12 0 100-24 12 12 0 000 24zm0 6c-16 0-25 8-25 16v8h50v-8c0-8-9-16-25-16z" fill="%239ca3af"/%3E%3C/svg%3E'
+    return
+  }
   event.target.src = '/default-avatar.png'
 }
 
 function getActorAvatarUrl(avatarPath) {
-  if (!avatarPath) {
-    return '/default-avatar.png'
-  }
-  
-  try {
-    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-      return avatarPath
-    }
-    
-    const path = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`
-    return `${BASE_URL}${path}`
-  } catch (error) {
-    console.error('Error processing actor avatar URL:', error)
-    return '/default-avatar.png'
-  }
+  return getProfilePictureUrl(avatarPath)
 }
 
 function handleClickOutside(event) {

@@ -16,6 +16,16 @@ const emit = defineEmits(['view-user', 'change-page']);
 watch(() => props.paginatedUsers, (val) => {
   console.log('paginatedUsers:', val);
 }, { immediate: true });
+
+// Prevent infinite loop on image error
+function handleImageError(event) {
+  if (event.target.src.includes('default-avatar.png')) {
+    // Already using fallback, use inline SVG to prevent loop
+    event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%23e5e7eb"/%3E%3Cpath d="M50 45a12 12 0 100-24 12 12 0 000 24zm0 6c-16 0-25 8-25 16v8h50v-8c0-8-9-16-25-16z" fill="%239ca3af"/%3E%3C/svg%3E'
+    return
+  }
+  event.target.src = '/default-avatar.png'
+}
 </script>
 
 <template>
@@ -55,7 +65,7 @@ watch(() => props.paginatedUsers, (val) => {
                 :src="user.profile_picture || '/default-avatar.png'"
                 :alt="`${user.first_name} ${user.last_name}`"
                 class="w-10 h-10 rounded-full object-cover border"
-                @error="$event.target.src = '/default-avatar.png'"
+                @error="handleImageError"
               />
             </div>
           </td>

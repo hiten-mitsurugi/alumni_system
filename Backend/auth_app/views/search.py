@@ -56,7 +56,7 @@ class SuggestedConnectionsView(APIView):
         exclude_ids = list(following_ids) + list(pending_user_ids) + [current_user.id]
         
         # Get user's skills
-        user_skills = list(Skill.objects.filter(user=current_user).values_list('skill_name', flat=True))
+        user_skills = list(UserSkill.objects.filter(user=current_user).values_list('name', flat=True))
         
         # Find users with similar skills
         suggested_users = CustomUser.objects.filter(
@@ -65,7 +65,7 @@ class SuggestedConnectionsView(APIView):
             id__in=exclude_ids
         ).annotate(
             mutual_count=Count('followers', filter=Q(followers__follower__in=following_ids)),
-            skill_match=Count('skills', filter=Q(skills__skill_name__in=user_skills))
+            skill_match=Count('user_skills', filter=Q(user_skills__name__in=user_skills))
         ).filter(
             Q(mutual_count__gt=0) | Q(skill_match__gt=0)
         ).order_by('-mutual_count', '-skill_match')[:10]

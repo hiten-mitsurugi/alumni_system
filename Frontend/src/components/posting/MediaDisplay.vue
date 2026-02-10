@@ -4,7 +4,7 @@
     <div v-if="mediaFiles.length === 1" class="rounded-2xl overflow-hidden shadow-lg bg-white">
       <img
         v-if="mediaFiles[0].media_type === 'image' && mediaFiles[0].file_url"
-        :src="mediaFiles[0].file_url"
+        :src="getMediaUrl(mediaFiles[0].file_url)"
         :alt="altText || 'Post image'"
         :class="[
           'w-full cursor-pointer hover:opacity-90 transition-opacity duration-300',
@@ -26,7 +26,7 @@
       </div>
       <video
         v-else-if="mediaFiles[0].media_type === 'video' && mediaFiles[0].file_url"
-        :src="mediaFiles[0].file_url"
+        :src="getMediaUrl(mediaFiles[0].file_url)"
         controls
         :class="[
           'w-full rounded-2xl',
@@ -48,7 +48,7 @@
         >
           <img
             v-if="media.media_type === 'image' && media.file_url"
-            :src="media.file_url"
+            :src="getMediaUrl(media.file_url)"
             :alt="`Media ${index + 1}`"
             class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity duration-300"
             @error="handleImageError"
@@ -64,7 +64,7 @@
           </div>
           <video
             v-else-if="media.media_type === 'video' && media.file_url"
-            :src="media.file_url"
+            :src="getMediaUrl(media.file_url)"
             class="w-full h-full object-cover"
             muted
           />
@@ -86,6 +86,9 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { getMediaUrl } from '@/utils/imageUrl'
+
 // Props
 const props = defineProps({
   mediaFiles: {
@@ -175,7 +178,6 @@ const handleMediaClick = () => {
 }
 
 // Debug: Log media files when component mounts
-import { onMounted } from 'vue'
 onMounted(() => {
   console.log('🎬 MediaDisplay mounted with mediaFiles:', props.mediaFiles)
   if (props.mediaFiles && props.mediaFiles.length > 0) {

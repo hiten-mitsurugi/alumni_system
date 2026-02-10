@@ -19,8 +19,8 @@ class UserBasicSerializer(serializers.ModelSerializer):
                 try:
                     return request.build_absolute_uri(obj.profile_picture.url)
                 except (KeyError, AttributeError):
-                    # Fallback for ASGI servers like Daphne
-                    return f"http://localhost:8000{obj.profile_picture.url}"
+                    # Return relative URL - frontend will handle base URL
+                    return obj.profile_picture.url
         return None
     
     def get_full_name(self, obj):
@@ -47,8 +47,8 @@ class PostMediaSerializer(serializers.ModelSerializer):
                 try:
                     return request.build_absolute_uri(obj.file.url)
                 except (KeyError, AttributeError):
-                    # Fallback for ASGI servers like Daphne
-                    return f"http://localhost:8000{obj.file.url}"
+                    # Return relative URL - frontend will handle base URL
+                    return obj.file.url
         return None
     
     def get_thumbnail_url(self, obj):
@@ -58,8 +58,8 @@ class PostMediaSerializer(serializers.ModelSerializer):
                 try:
                     return request.build_absolute_uri(obj.thumbnail.url)
                 except (KeyError, AttributeError):
-                    # Fallback for ASGI servers like Daphne
-                    return f"http://localhost:8000{obj.thumbnail.url}"
+                    # Return relative URL - frontend will handle base URL
+                    return obj.thumbnail.url
         return None
 
 class ReactionSerializer(serializers.ModelSerializer):
