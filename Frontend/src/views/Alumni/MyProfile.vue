@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import api from '@/services/api'
-import { getProfilePictureUrl } from '@/utils/imageUrl'
+import { getProfilePictureUrl, getCoverPhotoUrl } from '@/utils/imageUrl'
 // Component imports
 import ProfileHeaderCard from '@/components/profile/ProfileHeaderCard.vue'
 import ProfileTabs from '@/components/profile/ProfileTabs.vue'
@@ -95,6 +95,11 @@ const activeTab = ref('about')
 const profilePictureUrl = computed(() => {
   return getProfilePictureUrl(user.value?.profile_picture)
 })
+
+// Cover photo URL with fallback
+const coverPhotoUrl = computed(() => {
+  return getCoverPhotoUrl(profile.value?.cover_photo)
+})
 // Keep profile page in sync with global auth store (e.g. sidebar uploads)
 watch(() => authStore.user, (newAuthUser) => {
   try {
@@ -124,16 +129,16 @@ const toggleFollow = async () => {
   }
 }
 const openMessage = () => router.push({ name: 'AlumniMessaging', query: { userId: profileUserId.value } })
-const editProfile = () => { showEditModal.value = true }
-const editCoverPhoto = () => { showCoverModal.value = true }
-const editProfilePicture = () => { showProfilePictureModal.value = true }
+const editProfile = () => openModal('profile')
+const editCoverPhoto = () => openModal('coverPhoto')
+const editProfilePicture = () => openModal('profilePicture')
 const handleCvExportSuccess = () => { showExportCvModal.value = false }
 
 const updateProfile = async (profileData) => {
   try {
     await api.patch('/auth/enhanced-profile/', profileData)
     await fetchProfile()
-    showEditModal.value = false
+    closeModal('profile')
   } catch (error) {
     console.error('Error updating profile:', error)
   }
@@ -147,7 +152,7 @@ const updateCoverPhoto = async (file) => {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     await fetchProfile()
-    showCoverModal.value = false
+    closeModal('coverPhoto')
   } catch (error) {
     console.error('Error updating cover photo:', error)
   }
@@ -162,7 +167,7 @@ const updateProfilePicture = async (file) => {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     await fetchProfile()
-    showProfilePictureModal.value = false
+    closeModal('profilePicture')
   } catch (error) {
     console.error('Error updating profile picture:', error)
   }
@@ -468,6 +473,7 @@ watch(() => route.params.userIdentifier, () => {
         :education="education"
         :work-histories="workHistories"
         :profile-picture-url="profilePictureUrl"
+        :cover-photo-url="coverPhotoUrl"
         :connections-count="connectionsCount"
         :is-following="isFollowing"
         :follow-loading="followLoading"

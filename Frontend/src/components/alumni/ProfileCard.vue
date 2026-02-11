@@ -103,52 +103,6 @@
           View Profile
         </button>
       </div>
-
-      <!-- Quick Links -->
-      <div :class="[
-        'pt-3 mt-4 border-t',
-        themeStore.isDarkMode ? 'border-gray-700' : 'border-gray-100'
-      ]">
-        <h4 :class="[
-          'mb-2 text-xs font-semibold tracking-wider uppercase',
-          themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500'
-        ]">Quick Links</h4>
-        <div class="space-y-1">
-          <a href="#" :class="[
-            'flex items-center text-sm transition-colors',
-            themeStore.isDarkMode 
-              ? 'text-gray-300 hover:text-green-400' 
-              : 'text-gray-600 hover:text-green-600'
-          ]">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            My Network
-          </a>
-          <a href="#" :class="[
-            'flex items-center text-sm transition-colors',
-            themeStore.isDarkMode 
-              ? 'text-gray-300 hover:text-green-400' 
-              : 'text-gray-600 hover:text-green-600'
-          ]">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Analytics
-          </a>
-          <a href="#" :class="[
-            'flex items-center text-sm transition-colors',
-            themeStore.isDarkMode 
-              ? 'text-gray-300 hover:text-green-400' 
-              : 'text-gray-600 hover:text-green-600'
-          ]">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a4 4 0 118 0v4m-4 8l2-2m0 0l2-2m-2 2l-2-2m2 2v4" />
-            </svg>
-            Events
-          </a>
-        </div>
-      </div>
     </div>
   </div>
 </template>

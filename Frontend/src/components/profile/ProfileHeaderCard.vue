@@ -6,8 +6,8 @@
     <!-- Cover Photo -->
     <div class="relative h-48 bg-gradient-to-r from-green-400 to-blue-500">
       <img
-        v-if="profile?.cover_photo"
-        :src="profile.cover_photo"
+        v-if="coverPhotoUrl"
+        :src="coverPhotoUrl"
         alt="Cover Photo"
         class="object-cover w-full h-full"
       />
@@ -144,6 +144,7 @@ const props = defineProps({
   education: Array,
   workHistories: Array,
   profilePictureUrl: String,
+  coverPhotoUrl: String,
   connectionsCount: Number,
   isFollowing: Boolean,
   followLoading: Boolean,

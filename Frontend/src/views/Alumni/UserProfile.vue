@@ -18,8 +18,8 @@
         <!-- Cover Photo -->
         <div class="relative h-48 bg-gradient-to-r from-green-400 to-blue-500">
           <img
-            v-if="profile?.cover_photo"
-            :src="profile.cover_photo"
+            v-if="coverPhotoUrl"
+            :src="coverPhotoUrl"
             alt="Cover Photo"
             class="object-cover w-full h-full"
           />
@@ -31,7 +31,7 @@
           <div class="absolute -top-16 left-6">
             <div class="relative">
               <img
-                :src="user?.profile_picture || '/default-avatar.png'"
+                :src="profilePictureUrl"
                 alt="Profile Picture"
                 :class="[
                   'w-32 h-32 rounded-full border-4 shadow-lg object-cover',
@@ -355,6 +355,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import api from '@/services/api'
+import { getProfilePictureUrl, getCoverPhotoUrl } from '@/utils/imageUrl'
 
 // Components
 import ProfileAboutSection from '@/components/profile/ProfileAboutSection.vue'
@@ -432,6 +433,16 @@ const currentJob = computed(() => {
   })
 
   return sorted[0]
+})
+
+// Profile picture URL with fallback
+const profilePictureUrl = computed(() => {
+  return getProfilePictureUrl(user.value?.profile_picture)
+})
+
+// Cover photo URL with fallback
+const coverPhotoUrl = computed(() => {
+  return getCoverPhotoUrl(profile.value?.cover_photo)
 })
 
 // Compute total visible items to detect empty profile
