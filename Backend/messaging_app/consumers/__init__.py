@@ -14,6 +14,7 @@ from .base import MessagingBaseMixin
 
 # Handler mixins
 from .private_handlers import PrivateMessageHandlersMixin
+from .private_helpers import PrivateMessageHelpersMixin as PrivateHelpersMixin
 from .group_handlers import GroupMessageHandlersMixin
 
 # Main consumer classes
@@ -28,6 +29,7 @@ __all__ = [
     # Base and mixins (for potential extensions)
     'MessagingBaseMixin',
     'PrivateMessageHandlersMixin',
+    'PrivateHelpersMixin',
     'GroupMessageHandlersMixin',
     
     # Utilities (for testing and debugging)

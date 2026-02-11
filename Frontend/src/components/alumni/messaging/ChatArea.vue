@@ -385,25 +385,97 @@ watch(() => props.messages, () => {
 function handleWebSocketMessage(event) {
   try {
     const data = JSON.parse(event.data)
-    
-    if (data.type === 'message_read_update') {
+    // Normalize event types used across server broadcasts
+    const eventType = data.type || data.action || data.event
+
+    // Handle read updates separately
+    if (eventType === 'message_read_update') {
       console.log('🔥 Received message_read_update:', data)
-      
-      // Find the message and update its read_by status
+
       const messageIndex = props.messages?.findIndex(m => m.id === data.message_id)
       if (messageIndex !== -1 && props.messages[messageIndex]) {
-        // Force reactivity by updating the message object
         const updatedMessage = { ...props.messages[messageIndex] }
         updatedMessage.read_by = data.read_by || []
-        
-        // Update the message in the array to trigger reactivity
         props.messages.splice(messageIndex, 1, updatedMessage)
-        
-        console.log('✅ Updated message read status:', {
-          messageId: data.message_id,
-          readBy: updatedMessage.read_by
-        })
+        console.log('✅ Updated message read status:', { messageId: data.message_id, readBy: updatedMessage.read_by })
       }
+      return
+    }
+
+    // Only process chat message events for the current conversation
+    const convId = data.conversation_id || data.conversation?.id || data.message?.conversation_id || data.message?.conversation?.id
+    if (convId && props.conversation && String(convId) !== String(props.conversation.id)) {
+      // Not for this conversation, ignore
+      return
+    }
+
+    // New message from server: replace optimistic temp message or append
+    if (eventType === 'chat_message' || eventType === 'new_message' || eventType === 'private_chat_message') {
+      const serverMsg = data.message || data
+
+      // Try to find optimistic temp message by temp_id or id
+      const tempId = serverMsg.temp_id || data.temp_id
+      let replaced = false
+
+      if (tempId) {
+        const idx = props.messages?.findIndex(m => m.temp_id === tempId || m.id === tempId)
+        if (idx !== -1) {
+          props.messages.splice(idx, 1, serverMsg)
+          replaced = true
+          console.log('🔁 Replaced optimistic message with server message:', serverMsg.id || serverMsg.temp_id)
+        }
+      }
+
+      // Fallback: avoid duplicate insert if server message already exists
+      const exists = props.messages?.some(m => String(m.id) === String(serverMsg.id))
+      if (!replaced && !exists) {
+        props.messages.push(serverMsg)
+        console.log('➕ Appended server message:', serverMsg.id)
+      }
+
+      // Scroll to bottom for new incoming messages
+      nextTick(() => scrollToBottom())
+      return
+    }
+
+    // Message edited
+    if (eventType === 'chat_message_edit' || eventType === 'message_edit') {
+      const edited = data.message || data
+      const idx = props.messages?.findIndex(m => String(m.id) === String(edited.id))
+      if (idx !== -1) {
+        props.messages.splice(idx, 1, edited)
+        console.log('✏️ Applied edit to message:', edited.id)
+      }
+      return
+    }
+
+    // Message deleted
+    if (eventType === 'chat_message_delete' || eventType === 'message_delete') {
+      const msgId = data.message_id || data.id || (data.message && data.message.id)
+      const idx = props.messages?.findIndex(m => String(m.id) === String(msgId))
+      if (idx !== -1) {
+        props.messages.splice(idx, 1)
+        console.log('🗑️ Removed deleted message:', msgId)
+      }
+      return
+    }
+
+    // Reaction or reaction update
+    if (eventType === 'reaction_update' || eventType === 'message_reaction') {
+      const payload = data.message || data
+      const idx = props.messages?.findIndex(m => String(m.id) === String(payload.id || payload.message_id))
+      if (idx !== -1) {
+        const updatedMessage = { ...props.messages[idx], reactions: payload.reactions || payload.reaction_stats || props.messages[idx].reactions }
+        props.messages.splice(idx, 1, updatedMessage)
+        console.log('🔁 Updated reactions for message:', updatedMessage.id)
+      }
+      return
+    }
+
+    // Typing indicators or other ephemeral events: emit upward for UI handling
+    if (eventType === 'typing' || eventType === 'user_typing') {
+      emit('message-action', { action: 'typing', data })
+      return
     }
   } catch (error) {
     console.error('❌ Error handling WebSocket message:', error)

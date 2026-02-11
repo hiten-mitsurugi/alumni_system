@@ -49,21 +49,38 @@ class ApproveUserView(APIView):
             
             # Queue background tasks for slow operations
             try:
-                from auth_app.tasks import send_approval_email_task, clear_approval_caches_task
-                
-                # Try to send email in background (Celery)
+                # Check if Celery is available by trying to import it
+                celery_available = False
                 try:
-                    send_approval_email_task.delay(
-                        user_data['id'],
-                        user_data['email'],
-                        user_data['first_name'],
-                        user_data['last_name'],
-                        user_data['username']
-                    )
-                    email_status = 'queued'
-                except Exception as celery_error:
-                    logger.warning(f"Celery not available, sending email synchronously: {celery_error}")
-                    # Fallback: Send email synchronously
+                    from celery import current_app
+                    # Try to inspect active workers
+                    inspect = current_app.control.inspect()
+                    active_workers = inspect.active()
+                    celery_available = active_workers is not None and len(active_workers) > 0
+                except Exception:
+                    celery_available = False
+                
+                # Send email based on Celery availability
+                if celery_available:
+                    # Celery is running, queue the task
+                    try:
+                        from auth_app.tasks import send_approval_email_task
+                        send_approval_email_task.delay(
+                            user_data['id'],
+                            user_data['email'],
+                            user_data['first_name'],
+                            user_data['last_name'],
+                            user_data['username']
+                        )
+                        email_status = 'queued'
+                        logger.info(f"Approval email queued for {user_data['email']}")
+                    except Exception as celery_error:
+                        logger.warning(f"Failed to queue email task: {celery_error}")
+                        celery_available = False
+                
+                if not celery_available:
+                    # Celery not available, send email synchronously
+                    logger.warning(f"Celery workers not detected, sending email synchronously")
                     try:
                         from auth_app.email_templates.approval_email import get_approval_email_template
                         from django.core.mail import EmailMultiAlternatives
@@ -90,19 +107,28 @@ class ApproveUserView(APIView):
                         logger.info(f"Approval email sent synchronously to {user_data['email']}")
                     except Exception as email_error:
                         logger.error(f"Failed to send approval email: {email_error}")
+                        import traceback
+                        logger.error(traceback.format_exc())
                         email_status = 'failed'
                 
                 # Clear additional caches in background (or synchronously if Celery unavailable)
-                try:
-                    clear_approval_caches_task.delay(
-                        user_data['id'],
-                        user_data['year_graduated'],
-                        user_data['program'],
-                        user_data['first_name'],
-                        user_data['last_name']
-                    )
-                except Exception:
-                    # Fallback: Clear caches synchronously
+                if celery_available:
+                    try:
+                        from auth_app.tasks import clear_approval_caches_task
+                        clear_approval_caches_task.delay(
+                            user_data['id'],
+                            user_data['year_graduated'],
+                            user_data['program'],
+                            user_data['first_name'],
+                            user_data['last_name']
+                        )
+                    except Exception:
+                        # Fallback: Clear caches synchronously
+                        cache.delete('approved_alumni_list')
+                        cache.delete('pending_alumni_list')
+                        cache.delete(f'user_detail_{user_data["id"]}')
+                else:
+                    # Clear caches synchronously
                     cache.delete('approved_alumni_list')
                     cache.delete('pending_alumni_list')
                     cache.delete(f'user_detail_{user_data["id"]}')

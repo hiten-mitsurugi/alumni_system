@@ -38,8 +38,9 @@ import PostCard from '@/components/posting/PostCard.vue';
 
 const props = defineProps({
   userId: {
-    type: Number,
-    default: null
+    type: [Number, null],
+    default: null,
+    validator: (value) => value === null || typeof value === 'number'
   }
 });
 
@@ -74,8 +75,10 @@ const fetchPosts = async () => {
     const allPosts = response.data.results || response.data;
     console.log('📊 PostsTab - Total posts from API:', allPosts.length);
 
-    // Determine which user ID to filter by - ensure it's a number
-    const targetUserId = Number(props.userId || authStore.user.id);
+    // Determine which user ID to filter by - handle null safely
+    const targetUserId = props.userId !== null && props.userId !== undefined 
+      ? Number(props.userId) 
+      : authStore.user?.id;
     console.log('🎯 PostsTab - Filtering for user ID:', targetUserId);
     console.log('🎯 PostsTab - Type of targetUserId:', typeof targetUserId);
 

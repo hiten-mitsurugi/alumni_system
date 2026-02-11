@@ -257,3 +257,6 @@ class PrivacyService {
   }
 
 }
+
+export default new PrivacyService()
+

@@ -38,9 +38,20 @@ class EnhancedProfileView(APIView):
         else:
             user = request.user
         
-        # Get privacy settings
-        from auth_app.models import UserFieldPrivacySettings
-        privacy_settings = UserFieldPrivacySettings.objects.filter(user=user).first()
+        # Resolve privacy settings safely. The project uses a per-field
+        # `FieldPrivacySetting` model (not a single `UserFieldPrivacySettings`).
+        # To avoid ImportError and keep this endpoint stable, default to
+        # no privacy restrictions when the expected model/fields aren't
+        # available. This prevents 500s while preserving backward
+        # compatibility.
+        privacy_settings = None
+        try:
+            from auth_app.models import FieldPrivacySetting
+            # We don't attempt to map per-field settings into the older
+            # aggregate shape here; leave `privacy_settings` as None so the
+            # endpoint behaves as public by default.
+        except Exception:
+            privacy_settings = None
         
         # Determine viewer's relationship with the profile owner
         viewer = request.user
@@ -72,7 +83,7 @@ class EnhancedProfileView(APIView):
         user_data = UserDetailSerializer(user).data
         
         # Get additional profile data
-        from auth_app.models import Following, Skill, WorkHistory, Education, Achievement
+        from auth_app.models import Following, UserSkill, WorkHistory, Education, Achievement
         
         # Connection status (only if viewing another user's profile)
         connection_status = {}
@@ -101,10 +112,10 @@ class EnhancedProfileView(APIView):
         following_count = Following.objects.filter(follower=user, status='accepted').count()
         mutual_count = Following.objects.filter(following=user, is_mutual=True, status='accepted').count()
         
-        # Skills
-        from auth_app.serializers import SkillSerializer
-        skills = Skill.objects.filter(user=user)
-        skills_data = SkillSerializer(skills, many=True).data
+        # Skills (use UserSkill which links users to skill entries)
+        from auth_app.serializers.skills_work_serializers import UserSkillSerializer
+        user_skills = UserSkill.objects.filter(user=user)
+        skills_data = UserSkillSerializer(user_skills, many=True).data
         
         # Work History
         from auth_app.serializers import WorkHistorySerializer
@@ -118,7 +129,7 @@ class EnhancedProfileView(APIView):
         
         # Achievements
         from auth_app.serializers import AchievementSerializer
-        achievements = Achievement.objects.filter(user=user).order_by('-date')
+        achievements = Achievement.objects.filter(user=user).order_by('-date_achieved')
         achievements_data = AchievementSerializer(achievements, many=True).data
         
         # Combine all data
@@ -133,14 +144,108 @@ class EnhancedProfileView(APIView):
             'education': education_data,
             'achievements': achievements_data,
             'is_owner': is_owner,
-            'privacy_settings': {
-                'profile_visibility': privacy_settings.profile_visibility if privacy_settings else 'public',
-                'email_visibility': privacy_settings.email_visibility if privacy_settings else 'public',
-                'skills_visibility': privacy_settings.skills_visibility if privacy_settings else 'public',
-            } if privacy_settings else None
+            'privacy_settings': None  # Simplified; field-based privacy handled elsewhere
         }
         
+        # Safely add memberships, recognitions, trainings, publications if available
+        try:
+            from auth_app.models import Membership, Recognition, Training, Publication, Certificate
+            from auth_app.serializers.profile_items_serializers import (
+                MembershipSerializer, RecognitionSerializer, 
+                TrainingSerializer, PublicationSerializer, CertificateSerializer
+            )
+            
+            memberships = Membership.objects.filter(user=user)
+            enhanced_profile['memberships'] = MembershipSerializer(memberships, many=True).data
+            
+            recognitions = Recognition.objects.filter(user=user)
+            enhanced_profile['recognitions'] = RecognitionSerializer(recognitions, many=True).data
+            
+            trainings = Training.objects.filter(user=user)
+            enhanced_profile['trainings'] = TrainingSerializer(trainings, many=True).data
+            
+            publications = Publication.objects.filter(user=user)
+            enhanced_profile['publications'] = PublicationSerializer(publications, many=True).data
+            
+            certificates = Certificate.objects.filter(user=user)
+            enhanced_profile['certificates'] = CertificateSerializer(certificates, many=True).data
+        except Exception as e:
+            logger.error(f"Error fetching additional profile data: {str(e)}", exc_info=True)
+            # Continue without these fields if there's an error
+        
         return Response(enhanced_profile)
+    
+    def patch(self, request, user_id=None, username=None):
+        """
+        Update user profile (supports profile picture, cover photo, and other fields)
+        Only allows users to update their own profile
+        """
+        # If user_id or username is provided, validate it matches the current user
+        if user_id and user_id != request.user.id:
+            return Response({
+                'error': 'You can only update your own profile'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        if username and username != request.user.username:
+            return Response({
+                'error': 'You can only update your own profile'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        user = request.user
+        
+        try:
+            # Handle file uploads
+            profile_picture = request.FILES.get('profile_picture')
+            cover_photo = request.FILES.get('cover_photo')
+            
+            # Update fields on CustomUser model
+            updatable_fields = [
+                'first_name', 'last_name', 'email', 'contact_number', 
+                'bio', 'middle_name', 'program', 'year_graduated'
+            ]
+            
+            for field in updatable_fields:
+                if field in request.data:
+                    setattr(user, field, request.data[field])
+            
+            # Handle profile picture upload (on CustomUser)
+            if profile_picture:
+                user.profile_picture = profile_picture
+            
+            user.save()
+            
+            # Handle cover photo and other profile fields (on Profile model)
+            profile, created = Profile.objects.get_or_create(user=user)
+            
+            profile_fields = [
+                'location', 'headline', 'summary', 
+                'linkedin_url', 'facebook_url', 'twitter_url', 
+                'instagram_url', 'website_url'
+            ]
+            
+            for field in profile_fields:
+                if field in request.data:
+                    setattr(profile, field, request.data[field])
+            
+            if cover_photo:
+                profile.cover_photo = cover_photo
+            
+            profile.save()
+            
+            # Return updated user data
+            user_data = UserDetailSerializer(user).data
+            
+            return Response({
+                'message': 'Profile updated successfully',
+                **user_data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error updating profile: {str(e)}")
+            return Response({
+                'error': 'Failed to update profile',
+                'details': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DebugEducationView(APIView):

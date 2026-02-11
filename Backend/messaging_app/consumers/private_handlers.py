@@ -76,9 +76,13 @@ class PrivateMessageHandlersMixin:
             
             # Serialize and broadcast
             serialized = await self.serialize_message(message)
+            # Notify only the receiver via broadcast. The sender gets a direct
+            # confirmation via `send_json` below to avoid duplicate messages
+            # being delivered to the sender (once via broadcast and once via
+            # direct send).
             await self.broadcast_to_users(
-                [self.user.id, receiver.id], 
-                'chat_message', 
+                [receiver.id],
+                'chat_message',
                 {'message': serialized}
             )
             
@@ -136,11 +140,9 @@ class PrivateMessageHandlersMixin:
             # Serialize and broadcast
             serialized = await self.serialize_message(bump_message)
             
-            await self.broadcast_to_users(
-                [self.user.id, receiver.id], 
-                'chat_message', 
-                {'message': serialized}
-            )
+            # Broadcast only to receiver; send confirmation directly to sender
+            # to prevent the sender receiving the same message twice.
+            await self.broadcast_to_users([receiver.id], 'chat_message', {'message': serialized})
             await self.send_json({'status': 'success', 'message': serialized})
             
         except ValueError as ve:
@@ -316,17 +318,20 @@ class PrivateMessageHandlersMixin:
                 
             message, edited_at, users = await _edit()
             
-            # Broadcast to participants
+            # Broadcast to participants (exclude sender to avoid duplicate
+            # delivery since we send a direct confirmation below)
             logger.info(f"Broadcasting edit to users: {users}")
-            await self.broadcast_to_users(
-                users,
-                'message_edited',
-                {
-                    'message_id': str(message.id), 
-                    'new_content': new_content,
-                    'edited_at': edited_at.isoformat()
-                }
-            )
+            recipients = [uid for uid in users if uid != self.user.id]
+            if recipients:
+                await self.broadcast_to_users(
+                    recipients,
+                    'message_edited',
+                    {
+                        'message_id': str(message.id),
+                        'new_content': new_content,
+                        'edited_at': edited_at.isoformat()
+                    }
+                )
             
             # Send success confirmation to sender
             await self.send_json({
@@ -360,11 +365,14 @@ class PrivateMessageHandlersMixin:
                 
             users = await _delete()
             
-            await self.broadcast_to_users(
-                users,
-                'message_deleted',
-                {'message_id': str(message_id)}
-            )
+            # Exclude sender to avoid duplicate notification on sender side
+            recipients = [uid for uid in users if uid != self.user.id]
+            if recipients:
+                await self.broadcast_to_users(
+                    recipients,
+                    'message_deleted',
+                    {'message_id': str(message_id)}
+                )
             
             # Send success confirmation to sender
             await self.send_json({
@@ -425,17 +433,20 @@ class PrivateMessageHandlersMixin:
                 
             message, is_pinned, users = await _pin()
             
-            # Broadcast to participants
+            # Broadcast to participants (exclude sender to avoid duplicate
+            # delivery since we send a direct confirmation below)
             logger.info(f"Broadcasting pin update to users: {users}")
-            await self.broadcast_to_users(
-                users,
-                'message_pinned',
-                {
-                    'message_id': str(message.id), 
-                    'is_pinned': is_pinned,
-                    'action': 'pin' if is_pinned else 'unpin'
-                }
-            )
+            recipients = [uid for uid in users if uid != self.user.id]
+            if recipients:
+                await self.broadcast_to_users(
+                    recipients,
+                    'message_pinned',
+                    {
+                        'message_id': str(message.id),
+                        'is_pinned': is_pinned,
+                        'action': 'pin' if is_pinned else 'unpin'
+                    }
+                )
             
             # Send success confirmation to sender
             await self.send_json({
@@ -526,96 +537,3 @@ class PrivateMessageHandlersMixin:
                 'user_stop_typing', 
                 {'user_id': self.user.id}
             )
-
-    # Private helper methods
-
-    async def _create_message_request(self, receiver, content: str):
-        """Create a message request for new conversation."""
-        @database_sync_to_async
-        def _create_request():
-            # Check for existing pending request
-            existing = MessageRequest.objects.filter(
-                Q(sender=self.user, receiver=receiver) |
-                Q(sender=receiver, receiver=self.user),
-                accepted=False
-            ).exists()
-            
-            if existing:
-                return None
-                
-            return MessageRequest.objects.create(
-                sender=self.user, 
-                receiver=receiver, 
-                content=content
-            )
-            
-        request = await _create_request()
-        
-        if not request:
-            return await self.send_json({'status': 'pending', 'message': 'Request already sent'})
-            
-        # Notify receiver
-        await self.broadcast_to_users(
-            [receiver.id], 
-            'message_request', 
-            {
-                'message': {
-                    'id': str(request.id),
-                    'sender': {'id': self.user.id, 'first_name': self.user.first_name},
-                    'content': content,
-                    'timestamp': request.timestamp.isoformat()
-                }
-            }
-        )
-        
-        # 🔔 NOTIFICATION: Broadcast notification update for message request
-        await self.channel_layer.group_send(
-            f'user_{receiver.id}',
-            {
-                'type': 'notification_update',
-                'data': {
-                    'action': 'increment',
-                    'type': 'request'
-                }
-            }
-        )
-        
-        await self.send_json({'status': 'pending', 'message': 'Message request sent'})
-
-    async def _create_bump_message(self, receiver, original_message_id: str):
-        """Create a bump message referencing the original message."""
-        @database_sync_to_async
-        def _create():
-            try:
-                # Get the original message - can be any message accessible to both users
-                original_message = Message.objects.get(id=original_message_id)
-                
-                # Verify the message is part of the conversation between these users
-                is_in_conversation = (
-                    (original_message.sender == self.user and original_message.receiver == receiver) or
-                    (original_message.sender == receiver and original_message.receiver == self.user)
-                )
-                
-                if not is_in_conversation:
-                    raise ValueError("Message not found in this conversation")
-                
-                # Create bump message with special content and reply relationship
-                message = Message.objects.create(
-                    sender=self.user,
-                    receiver=receiver,
-                    content="🔔 Bumped message",  # Special indicator for bump
-                    reply_to=original_message
-                )
-                
-                # Return with relationships loaded
-                return Message.objects.select_related(
-                    'sender', 'receiver', 'reply_to', 'reply_to__sender'
-                ).prefetch_related('attachments').get(id=message.id)
-                
-            except Message.DoesNotExist:
-                raise ValueError("Original message not found")
-            except Exception as e:
-                logger.error(f"Error creating bump message: {e}")
-                raise
-            
-        return await _create()

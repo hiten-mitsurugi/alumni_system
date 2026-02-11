@@ -142,7 +142,7 @@ class EnhancedUserDetailSerializer(serializers.ModelSerializer):
     
     def _filter_privacy_items(self, data, target_user, requesting_user):
         """Filter individual items based on their privacy settings"""
-        from ..models import FieldPrivacySetting
+        from auth_app.models import FieldPrivacySetting
         
         # Filter education items
         if 'education' in data and data['education']:

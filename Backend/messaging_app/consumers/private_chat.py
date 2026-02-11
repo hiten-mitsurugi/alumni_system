@@ -8,11 +8,12 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from .base import MessagingBaseMixin
 from .private_handlers import PrivateMessageHandlersMixin
+from .private_helpers import PrivateMessageHelpersMixin as PrivateHelpersMixin
 
 logger = logging.getLogger(__name__)
 
 
-class PrivateChatConsumer(PrivateMessageHandlersMixin, MessagingBaseMixin, AsyncJsonWebsocketConsumer):
+class PrivateChatConsumer(PrivateMessageHandlersMixin, PrivateHelpersMixin, MessagingBaseMixin, AsyncJsonWebsocketConsumer):
     """
     WebSocket consumer for private messaging between two users.
     Handles message sending, reactions, editing, deletion, and read receipts.

@@ -55,7 +55,8 @@ class SuggestedConnectionsView(APIView):
         # Combine following and pending IDs
         exclude_ids = list(following_ids) + list(pending_user_ids) + [current_user.id]
         
-        # Get user's skills
+        # Get user's skills (use UserSkill model, not Skill)
+        from auth_app.models import UserSkill
         user_skills = list(UserSkill.objects.filter(user=current_user).values_list('name', flat=True))
         
         # Find users with similar skills

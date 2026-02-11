@@ -40,6 +40,7 @@ const handleProfilePictureUpload = async (event) => {
       authStore.setUser(authStore.user);
     }
     event.target.value = '';
+    alert('Profile picture uploaded successfully!');
     console.log('Profile picture updated successfully');
   } catch (error) {
     console.error('Failed to upload profile picture:', error);

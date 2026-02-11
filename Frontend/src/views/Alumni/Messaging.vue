@@ -272,22 +272,6 @@ const {
   clearCache
 } = useMessages()
 
-const {
-  sendMessage,
-  editMessage,
-  deleteMessage: deleteMessageAction,
-  sendReaction,
-  handleMessageAction,
-  handleMessageRead
-} = useMessageActions(
-  ref(null), // selectedConversation - will be linked below
-  currentUser,
-  messages,
-  privateWs,
-  groupWs,
-  messageCache,
-  prefetchedConversations
-)
 
 const {
   conversations,
@@ -309,6 +293,24 @@ const {
   rejectPendingMessage,
   focusSearch
 } = useConversations(currentUser, route)
+
+// Initialize message actions AFTER we have the real selectedConversation ref
+const {
+  sendMessage,
+  editMessage,
+  deleteMessage: deleteMessageAction,
+  sendReaction,
+  handleMessageAction,
+  handleMessageRead
+} = useMessageActions(
+  selectedConversation,
+  currentUser,
+  messages,
+  privateWs,
+  groupWs,
+  messageCache,
+  prefetchedConversations
+)
 
 const {
   showPendingMessages,

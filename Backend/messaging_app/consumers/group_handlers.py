@@ -360,12 +360,8 @@ class GroupMessageHandlersMixin:
                 }
             )
             
-            # Send success confirmation to sender
-            await self.send_json({
-                'status': 'success', 
-                'action': 'message_edited',
-                'message_id': str(message_id)
-            })
+            # Success is delivered via the group broadcast; no direct sender
+            # confirmation needed to avoid duplicate events on the sender.
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot edit this message'})
@@ -397,12 +393,8 @@ class GroupMessageHandlersMixin:
                 {'type': 'message_deleted', 'message_id': str(message_id)}
             )
             
-            # Send success confirmation to sender
-            await self.send_json({
-                'status': 'success', 
-                'action': 'message_deleted',
-                'message_id': str(message_id)
-            })
+            # Success is delivered via the group broadcast; no direct sender
+            # confirmation needed to avoid duplicate events on the sender.
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot delete this message'})
@@ -439,13 +431,8 @@ class GroupMessageHandlersMixin:
                 }
             )
             
-            # Send success confirmation to sender
-            await self.send_json({
-                'status': 'success', 
-                'action': 'message_pinned',
-                'message_id': str(message_id),
-                'is_pinned': is_pinned
-            })
+            # Success is delivered via the group broadcast; no direct sender
+            # confirmation needed to avoid duplicate events on the sender.
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Message not found in this group'})
