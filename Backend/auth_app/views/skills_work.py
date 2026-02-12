@@ -87,7 +87,9 @@ class WorkHistoryListCreateView(ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        logger.info(f"💼 Creating work history for user {self.request.user.id}")
+        work_history = serializer.save(user=self.request.user)
+        logger.info(f"✅ Work history created: ID={work_history.id}, Occupation={work_history.occupation}")
         # Clear cache after creating new work history
         cache.delete(f'work_history_{self.request.user.id}')
 

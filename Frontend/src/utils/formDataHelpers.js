@@ -5,23 +5,32 @@
  * @returns {FormData}
  */
 export function createAchievementFormData(achievement, file = null) {
+  console.log('🔧 createAchievementFormData: Received achievement data:', achievement)
+  console.log('🔧 createAchievementFormData: Received file:', file)
+  
   const formData = new FormData()
   
-  // Add basic fields
+  // Add required fields
   if (achievement.title) formData.append('title', achievement.title)
-  if (achievement.issuing_organization) formData.append('issuing_organization', achievement.issuing_organization)
-  if (achievement.issue_date) formData.append('issue_date', achievement.issue_date)
-  if (achievement.description) formData.append('description', achievement.description)
-  if (achievement.url) formData.append('url', achievement.url)
+  if (achievement.type) formData.append('type', achievement.type)
   
-  // Add visibility
-  if (achievement.visibility !== undefined) {
-    formData.append('visibility', achievement.visibility)
+  // Add optional fields
+  if (achievement.organization) formData.append('organization', achievement.organization)
+  if (achievement.date_achieved) formData.append('date_achieved', achievement.date_achieved)
+  if (achievement.description) formData.append('description', achievement.description)
+  
+  // Add boolean field
+  formData.append('is_featured', achievement.is_featured || false)
+  
+  // Add file if provided (use attachment as the field name)
+  if (file) {
+    formData.append('attachment', file)
   }
   
-  // Add file if provided
-  if (file) {
-    formData.append('achievement_file', file)
+  // Log all FormData entries
+  console.log('🔧 createAchievementFormData: FormData entries:')
+  for (let [key, value] of formData.entries()) {
+    console.log(`  ${key}:`, value)
   }
   
   return formData

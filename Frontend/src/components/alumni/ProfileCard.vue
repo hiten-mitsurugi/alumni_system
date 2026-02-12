@@ -85,8 +85,8 @@
           :class="[
             'w-full px-3 py-2 text-sm font-medium transition-colors rounded-lg',
             themeStore.isDarkMode 
-              ? 'text-gray-300 bg-gray-700 hover:bg-gray-600' 
-              : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+              ? 'text-white bg-gray-700 hover:bg-gray-600' 
+              : 'text-orange-700 bg-orange-100 hover:bg-orange-200'
           ]"
         >
           Edit Profile
@@ -96,8 +96,8 @@
           :class="[
             'w-full px-3 py-2 text-sm font-medium transition-colors rounded-lg',
             themeStore.isDarkMode 
-              ? 'text-green-400 bg-gray-700 hover:bg-gray-600' 
-              : 'text-green-600 bg-blue-50 hover:bg-blue-100'
+              ? 'text-white bg-gray-700 hover:bg-gray-600' 
+              : 'text-orange-700 bg-orange-100 hover:bg-orange-200'
           ]"
         >
           View Profile

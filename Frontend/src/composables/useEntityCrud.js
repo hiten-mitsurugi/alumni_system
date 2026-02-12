@@ -10,7 +10,11 @@ export function useEntityCrud(endpoint) {
    * Create a new entity
    */
   const create = async (data) => {
+    console.log(`📤 useEntityCrud: Creating ${endpoint}`, { data })
     const response = await api.post(`/auth/${endpoint}/`, data)
+    console.log(`✅ useEntityCrud: Created ${endpoint} successfully`, { 
+      response: response.data 
+    })
     return response.data
   }
 
@@ -18,7 +22,11 @@ export function useEntityCrud(endpoint) {
    * Update an existing entity
    */
   const update = async (id, data) => {
+    console.log(`📝 useEntityCrud: Updating ${endpoint} #${id}`, { data })
     const response = await api.put(`/auth/${endpoint}/${id}/`, data)
+    console.log(`✅ useEntityCrud: Updated ${endpoint} #${id} successfully`, { 
+      response: response.data 
+    })
     return response.data
   }
 

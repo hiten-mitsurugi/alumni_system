@@ -11,18 +11,23 @@ export function useProfileCrud({
   selectedItem,
   showModal,
   closeModalFn,
+  openModalFn,
   entityName = 'item',
   onSuccess = null,
   isSkill = false
 }) {
   const add = () => {
-    selectedItem.value = null
-    showModal.value = true
+    console.log(`➕ useProfileCrud: Adding new ${entityName}`)
+    if (openModalFn) {
+      openModalFn(null)
+    }
   }
 
   const edit = (item) => {
-    selectedItem.value = item
-    showModal.value = true
+    console.log(`✏️ useProfileCrud: Editing ${entityName}`, item)
+    if (openModalFn) {
+      openModalFn(item)
+    }
   }
 
   const remove = async (itemId) => {
@@ -46,23 +51,34 @@ export function useProfileCrud({
 
   const save = async (data) => {
     try {
+      console.log(`💾 useProfileCrud: Saving ${entityName}`, {
+        data,
+        selectedItem: selectedItem.value,
+        isEditing: !!selectedItem.value
+      })
+      
       if (selectedItem.value) {
+        console.log(`✏️ Updating ${entityName} with ID:`, selectedItem.value.id)
         await updateApi(selectedItem.value.id, data)
       } else {
+        console.log(`➕ Creating new ${entityName}`)
         await createApi(data)
       }
 
+      console.log(`✅ ${entityName} saved successfully, closing modal...`)
       closeModalFn()
       
+      console.log(`🔄 Refreshing profile data...`)
       if (isSkill) {
         await loadUserSkills()
       } else {
         await fetchProfile()
       }
       
+      console.log(`🎉 ${entityName} save process complete`)
       if (onSuccess) onSuccess('saved')
     } catch (error) {
-      console.error(`Error saving ${entityName}:`, error)
+      console.error(`❌ Error saving ${entityName}:`, error)
       const message = error.response?.data?.detail || error.message
       alert(`Failed to save ${entityName}: ` + message)
       throw error

@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { 
   EyeIcon,
@@ -198,6 +198,21 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['add', 'edit', 'delete', 'section-visibility-changed', 'experience-visibility-changed'])
+
+console.log('🔧 ProfileExperienceSection: Component loaded with props', {
+  workHistoriesLength: props.workHistories?.length || 0,
+  workHistories: props.workHistories,
+  isOwnProfile: props.isOwnProfile
+})
+
+// Watch for prop changes
+watch(() => props.workHistories, (newValue, oldValue) => {
+  console.log('👁️ ProfileExperienceSection: workHistories prop changed', {
+    old: oldValue,
+    new: newValue,
+    newLength: newValue?.length || 0
+  })
+}, { deep: true })
 
 // Privacy state
 const showExperienceVisibilityMenu = ref(null)
@@ -257,7 +272,16 @@ function getExperienceVisibilityButtonClass(experience) {
 const showAllWork = ref(false)
 
 const displayedWork = computed(() => {
-  if (!props.workHistories) return []
+  console.log('🎯 ProfileExperienceSection: Computing displayedWork', {
+    workHistories: props.workHistories,
+    length: props.workHistories?.length || 0,
+    showAllWork: showAllWork.value
+  })
+  
+  if (!props.workHistories) {
+    console.log('⚠️ ProfileExperienceSection: No workHistories prop')
+    return []
+  }
   
   // Sort by start date (most recent first)
   const sorted = [...props.workHistories].sort((a, b) => {
@@ -266,8 +290,12 @@ const displayedWork = computed(() => {
     return dateB - dateA
   })
   
+  console.log('📊 ProfileExperienceSection: Sorted work histories', sorted)
+  
   // Show first 3 or all if expanded
-  return showAllWork.value ? sorted : sorted.slice(0, 3)
+  const result = showAllWork.value ? sorted : sorted.slice(0, 3)
+  console.log('✅ ProfileExperienceSection: Returning displayed work', result)
+  return result
 })
 
 const formatWorkDuration = (work) => {

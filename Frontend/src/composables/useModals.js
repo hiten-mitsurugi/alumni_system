@@ -37,13 +37,21 @@ export function useModals() {
    * @param {Object} item - Optional item to edit
    */
   const openModal = (modalName, item = null) => {
+    console.log(`🔓 useModals: Opening modal "${modalName}"`, { item })
+    
     if (modals.hasOwnProperty(modalName)) {
       modals[modalName] = true
       
       // Set selected item if applicable
       if (selectedItems.hasOwnProperty(modalName) && item) {
         selectedItems[modalName] = item
+        console.log(`✅ useModals: Set selectedItems.${modalName}`, item)
+      } else if (selectedItems.hasOwnProperty(modalName)) {
+        selectedItems[modalName] = null
+        console.log(`🔄 useModals: Cleared selectedItems.${modalName}`)
       }
+    } else {
+      console.warn(`⚠️ useModals: Modal "${modalName}" not found in modals object`)
     }
   }
 

@@ -83,19 +83,6 @@
             />
           </div>
 
-          <!-- URL -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              URL (Optional)
-            </label>
-            <input
-              v-model="form.url"
-              type="url"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="https://example.com/certificate"
-            />
-          </div>
-
           <!-- Featured -->
           <div class="flex items-center">
             <input
@@ -184,7 +171,6 @@ const formTitle = ref('')
 const formType = ref('')
 const formOrganization = ref('')
 const formDateAchieved = ref('')
-const formUrl = ref('')
 const formDescription = ref('')
 const formIsFeatured = ref(false)
 const formAttachment = ref(null)
@@ -199,8 +185,6 @@ const form = reactive({
   set organization(val) { formOrganization.value = val },
   get date_achieved() { return formDateAchieved.value },
   set date_achieved(val) { formDateAchieved.value = val },
-  get url() { return formUrl.value },
-  set url(val) { formUrl.value = val },
   get description() { return formDescription.value },
   set description(val) { formDescription.value = val },
   get is_featured() { return formIsFeatured.value },
@@ -220,7 +204,6 @@ if (props.achievement) {
   formType.value = props.achievement.type || ''
   formOrganization.value = props.achievement.organization || ''
   formDateAchieved.value = props.achievement.date_achieved || ''
-  formUrl.value = props.achievement.url || ''
   formDescription.value = props.achievement.description || ''
   formIsFeatured.value = props.achievement.is_featured || false
   formAttachment.value = props.achievement.attachment || null
@@ -231,10 +214,6 @@ if (props.achievement) {
 // Watch the individual ref values
 watch(formType, (newType) => {
   console.log('🔍 AchievementModal: Type watcher triggered:', newType)
-})
-
-watch(formUrl, (newUrl) => {
-  console.log('🔍 AchievementModal: URL watcher triggered:', newUrl)
 })
 
 watch(formAttachment, (newAttachment) => {
@@ -280,7 +259,6 @@ const handleSubmit = async () => {
       type: formType.value,
       organization: formOrganization.value,
       date_achieved: formDateAchieved.value,
-      url: formUrl.value,
       description: formDescription.value,
       is_featured: formIsFeatured.value,
       attachment: formAttachment.value
@@ -290,7 +268,6 @@ const handleSubmit = async () => {
     console.log('  title:', formTitle.value)
     console.log('  type:', formType.value)
     console.log('  organization:', formOrganization.value)
-    console.log('  url:', formUrl.value)
     console.log('  attachment:', formAttachment.value)
     
     console.log('🔍 AchievementModal sending data:', achievementData)
@@ -300,17 +277,6 @@ const handleSubmit = async () => {
       alert('Please fill in all required fields (Title and Type)')
       loading.value = false
       return
-    }
-    
-    // Validate URL format if provided
-    if (achievementData.url && achievementData.url.trim()) {
-      try {
-        new URL(achievementData.url)
-      } catch {
-        alert('Please enter a valid URL (e.g., https://example.com)')
-        loading.value = false
-        return
-      }
     }
     
     // DON'T clean up to empty strings - leave the actual values

@@ -181,6 +181,7 @@ const educationCrud = useProfileCrud({
   deleteApi: deleteEducationApi,
   selectedItem: selectedEducation,
   showModal: showEducationModal,
+  openModalFn: (item) => openModal('education', item),
   closeModalFn: () => closeModal('education'),
   entityName: 'education record'
 })
@@ -194,6 +195,7 @@ const experienceCrud = useProfileCrud({
   deleteApi: deleteExperienceApi,
   selectedItem: selectedExperience,
   showModal: showExperienceModal,
+  openModalFn: (item) => openModal('workHistory', item),
   closeModalFn: () => closeModal('workHistory'),
   entityName: 'work experience'
 })
@@ -207,6 +209,7 @@ const skillCrud = useProfileCrud({
   deleteApi: deleteSkillApi,
   selectedItem: selectedSkill,
   showModal: showSkillModal,
+  openModalFn: (item) => openModal('skills', item),
   closeModalFn: () => closeModal('skills'),
   entityName: 'skill',
   isSkill: true,
@@ -222,6 +225,7 @@ const achievementCrud = useProfileCrud({
   deleteApi: deleteAchievementApi,
   selectedItem: selectedAchievement,
   showModal: showAchievementModal,
+  openModalFn: (item) => openModal('achievements', item),
   closeModalFn: () => closeModal('achievements'),
   entityName: 'achievement'
 })
@@ -302,6 +306,7 @@ const membershipCrud = useProfileCrud({
   deleteApi: deleteMembershipApi,
   selectedItem: selectedMembership,
   showModal: showMembershipModal,
+  openModalFn: (item) => openModal('memberships', item),
   closeModalFn: () => closeModal('memberships'),
   entityName: 'membership'
 })
@@ -315,6 +320,7 @@ const recognitionCrud = useProfileCrud({
   deleteApi: deleteRecognitionApi,
   selectedItem: selectedRecognition,
   showModal: showRecognitionModal,
+  openModalFn: (item) => openModal('recognitions', item),
   closeModalFn: () => closeModal('recognitions'),
   entityName: 'recognition'
 })
@@ -328,6 +334,7 @@ const trainingCrud = useProfileCrud({
   deleteApi: deleteTrainingApi,
   selectedItem: selectedTraining,
   showModal: showTrainingModal,
+  openModalFn: (item) => openModal('trainings', item),
   closeModalFn: () => closeModal('trainings'),
   entityName: 'training'
 })
@@ -341,6 +348,7 @@ const publicationCrud = useProfileCrud({
   deleteApi: deletePublicationApi,
   selectedItem: selectedPublication,
   showModal: showPublicationModal,
+  openModalFn: (item) => openModal('publications', item),
   closeModalFn: () => closeModal('publications'),
   entityName: 'publication'
 })

@@ -122,6 +122,8 @@ class EnhancedProfileView(APIView):
         work_history = WorkHistory.objects.filter(user=user).order_by('-start_date')
         work_data = WorkHistorySerializer(work_history, many=True).data
         
+        logger.info(f"📊 Enhanced Profile: Fetched {len(work_data)} work histories for user {user.id}")
+        
         # Education
         from auth_app.serializers import EducationSerializer
         education = Education.objects.filter(user=user).order_by('-start_date')
@@ -140,7 +142,7 @@ class EnhancedProfileView(APIView):
             'following_count': following_count,
             'mutual_count': mutual_count,
             'skills': skills_data,
-            'work_history': work_data,
+            'work_histories': work_data,  # Changed from 'work_history' to 'work_histories'
             'education': education_data,
             'achievements': achievements_data,
             'is_owner': is_owner,

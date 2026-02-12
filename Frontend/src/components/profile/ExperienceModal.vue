@@ -212,9 +212,14 @@ const handleSubmit = async () => {
       }
     })
     
+    console.log('📤 ExperienceModal: Emitting save event', {
+      experienceData,
+      isEditing: isEditing.value
+    })
+    
     emit('save', experienceData)
   } catch (error) {
-    console.error('Error saving experience:', error)
+    console.error('❌ ExperienceModal: Error in handleSubmit:', error)
   } finally {
     loading.value = false
   }

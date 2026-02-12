@@ -110,6 +110,12 @@ export function useProfileData(route, authStore) {
       const response = await api.get(`/auth${endpoint}`)
       const data = response.data
 
+      console.log('🔍 useProfileData: Fetched profile data', {
+        hasWorkHistories: !!data.work_histories,
+        workHistoriesLength: data.work_histories?.length || 0,
+        workHistoriesData: data.work_histories
+      })
+
       // Only update values on successful fetch (don't set to null on error)
       user.value = data
       profile.value = data.profile || {}
@@ -125,6 +131,11 @@ export function useProfileData(route, authStore) {
         ...work,
         visibility: getItemPrivacy('experience', work.id) || 'connections_only'
       }))
+      
+      console.log('✅ useProfileData: Updated workHistories ref', {
+        length: workHistories.value.length,
+        items: workHistories.value
+      })
 
       achievements.value = (data.achievements || []).map(achievement => ({
         ...achievement,
