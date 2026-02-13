@@ -319,20 +319,84 @@ class SurveyTemplateSerializer(serializers.ModelSerializer):
         return template
 
     def update(self, instance, validated_data):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"\n{'='*80}")
+        logger.info(f"🟢 SurveyTemplateSerializer.update STARTED")
+        logger.info(f"  - Instance ID: {instance.id}")
+        logger.info(f"  - Instance name: {instance.name}")
+        logger.info(f"  - validated_data keys: {list(validated_data.keys())}")
+        logger.info(f"  - validated_data: {validated_data}")
+        
         # Handle categories separately
         categories = validated_data.pop('categories', None)
         
+        logger.info(f"  - Categories popped from validated_data: {categories}")
+        logger.info(f"  - Categories type: {type(categories)}")
+        logger.info(f"  - Categories is None: {categories is None}")
+        if categories is not None:
+            logger.info(f"  - Categories length: {len(categories)}")
+            logger.info(f"  - Category IDs: {[getattr(c, 'id', 'N/A') for c in categories]}")
+        
+        # Get current state BEFORE any changes
+        current_links_before = instance.surveytemplatecategory_set.all()
+        current_cat_ids_before = set(link.category.id for link in current_links_before)
+        logger.info(f"  - BEFORE UPDATE - Current category IDs in database: {current_cat_ids_before}")
+        
         # Update other fields
         instance = super().update(instance, validated_data)
+        logger.info(f"  - Non-category fields updated")
         
-        # Update categories if provided
-        if categories is not None:
-            # Clear existing categories
-            instance.surveytemplatecategory_set.all().delete()
+        # Update categories if provided - ONLY if explicitly sent and not empty
+        # IMPORTANT: Always preserve existing categories when adding new ones
+        # The frontend should send ALL category IDs (existing + new) to avoid accidental deletions
+        if categories is not None and len(categories) > 0:
+            # Get current category links
+            current_links = instance.surveytemplatecategory_set.all()
+            current_cat_ids = set(link.category.id for link in current_links)
+            new_cat_ids = set(cat.id for cat in categories if isinstance(cat, SurveyCategory))
             
-            # Add new categories with order
+            logger.info(f"Current categories: {current_cat_ids}")
+            logger.info(f"New categories: {new_cat_ids}")
+            
+            # Safety check: Warn if removing all existing categories (potential bug)
+            if current_cat_ids and not (new_cat_ids & current_cat_ids):
+                logger.warning(f"⚠️  WARNING: All existing categories are being removed!")
+                logger.warning(f"   Current: {current_cat_ids}")
+                logger.warning(f"   New: {new_cat_ids}")
+                logger.warning(f"   This might be unintentional - verify the frontend is sending all category IDs")
+            
+            # Only delete links that are being removed
+            links_to_remove = current_links.filter(category__id__in=(current_cat_ids - new_cat_ids))
+            logger.info(f"Removing {links_to_remove.count()} old category links")
+            links_to_remove.delete()
+            
+            # Add new category links (skip duplicates and invalid ones)
             for i, category in enumerate(categories):
-                instance.surveytemplatecategory_set.create(category=category, order=i)
+                logger.info(f"Processing category {i}: {category} (type: {type(category).__name__}, id: {getattr(category, 'id', 'N/A')})")
+                
+                # Validate category exists in database
+                if isinstance(category, SurveyCategory) and SurveyCategory.objects.filter(id=category.id).exists():
+                    # Check if already linked
+                    if not instance.surveytemplatecategory_set.filter(category=category).exists():
+                        instance.surveytemplatecategory_set.create(category=category, order=i)
+                        logger.info(f"Successfully linked category {category.id} to template {instance.id}")
+                    else:
+                        # Update order for existing link
+                        instance.surveytemplatecategory_set.filter(category=category).update(order=i)
+                        logger.info(f"Updated order for existing category {category.id}")
+                else:
+                    logger.warning(f"Skipping invalid category: {category} (type: {type(category).__name__})")
+        else:
+            logger.info(f"  - SKIPPING category update (categories is None or empty)")
+        
+        # Log final state
+        final_links = instance.surveytemplatecategory_set.all()
+        final_cat_ids = list(link.category.id for link in final_links)
+        logger.info(f"  - AFTER UPDATE - Final category IDs: {final_cat_ids}")
+        logger.info(f"🟢 SurveyTemplateSerializer.update COMPLETED")
+        logger.info(f"{'='*80}\n")
         
         return instance
 

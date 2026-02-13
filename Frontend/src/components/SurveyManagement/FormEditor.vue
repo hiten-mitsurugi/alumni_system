@@ -101,7 +101,7 @@
     <!-- Preview Modal -->
     <div
       v-if="showPreview"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4"
       @click.self="showPreview = false"
     >
       <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -328,7 +328,7 @@
             <!-- Close Button -->
             <button
               @click="showPreview = false; previewCurrentPage = 0"
-              class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+              class="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
             >
               Close Preview
             </button>
@@ -633,14 +633,37 @@ const handleSectionSubmit = async () => {
       await updateSection(editingSectionData.value.id, data)
     } else {
       // Create new section
+      console.log('🔵 STEP 1: Creating new section with data:', data)
       const newSection = await createSection(data)
+      console.log('🔵 STEP 2: New section created:', newSection)
       
       if (newSection) {
-        // Link the new section to the form
-        const currentCategoryIds = (props.form.sections || []).map(s => s.category?.id).filter(Boolean)
-        const updatedCategoryIds = [...currentCategoryIds, newSection.id]
+        // Fetch fresh form data to get ALL current categories (prevents deletion of existing sections)
+        console.log('🔵 STEP 3: Fetching fresh form data for form ID:', props.form.id)
+        const freshForm = await surveyService.getForm(props.form.id)
+        console.log('🔵 STEP 4: Fresh form data received:', freshForm.data)
+        console.log('🔵 STEP 4a: Fresh form sections:', freshForm.data.sections)
         
-        await surveyService.updateForm(props.form.id, { category_ids: updatedCategoryIds })
+        const currentCategoryIds = (freshForm.data.sections || []).map(s => s.category?.id).filter(Boolean)
+        console.log('🔵 STEP 5: Current category IDs extracted:', currentCategoryIds)
+        
+        // Only add the new section if it's not already in the list
+        if (!currentCategoryIds.includes(newSection.id)) {
+          const updatedCategoryIds = [...currentCategoryIds, newSection.id]
+          console.log('🔵 STEP 6: Sending update to backend:')
+          console.log('  - Form ID:', props.form.id)
+          console.log('  - Current categories:', currentCategoryIds)
+          console.log('  - New category ID:', newSection.id)
+          console.log('  - Updated categories:', updatedCategoryIds)
+          console.log('  - Payload:', { category_ids: updatedCategoryIds })
+          
+          const updateResponse = await surveyService.updateForm(props.form.id, { category_ids: updatedCategoryIds })
+          console.log('🔵 STEP 7: Update response received:', updateResponse.data)
+        } else {
+          console.log('🔵 STEP 6 (SKIP): Section already linked to form, skipping update')
+        }
+      } else {
+        console.error('🔴 ERROR: New section creation returned null/undefined')
       }
     }
     

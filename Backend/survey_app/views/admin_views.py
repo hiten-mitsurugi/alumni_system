@@ -157,9 +157,11 @@ class SurveyFormDetailView(generics.RetrieveUpdateDestroyAPIView):
         form_data = SurveyTemplateSerializer(instance).data
 
         # Attach categories with their questions
-        categories = instance.categories.all().order_by('order', 'name')
+        # FIX: Use SurveyTemplateCategory order, not SurveyCategory order
+        template_categories = instance.surveytemplatecategory_set.all().select_related('category').order_by('order')
         categories_data = []
-        for cat in categories:
+        for tc in template_categories:
+            cat = tc.category
             questions = SurveyQuestion.objects.filter(category=cat).order_by('order', 'question_text')
             qdata = SurveyQuestionSerializer(questions, many=True).data
             categories_data.append({

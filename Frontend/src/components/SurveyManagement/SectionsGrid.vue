@@ -246,7 +246,7 @@ function handleDrop(event) {
 }
 
 .sections-grid__empty-btn:hover {
-  background: #2563eb;
+  background: #c05621;
 }
 
 .sections-grid__container {
