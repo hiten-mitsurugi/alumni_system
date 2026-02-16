@@ -28,6 +28,10 @@ export function useRegistrationSurvey() {
         console.log('✅ Survey sections loaded:')
         surveyCategories.value.forEach((section, index) => {
           console.log(`  ${index + 1}. ${section.category.name} (${section.questions.length} questions)`)
+          console.log(`     - description: ${section.category.description}`)
+          console.log(`     - page_title: ${section.category.page_title}`)
+          console.log(`     - page_description: ${section.category.page_description}`)
+          console.log(`     - Full category object:`, section.category)
         })
       } else {
         console.warn('⚠️ No survey sections returned from API')

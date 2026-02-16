@@ -1,6 +1,6 @@
 <script setup>
 defineOptions({ name: 'AlumniRegister' });
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import api from '../services/api';
 import Navbar from '@/components/Navbar.vue';
 import VerifyAlumniDirectory from '@/components/register/VerifyAlumniDirectory.vue';
@@ -389,6 +389,22 @@ const handleSurveyResponses = (responses) => {
   updateCategoryResponses(responses);
 };
 
+// Debug: Watch currentSurveyCategory to see what data it contains
+watch(currentSurveyCategory, (newVal) => {
+  if (newVal) {
+    console.log('🔍 Current Survey Category Changed:');
+    console.log('  - Name:', newVal.category?.name);
+    console.log('  - Description:', newVal.category?.description);
+    console.log('  - Page Title:', newVal.category?.page_title);
+    console.log('  - Page Description:', newVal.category?.page_description);
+    console.log('  - Full category object:', newVal.category);
+  }
+}, { immediate: true });
+
+watch(currentStep, (newVal) => {
+  console.log('📍 Current Step:', newVal);
+});
+
 // Force light theme while this registration page is mounted and load survey data
 onMounted(async () => {
   const wasDark = document.documentElement.classList.contains('dark');
@@ -490,7 +506,16 @@ onUnmounted(() => {
 
           <!-- Dynamic Survey Steps -->
           <div v-if="currentStep > 4 && currentSurveyCategory">
-            <h3 class="text-xl font-semibold text-center mb-6">{{ getStepTitle }}</h3>
+            <h3 class="text-xl font-semibold text-center mb-2">
+              {{ currentSurveyCategory.category.page_title || currentSurveyCategory.category.name }}
+            </h3>
+            <!-- Show description if available -->
+            <p 
+              v-if="currentSurveyCategory.category.page_description || currentSurveyCategory.category.description" 
+              class="text-sm text-gray-600 text-center mb-6 px-4"
+            >
+              {{ currentSurveyCategory.category.page_description || currentSurveyCategory.category.description }}
+            </p>
             <DynamicSurveyStep
               :category="currentSurveyCategory.category"
               :questions="currentSurveyCategory.questions"

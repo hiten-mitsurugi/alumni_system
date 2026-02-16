@@ -1,11 +1,5 @@
 <template>
   <div>
-    <!-- Category Header -->
-    <div class="mb-6">
-      <h4 class="text-lg font-semibold text-gray-800 mb-2">{{ category.name }}</h4>
-      <p v-if="category.description" class="text-sm text-gray-600">{{ category.description }}</p>
-    </div>
-
     <!-- Questions Grid - Single column layout -->
     <div class="space-y-4">
       <div
@@ -177,19 +171,20 @@
             v-else-if="question.question_type === 'rating'"
             class="mt-2"
           >
-            <!-- Labels for min and max -->
-            <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
-              <span class="font-medium">{{ question.min_value }} - Low</span>
-              <span class="font-medium">{{ question.max_value }} - High</span>
-            </div>
-            
             <!-- Rating options -->
-            <div class="flex items-center justify-start gap-2 flex-wrap">
+            <div class="flex items-end justify-start gap-2 flex-wrap">
               <div
                 v-for="rating in getRatingRange(question)"
                 :key="rating"
                 class="flex flex-col items-center gap-1"
               >
+                <!-- Show "Low" label above first rating, "High" above last rating -->
+                <span 
+                  v-if="rating === question.min_value || rating === question.max_value"
+                  class="text-xs text-gray-500 font-medium mb-1"
+                >
+                  {{ rating === question.min_value ? 'Low' : 'High' }}
+                </span>
                 <input
                   :id="`${question.id}_${rating}`"
                   v-model.number="localResponses[question.id]"

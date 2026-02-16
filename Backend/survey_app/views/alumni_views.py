@@ -382,6 +382,8 @@ class RegistrationSurveyQuestionsView(APIView):
                         'id': category.id,
                         'name': category.name,
                         'description': category.description,
+                        'page_title': category.page_title,
+                        'page_description': category.page_description,
                         'order': category.order
                     },
                     'questions': questions_data
