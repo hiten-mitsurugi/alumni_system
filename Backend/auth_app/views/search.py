@@ -29,47 +29,114 @@ class SuggestedConnectionsView(APIView):
     def get(self, request):
         current_user = request.user
         
-        from auth_app.models import Following, Skill
+        from auth_app.models import Following
         
-        # Get IDs of users current user is already following
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔍 Suggestions requested for user {current_user.id} ({current_user.username})")
+        
+        # Get IDs of users current user is already following (accepted connections)
         following_ids = Following.objects.filter(
             follower=current_user,
             status='accepted'
         ).values_list('following_id', flat=True)
         
-        # Get IDs of pending connection requests
+        logger.info(f"🔍 User has {len(following_ids)} accepted connections (following)")
+        
+        # Get IDs of users who are following the current user (followers with accepted status)
+        follower_ids = Following.objects.filter(
+            following=current_user,
+            status='accepted'
+        ).values_list('follower_id', flat=True)
+        
+        logger.info(f"🔍 User has {len(follower_ids)} followers (accepted)")
+        
+        # Get IDs of pending connection requests (in either direction)
         pending_ids = Following.objects.filter(
             Q(follower=current_user, status='pending') | 
             Q(following=current_user, status='pending')
         ).values_list('following_id', 'follower_id')
         
-        # Flatten the pending IDs (could be in either follower or following position)
+        # Flatten the pending IDs
         pending_user_ids = set()
         for follower_id, following_id in pending_ids:
             pending_user_ids.add(follower_id)
             pending_user_ids.add(following_id)
-        
-        # Remove current user from pending IDs
         pending_user_ids.discard(current_user.id)
         
-        # Combine following and pending IDs
-        exclude_ids = list(following_ids) + list(pending_user_ids) + [current_user.id]
+        logger.info(f"🔍 Found {len(pending_user_ids)} pending connections")
         
-        # Get user's skills (use UserSkill model, not Skill)
+        # Combine following, follower, and pending IDs
+        exclude_ids = list(following_ids) + list(follower_ids) + list(pending_user_ids) + [current_user.id]
+        
+        logger.info(f"🔍 Excluding {len(exclude_ids)} users total")
+        
+        # Get user's skills for matching
         from auth_app.models import UserSkill
         user_skills = list(UserSkill.objects.filter(user=current_user).values_list('name', flat=True))
         
-        # Find users with similar skills
-        suggested_users = CustomUser.objects.filter(
-            is_approved=True
-        ).exclude(
-            id__in=exclude_ids
-        ).annotate(
-            mutual_count=Count('followers', filter=Q(followers__follower__in=following_ids)),
-            skill_match=Count('user_skills', filter=Q(user_skills__name__in=user_skills))
-        ).filter(
-            Q(mutual_count__gt=0) | Q(skill_match__gt=0)
-        ).order_by('-mutual_count', '-skill_match')[:10]
+        logger.info(f"🔍 Current user has {len(user_skills)} skills")
+        
+        # Base query: All approved, active alumni except excluded users
+        base_queryset = CustomUser.objects.filter(
+            user_type=3,  # Alumni only
+            is_approved=True,
+            is_active=True
+        ).exclude(id__in=exclude_ids)
+        
+        logger.info(f"🔍 Found {base_queryset.count()} potential suggestions after exclusions")
+        
+        # Get user's skills for matching
+        from auth_app.models import UserSkill
+        user_skills = list(UserSkill.objects.filter(user=current_user).values_list('name', flat=True))
+        
+        logger.info(f"🔍 Current user has {len(user_skills)} skills")
+        
+        # Convert base_queryset to list to work with
+        all_candidates = list(base_queryset)
+        
+        logger.info(f"🔍 Total candidates available: {len(all_candidates)}")
+        
+        # If we have candidates, prioritize by mutual connections and skills
+        if all_candidates and (following_ids or user_skills):
+            # Try to find users with mutual connections or skill matches
+            prioritized = []
+            regular = []
+            
+            for candidate in all_candidates:
+                # Count mutual connections
+                mutual_count = Following.objects.filter(
+                    follower__in=following_ids,
+                    following=candidate,
+                    status='accepted'
+                ).count() if following_ids else 0
+                
+                # Count skill matches
+                skill_count = UserSkill.objects.filter(
+                    user=candidate,
+                    name__in=user_skills
+                ).count() if user_skills else 0
+                
+                if mutual_count > 0 or skill_count > 0:
+                    prioritized.append((candidate, mutual_count, skill_count))
+                else:
+                    regular.append((candidate, 0, 0))
+            
+            # Sort prioritized by mutual count, then skill count
+            prioritized.sort(key=lambda x: (x[1], x[2]), reverse=True)
+            
+            # Combine: prioritized first, then regular
+            all_sorted = prioritized + regular
+            suggested_users = [user[0] for user in all_sorted[:10]]
+            
+            logger.info(f"🔍 Prioritized {len(prioritized)} users, {len(regular)} regular")
+        else:
+            # No following or skills, just return all candidates
+            suggested_users = all_candidates[:10]
+            logger.info(f"🔍 No prioritization possible, returning {len(suggested_users)} users")
+        
+        logger.info(f"🔍 Final count: {len(suggested_users)} suggestions")
         
         # Serialize the suggestions
         serializer = UserDetailSerializer(suggested_users, many=True)
@@ -86,8 +153,8 @@ class SuggestedConnectionsView(APIView):
             
             suggestions.append({
                 **user_data,
-                'mutual_connections_count': mutual_connections.count(),
-                'mutual_connections': [
+                'mutual_connections': mutual_connections.count(),
+                'mutual_connections_list': [
                     {
                         'id': conn.follower.id,
                         'name': f"{conn.follower.first_name} {conn.follower.last_name}"

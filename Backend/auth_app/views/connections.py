@@ -32,6 +32,44 @@ class FollowUserView(APIView):
             elif existing_connection.status == 'accepted':
                 return Response({'message': 'Already connected to this user'}, status=status.HTTP_200_OK)
         
+        # Check if the target user is already following current user (follow back scenario)
+        reverse_connection = Following.objects.filter(
+            follower=target_user,
+            following=request.user
+        ).first()
+        
+        if reverse_connection and reverse_connection.status == 'accepted':
+            # Auto-accept: Create accepted connection immediately (mutual connection)
+            following = Following.objects.create(
+                follower=request.user,
+                following=target_user,
+                status='accepted',
+                is_mutual=True
+            )
+            
+            # Update reverse connection to mutual
+            reverse_connection.is_mutual = True
+            reverse_connection.save()
+            
+            # Create notification for accepted connection
+            from notifications_app.utils import create_notification
+            create_notification(
+                user=target_user,
+                actor=request.user,
+                notification_type='social',
+                title='Connection Accepted',
+                message=f"{request.user.first_name} {request.user.last_name} is now connected with you",
+                link_route='/alumni/my-mates',
+                link_params={'tab': 'connections'},
+                metadata={'user_id': request.user.id}
+            )
+            
+            return Response({
+                'message': f'You are now connected with {target_user.first_name} {target_user.last_name}!',
+                'status': 'accepted',
+                'is_mutual': True
+            }, status=status.HTTP_201_CREATED)
+        
         # Create pending connection request (LinkedIn-style)
         following = Following.objects.create(
             follower=request.user,
@@ -47,7 +85,7 @@ class FollowUserView(APIView):
             notification_type='social',
             title='Connection Request',
             message=f"{request.user.first_name} {request.user.last_name} wants to connect with you",
-            link_route='/alumni/connections',
+            link_route='/alumni/my-mates',
             link_params={'tab': 'invitations'},
             metadata={'invitation_id': following.id}
         )
@@ -172,16 +210,26 @@ class UserConnectionsView(APIView):
             
             # Debug: Log what invitations we're returning
             logger.info(f"User {user.id} invitations query: {[inv.id for inv in invitations]}")
+            logger.info(f"User {user.id} invitations count: {invitations.count()}")
             
-            return Response({
+            # Serialize the invitations
+            serialized_invitations = [serialize_following_relationship(inv, 'follower') for inv in invitations]
+            logger.info(f"User {user.id} serialized invitations: {serialized_invitations}")
+            
+            response_data = {
                 'followers': [serialize_following_relationship(conn, 'follower') for conn in followers],
                 'following': [serialize_following_relationship(conn, 'following') for conn in following],
-                'invitations': [serialize_following_relationship(inv, 'follower') for inv in invitations],
+                'invitations': serialized_invitations,
                 'followers_count': followers.count(),
                 'following_count': following.count(),
                 'mutual_count': Following.objects.filter(following=user, is_mutual=True, status='accepted').count(),
                 'invitations_count': invitations.count()
-            })
+            }
+            
+            logger.info(f"User {user.id} response data keys: {response_data.keys()}")
+            logger.info(f"User {user.id} invitations in response: {len(response_data['invitations'])}")
+            
+            return Response(response_data)
         
         return Response(data)
 
@@ -202,11 +250,26 @@ class InvitationManageView(APIView):
             
             # Accept the invitation
             invitation.status = 'accepted'
+            
+            # Check if current user is also following the inviter (mutual connection)
+            reverse_connection = Following.objects.filter(
+                follower=request.user,
+                following=invitation.follower,
+                status='accepted'
+            ).first()
+            
+            if reverse_connection:
+                # Mark both as mutual
+                invitation.is_mutual = True
+                reverse_connection.is_mutual = True
+                reverse_connection.save()
+            
             invitation.save()
             
             return Response({
                 'message': f'Connection accepted with {invitation.follower.first_name} {invitation.follower.last_name}!',
-                'status': 'accepted'
+                'status': 'accepted',
+                'is_mutual': invitation.is_mutual
             }, status=status.HTTP_200_OK)
             
         except Following.DoesNotExist:

@@ -294,7 +294,7 @@ class FollowUserView(APIView):
             notification_type='social',
             title='Connection Request',
             message=f"{request.user.first_name} {request.user.last_name} wants to connect with you",
-            link_route='/alumni/connections',
+            link_route='/alumni/my-mates',
             link_params={'tab': 'invitations'},
             metadata={'invitation_id': following.id}
         )
@@ -634,18 +634,36 @@ class SuggestedConnectionsView(APIView):
     def get(self, request):
         user = request.user
         
-        # Get users the current user is not already connected to
+        # Get users the current user is already connected to (only accepted connections)
         from auth_app.models import Following
-        connected_user_ids = Following.objects.filter(
-            Q(follower=user) | Q(following=user)
-        ).values_list('follower_id', 'following_id')
         
-        # Flatten the list and exclude current user
-        exclude_ids = set()
-        for follower_id, following_id in connected_user_ids:
-            exclude_ids.add(follower_id)
-            exclude_ids.add(following_id)
-        exclude_ids.add(user.id)
+        # Build exclude list: users already connected (in either direction)
+        exclude_ids = set([user.id])  # Always exclude current user
+        
+        # Get accepted connections only (if status field exists)
+        following_relationships = Following.objects.filter(
+            Q(follower=user) | Q(following=user)
+        )
+        
+        # Only exclude accepted connections if status field exists
+        try:
+            following_relationships = following_relationships.filter(status='accepted')
+        except Exception:
+            # No status field, accept all Following relationships
+            pass
+        
+        # Add connected user IDs to exclude list
+        for rel in following_relationships:
+            if rel.follower_id != user.id:
+                exclude_ids.add(rel.follower_id)
+            if rel.following_id != user.id:
+                exclude_ids.add(rel.following_id)
+        
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔍 Suggestions for user {user.id} ({user.username})")
+        logger.info(f"🔍 Excluding {len(exclude_ids)} users: {exclude_ids}")
         
         # Get base suggestions (all approved alumni except connected ones)
         base_suggestions = CustomUser.objects.filter(
@@ -653,6 +671,8 @@ class SuggestedConnectionsView(APIView):
             is_approved=True, 
             is_active=True
         ).exclude(id__in=exclude_ids)
+        
+        logger.info(f"🔍 Found {base_suggestions.count()} potential suggestions")
         
         # Prioritize suggestions: same program OR same year, then others
         priority_suggestions = []
@@ -671,6 +691,8 @@ class SuggestedConnectionsView(APIView):
         
         # Limit to 10 suggestions
         final_suggestions = final_suggestions[:10]
+        
+        logger.info(f"🔍 Returning {len(final_suggestions)} suggestions ({len(priority_suggestions)} priority, {len(regular_suggestions[:10-len(priority_suggestions)])} regular)")
         
         serializer = UserSearchSerializer(final_suggestions, many=True, context={'request': request})
         return Response(serializer.data)

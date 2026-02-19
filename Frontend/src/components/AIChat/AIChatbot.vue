@@ -162,7 +162,7 @@ const position = ref({ x: 16, y: 80 }) // Default position (right: 16px, bottom:
 const dragStart = ref({ x: 0, y: 0 })
 
 // N8N Webhook Configuration
-const N8N_WEBHOOK_URL = 'https://romantik123.app.n8n.cloud/webhook/87db0748-958e-4a67-9ac2-db37f1ff4d71/chat'
+const N8N_WEBHOOK_URL = 'https://roman-n8n.giize.com/webhook/1516db1a-0c04-4834-9c55-bdef0927db60/chat'
 
 onMounted(() => {
   // Generate unique session ID

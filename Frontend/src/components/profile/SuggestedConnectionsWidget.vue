@@ -29,9 +29,9 @@
       </div>
     </div>
 
-    <div v-else-if="suggestions.length > 0" class="space-y-4">
+    <div v-else-if="displaySuggestions.length > 0" class="space-y-4">
       <div 
-        v-for="person in suggestions" 
+        v-for="person in displaySuggestions" 
         :key="person.id"
         :class="[
           'flex items-center space-x-3 p-3 rounded-lg transition-colors',
@@ -44,9 +44,10 @@
           class="cursor-pointer"
         >
           <img 
-            :src="person.profile_picture || '/default-avatar.png'" 
+            :src="getProfilePictureUrl(person)" 
             :alt="`${person.first_name} ${person.last_name}`"
             class="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-green-500 transition-all"
+            @error="$event.target.src = '/default-avatar.png'"
           />
         </div>
         
@@ -123,25 +124,52 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 
 const emit = defineEmits(['connect'])
 const router = useRouter()
 const themeStore = useThemeStore()
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const suggestions = ref([])
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
+const getProfilePictureUrl = (person) => {
+  const profilePicture = person.profile?.profile_picture || person.profile_picture
+  
+  if (!profilePicture) {
+    return '/default-avatar.png'
+  }
+  
+  if (profilePicture.startsWith('http')) {
+    return profilePicture
+  }
+  
+  return `${BASE_URL}${profilePicture}`
+}
 
 const fetchSuggestions = async () => {
   try {
     loading.value = true
     const response = await api.get('/auth/suggested-connections/')
-    suggestions.value = response.data.results || response.data || []
+    const rawData = response.data.results || response.data || []
+    
+    console.log('🔍 Suggestions loaded:', rawData.length)
+    
+    // Filter out current user and ensure valid data
+    const currentUserId = authStore.user?.id
+    suggestions.value = (Array.isArray(rawData) ? rawData : [])
+      .filter(person => person && person.id !== currentUserId)
+    
+    console.log('🔍 Final suggestions:', suggestions.value.length)
   } catch (error) {
-    console.error('Error fetching suggestions:', error)
+    console.error('❌ Error fetching suggestions:', error)
     suggestions.value = []
   } finally {
     loading.value = false
@@ -149,11 +177,10 @@ const fetchSuggestions = async () => {
 }
 
 const viewProfile = (person) => {
-  // Debug: Log the person data
-  console.log('Clicked person data:', person)
-  
-  // Use the person's username for clean URLs
-  console.log('Navigating to username:', person.username)
+  if (!person.username) {
+    console.error('❌ Cannot view profile: username is missing')
+    return
+  }
   
   // Navigate to the person's profile using their username
   router.push({
@@ -192,6 +219,9 @@ const connect = async (person) => {
     person.connecting = false
   }
 }
+
+// Limit display to 5 suggestions in the widget
+const displaySuggestions = computed(() => suggestions.value.slice(0, 5))
 
 onMounted(() => {
   fetchSuggestions()

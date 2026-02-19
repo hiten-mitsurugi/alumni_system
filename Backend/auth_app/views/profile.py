@@ -28,13 +28,20 @@ class EnhancedProfileView(APIView):
     """
     permission_classes = [IsAuthenticated]
     
-    def get(self, request, user_id=None):
-        # If user_id is provided, get that user; otherwise get current user
-        if user_id:
+    def get(self, request, user_id=None, username=None):
+        # If username is provided, look up user by username
+        if username:
+            try:
+                user = CustomUser.objects.get(username=username)
+            except CustomUser.DoesNotExist:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        # If user_id is provided, get that user
+        elif user_id:
             try:
                 user = CustomUser.objects.get(id=user_id)
             except CustomUser.DoesNotExist:
                 return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        # Otherwise get current user
         else:
             user = request.user
         

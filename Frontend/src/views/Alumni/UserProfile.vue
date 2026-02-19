@@ -252,7 +252,7 @@
             />
 
             <!-- Work History Section -->
-            <ProfileWorkHistorySection
+            <ProfileExperienceSection
               :workHistories="workHistories"
               :is-own-profile="false"
               @add="() => {}"
@@ -361,7 +361,7 @@ import { getProfilePictureUrl, getCoverPhotoUrl } from '@/utils/imageUrl'
 import ProfileAboutSection from '@/components/profile/ProfileAboutSection.vue'
 import ProfileContactSection from '@/components/profile/ProfileContactSection.vue'
 import ProfileEducationSection from '@/components/profile/ProfileEducationSection.vue'
-import ProfileWorkHistorySection from '@/components/profile/ProfileWorkHistorySection.vue'
+import ProfileExperienceSection from '@/components/profile/ProfileExperienceSection.vue'
 import ProfileSkillsSection from '@/components/profile/ProfileSkillsSection.vue'
 import ProfileAchievementsSection from '@/components/profile/ProfileAchievementsSection.vue'
 import ProfileMembershipsSection from '@/components/profile/ProfileMembershipsSection.vue'

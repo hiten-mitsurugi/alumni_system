@@ -78,6 +78,9 @@ export function useNetworking() {
       const data = response.data;
 
       console.log('📊 Raw connections data:', data);
+      console.log('📊 data.invitations:', data.invitations);
+      console.log('📊 data.invitations length:', data.invitations?.length);
+      console.log('📊 data.invitations_count:', data.invitations_count);
 
       // Process connections (mutual followers)
       const mutualConnections = data.followers?.filter(f =>
@@ -216,6 +219,9 @@ export function useNetworking() {
         return processedInvitation;
       });
 
+      console.log('✅ Processed pendingInvitations:', pendingInvitations.value);
+      console.log('✅ pendingInvitations length:', pendingInvitations.value.length);
+
       return data;
 
     } catch (error) {
@@ -264,6 +270,9 @@ export function useNetworking() {
       // Refresh the connections data
       await fetchConnections();
 
+      // Refresh suggestions to remove newly connected user
+      await fetchSuggestions();
+
       return response.data;
     } catch (error) {
       console.error('❌ Error accepting invitation:', error);
@@ -287,6 +296,9 @@ export function useNetworking() {
         inv.invitation_id !== invitationId && inv.id !== invitationId
       );
 
+      // Refresh suggestions since ignored user might reappear there
+      await fetchSuggestions();
+
       return response.data;
     } catch (error) {
       console.error('❌ Error ignoring invitation:', error);
@@ -300,15 +312,32 @@ export function useNetworking() {
     try {
       suggestion.processing = true;
 
-      await api.post(`/auth/follow/${suggestion.id}/`);
+      const response = await api.post(`/auth/follow/${suggestion.id}/`);
 
-      // Remove from suggestions (connection request sent)
+      console.log('✅ Connect to suggestion response:', response.data);
+
+      // Remove from suggestions (connection request sent or accepted)
       suggestions.value = suggestions.value.filter(s => s.id !== suggestion.id);
 
-      // Note: Don't add to following yet - wait for them to accept
-      // Connection will be mutual only after acceptance
+      // If it's a mutual connection (auto-accepted), refresh all data
+      if (response.data.is_mutual) {
+        // Refresh connections and following lists
+        await fetchConnections();
+        
+        return { 
+          success: true, 
+          message: response.data.message || `You are now connected with ${suggestion.name}!` 
+        };
+      } else {
+        // Refresh connections to update following list
+        await fetchConnections();
 
-      return { success: true, message: `Connection request sent to ${suggestion.name}!` };
+        // Note: Connection is pending - will be mutual only after acceptance
+        return { 
+          success: true, 
+          message: response.data.message || `Connection request sent to ${suggestion.name}!` 
+        };
+      }
 
     } catch (error) {
       console.error('Error connecting to suggestion:', error);
@@ -334,6 +363,9 @@ export function useNetworking() {
       // Update followers list - they're no longer following you either
       followers.value = followers.value.filter(f => f.id !== connection.id);
 
+      // Refresh suggestions since this user might reappear there
+      await fetchSuggestions();
+
       return { success: true, message: `${connection.name} has been removed from your connections.` };
 
     } catch (error) {
@@ -348,16 +380,35 @@ export function useNetworking() {
     try {
       follower.processing = true;
 
-      // Send connection request (will create mutual connection when accepted)
-      await api.post(`/auth/follow/${follower.id}/`);
+      // Send connection request (will auto-accept if they're already following you)
+      const response = await api.post(`/auth/follow/${follower.id}/`);
 
-      // Note: In LinkedIn-style, this would send a connection request
-      // For immediate mutual connection, we could create a different endpoint
-      // For now, keeping consistent with the invitation flow
+      console.log('✅ Follow back response:', response.data);
 
-      follower.isFollowing = true;
+      // If it's a mutual connection (auto-accepted), refresh all data
+      if (response.data.is_mutual) {
+        // Remove from followers list temporarily (will reappear in connections)
+        followers.value = followers.value.filter(f => f.id !== follower.id);
+        
+        // Refresh connections and following lists
+        await fetchConnections();
+        
+        return { 
+          success: true, 
+          message: response.data.message || `You are now connected with ${follower.name}!` 
+        };
+      } else {
+        // Regular pending request
+        follower.isFollowing = true;
 
-      return { success: true, message: `Connection request sent to ${follower.name}!` };
+        // Refresh suggestions to remove this user if they were there
+        await fetchSuggestions();
+
+        return { 
+          success: true, 
+          message: response.data.message || `Connection request sent to ${follower.name}!` 
+        };
+      }
 
     } catch (error) {
       console.error('Error following back:', error);
@@ -396,6 +447,9 @@ export function useNetworking() {
       } else if (context === 'followers') {
         user.isFollowing = false;
       }
+
+      // Refresh suggestions since unfollowed user might reappear there
+      await fetchSuggestions();
 
       return { success: true, message: `You have unfollowed ${user.name}.` };
 
