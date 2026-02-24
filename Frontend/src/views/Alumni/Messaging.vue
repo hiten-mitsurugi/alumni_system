@@ -401,7 +401,7 @@ async function handleSelectConversation(conv) {
     await fetchMessages(conv)
     
     if (conv.type === 'group') {
-      await setupGroupWebSocket(conv)
+      await setupGroupWebSocket(conv.group.id)
     } else {
       if (groupWs.value) {
         groupWs.value.close()

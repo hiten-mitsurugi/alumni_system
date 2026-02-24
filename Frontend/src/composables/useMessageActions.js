@@ -112,6 +112,7 @@ export function useMessageActions(
       // Create temporary message for optimistic UI
       const newMessage = {
         id: tempId,
+        temp_id: tempId,  // Store temp_id for matching server response
         sender: currentUser.value,
         content: data.content,
         attachments: data.attachments.map(file => ({
@@ -157,11 +158,18 @@ export function useMessageActions(
         payload.group_id = selectedConversation.value.group.id
         delete payload.receiver_id
         
+        console.log('🟢 Preparing to send group message:', {
+          groupId: payload.group_id,
+          wsState: groupWs.value?.readyState,
+          wsOpen: groupWs.value?.readyState === WebSocket.OPEN
+        })
+        
         if (groupWs.value?.readyState === WebSocket.OPEN) {
-          console.log('Sending via group WebSocket:', payload)
+          console.log('🟢 Sending via group WebSocket:', payload)
           groupWs.value.send(JSON.stringify(payload))
         } else {
-          console.error('Group WebSocket not open')
+          console.error('🟢 Group WebSocket not open! State:', groupWs.value?.readyState)
+          alert('Group chat connection not ready. Please refresh the page.')
           messages.value = messages.value.filter(m => m.id !== tempId)
         }
       }
@@ -192,7 +200,7 @@ export function useMessageActions(
       const payload = {
         action: 'edit_message',
         message_id: message.id,
-        content: newContent
+        new_content: newContent
       }
       
       if (selectedConversation.value?.type === 'private') {
@@ -278,13 +286,28 @@ export function useMessageActions(
   /**
    * Handle message action from child components
    */
-  async function handleMessageAction(action, message, actionData = {}) {
+  async function handleMessageAction(actionData) {
     try {
+      // Handle both call signatures: object or individual params
+      const { action, message, newContent } = typeof actionData === 'object' && actionData.action
+        ? actionData
+        : { action: actionData, message: arguments[1], newContent: arguments[2]?.newContent }
+      
       console.log('Handling message action:', action, 'for message:', message?.id)
+      
+      if (!message) {
+        console.error('Message is undefined for action:', action)
+        alert('Failed to perform action: Message is missing.')
+        return
+      }
       
       switch (action) {
         case 'edit':
-          await editMessage(message, actionData.newContent)
+          if (!newContent) {
+            console.error('New content is required for edit action')
+            return
+          }
+          await editMessage(message, newContent)
           break
           
         case 'delete':
@@ -294,7 +317,7 @@ export function useMessageActions(
         case 'reaction_added':
         case 'reaction_updated':
         case 'reaction_removed':
-          console.log('Handling reaction update for message:', actionData.messageId)
+          console.log('Handling reaction update for message:', message.id)
           break
           
         case 'select':
@@ -306,6 +329,7 @@ export function useMessageActions(
       }
     } catch (error) {
       console.error('Error handling message action:', error)
+      alert('An error occurred while performing the action.')
     }
   }
   

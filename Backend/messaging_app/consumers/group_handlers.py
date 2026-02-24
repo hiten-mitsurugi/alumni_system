@@ -30,6 +30,7 @@ class GroupMessageHandlersMixin:
         content = data.get('content', '').strip()
         attachment_ids = data.get('attachment_ids', [])
         reply_to_id = data.get('reply_to_id')
+        temp_id = data.get('temp_id')  # Get temp_id from frontend for optimistic UI matching
         
         if not content and not attachment_ids:
             return await self.send_json({'error': 'Message content or attachments are required'})
@@ -50,6 +51,9 @@ class GroupMessageHandlersMixin:
             
             # Serialize and broadcast to group
             serialized = await self.serialize_message(message)
+            # Add temp_id to help frontend match optimistic message
+            if temp_id:
+                serialized['temp_id'] = temp_id
             await self.channel_layer.group_send(
                 self.group_name, 
                 {'type': 'chat_message', 'message': serialized}

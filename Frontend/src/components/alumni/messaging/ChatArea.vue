@@ -387,6 +387,8 @@ function handleWebSocketMessage(event) {
     const data = JSON.parse(event.data)
     // Normalize event types used across server broadcasts
     const eventType = data.type || data.action || data.event
+    
+    console.log('🔔 ChatArea handleWebSocketMessage received:', { eventType, data })
 
     // Handle read updates separately
     if (eventType === 'message_read_update') {
@@ -417,12 +419,23 @@ function handleWebSocketMessage(event) {
       const tempId = serverMsg.temp_id || data.temp_id
       let replaced = false
 
+      console.log('📨 Received server message:', {
+        messageId: serverMsg.id,
+        tempId: tempId,
+        hasOptimisticMessages: props.messages?.some(m => m._isTemporary)
+      })
+
       if (tempId) {
         const idx = props.messages?.findIndex(m => m.temp_id === tempId || m.id === tempId)
         if (idx !== -1) {
           props.messages.splice(idx, 1, serverMsg)
           replaced = true
-          console.log('🔁 Replaced optimistic message with server message:', serverMsg.id || serverMsg.temp_id)
+          console.log('🔁 Replaced optimistic message with server message:', {
+            tempId,
+            serverId: serverMsg.id
+          })
+        } else {
+          console.log('⚠️ Could not find optimistic message to replace with tempId:', tempId)
         }
       }
 
@@ -431,6 +444,8 @@ function handleWebSocketMessage(event) {
       if (!replaced && !exists) {
         props.messages.push(serverMsg)
         console.log('➕ Appended server message:', serverMsg.id)
+      } else if (exists && !replaced) {
+        console.log('⚠️ Server message already exists, skipping:', serverMsg.id)
       }
 
       // Scroll to bottom for new incoming messages
@@ -439,23 +454,45 @@ function handleWebSocketMessage(event) {
     }
 
     // Message edited
-    if (eventType === 'chat_message_edit' || eventType === 'message_edit') {
-      const edited = data.message || data
-      const idx = props.messages?.findIndex(m => String(m.id) === String(edited.id))
-      if (idx !== -1) {
-        props.messages.splice(idx, 1, edited)
-        console.log('✏️ Applied edit to message:', edited.id)
+    if (eventType === 'message_edited' || eventType === 'chat_message_edit' || eventType === 'message_edit') {
+      console.log('✏️ Processing message_edited event:', data)
+      const messageId = data.message_id
+      const newContent = data.new_content
+      const editedAt = data.edited_at
+      
+      if (messageId) {
+        console.log('✏️ Looking for message to edit:', messageId, 'in', props.messages?.length, 'messages')
+        const idx = props.messages?.findIndex(m => String(m.id) === String(messageId))
+        console.log('✏️ Found message at index:', idx)
+        if (idx !== -1) {
+          const updatedMessage = {
+            ...props.messages[idx],
+            content: newContent,
+            edited_at: editedAt
+          }
+          props.messages.splice(idx, 1, updatedMessage)
+          console.log('✅ Applied edit to message:', messageId, 'new content:', newContent)
+        } else {
+          console.warn('⚠️ Message not found for edit:', messageId)
+        }
       }
       return
     }
 
     // Message deleted
-    if (eventType === 'chat_message_delete' || eventType === 'message_delete') {
+    if (eventType === 'message_deleted' || eventType === 'chat_message_delete' || eventType === 'message_delete') {
+      console.log('🗑️ Processing message_deleted event:', data)
       const msgId = data.message_id || data.id || (data.message && data.message.id)
-      const idx = props.messages?.findIndex(m => String(m.id) === String(msgId))
-      if (idx !== -1) {
-        props.messages.splice(idx, 1)
-        console.log('🗑️ Removed deleted message:', msgId)
+      if (msgId) {
+        console.log('🗑️ Looking for message to delete:', msgId, 'in', props.messages?.length, 'messages')
+        const idx = props.messages?.findIndex(m => String(m.id) === String(msgId))
+        console.log('🗑️ Found message at index:', idx)
+        if (idx !== -1) {
+          props.messages.splice(idx, 1)
+          console.log('✅ Removed deleted message:', msgId)
+        } else {
+          console.warn('⚠️ Message not found for delete:', msgId)
+        }
       }
       return
     }

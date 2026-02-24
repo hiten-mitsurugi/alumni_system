@@ -33,6 +33,7 @@ class PrivateMessageHandlersMixin:
         content = data.get('content', '').strip()
         attachment_ids = data.get('attachment_ids', [])
         reply_to_id = data.get('reply_to_id')
+        temp_id = data.get('temp_id')  # Get temp_id from frontend for optimistic UI matching
         
         # Validation
         if not receiver_id:
@@ -76,12 +77,14 @@ class PrivateMessageHandlersMixin:
             
             # Serialize and broadcast
             serialized = await self.serialize_message(message)
-            # Notify only the receiver via broadcast. The sender gets a direct
-            # confirmation via `send_json` below to avoid duplicate messages
-            # being delivered to the sender (once via broadcast and once via
-            # direct send).
+            # Add temp_id to help frontend match optimistic message
+            if temp_id:
+                serialized['temp_id'] = temp_id
+            
+            # Broadcast to ALL users (sender and receiver) to ensure real-time updates
+            users = [self.user.id, receiver.id]
             await self.broadcast_to_users(
-                [receiver.id],
+                users,
                 'chat_message',
                 {'message': serialized}
             )
@@ -98,7 +101,7 @@ class PrivateMessageHandlersMixin:
                 }
             )
             
-            await self.send_json({'status': 'success', 'message': serialized})
+            # No need to send direct JSON response - message delivered via broadcast
             
         except User.DoesNotExist:
             await self.send_json({'error': 'Receiver not found'})
@@ -318,27 +321,17 @@ class PrivateMessageHandlersMixin:
                 
             message, edited_at, users = await _edit()
             
-            # Broadcast to participants (exclude sender to avoid duplicate
-            # delivery since we send a direct confirmation below)
+            # Broadcast to ALL participants (including sender) so everyone sees real-time updates
             logger.info(f"Broadcasting edit to users: {users}")
-            recipients = [uid for uid in users if uid != self.user.id]
-            if recipients:
-                await self.broadcast_to_users(
-                    recipients,
-                    'message_edited',
-                    {
-                        'message_id': str(message.id),
-                        'new_content': new_content,
-                        'edited_at': edited_at.isoformat()
-                    }
-                )
-            
-            # Send success confirmation to sender
-            await self.send_json({
-                'status': 'success', 
-                'action': 'message_edited',
-                'message_id': str(message.id)
-            })
+            await self.broadcast_to_users(
+                users,
+                'message_edited',
+                {
+                    'message_id': str(message.id),
+                    'new_content': new_content,
+                    'edited_at': edited_at.isoformat()
+                }
+            )
             logger.info(f"Edit completed successfully for message {message.id}")
             
         except Message.DoesNotExist:
@@ -365,21 +358,12 @@ class PrivateMessageHandlersMixin:
                 
             users = await _delete()
             
-            # Exclude sender to avoid duplicate notification on sender side
-            recipients = [uid for uid in users if uid != self.user.id]
-            if recipients:
-                await self.broadcast_to_users(
-                    recipients,
-                    'message_deleted',
-                    {'message_id': str(message_id)}
-                )
-            
-            # Send success confirmation to sender
-            await self.send_json({
-                'status': 'success', 
-                'action': 'message_deleted',
-                'message_id': str(message_id)
-            })
+            # Broadcast to ALL participants (including sender) so everyone sees real-time updates
+            await self.broadcast_to_users(
+                users,
+                'message_deleted',
+                {'message_id': str(message_id)}
+            )
             
         except Message.DoesNotExist:
             await self.send_json({'error': 'Cannot delete this message'})

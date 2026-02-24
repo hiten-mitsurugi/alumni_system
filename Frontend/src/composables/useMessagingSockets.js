@@ -138,25 +138,30 @@ export function useMessagingSockets() {
       return
     }
     
+    console.log('🟢 Setting up group WebSocket for group:', groupId)
+    
     if (groupWs.value) {
+      console.log('🟢 Closing existing group WebSocket')
       groupWs.value.close()
     }
     
     const token = authStore.token
     const wsBaseUrl = getWebSocketBaseURL()
-    groupWs.value = new WebSocket(`${wsBaseUrl}/ws/group/${groupId}/?token=${token}`)
+    const wsUrl = `${wsBaseUrl}/ws/group/${groupId}/?token=${token}`
+    console.log('🟢 Connecting to:', wsUrl)
+    groupWs.value = new WebSocket(wsUrl)
     
     groupWs.value.onopen = () => {
-      console.log('Group WS connected')
+      console.log('🟢 Group WS connected for group:', groupId)
       startTypedHeartbeat(groupWs.value, 'group')
     }
     
     groupWs.value.onclose = () => {
-      console.log('Group WS closed')
+      console.log('🟢 Group WS closed for group:', groupId)
     }
     
     groupWs.value.onerror = (error) => {
-      console.error('Group WS error:', error)
+      console.error('🟢 Group WS error for group:', groupId, error)
     }
     
     groupWs.value.onmessage = (e) => {
