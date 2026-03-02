@@ -44,7 +44,13 @@ class EducationSerializer(serializers.ModelSerializer):
     """Serializer for Education model"""
     class Meta:
         model = Education
-        fields = ['id', 'institution', 'degree_type', 'field_of_study', 'start_date', 'end_date', 'is_current', 'description', 'user', 'created_at', 'updated_at']
+        fields = [
+            'id', 'institution', 'degree_type', 'field_of_study', 
+            'specialization', 'is_related_to_undergrad', 
+            'reason_for_further_study', 'reason_other_specify',
+            'start_date', 'end_date', 'is_current', 'description', 
+            'user', 'created_at', 'updated_at'
+        ]
         read_only_fields = ['user', 'created_at', 'updated_at']
 
 

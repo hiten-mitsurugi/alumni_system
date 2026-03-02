@@ -4,7 +4,7 @@
     themeStore.isDarkMode ? 'bg-gray-800' : 'bg-white'
   ]">
     <SectionPrivacyControl 
-      title="Experience"
+      title="Work History"
       :is-own-profile="isOwnProfile"
       :section-visibility="sectionVisibility"
       @add="$emit('add')"
@@ -165,7 +165,7 @@
         @click="$emit('add')"
         class="text-green-600 hover:text-green-700 font-medium"
       >
-        Add Experience
+        Add Work History
       </button>
     </div>
 

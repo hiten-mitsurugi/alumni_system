@@ -271,10 +271,23 @@ class Education(models.Model):
         ('other', 'Other'),
     ]
     
+    REASON_CHOICES = [
+        ('career_growth', 'Career growth'),
+        ('interest', 'Interest'),
+        ('job_requirement', 'Job requirement'),
+        ('promotion', 'Promotion'),
+        ('personal_development', 'Personal development'),
+        ('others', 'Others'),
+    ]
+    
     user = models.ForeignKey(CustomUser, related_name='education', on_delete=models.CASCADE)
     institution = models.CharField(max_length=200)
     degree_type = models.CharField(max_length=20, choices=DEGREE_TYPES)
     field_of_study = models.CharField(max_length=200, blank=True, null=True)
+    specialization = models.CharField(max_length=200, blank=True, null=True)
+    is_related_to_undergrad = models.BooleanField(default=False)
+    reason_for_further_study = models.JSONField(default=list, blank=True)  # Stores array of selected reasons
+    reason_other_specify = models.TextField(blank=True, null=True)  # Text when "Others" is selected
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     is_current = models.BooleanField(default=False)

@@ -64,6 +64,81 @@
             />
           </div>
 
+          <!-- Specialization -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Specialization
+            </label>
+            <input
+              v-model="form.specialization"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter specialization (optional)"
+            />
+          </div>
+
+          <!-- Is this related to your undergrad? -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Is this related to your undergrad?
+            </label>
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center">
+                <input
+                  v-model="form.is_related_to_undergrad"
+                  type="radio"
+                  :value="true"
+                  class="mr-2 text-green-600 focus:ring-green-500"
+                />
+                <span class="text-sm text-gray-700">Yes</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  v-model="form.is_related_to_undergrad"
+                  type="radio"
+                  :value="false"
+                  class="mr-2 text-green-600 focus:ring-green-500"
+                />
+                <span class="text-sm text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Reason for further study -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Reason for further study (select all that apply)
+            </label>
+            <div class="space-y-2">
+              <label 
+                v-for="reason in reasonOptions" 
+                :key="reason.value"
+                class="flex items-center"
+              >
+                <input
+                  v-model="form.reason_for_further_study"
+                  type="checkbox"
+                  :value="reason.value"
+                  class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
+                <span class="ml-2 text-sm text-gray-700">{{ reason.label }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Please specify (shown when "Others" is selected) -->
+          <div v-if="form.reason_for_further_study.includes('others')">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Please specify
+            </label>
+            <textarea
+              v-model="form.reason_other_specify"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Please specify your reason..."
+            ></textarea>
+          </div>
+
           <!-- Date Range (Month and Year) -->
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -174,7 +249,15 @@ const emit = defineEmits(['close', 'save'])
 const loading = ref(false)
 const isEditing = ref(false)
 
-
+// Reason for further study options
+const reasonOptions = [
+  { value: 'career_growth', label: 'Career growth' },
+  { value: 'interest', label: 'Interest' },
+  { value: 'job_requirement', label: 'Job requirement' },
+  { value: 'promotion', label: 'Promotion' },
+  { value: 'personal_development', label: 'Personal development' },
+  { value: 'others', label: 'Others' }
+]
 
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -185,6 +268,10 @@ const form = reactive({
   institution: '',
   degree_type: '',
   field_of_study: '',
+  specialization: '',
+  is_related_to_undergrad: false,
+  reason_for_further_study: [],
+  reason_other_specify: '',
   start_month: '',
   start_year: '',
   end_month: '',
@@ -211,6 +298,10 @@ if (props.education) {
   form.institution = props.education.institution || ''
   form.degree_type = props.education.degree_type || ''
   form.field_of_study = props.education.field_of_study || ''
+  form.specialization = props.education.specialization || ''
+  form.is_related_to_undergrad = props.education.is_related_to_undergrad || false
+  form.reason_for_further_study = props.education.reason_for_further_study || []
+  form.reason_other_specify = props.education.reason_other_specify || ''
   form.is_current = props.education.is_current || false
 }
 
@@ -221,6 +312,13 @@ watch(() => form.is_current, (newValue) => {
     form.end_year = ''
   }
 })
+
+// Clear reason_other_specify when "others" is unchecked
+watch(() => form.reason_for_further_study, (newValue) => {
+  if (!newValue.includes('others')) {
+    form.reason_other_specify = ''
+  }
+}, { deep: true })
 
 const handleSubmit = async () => {
   loading.value = true
@@ -233,6 +331,10 @@ const handleSubmit = async () => {
       institution: form.institution,
       degree_type: degreeType,
       field_of_study: form.field_of_study || null,
+      specialization: form.specialization || null,
+      is_related_to_undergrad: form.is_related_to_undergrad,
+      reason_for_further_study: form.reason_for_further_study,
+      reason_other_specify: form.reason_other_specify || null,
       is_current: form.is_current
     }
     

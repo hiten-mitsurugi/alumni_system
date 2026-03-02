@@ -30,8 +30,8 @@
     @save="handlers.saveEducation"
   />
 
-  <!-- Experience Modal -->
-  <ExperienceModal
+  <!-- Work History Modal -->
+  <WorkHistoryModal
     v-if="modals.showExperienceModal"
     :experience="selectedItems.experience"
     @close="handlers.closeExperienceModal"
@@ -108,7 +108,7 @@ import EditProfileModal from '@/components/profile/EditProfileModal.vue'
 import CoverPhotoModal from '@/components/profile/CoverPhotoModal.vue'
 import ProfilePictureModal from '@/components/profile/ProfilePictureModal.vue'
 import EducationModal from '@/components/profile/EducationModal.vue'
-import ExperienceModal from '@/components/profile/ExperienceModal.vue'
+import WorkHistoryModal from '@/components/profile/WorkHistoryModal.vue'
 import SkillModal from '@/components/profile/SkillModal.vue'
 import AchievementModal from '@/components/profile/AchievementModal.vue'
 import MembershipModal from '@/components/profile/MembershipModal.vue'
